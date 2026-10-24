@@ -1,0 +1,11 @@
+{
+  "name": "nikkis-closet",
+  "version": "0.1.0",
+  "description": "A digital closet: upload your real clothes, try them on a mannequin, plan and log your OOTD, and match Pinterest inspo to what you own.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/smoke.mjs"
+  },
+  "license": "MIT"
+}
