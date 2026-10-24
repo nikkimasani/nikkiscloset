@@ -1,5 +1,5 @@
 import { all, put, del, uid } from './db.js';
-import { OCCASIONS, OCCASION_EMOJI, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, slotOf, wear } from './data.js';
+import { OCCASIONS, OCCASION_EMOJI, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, slotOf, wear } from './data.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
 import { palette, colorName, hexDist } from './color.js';
 import { mannequinSVG } from './mannequin.js';
@@ -23,7 +23,8 @@ const S = {
   filter: { type: 'all', occ: 'all', q: '' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
-  skin: store.get('skin', SKIN[1]), hair: store.get('hair', HAIR[1]),
+  skin: store.get('skin', SKIN[2]), hair: store.get('hair', HAIR[1]), hairStyle: store.get('hairstyle', 'long'),
+  shape: (() => { try { return JSON.parse(store.get('shape', 'null')); } catch { return null; } })(), shapeName: store.get('shapename', ''),
   month: new Date(), date: iso(new Date()),
   inspo: null,                      // working inspo draft
   ai: null, aiError: '', aiBusy: false, aiAbort: null, // fal.ai render of the current outfit
@@ -73,13 +74,13 @@ function outfitItems(src) {
   ids.map(itemById).filter(Boolean).forEach((i) => (out[slotOf(i.type)] = i));
   return out;
 }
-const currentBody = () => (S.profile ? { W: S.profile.W, H: S.profile.H, pts: S.profile.pts } : DEFAULT_BODY);
+const currentBody = () => (!usingPhoto() && S.shape ? fromProportions(S.shape) : S.profile ? { W: S.profile.W, H: S.profile.H, pts: S.profile.pts } : DEFAULT_BODY);
 const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 function mannequin(src, cls = '') {
   const items = outfitItems(src), done = aiFor(items); // AI result replaces the photo; only un-rendered pieces are layered on
   const rest = done ? Object.fromEntries(Object.entries(items).filter(([slot]) => !done.includes(slot))) : items;
-  return mannequinSVG({ body: currentBody(), photoUrl: done ? S.ai.image : usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, items: rest, urls: S.urls, cls,
+  return mannequinSVG({ body: currentBody(), photoUrl: done ? S.ai.image : usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, items: rest, urls: S.urls, cls,
     label: done ? `Your photo wearing ${Object.values(items).map((i) => i.name).join(', ')}` : '' });
 }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
@@ -404,6 +405,11 @@ async function runAIRender() {
 /* ───────────────────────── try on ───────────────────────── */
 // 3D when the device supports WebGL (and the user hasn't chosen flat); the 2D SVG mannequin is the fallback.
 const use3D = () => !usingPhoto() && stage3d.usable && store.get('flat', '') !== '1';
+async function setShape(shape, name) {
+  S.shape = shape; S.shapeName = name;
+  store.set('shape', JSON.stringify(shape)); store.set('shapename', name);
+  if (S.profile?.display === 'photo') { S.profile.display = 'mannequin'; await put('profile', S.profile); } // a body type customizes the mannequin, not the photo
+}
 function stageHTML() {
   return use3D() ? '' : mannequin(S.outfit);
 }
@@ -415,7 +421,7 @@ function mountStage() {
   const el = $('#stage'); if (!el) return;
   if (!use3D()) { el.innerHTML = stageHTML(); return; }
   stage3d.attach(el);
-  stage3d.setModel({ body: currentBody(), skin: S.skin, hair: S.hair });
+  stage3d.setModel({ body: currentBody(), skin: S.skin, hair: S.hair, hairStyle: S.hairStyle });
   stage3d.setOutfit(outfitItems(S.outfit), S.urls);
   stage3d.setRole(); stage3d.setLabel(outfitLabel());
 }
@@ -424,7 +430,7 @@ function refreshStage() {
   if (use3D()) { stage3d.setOutfit(outfitItems(S.outfit), S.urls); stage3d.setLabel(outfitLabel()); } else s.innerHTML = stageHTML();
 }
 
-const DRAWERS = [['fit', '📏 Fit'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
+const DRAWERS = [['fit', '📏 Fit'], ['look', '🎨 Customize'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
 
 function metersHTML(worn) {
   const m = outfitMeters(worn, S.mood, wearCounts());
@@ -432,20 +438,32 @@ function metersHTML(worn) {
   return `<div class="meters" role="group" aria-label="Outfit meters">${bar('Mood fit', S.mood ? m?.fit : null)}${bar('Colours', m?.harmony)}${bar('Fresh', m?.fresh)}</div>`;
 }
 
+const SHAPE_SLIDERS = [['shoulders', 'Shoulders', .8, 1.25], ['hips', 'Hips', .8, 1.35], ['torso', 'Torso length', .85, 1.15], ['legs', 'Leg length', .8, 1.2], ['build', 'Build (soft ↔ full)', .85, 1.4]];
+function customizeHTML() {
+  if (usingPhoto()) return '<p class="muted">You’re showing your own photo. Switch to the mannequin under <b>Me</b> to customize it.</p>';
+  const shape = S.shape || BODY_TYPES.Average;
+  const sw = (list, cur, act, label) => `<div class="swatches wrap" role="group" aria-label="${label}">${list.map((c, n) => `<button class="sw ${c === cur ? 'on' : ''}" aria-pressed="${c === cur}" data-act="${act}" data-v="${c}" style="background:${c}" aria-label="${label} ${n + 1}"></button>`).join('')}
+    <label class="sw custom" title="Pick any colour"><span class="sr-only">Custom ${label.toLowerCase()}</span><input type="color" id="custom-${act}" value="${cur}"></label></div>`;
+  return `<h3>Skin tone</h3>${sw(SKIN, S.skin, 'skin', 'Skin tone')}
+    <h3>Hair colour</h3>${sw(HAIR, S.hair, 'hair', 'Hair colour')}
+    <h3>Hair style</h3><div class="chips" role="group" aria-label="Hair style">${HAIR_STYLES.map(([k, l]) => `<button class="chip ${S.hairStyle === k ? 'on' : ''}" aria-pressed="${S.hairStyle === k}" data-act="hairstyle" data-v="${k}">${l}</button>`).join('')}</div>
+    <h3>Body type</h3><div class="chips" role="group" aria-label="Body type">${Object.keys(BODY_TYPES).map((k) => `<button class="chip ${S.shape && S.shapeName === k ? 'on' : ''}" aria-pressed="${!!S.shape && S.shapeName === k}" data-act="bodytype" data-v="${k}">${k}</button>`).join('')}</div>
+    <h3>Fine-tune</h3>${SHAPE_SLIDERS.map(([k, l, a, b]) => `<label class="f" for="sh-${k}">${l}</label><input type="range" id="sh-${k}" data-shape="${k}" min="${a}" max="${b}" step="0.01" value="${shape[k]}">`).join('')}
+    <button class="ghost" data-act="resetlook" style="margin-top:12px">Reset appearance</button>`;
+}
+
 function drawerHTML(worn, fit) {
   if (S.drawer === 'looks') return `<div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Name this look (optional)" class="grow">
       <button class="ghost" data-act="savelook">💾 Save</button></div>
       <button class="primary wide" data-act="wearToday">📅 I’m wearing this today</button>
       ${S.outfits.length ? `<h3>Saved looks</h3><div class="chips">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}${o.occasion ? ' · ' + esc(o.occasion) : ''}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : '<p class="muted">Saved looks show up here.</p>'}`;
+  if (S.drawer === 'look') return customizeHTML();
   if (S.drawer === 'ai') return aiPanel();
   if (S.drawer === 'me') return `<div class="row" role="group" aria-label="Model">
         <button class="chip ${usingPhoto() ? '' : 'on'}" aria-pressed="${!usingPhoto()}" data-act="display" data-v="mannequin" ${S.profile ? '' : 'disabled'}>${S.profile ? 'Mannequin shaped like me' : 'Default mannequin'}</button>
         <button class="chip ${usingPhoto() ? 'on' : ''}" aria-pressed="${usingPhoto()}" data-act="display" data-v="photo" ${S.profile?.photo ? '' : 'disabled'}>My photo</button></div>
       ${stage3d.usable && !usingPhoto() ? `<label class="row" style="margin-top:12px"><input type="checkbox" id="flat" ${store.get('flat', '') === '1' ? 'checked' : ''}> Flat 2D view (lighter on battery)</label>` : ''}
-      <button class="primary wide" data-act="setup">${S.profile ? 'Edit my model' : '✨ Make it look like me'}</button>
-      ${usingPhoto() ? '' : `<div class="row" style="justify-content:space-between;margin-top:12px">
-        <div class="swatches" role="group" aria-label="Skin tone">${SKIN.map((c, n) => `<button class="sw ${c === S.skin ? 'on' : ''}" aria-pressed="${c === S.skin}" data-act="skin" data-v="${c}" style="background:${c}" aria-label="Skin tone ${n + 1}"></button>`).join('')}</div>
-        <div class="swatches" role="group" aria-label="Hair colour">${HAIR.map((c, n) => `<button class="sw ${c === S.hair ? 'on' : ''}" aria-pressed="${c === S.hair}" data-act="hair" data-v="${c}" style="background:${c}" aria-label="Hair colour ${n + 1}"></button>`).join('')}</div></div>`}`;
+      <button class="primary wide" data-act="setup">${S.profile ? 'Edit my model' : '✨ Make it look like me'}</button>`;
   return Object.keys(worn).length
     ? `<div class="chips">${SLOTS.filter((s) => worn[s]).map((s) => `<button class="chip ${fit?.id === worn[s].id ? 'on' : ''}" aria-pressed="${fit?.id === worn[s].id}" data-act="fit" data-id="${worn[s].id}">${SLOT_LABEL[s]}: ${esc(worn[s].name)}</button>`).join('')}</div>
       ${fit ? `<p class="muted">Fine-tune “${esc(fit.name)}”</p>${[['scale', 'Size', 0.5, 1.8, 0.02], ['dx', 'Left / right', -60, 60, 1], ['dy', 'Up / down', -80, 80, 1]].map(([k, l, a, b, st]) => `<label class="f" for="adj-${k}">${l}</label><input type="range" id="adj-${k}" data-adj="${k}" min="${a}" max="${b}" step="${st}" value="${fit.adj[k]}">`).join('')}
@@ -631,6 +649,9 @@ document.addEventListener('click', async (e) => {
     case 'tab': S.tab = v; return renderTryon();
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; return renderTryon();
     case 'turn': return stage3d.turn(+v);
+    case 'hairstyle': S.hairStyle = v; store.set('hairstyle', v); return renderTryon();
+    case 'bodytype': await setShape({ ...BODY_TYPES[v] }, v); return renderTryon();
+    case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; ['skin', 'hair', 'hairstyle', 'shape', 'shapename'].forEach((k) => store.set(k, '')); return renderTryon();
     case 'mood': S.mood = S.mood === v ? '' : v; return renderTryon();
     case 'drawer': S.drawer = v; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
@@ -678,7 +699,16 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-document.addEventListener('change', (e) => { if (e.target.id === 'flat') { store.set('flat', e.target.checked ? '1' : ''); renderTryon(); } });
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.id === 'custom-skin' || t.id === 'custom-hair') { const k = t.id.slice(7); S[k] = t.value; store.set(k, t.value); mountStage(); }
+  if (t.dataset?.shape) { // live: reshape the model while dragging, save when released
+    S.shape = { ...(S.shape || BODY_TYPES.Average), [t.dataset.shape]: +t.value }; S.shapeName = 'Custom';
+    store.set('shape', JSON.stringify(S.shape)); store.set('shapename', 'Custom'); mountStage();
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'custom-skin' || e.target.id === 'custom-hair' || e.target.dataset?.shape) renderTryon(); if (e.target.id === 'flat') { store.set('flat', e.target.checked ? '1' : ''); renderTryon(); } });
 
 document.addEventListener('paste', (e) => {
   if (S.view !== 'inspo') return;

@@ -5,7 +5,7 @@ import { figureSVG, place, viewBox } from './body.js';
 /**
  * @param {{body:object, photoUrl?:string, skin:string, hair:string, items:Record<string,object>, urls:Map, cls?:string, label?:string}} o
  */
-export function mannequinSVG({ body, photoUrl, skin, hair, items, urls, cls = '', label = '' }) {
+export function mannequinSVG({ body, photoUrl, skin, hair, hairStyle = 'long', items, urls, cls = '', label = '' }) {
   const vb = viewBox(body, !!photoUrl);
   const k = body.H / 640; // slider offsets are expressed in 1/640ths of body height
   const layers = Z.map((slot) => {
@@ -20,7 +20,7 @@ export function mannequinSVG({ body, photoUrl, skin, hair, items, urls, cls = ''
   }).join('');
   const base = photoUrl
     ? `<image href="${photoUrl}" width="${body.W}" height="${body.H}" preserveAspectRatio="none"/>`
-    : figureSVG(body, skin, hair);
+    : figureSVG(body, skin, hair, hairStyle);
   const names = Z.map((s) => items[s]?.name).filter(Boolean);
   const desc = label || (names.length ? `Model wearing ${names.join(', ')}` : 'Model with no clothes selected');
   return `<svg class="mannequin ${cls}" viewBox="${vb.map((n) => Math.round(n * 10) / 10).join(' ')}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}">${base}${layers}</svg>`;

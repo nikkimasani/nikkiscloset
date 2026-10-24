@@ -101,8 +101,8 @@ function limb(a, b, r1, r2, mat) {
   return g;
 }
 
-function buildBody(body, skin, hair) {
-  const { pts: p } = body, m = measures(body), { sw, hw, T, L, headH } = m;
+function buildBody(body, skin, hair, style = 'long') {
+  const { pts: p } = body, m = measures(body), { sw, hw, T, L, headH } = m, bf = body.build || 1;
   const gy = Math.max(p.anL[1], p.anR[1]) + 0.04 * L, cx = m.sm[0];
   const V = (x, y, z = 0) => new THREE.Vector3(x - cx, gy - y, z);
   const skinM = new THREE.MeshStandardMaterial({ color: skin, roughness: .75, metalness: 0 });
@@ -111,7 +111,7 @@ function buildBody(body, skin, hair) {
 
   // torso: shoulders -> chest -> waist -> hips -> crotch (elliptical sections)
   const shY = m.sm[1], hipY = m.hm[1], waistY = hipY - 0.3 * T;
-  const sec = (y, a, d) => ({ y: gy - y, a, d });
+  const sec = (y, a, d) => ({ y: gy - y, a: a * bf, d: d * bf });
   g.add(new THREE.Mesh(loft([
     sec(shY - 0.07 * T, 0.16 * sw, 0.12 * sw), sec(shY + 0.0 * T, 0.5 * sw, 0.15 * sw), sec(shY + 0.22 * T, 0.45 * sw, 0.19 * sw),
     sec(waistY, 0.33 * sw, 0.15 * sw), sec(hipY - 0.05 * T, 0.43 * sw, 0.19 * sw), sec(hipY + 0.1 * T, 0.46 * sw, 0.2 * sw), sec(hipY + 0.2 * T, 0.38 * sw, 0.17 * sw),
@@ -123,29 +123,38 @@ function buildBody(body, skin, hair) {
   neck.position.set(hc.x, hc.y - headH * 0.55, 0); g.add(neck);
   const head = new THREE.Mesh(new THREE.SphereGeometry(headH / 2, 32, 24), skinM);
   head.scale.set(0.8, 1.04, 0.86); head.position.copy(hc); g.add(head);
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(headH / 2, 36, 20, 0, Math.PI * 2, 0, Math.PI * 0.56), hairM);
-  cap.scale.set(0.84, 1.1, 0.92); cap.position.set(hc.x, hc.y + headH * 0.02, -headH * 0.02); cap.rotation.x = 0.32; g.add(cap);
-  const hairBack = new THREE.Mesh(new THREE.SphereGeometry(headH / 2, 32, 24), hairM);
-  hairBack.scale.set(0.82, 1.04, 0.8); hairBack.position.set(hc.x, hc.y, -headH * 0.14); g.add(hairBack);
-  const hairLong = new THREE.Mesh(new THREE.CylinderGeometry(headH * 0.36, headH * 0.3, headH * 1.1, 24, 1, true), hairM);
-  hairLong.position.set(hc.x, hc.y - headH * 0.5, -headH * 0.2); hairLong.scale.z = 0.7; g.add(hairLong);
-  const eyeM = new THREE.MeshBasicMaterial({ color: 0x2b1d17 });
-  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.028, 10, 8), eyeM); e.position.set(hc.x + s * headH * 0.15, hc.y - headH * 0.02, headH * 0.42); g.add(e); }
-  const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: 0xb5584f }));
-  mouth.scale.set(2.2, .7, .6); mouth.position.set(hc.x, hc.y - headH * 0.22, headH * 0.42); g.add(mouth);
+  // hair: a cap over the crown + style-specific back/top pieces
+  const sph = (r, sx, sy, sz, x, y, z) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), hairM); o.scale.set(sx, sy, sz); o.position.set(x, y, z); g.add(o); return o; };
+  const capScale = style === 'curly' ? 1.18 : 1;
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(headH / 2, 36, 20, 0, Math.PI * 2, 0, Math.PI * (style === 'pixie' ? 0.45 : 0.48)), hairM);
+  cap.scale.set(0.84 * capScale, 1.1 * capScale, 0.92); cap.position.set(hc.x, hc.y + headH * 0.02, -headH * 0.02); cap.rotation.x = 0.12; g.add(cap);
+  if (style !== 'pixie') sph(headH / 2, 0.77, 1.0, 0.78, hc.x, hc.y + headH * 0.03, -headH * 0.17);
+  const tube = (rTop, rBot, len, x, y, z, sz = 0.7) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, len, 24, 1, true), hairM); o.position.set(x, y, z); o.scale.z = sz; g.add(o); return o; };
+  if (style === 'long') tube(headH * 0.36, headH * 0.3, headH * 1.1, hc.x, hc.y - headH * 0.5, -headH * 0.2);
+  if (style === 'bob') tube(headH * 0.37, headH * 0.4, headH * 0.55, hc.x, hc.y - headH * 0.28, -headH * 0.12, 0.85);
+  if (style === 'bun') sph(headH * 0.2, 1, 1, 1, hc.x, hc.y + headH * 0.58, -headH * 0.1);
+  if (style === 'pony') { const t = tube(headH * 0.12, headH * 0.04, headH * 1.1, hc.x, hc.y - headH * 0.35, -headH * 0.55, 1); t.rotation.x = -0.25; }
+  if (style === 'curly') for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; sph(headH * 0.2, 1, 1, 1, hc.x + Math.cos(a) * headH * 0.4, hc.y + Math.sin(a) * headH * 0.42 + headH * 0.05, -headH * 0.12); }
+  const white = new THREE.MeshBasicMaterial({ color: 0xffffff }), pupil = new THREE.MeshBasicMaterial({ color: 0x2b1d17 });
+  for (const sd of [-1, 1]) {
+    const w = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.05, 14, 10), white); w.scale.set(1.25, 0.85, 0.5); w.position.set(hc.x + sd * headH * 0.15, hc.y - headH * 0.08, headH * 0.4); g.add(w);
+    const e = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.028, 12, 8), pupil); e.position.set(hc.x + sd * headH * 0.15, hc.y - headH * 0.08, headH * 0.43); g.add(e);
+  }
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: 0xc4505f }));
+  mouth.scale.set(2.2, .7, .6); mouth.position.set(hc.x, hc.y - headH * 0.27, headH * 0.42); g.add(mouth);
 
   // arms + hands
   for (const [s, w, side] of [[p.shL, p.wrL, -1], [p.shR, p.wrR, 1]]) {
     const sh = V(s[0] - side * 0.02 * sw, s[1] + 0.05 * T), wr = V(w[0], w[1]);
     const el = V((s[0] + w[0]) / 2 + side * sw * 0.07, (s[1] + w[1]) / 2);
-    g.add(limb(sh, el, 0.125 * sw, 0.1 * sw, skinM), limb(el, wr, 0.1 * sw, 0.07 * sw, skinM));
+    g.add(limb(sh, el, 0.125 * sw * bf, 0.1 * sw * bf, skinM), limb(el, wr, 0.1 * sw * bf, 0.07 * sw * bf, skinM));
     const hand = new THREE.Mesh(new THREE.SphereGeometry(0.085 * sw, 14, 10), skinM);
     hand.scale.set(0.8, 1.35, 0.6); hand.position.set(wr.x, wr.y - 0.09 * sw, 0); g.add(hand);
   }
   // legs + feet
   for (const [h, k, a] of [[p.hipL, p.knL, p.anL], [p.hipR, p.knR, p.anR]]) {
     const hp = V(h[0], h[1] + 0.04 * T), kn = V(k[0], k[1]), an = V(a[0], a[1]);
-    g.add(limb(hp, kn, 0.25 * sw, 0.155 * sw, skinM), limb(kn, an, 0.155 * sw, 0.09 * sw, skinM));
+    g.add(limb(hp, kn, 0.25 * sw * bf, 0.155 * sw * bf, skinM), limb(kn, an, 0.155 * sw * bf, 0.09 * sw * bf, skinM));
     const foot = new THREE.Mesh(new THREE.SphereGeometry(0.1 * sw, 14, 10), skinM);
     foot.scale.set(0.85, 0.5, 2.1); foot.position.set(an.x, an.y - 0.02 * L, 0.1 * sw); g.add(foot);
   }
@@ -205,7 +214,7 @@ function buildGarments() {
     const gcy = bcy + a.dy * k + (iy + dh / 2 - bcy) * a.scale;
     const W = dw * a.scale, H = dh * a.scale;
     const flat = FLAT.has(it.type);
-    const geo = shell({ cx: gcx - cx, top: gy - (gcy - H / 2), h: H, w: W, sw: m.sw, z: it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.06 * m.sw : 0 }, DEPTH[it.type] || [.235], flat);
+    const geo = shell({ cx: gcx - cx, top: gy - (gcy - H / 2), h: H, w: W, sw: m.sw * (body.build || 1), z: it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.06 * m.sw : 0 }, DEPTH[it.type] || [.235], flat);
     const mat = new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, side: flat ? THREE.DoubleSide : THREE.FrontSide });
     const mesh = new THREE.Mesh(geo, mat);
     if (box.rot) mesh.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
@@ -226,13 +235,13 @@ export const stage3d = {
     resize();
   },
 
-  setModel({ body, skin, hair }) {
-    const s = ensure(), key = JSON.stringify([body.W, body.H, body.pts, skin, hair]);
+  setModel({ body, skin, hair, hairStyle = 'long' }) {
+    const s = ensure(), key = JSON.stringify([body.W, body.H, body.pts, body.build, skin, hair, hairStyle]);
     if (key === s.bodyKey) return;
     s.bodyKey = key;
     s.figure.children.slice().forEach((c) => { s.figure.remove(c); dispose(c); });
     s.shells = [];
-    const built = buildBody(body, skin, hair);
+    const built = buildBody(body, skin, hair, hairStyle);
     s.figure.add(built.group); s.ctx = built.ctx;
     if (s.shadow) { s.scene.remove(s.shadow); s.shadow.geometry.dispose(); s.shadow.material.dispose(); }
     const c = document.createElement('canvas'); c.width = c.height = 128;

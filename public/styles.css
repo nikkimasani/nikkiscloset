@@ -203,3 +203,10 @@ main { overflow-x: clip; }
 .turnbar { position: absolute; left: 10px; bottom: 10px; z-index: 4; display: flex; gap: 6px; padding: 5px; border-radius: 99px; background: #07203a; border: 1px solid #5ad1ff88; }
 .turnbar button { min-width: 44px; min-height: 40px; border: 0; border-radius: 99px; background: #ffffff1c; color: var(--ink); font-weight: 700; padding: 0 12px; }
 .turnbar button:active { background: var(--accent); color: var(--accent-ink); }
+
+/* customize drawer */
+.swatches.wrap { flex-wrap: wrap; }
+.sw.custom { position: relative; display: inline-grid; place-items: center; background: conic-gradient(#f66, #fc6, #6f9, #6cf, #96f, #f6c, #f66); overflow: hidden; cursor: pointer; }
+.sw.custom input { position: absolute; inset: -6px; width: 44px; height: 44px; opacity: 0; cursor: pointer; padding: 0; min-height: 0; }
+.sw.custom:focus-within { outline: 3px solid #ffd24a; }
+.drawer h3:first-child { margin-top: 4px; }

@@ -265,6 +265,22 @@ try {
     const bad3 = r3.violations.filter((v) => v.impact !== 'minor');
     ok(bad3.length === 0, `axe (3D dress-up): ${bad3.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
     await p3.screenshot({ path: join(out, '10-3d.png') });
+    // customization
+    await p3.click('[data-act=drawer][data-v=look]');
+    await p3.click('[data-act=hairstyle][data-v=pony]'); await p3.click('[data-act=hair][data-v="#e8639a"]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
+    await p3.click('[data-act=bodytype][data-v="Plus size"]'); await p3.waitForTimeout(500);
+    const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin'), shape: JSON.parse(localStorage.getItem('shape') || 'null') }));
+    ok(saved.style === 'pony' && saved.hair === '#e8639a' && saved.skin === '#8a5636' && saved.shape?.build > 1.2, 'appearance choices are saved on the device');
+    await p3.locator('#sh-legs').fill('1.15');
+    ok((await p3.evaluate(() => JSON.parse(localStorage.getItem('shape')))).legs === 1.15 && (await p3.evaluate(() => localStorage.getItem('shapename'))) === 'Custom', 'sliders fine-tune the body (preset becomes Custom)');
+    const filled2 = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
+    ok(filled2 > 0.04 && filled2 < 0.6, `customized figure still renders in frame (${(filled2 * 100).toFixed(1)}% of canvas)`);
+    await p3.evaluate(axeSource);
+    const r4 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    const bad4 = r4.violations.filter((v) => v.impact !== 'minor');
+    ok(bad4.length === 0, `axe (customize tab): ${bad4.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await p3.click('[data-act=resetlook]');
+    ok((await p3.evaluate(() => localStorage.getItem('shape'))) === '', 'Reset appearance clears customizations');
     await p3.click('[data-act=drawer][data-v=me]'); await p3.check('#flat');
     ok(await p3.locator('#stage svg').count() === 1, 'Flat 2D toggle switches back to the SVG mannequin');
   }

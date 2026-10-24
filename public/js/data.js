@@ -29,8 +29,20 @@ export const SLOT_LABEL = { dress: 'Dress', top: 'Top', bottom: 'Bottom', outer:
 // Paint order, back to front.
 export const Z = ['shoes', 'bottom', 'dress', 'top', 'outer', 'bag', 'acc'];
 
-export const SKIN = ['#f6d9c4', '#eec3a0', '#d9a074', '#b97a50', '#8a5636', '#5d3a25'];
-export const HAIR = ['#1f1612', '#4a2e1e', '#8a5a2b', '#d6b370', '#a8321f', '#3a3a46'];
+export const SKIN = ['#fbe3d3', '#f6d9c4', '#eec3a0', '#e0ac82', '#d9a074', '#c68a5e', '#b97a50', '#8a5636', '#6d4228', '#4a2c1a'];
+export const HAIR = ['#1f1612', '#4a2e1e', '#7a4a26', '#a8321f', '#d6b370', '#efe3c0', '#3a3a46', '#c9c9d4', '#e8639a', '#7c4dff', '#2fa8e0', '#22b573'];
+export const HAIR_STYLES = [['long', '💁‍♀️ Long'], ['bob', '👩 Bob'], ['pixie', '✂️ Pixie'], ['bun', '🎀 Bun'], ['pony', '🐴 Ponytail'], ['curly', '🌀 Curly']];
+// Body types = presets for the five shape sliders (1 = default figure)
+export const BODY_TYPES = {
+  Petite: { shoulders: .95, hips: .98, torso: .92, legs: .86, build: .95 },
+  Average: { shoulders: 1, hips: 1, torso: 1, legs: 1, build: 1 },
+  Tall: { shoulders: 1, hips: 1, torso: 1.05, legs: 1.14, build: 1 },
+  Athletic: { shoulders: 1.12, hips: .96, torso: 1, legs: 1.04, build: 1.06 },
+  Pear: { shoulders: .94, hips: 1.18, torso: 1, legs: 1, build: 1.05 },
+  Hourglass: { shoulders: 1.04, hips: 1.14, torso: .98, legs: 1, build: 1.04 },
+  Curvy: { shoulders: 1.02, hips: 1.22, torso: .98, legs: .98, build: 1.16 },
+  'Plus size': { shoulders: 1.06, hips: 1.3, torso: 1, legs: .98, build: 1.3 },
+};
 
 export const slotOf = (type) => TYPES[type].slot;
 
