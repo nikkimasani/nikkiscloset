@@ -5,6 +5,11 @@ export const OCCASIONS = [
   'Workout', 'Travel', 'Formal / Event', 'Lounge',
 ];
 
+export const OCCASION_EMOJI = {
+  'Work / Office': '💼', 'Date Night': '🌹', GNO: '🥂', 'Casual Outing': '🛍️', Brunch: '🥐',
+  Dinner: '🍽️', Workout: '🏋️', Travel: '✈️', 'Formal / Event': '✨', Lounge: '🛋️',
+};
+
 export const TYPES = {
   tops:        { label: 'Tops',        slot: 'top',    emoji: '👚' },
   tanks:       { label: 'Tank Tops',   slot: 'top',    emoji: '🎽' },

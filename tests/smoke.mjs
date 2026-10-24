@@ -69,12 +69,14 @@ try {
   await page.click('#occs [data-o="Date Night"]');
   await page.fill('#name', 'Red party dress');
   await page.click('#save');
+  await page.click('[data-view=closet]');
   await page.waitForSelector('.piece');
   ok((await page.locator('.piece').count()) === 1, 'uploaded piece appears in closet');
   const colorName = await page.locator('.piece .meta').innerText();
   ok(/red/i.test(colorName), `colour auto-detected (${colorName.trim()})`);
 
   await page.reload();
+  await page.click('[data-view=closet]');
   ok((await page.locator('.piece').count()) === 1, 'piece persists after reload (IndexedDB)');
 
   await page.click('[data-view=closet]');
@@ -86,11 +88,12 @@ try {
   await page.screenshot({ path: join(out, '2-tryon.png') });
 
   // Log + planner
+  await page.click('[data-act=drawer][data-v=looks]');
   await page.fill('#lookname', 'Test look');
-  await page.click('[data-act=savelook]');
+  await page.click('.drawer [data-act=savelook]');
   await page.waitForSelector('[data-act=loadlook]');
   ok(await page.locator('[data-act=loadlook]').count() === 1, 'look saved');
-  await page.click('[data-act=wearToday]');
+  await page.click('.tools [data-act=wearToday]');
   await page.waitForSelector('#toast.show');
   await page.click('[data-view=planner]');
   ok(await page.locator('.day .mannequin').count() === 1, 'OOTD appears on calendar');
@@ -123,11 +126,13 @@ try {
   const p2 = await ctx.newPage(); p2.on('pageerror', (e) => errors.push(e.message));
   await p2.goto(`http://localhost:${PORT}/`);
   await p2.click('.empty [data-act=samples]');
+  await p2.waitForFunction(() => window.__closet?.items.length === 10);
+  await p2.click('[data-view=closet]');
   await p2.waitForSelector('.piece');
   ok((await p2.locator('.piece').count()) === 10, 'sample closet loads 10 pieces');
   await p2.screenshot({ path: join(out, '5-closet.png'), fullPage: true });
   await p2.click('[data-view=tryon]');
-  await p2.selectOption('#styleocc', 'Date Night');
+  await p2.click('[data-act=mood][data-v="Date Night"]');
   await p2.click('[data-act=styleme]');
   ok(await p2.locator('#stage image').count() >= 2, 'Style me builds an outfit');
   await p2.screenshot({ path: join(out, '6-styleme.png') });
@@ -163,6 +168,7 @@ try {
 
   // UI: proportions by hand
   const vb0 = await p2.getAttribute('#stage svg', 'viewBox');
+  await p2.click('[data-act=drawer][data-v=me]');
   await p2.click('[data-act=setup]');
   ok(await p2.locator('[role=dialog][aria-modal=true]').isVisible(), 'model dialog opens');
   ok(await p2.evaluate(() => document.querySelector('main').inert), 'background inert while dialog is open');
@@ -184,6 +190,7 @@ try {
     return c.toDataURL('image/jpeg', 0.9);
   });
   const figFile = join(out, 'fig.jpg'); writeFileSync(figFile, Buffer.from(fig.split(',')[1], 'base64'));
+  await p2.click('[data-act=drawer][data-v=me]');
   await p2.click('[data-act=setup]');
   await p2.setInputFiles('#mfile', figFile);
   await p2.waitForSelector('#cal .handle', { timeout: 60000 });
@@ -214,6 +221,7 @@ try {
 
   p2.on('dialog', (dlg) => dlg.accept());
   const steps = await p2.locator('#stage g[data-slot]').count();
+  await p2.click('[data-act=drawer][data-v=ai]');
   await p2.fill('#aipass', 'letmein');
   await p2.click('[data-act=airender]');
   await p2.waitForSelector('#stage svg > image[href^="data:image/png"]', { timeout: 30000 });
