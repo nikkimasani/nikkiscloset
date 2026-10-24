@@ -195,3 +195,11 @@ fieldset legend { padding: 0; }
 /* grid/flex children must be allowed to shrink, otherwise a scrolling row stretches the whole page */
 .dress > *, .planner > *, .inspo > *, .dress-left, .dress-right, .tray, .drawer { min-width: 0; }
 main { overflow-x: clip; }
+
+/* 3D stage */
+.room.is3d .stage { inset: 3% 0 4% 0; }
+.room.is3d .stage canvas { width: 100%; height: 100%; display: block; cursor: grab; }
+.room.is3d .stage canvas:active { cursor: grabbing; }
+.turnbar { position: absolute; left: 10px; bottom: 10px; z-index: 4; display: flex; gap: 6px; padding: 5px; border-radius: 99px; background: #07203a; border: 1px solid #5ad1ff88; }
+.turnbar button { min-width: 44px; min-height: 40px; border: 0; border-radius: 99px; background: #ffffff1c; color: var(--ink); font-weight: 700; padding: 0 12px; }
+.turnbar button:active { background: var(--accent); color: var(--accent-ink); }

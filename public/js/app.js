@@ -8,6 +8,7 @@ import { SAMPLES, sampleBlob } from './sample.js';
 import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js';
 import { detectPose } from './pose.js';
 import { outfitMeters } from './meters.js';
+import { stage3d } from './stage3d.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor } from './aitryon.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -401,10 +402,27 @@ async function runAIRender() {
 }
 
 /* ───────────────────────── try on ───────────────────────── */
+// 3D when the device supports WebGL (and the user hasn't chosen flat); the 2D SVG mannequin is the fallback.
+const use3D = () => !usingPhoto() && stage3d.usable && store.get('flat', '') !== '1';
 function stageHTML() {
-  return mannequin(S.outfit);
+  return use3D() ? '' : mannequin(S.outfit);
 }
-function refreshStage() { const s = $('#stage'); if (s) s.innerHTML = stageHTML(); }
+function outfitLabel() {
+  const names = Object.values(outfitItems(S.outfit)).map((i) => i.name);
+  return `3D model ${names.length ? 'wearing ' + names.join(', ') : 'with no clothes selected'}. Use the turn buttons to rotate.`;
+}
+function mountStage() {
+  const el = $('#stage'); if (!el) return;
+  if (!use3D()) { el.innerHTML = stageHTML(); return; }
+  stage3d.attach(el);
+  stage3d.setModel({ body: currentBody(), skin: S.skin, hair: S.hair });
+  stage3d.setOutfit(outfitItems(S.outfit), S.urls);
+  stage3d.setRole(); stage3d.setLabel(outfitLabel());
+}
+function refreshStage() {
+  const s = $('#stage'); if (!s) return;
+  if (use3D()) { stage3d.setOutfit(outfitItems(S.outfit), S.urls); stage3d.setLabel(outfitLabel()); } else s.innerHTML = stageHTML();
+}
 
 const DRAWERS = [['fit', '📏 Fit'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
 
@@ -423,6 +441,7 @@ function drawerHTML(worn, fit) {
   if (S.drawer === 'me') return `<div class="row" role="group" aria-label="Model">
         <button class="chip ${usingPhoto() ? '' : 'on'}" aria-pressed="${!usingPhoto()}" data-act="display" data-v="mannequin" ${S.profile ? '' : 'disabled'}>${S.profile ? 'Mannequin shaped like me' : 'Default mannequin'}</button>
         <button class="chip ${usingPhoto() ? 'on' : ''}" aria-pressed="${usingPhoto()}" data-act="display" data-v="photo" ${S.profile?.photo ? '' : 'disabled'}>My photo</button></div>
+      ${stage3d.usable && !usingPhoto() ? `<label class="row" style="margin-top:12px"><input type="checkbox" id="flat" ${store.get('flat', '') === '1' ? 'checked' : ''}> Flat 2D view (lighter on battery)</label>` : ''}
       <button class="primary wide" data-act="setup">${S.profile ? 'Edit my model' : '✨ Make it look like me'}</button>
       ${usingPhoto() ? '' : `<div class="row" style="justify-content:space-between;margin-top:12px">
         <div class="swatches" role="group" aria-label="Skin tone">${SKIN.map((c, n) => `<button class="sw ${c === S.skin ? 'on' : ''}" aria-pressed="${c === S.skin}" data-act="skin" data-v="${c}" style="background:${c}" aria-label="Skin tone ${n + 1}"></button>`).join('')}</div>
@@ -444,12 +463,13 @@ function renderTryon() {
   $('#main').innerHTML = `<h2 class="view-title sr-only">Dress up</h2>
   <div class="dress">
     <div class="dress-left">
-      <div class="room ${usingPhoto() ? 'photo' : ''}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
+      <div class="room ${usingPhoto() ? 'photo' : ''} ${use3D() ? 'is3d' : ''}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
         <div class="wall" aria-hidden="true"><div class="window"></div><div class="art"></div><div class="plant">🪴</div></div>
         <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
         ${metersHTML(worn)}
+        ${use3D() ? `<div class="turnbar" role="group" aria-label="Turn the model"><button data-act="turn" data-v="-1" aria-label="Turn left"><span aria-hidden="true">◀</span></button><button data-act="turn" data-v="0">Front</button><button data-act="turn" data-v="1" aria-label="Turn right"><span aria-hidden="true">▶</span></button></div>` : ''}
         <div class="tools" role="group" aria-label="Quick actions">
           <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
           <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
@@ -472,6 +492,7 @@ function renderTryon() {
       </section>
     </div></div>`;
   S.lastTab = S.tab;
+  mountStage();
   const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
   window.scrollTo(0, keepY);
   $('#main').querySelectorAll('[data-adj]').forEach((r) => {
@@ -609,6 +630,7 @@ document.addEventListener('click', async (e) => {
     case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; return go('tryon'); }
     case 'tab': S.tab = v; return renderTryon();
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; return renderTryon();
+    case 'turn': return stage3d.turn(+v);
     case 'mood': S.mood = S.mood === v ? '' : v; return renderTryon();
     case 'drawer': S.drawer = v; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
@@ -656,6 +678,8 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+document.addEventListener('change', (e) => { if (e.target.id === 'flat') { store.set('flat', e.target.checked ? '1' : ''); renderTryon(); } });
+
 document.addEventListener('paste', (e) => {
   if (S.view !== 'inspo') return;
   const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith('image/'));
@@ -668,4 +692,5 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#mod
   await load();
   render();
   window.__closet = S; // handy for debugging
+  window.__stage3d = stage3d;
 })();
