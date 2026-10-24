@@ -36,5 +36,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/tryon.js": {
+      "maxDuration": 30
+    }
+  }
 }

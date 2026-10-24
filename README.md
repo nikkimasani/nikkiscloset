@@ -19,10 +19,25 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **Inspo** – drop in a Pinterest screenshot/image (drag, upload, or paste). It extracts the palette, rebuilds the closest outfit from your closet with colour-match %, and tells you what you're missing ("look for a sage-green top").
 
 ## Deploy
-The app is static files in `public/` (no build step), so it deploys as-is. Both configs ship the same security headers (strict CSP; camera only for this site).
+The app is static files in `public/` plus one serverless function (no build step), so it deploys as-is. Both configs ship the same security headers (strict CSP; camera only for this site).
 - **Vercel:** `npx vercel --prod` (uses `vercel.json`, output dir `public`) — or import the GitHub repo in the dashboard.
 - **Cloudflare:** `npx wrangler deploy` (uses `wrangler.jsonc`, Workers static assets) — or connect the repo in Workers & Pages.
 Your closet lives in each visitor's browser, so deploying doesn't expose your photos.
+
+## Photoreal try-on (fal.ai)
+The quick preview is geometric layering. For real fabric drape, **Try On → Photoreal try-on** sends your photo and each garment (on white) to a fal.ai virtual try-on model (`fal-ai/fashn/tryon/v1.5`) through a small serverless function, chaining pieces one after another. Shoes, bags, accessories and jackets-over-a-top are layered on afterwards. About $0.075 per piece, billed to your fal account; the app shows the cost and asks before spending. Renders you log to the OOTD calendar keep their photo.
+
+Setup — the key lives **only** in server env vars, never in the repo or browser:
+```bash
+# local
+FAL_KEY=… APP_PASSCODE=pick-a-passphrase npm start
+# Vercel
+npx vercel env add FAL_KEY && npx vercel env add APP_PASSCODE
+# Cloudflare
+npx wrangler secret put FAL_KEY && npx wrangler secret put APP_PASSCODE
+```
+`APP_PASSCODE` is required (the function refuses to run without it) so strangers who find your URL can't spend your credits; enter it once in the app (remembered on that device). Code: `lib/tryon.js` (shared), `api/tryon.js` (Vercel), `worker/index.js` (Cloudflare).
+The fal request/response fields were written from fal's public docs and tested against a mock, not the live API — the first real render is the real test, and fal's own error text is shown if a field name is off.
 
 ## Accessibility
 Keyboard-operable throughout (including the body-point editor), labelled controls, `aria-pressed` state on filters, dialogs that trap focus and restore it on close, screen-reader text for outfits and calendar days, live-region announcements, visible focus, and reduced-motion support. Automated axe (WCAG 2.1 AA) checks run in `npm test`; a manual screen-reader pass is still worth doing.

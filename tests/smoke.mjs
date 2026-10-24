@@ -9,8 +9,25 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
 
-const PORT = 5199;
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT }, stdio: 'ignore' });
+const PORT = 5199, FAL = 5198;
+// Mock of fal's queue API so the whole AI try-on path runs offline (field names per fal's public docs).
+const falCalls = [];
+const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+const { createServer } = await import('node:http');
+const polls = {};
+const mock = createServer((req, res) => {
+  const base = `http://localhost:${FAL}`, send = (o, c = 200) => { res.writeHead(c, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
+  if (req.method === 'POST' && req.url === '/fal-ai/fashn/tryon/v1.5') {
+    let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
+      const body = JSON.parse(b); falCalls.push({ auth: req.headers.authorization, ...body });
+      const id = 'r' + falCalls.length; send({ request_id: id, status_url: `${base}/fal-ai/fashn/requests/${id}/status`, response_url: `${base}/fal-ai/fashn/requests/${id}` });
+    });
+  } else if (req.url.endsWith('/status')) { polls[req.url] = (polls[req.url] || 0) + 1; send({ status: polls[req.url] < 2 ? 'IN_PROGRESS' : 'COMPLETED' }); }
+  else if (req.url.startsWith('/fal-ai/fashn/requests/')) send({ images: [{ url: `${base}/media/out.png`, content_type: 'image/png' }] });
+  else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
+  else send({ detail: 'nope' }, 404);
+}).listen(FAL);
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch();
@@ -184,6 +201,30 @@ try {
   ok(await p2.locator('#stage g[data-slot]').count() >= 2, 'garments are layered on the photo');
   await p2.screenshot({ path: join(out, '8-photo-model.png') });
 
+
+  // ── AI try-on (fal.ai via serverless function; mocked here) ──
+  const api = (path, init) => p2.evaluate(async ([path, init]) => { const r = await fetch(path, init); return { status: r.status, body: await r.json().catch(() => null) }; }, [path, init]);
+  ok((await api('/api/tryon', { method: 'POST', body: '{}' })).status === 401, 'API rejects a missing passcode');
+  ok((await api('/api/tryon', { method: 'POST', headers: { 'x-app-passcode': 'wrong' }, body: '{}' })).status === 401, 'API rejects a wrong passcode');
+  ok((await api('/api/tryon', { method: 'POST', headers: { 'x-app-passcode': 'letmein' }, body: JSON.stringify({ person: 'http://evil', garment: 'x', category: 'tops' }) })).status === 400, 'API rejects non-image inputs');
+  const evil = await api(`/api/tryon?status=${encodeURIComponent('http://169.254.169.254/latest')}&response=${encodeURIComponent('http://localhost:5198/fal-ai/fashn/x')}`, { headers: { 'x-app-passcode': 'letmein' } });
+  ok(evil.status === 400, 'API will not fetch URLs outside fal (SSRF guard)');
+  const { handleTryOn } = await import('../lib/tryon.js');
+  ok((await handleTryOn(new Request('http://x/api/tryon'), {})).status === 503, 'API refuses to run unconfigured (fail closed)');
+
+  p2.on('dialog', (dlg) => dlg.accept());
+  const steps = await p2.locator('#stage g[data-slot]').count();
+  await p2.fill('#aipass', 'letmein');
+  await p2.click('[data-act=airender]');
+  await p2.waitForSelector('#stage svg > image[href^="data:image/png"]', { timeout: 30000 });
+  ok(falCalls.length >= 1 && falCalls.every((c) => c.auth === 'Key test-key'), `fal called with the server-side key (${falCalls.length} calls)`);
+  ok(falCalls.length < 2 || falCalls[1].model_image.startsWith('data:image/png'), 'multi-piece outfit chains each result into the next piece');
+  ok(falCalls.every((c) => c.garment_image.startsWith('data:image/jpeg') && ['tops', 'bottoms', 'one-pieces'].includes(c.category)), 'garments sent as white-background JPEGs with a valid category');
+  ok(await p2.locator('#stage svg > image').count() === 1, 'AI render replaces the photo as the base');
+  await p2.screenshot({ path: join(out, '9-ai-render.png') });
+  await p2.click('[data-act=aiclear]');
+  ok(await p2.locator('#stage svg > image:not([href^="data:image/png"])').count() === 1, 'can go back to the quick preview');
+
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
     await p2.evaluate(axeSource);
@@ -198,5 +239,5 @@ try {
 
 ok(errors.length === 0, `no console/page errors ${errors.join(' | ')}`);
 console.log('screenshots in', out);
-await browser.close(); server.kill();
+await browser.close(); server.kill(); mock.close();
 process.exit(failed ? 1 : 0);

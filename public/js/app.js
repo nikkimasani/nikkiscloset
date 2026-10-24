@@ -7,6 +7,7 @@ import { matchInspo, styleMe, colorScore } from './stylist.js';
 import { SAMPLES, sampleBlob } from './sample.js';
 import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js';
 import { detectPose } from './pose.js';
+import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor } from './aitryon.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,6 +24,7 @@ const S = {
   skin: store.get('skin', SKIN[1]), hair: store.get('hair', HAIR[1]),
   month: new Date(), date: iso(new Date()),
   inspo: null,                      // working inspo draft
+  ai: null, aiError: '', aiBusy: false, aiAbort: null, // fal.ai render of the current outfit
 };
 
 const itemById = (id) => S.items.find((i) => i.id === id);
@@ -71,7 +73,13 @@ function outfitItems(src) {
 }
 const currentBody = () => (S.profile ? { W: S.profile.W, H: S.profile.H, pts: S.profile.pts } : DEFAULT_BODY);
 const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
-const mannequin = (src, cls = '') => mannequinSVG({ body: currentBody(), photoUrl: usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, items: outfitItems(src), urls: S.urls, cls });
+const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
+function mannequin(src, cls = '') {
+  const items = outfitItems(src), done = aiFor(items); // AI result replaces the photo; only un-rendered pieces are layered on
+  const rest = done ? Object.fromEntries(Object.entries(items).filter(([slot]) => !done.includes(slot))) : items;
+  return mannequinSVG({ body: currentBody(), photoUrl: done ? S.ai.image : usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, items: rest, urls: S.urls, cls,
+    label: done ? `Your photo wearing ${Object.values(items).map((i) => i.name).join(', ')}` : '' });
+}
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
 /* ───────────────────────── router ───────────────────────── */
@@ -356,6 +364,41 @@ function openModelModal() {
   paint();
 }
 
+/* ───────────────────────── AI try-on (fal.ai) ───────────────────────── */
+function aiPanel() {
+  const steps = aiSteps(outfitItems(S.outfit)), cost = (steps.length * PRICE).toFixed(2);
+  const rendered = !!aiFor(outfitItems(S.outfit));
+  const why = !usingPhoto() ? 'Switch to “My photo” above (and set up your model) to use this.' : !steps.length ? 'Pick a top, bottom, dress or jacket first.' : '';
+  return `<div class="panel"><h3>Photoreal try-on <span class="muted">(AI · uses your fal.ai credits)</span></h3>
+    <p class="muted">Renders the real drape of your piece${steps.length > 1 ? 's' : ''} on your photo. Shoes, bags and accessories are layered on afterwards.${steps.length ? ` About <b>$${cost}</b> for ${steps.length} piece${steps.length > 1 ? 's' : ''}.` : ''}</p>
+    <label class="f" for="aipass">Passcode</label>
+    <input type="password" id="aipass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
+    <div class="row" style="margin-top:8px">
+      ${S.aiBusy ? '<button class="ghost" data-act="aicancel">Cancel</button>' : `<button class="primary" data-act="airender" ${why ? 'disabled' : ''}>${rendered ? 'Render again' : '✨ Render on my photo'}</button>`}
+      ${rendered && !S.aiBusy ? '<button class="ghost" data-act="aiclear">Back to quick preview</button>' : ''}
+    </div>
+    <div id="aistatus" class="muted" role="status" aria-live="polite">${why && !S.aiBusy ? esc(why) : ''}${S.aiBusy ? 'Working…' : ''}</div>
+    ${S.aiError ? `<div class="gap" role="alert">${esc(S.aiError)}</div>` : ''}</div>`;
+}
+
+async function runAIRender() {
+  const items = outfitItems(S.outfit), steps = aiSteps(items);
+  const pass = $('#aipass').value.trim();
+  if (!pass) return toast('Enter your passcode first');
+  store.set('aipass', pass);
+  if (!confirm(`Render ${steps.length} piece${steps.length > 1 ? 's' : ''} with fal.ai? That's about $${(steps.length * PRICE).toFixed(2)} of your credits.`)) return;
+  S.aiAbort = new AbortController(); S.aiBusy = true; S.aiError = ''; renderTryon();
+  try {
+    const prepared = await Promise.all(steps.map(async ([slot, it]) => ({ category: categoryFor(slot), garment: await garmentImage(it.cutout) })));
+    const image = await renderOutfit({
+      person: await personImage(S.profile.photo), steps: prepared, passcode: pass, signal: S.aiAbort.signal,
+      onProgress: (m) => { const el = $('#aistatus'); if (el) el.textContent = m; },
+    });
+    S.ai = { sig: aiSignature(steps), image }; toast('Rendered ✓');
+  } catch (e) { if (e.name !== 'AbortError') S.aiError = e.message; else toast('Cancelled'); }
+  S.aiBusy = false; S.aiAbort = null; if (S.view === 'tryon') renderTryon();
+}
+
 /* ───────────────────────── try on ───────────────────────── */
 function stageHTML() {
   return mannequin(S.outfit);
@@ -396,6 +439,7 @@ function renderTryon() {
           <button class="ghost" data-act="resetfit" data-id="${fit.id}" style="margin-top:6px">Reset</button></div>` : ''}
       </div>
 
+      ${aiPanel()}
       <div class="panel"><h3>Save or wear this look</h3>
         <div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Look name (optional)" class="grow">
         <select id="lookocc" aria-label="Occasion" style="width:auto"><option value="">Occasion</option>${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select></div>
@@ -414,6 +458,7 @@ async function logWear(date, occasion = '', note = '') {
   const ids = Object.values(S.outfit);
   if (!ids.length) return toast('Dress the mannequin first');
   const w = { id: uid(), date, itemIds: ids, occasion, note, createdAt: Date.now() };
+  if (aiFor(outfitItems(S.outfit))) { w.render = await (await fetch(S.ai.image)).blob(); url('render:' + w.id, w.render); }
   await put('wears', w); S.wears.push(w);
   toast(`Logged for ${date} ✓`);
 }
@@ -427,7 +472,7 @@ function renderPlanner() {
     const d = new Date(start); d.setDate(start.getDate() + n);
     const k = iso(d), ws = S.wears.filter((w) => w.date === k);
     const last = ws[ws.length - 1];
-    return `<button class="day ${d.getMonth() !== mo ? 'off' : ''} ${k === S.date ? 'sel' : ''} ${k === today ? 'today' : ''}" aria-pressed="${k === S.date}" aria-label="${d.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}${ws.length ? `, ${ws.length} outfit${ws.length > 1 ? 's' : ''} logged` : ''}${k === today ? ', today' : ''}" data-act="pickday" data-v="${k}"><b aria-hidden="true">${d.getDate()}</b>${last ? mannequin(last.itemIds, 'mini') : ''}</button>`;
+    return `<button class="day ${d.getMonth() !== mo ? 'off' : ''} ${k === S.date ? 'sel' : ''} ${k === today ? 'today' : ''}" aria-pressed="${k === S.date}" aria-label="${d.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}${ws.length ? `, ${ws.length} outfit${ws.length > 1 ? 's' : ''} logged` : ''}${k === today ? ', today' : ''}" data-act="pickday" data-v="${k}"><b aria-hidden="true">${d.getDate()}</b>${last ? (last.render ? `<img class="render" src="${url('render:' + last.id, last.render)}" alt="">` : mannequin(last.itemIds, 'mini')) : ''}</button>`;
   }).join('');
   const dayWears = S.wears.filter((w) => w.date === S.date);
   const counts = wearCounts();
@@ -439,7 +484,7 @@ function renderPlanner() {
     <div class="cal">${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => `<div class="dow" aria-hidden="true">${d}</div>`).join('')}${cells}</div></div>
     <div>
       <div class="panel" style="margin-top:0"><h3>${new Date(S.date + 'T12:00').toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
-        ${dayWears.map((w) => `<div class="logrow"><div class="thumbs">${w.itemIds.map(itemById).filter(Boolean).map((i) => `<img src="${url(i.id)}" alt="${esc(i.name)}" title="${esc(i.name)}">`).join('')}</div>
+        ${dayWears.map((w) => `<div class="logrow">${w.render ? `<img class="render-thumb" src="${url('render:' + w.id, w.render)}" alt="Photo of this outfit">` : ''}<div class="thumbs">${w.itemIds.map(itemById).filter(Boolean).map((i) => `<img src="${url(i.id)}" alt="${esc(i.name)}" title="${esc(i.name)}">`).join('')}</div>
           <div class="grow muted">${esc(w.occasion || '')}${w.note ? ' — ' + esc(w.note) : ''}</div>
           <button class="ghost danger" data-act="delwear" data-id="${w.id}" aria-label="Delete this entry"><span aria-hidden="true">×</span></button></div>`).join('') || '<p class="muted">Nothing logged for this day.</p>'}
         <h3 style="margin-top:14px">Log an outfit</h3>
@@ -528,6 +573,9 @@ document.addEventListener('click', async (e) => {
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
     case 'resetfit': { const it = itemById(id); it.adj = { scale: 1, dx: 0, dy: 0 }; await put('items', it); return renderTryon(); }
+    case 'airender': return runAIRender();
+    case 'aicancel': return S.aiAbort?.abort();
+    case 'aiclear': S.ai = null; return renderTryon();
     case 'display': S.profile.display = v; await put('profile', S.profile); return renderTryon();
     case 'setup': return openModelModal();
     case 'skin': S.skin = v; store.set('skin', v); return renderTryon();
