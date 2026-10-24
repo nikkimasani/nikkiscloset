@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/smoke.mjs"
+    "test": "node tests/smoke.mjs",
+    "deploy:cloudflare": "npx wrangler deploy",
+    "deploy:vercel": "npx vercel --prod"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "axe-core": "4.10.2"
+  }
 }

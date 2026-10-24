@@ -1,0 +1,583 @@
+import { all, put, del, uid } from './db.js';
+import { OCCASIONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, slotOf, wear } from './data.js';
+import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
+import { palette, colorName, hexDist } from './color.js';
+import { mannequinSVG } from './mannequin.js';
+import { matchInspo, styleMe, colorScore } from './stylist.js';
+import { SAMPLES, sampleBlob } from './sample.js';
+import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js';
+import { detectPose } from './pose.js';
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const store = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } } };
+
+const S = {
+  items: [], outfits: [], wears: [], inspos: [], profile: null,
+  urls: new Map(),
+  view: 'closet',
+  filter: { type: 'all', occ: 'all', q: '' },
+  outfit: {},                       // slot -> item id (the outfit on the mannequin)
+  tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
+  skin: store.get('skin', SKIN[1]), hair: store.get('hair', HAIR[1]),
+  month: new Date(), date: iso(new Date()),
+  inspo: null,                      // working inspo draft
+};
+
+const itemById = (id) => S.items.find((i) => i.id === id);
+const url = (key, blob) => { if (!S.urls.has(key) && blob) S.urls.set(key, URL.createObjectURL(blob)); return S.urls.get(key); };
+const wearCounts = () => S.wears.reduce((m, w) => (w.itemIds.forEach((id) => (m[id] = (m[id] || 0) + 1)), m), {});
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+let lastFocus;
+function openModal() {
+  lastFocus = document.activeElement;
+  $('#modal').hidden = false;
+  document.querySelectorAll('header, main').forEach((e) => (e.inert = true));
+}
+function closeModal() {
+  $('#modal').hidden = true;
+  document.querySelectorAll('header, main').forEach((e) => (e.inert = false));
+  lastFocus?.isConnected && lastFocus.focus();
+}
+/** Paint a dialog sheet, keeping keyboard focus on the same control across re-renders. */
+function paintSheet(html, title) {
+  const m = $('#modal'), prev = document.activeElement?.id;
+  m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mtitle"><h2 id="mtitle" tabindex="-1">${title}</h2>${html}</div>`;
+  (prev && m.querySelector('#' + CSS.escape(prev)) || $('#mtitle', m)).focus();
+}
+
+async function load() {
+  let profiles;
+  [S.items, S.outfits, S.wears, S.inspos, profiles] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile'].map(all));
+  S.profile = profiles[0] || null;
+  if (S.profile?.photo) url('profile', S.profile.photo);
+  S.items.sort((a, b) => a.createdAt - b.createdAt);
+  S.items.forEach((i) => url(i.id, i.cutout));
+  S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
+}
+
+/** slot -> item objects for a {slot: id} map or an id list. */
+function outfitItems(src) {
+  const ids = Array.isArray(src) ? src : Object.values(src);
+  const out = {};
+  ids.map(itemById).filter(Boolean).forEach((i) => (out[slotOf(i.type)] = i));
+  return out;
+}
+const currentBody = () => (S.profile ? { W: S.profile.W, H: S.profile.H, pts: S.profile.pts } : DEFAULT_BODY);
+const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
+const mannequin = (src, cls = '') => mannequinSVG({ body: currentBody(), photoUrl: usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, items: outfitItems(src), urls: S.urls, cls });
+const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
+
+/* ───────────────────────── router ───────────────────────── */
+function go(view) {
+  S.view = view;
+  document.querySelectorAll('#nav button').forEach((b) => {
+    const on = b.dataset.view === view; b.classList.toggle('on', on);
+    on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current');
+  });
+  render();
+  const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+}
+function render() { ({ closet: renderCloset, tryon: renderTryon, planner: renderPlanner, inspo: renderInspo })[S.view](); }
+
+/* ───────────────────────── closet ───────────────────────── */
+function renderCloset() {
+  const { type, occ, q } = S.filter;
+  const counts = Object.fromEntries(Object.keys(TYPES).map((t) => [t, S.items.filter((i) => i.type === t).length]));
+  const shown = S.items.filter((i) =>
+    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) &&
+    (!q || (i.name + ' ' + (i.brand || '') + ' ' + (i.color?.name || '')).toLowerCase().includes(q.toLowerCase())));
+
+  const rails = Object.keys(TYPES).map((t) => {
+    const list = shown.filter((i) => i.type === t);
+    if (!list.length) return '';
+    return `<section class="rail" aria-label="${TYPES[t].label}"><h3 class="rail-h"><span aria-hidden="true">${TYPES[t].emoji}</span> ${TYPES[t].label} <small>${list.length}</small></h3>
+      <div class="rail-row">${list.map(pieceCard).join('')}</div></section>`;
+  }).join('');
+
+  $('#main').innerHTML = `
+    <h2 class="view-title sr-only">Your closet</h2>
+    <div class="row">
+      <input type="search" id="q" class="grow" aria-label="Search your closet" placeholder="Search your closet…" value="${esc(q)}" style="max-width:300px">
+      <select id="occ" aria-label="Filter by occasion" style="width:auto"><option value="all">All occasions</option>${OCCASIONS.map((o) => `<option ${o === occ ? 'selected' : ''}>${o}</option>`).join('')}</select>
+      <span class="muted">${S.items.length} pieces</span>
+    </div>
+    <div class="chips" style="margin-top:12px" role="group" aria-label="Filter by type">
+      <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
+      ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
+    </div>
+    ${rails || emptyCloset()}`;
+  const qEl = $('#q');
+  qEl.oninput = () => { S.filter.q = qEl.value; const p = qEl.selectionStart; renderCloset(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
+  $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
+}
+
+function emptyCloset() {
+  if (S.items.length) return `<div class="empty"><h2>Nothing here</h2><p class="muted">No pieces match those filters.</p></div>`;
+  return `<div class="empty"><h2 class="view-title">Your closet is empty ✨</h2>
+    <p class="muted">Snap a photo of each piece (flat on a bed or hanging on a plain wall works best) and add it.</p>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="primary" data-act="add">+ Add your first piece</button>
+      <button class="ghost" data-act="samples">Load a sample closet to explore</button></div></div>`;
+}
+
+function pieceCard(i) {
+  const worn = wearCounts()[i.id] || 0;
+  return `<article class="piece">${hanger}
+    <button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>
+    <button class="img" data-act="tryit" data-id="${i.id}" aria-label="Try on ${esc(i.name)}"><img src="${url(i.id)}" alt=""></button>
+    <div class="name">${esc(i.name)}</div>
+    <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div></article>`;
+}
+
+/* ───────────────────────── add / edit modal ───────────────────────── */
+function openItemModal(existing) {
+  const d = {
+    id: existing?.id || uid(), name: existing?.name || '', type: existing?.type || 'tops',
+    occasions: [...(existing?.occasions || [])], brand: existing?.brand || '', color: existing?.color || null,
+    tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample,
+  };
+  const m = $('#modal');
+  openModal();
+  const paint = () => {
+    paintSheet(`
+      <label class="f" for="file">Photo (a plain background works best)</label>
+      <input type="file" id="file" accept="image/*">
+      <div class="preview" style="margin-top:10px">
+        <figure><div class="box">${d.source ? `<img src="${d.source}" alt="Your original photo">` : '<span class="muted">Original</span>'}</div><figcaption class="muted">Your photo</figcaption></figure>
+        <figure><div class="box" id="cutbox">${d.cutoutUrl || (existing && url(existing.id)) ? `<img id="cutimg" src="${d.cutoutUrl || url(existing.id)}" alt="Background-removed preview">` : '<span class="muted">Cutout</span>'}</div><figcaption class="muted">Mannequin-ready cutout</figcaption></figure>
+      </div>
+      ${d.source ? `<label class="f" for="tol">Background removal strength: <span id="tolv">${d.tolerance}</span></label>
+        <input type="range" id="tol" min="8" max="110" value="${d.tolerance}">
+        <label class="row" style="margin-top:6px"><input type="checkbox" id="keep" ${d.keep ? 'checked' : ''}> Keep original background</label>` : ''}
+      <label class="f" for="name">Name</label><input type="text" id="name" value="${esc(d.name)}" placeholder="e.g. Black satin cami">
+      <div class="row"><div class="grow"><label class="f" for="type">Type</label>
+        <select id="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === d.type ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
+        <div class="grow"><label class="f" for="brand">Brand (optional)</label><input type="text" id="brand" value="${esc(d.brand)}"></div></div>
+      <label class="f" id="occl">Occasions</label>
+      <div class="chips" id="occs" role="group" aria-labelledby="occl">${OCCASIONS.map((o) => `<button type="button" class="chip ${d.occasions.includes(o) ? 'on' : ''}" aria-pressed="${d.occasions.includes(o)}" data-o="${o}">${o}</button>`).join('')}</div>
+      <label class="f" for="color">Main colour ${d.color ? `— ${esc(d.color.name)}` : ''}</label>
+      <input type="color" id="color" value="${d.color?.hex || '#888888'}" style="width:70px;height:34px;padding:0;border:0;background:none">
+      <div class="row" style="margin-top:18px;justify-content:space-between">
+        <span>${existing ? '<button class="ghost danger" id="rm">Delete</button>' : ''}</span>
+        <span class="row"><button class="ghost" id="cancel">Cancel</button><button class="primary" id="save">Save to closet</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
+    wire();
+  };
+
+  const recut = () => {
+    if (!d.base) return;
+    d.canvas = d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance });
+    d.cutoutUrl = d.canvas.toDataURL('image/png');
+    const pal = palette(d.canvas, 1)[0];
+    if (pal) d.color = { hex: pal.hex, name: colorName(pal.hex) };
+  };
+
+  function wire() {
+    $('#cancel').onclick = closeModal;
+    $('#occs').onclick = (e) => {
+      const o = e.target.dataset.o; if (!o) return;
+      d.occasions = d.occasions.includes(o) ? d.occasions.filter((x) => x !== o) : [...d.occasions, o];
+      e.target.classList.toggle('on'); e.target.setAttribute('aria-pressed', d.occasions.includes(o));
+    };
+    $('#name').oninput = (e) => (d.name = e.target.value);
+    $('#brand').oninput = (e) => (d.brand = e.target.value);
+    $('#type').onchange = (e) => (d.type = e.target.value);
+    $('#color').oninput = (e) => (d.color = { hex: e.target.value, name: colorName(e.target.value) });
+    $('#file').onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        const { img, url: u } = await loadImage(f);
+        d.source = u; d.base = toCanvas(img);
+        if (!d.name) d.name = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40);
+        recut(); paint();
+      } catch (err) { toast(err.message); }
+    };
+    const tol = $('#tol');
+    if (tol) {
+      tol.oninput = () => { d.tolerance = +tol.value; $('#tolv').textContent = tol.value; recut(); $('#cutbox').innerHTML = `<img id="cutimg" src="${d.cutoutUrl}" alt="Background-removed preview">`; };
+      $('#keep').onchange = (e) => { d.keep = e.target.checked; recut(); paint(); };
+    }
+    if ($('#rm')) $('#rm').onclick = async () => {
+      if (!confirm(`Delete “${existing.name}” from your closet?`)) return;
+      await del('items', existing.id);
+      S.items = S.items.filter((i) => i.id !== existing.id);
+      for (const k of Object.keys(S.outfit)) if (S.outfit[k] === existing.id) delete S.outfit[k];
+      closeModal(); render();
+    };
+    $('#save').onclick = async () => {
+      if (!d.canvas && !d.cutout) return toast('Add a photo first 📸');
+      if (!d.name.trim()) return toast('Give it a name');
+      const cutout = d.canvas ? await canvasToBlob(d.canvas) : d.cutout;
+      const item = {
+        ...(existing || {}), id: d.id, name: d.name.trim(), type: d.type, occasions: d.occasions, brand: d.brand.trim(),
+        color: d.color || existing?.color, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
+        createdAt: existing?.createdAt || Date.now(),
+      };
+      await put('items', item);
+      if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
+      url(item.id, item.cutout);
+      closeModal(); toast(existing ? 'Updated ✓' : 'Added to your closet ✓'); render();
+    };
+  }
+  paint();
+}
+
+async function loadSamples() {
+  for (const s of SAMPLES) {
+    const cutout = await sampleBlob(s);
+    const item = {
+      id: uid(), name: s.name, type: s.type, occasions: s.occasions, brand: '', sample: true,
+      color: { hex: s.hex, name: colorName(s.hex) }, cutout, adj: { scale: 1, dx: 0, dy: 0 }, createdAt: Date.now(),
+    };
+    await put('items', item); S.items.push(item); url(item.id, cutout);
+  }
+  toast('Sample closet loaded — swap in your real pieces anytime'); render();
+}
+
+/* ───────────────────────── my model (photo + proportions) ───────────────────────── */
+function openModelModal() {
+  const prof = S.profile;
+  const d = {
+    W: prof?.W || DEFAULT_BODY.W, H: prof?.H || DEFAULT_BODY.H,
+    pts: structuredClone(prof?.pts || DEFAULT_BODY.pts),
+    photo: prof?.photo || null, photoUrl: prof?.photo ? url('profile') : '', canvas: null,
+    display: prof?.display || 'mannequin', warnings: [], busy: false,
+    prop: { shoulders: 1, hips: 1, torso: 1, legs: 1 },
+  };
+  openModal();
+  const body = () => ({ W: d.W, H: d.H, pts: d.pts });
+  const preview = () => mannequinSVG({ body: body(), photoUrl: '', skin: S.skin, hair: S.hair, items: {}, urls: S.urls, label: 'Preview of your proportions' });
+
+  const paint = () => {
+    const sl = (k, l) => `<label class="f" for="p-${k}">${l}</label><input type="range" id="p-${k}" data-prop="${k}" min="0.75" max="1.3" step="0.01" value="${d.prop[k]}">`;
+    paintSheet(`
+      <p class="muted">For the most accurate try-on, upload a full-body photo: stand facing the camera, arms slightly away from your sides, whole body in frame (shoes included), fitted or neutral clothes, plain background, phone held at hip height. <b>The photo never leaves this device.</b></p>
+      <label class="f" for="mfile">Full-body photo</label>
+      <input type="file" id="mfile" accept="image/*">
+      <div id="mstatus" class="muted" role="status" aria-live="polite">${d.busy ? 'Finding your body points…' : ''}</div>
+      ${d.warnings.map((w) => `<div class="gap" role="alert">${esc(w)}</div>`).join('')}
+      <div class="mgrid">
+        <div>${d.photoUrl ? `<p class="muted" id="caldesc">Drag the dots onto your joints, or focus one and use the arrow keys (Shift = bigger steps).</p><svg id="cal" class="cal-svg" viewBox="0 0 ${d.W} ${d.H}" aria-describedby="caldesc"><image href="${d.photoUrl}" width="${d.W}" height="${d.H}"/></svg>` : '<div class="empty" style="padding:30px 10px">Upload a photo to place your body points, or just use the sliders →</div>'}</div>
+        <div><div class="stage" id="mprev" style="padding:6px">${preview()}</div>
+          <details style="margin-top:8px" ${d.photoUrl ? '' : 'open'}><summary>Adjust proportions by hand</summary>
+            ${sl('shoulders', 'Shoulders')}${sl('hips', 'Hips')}${sl('torso', 'Torso length')}${sl('legs', 'Leg length')}
+            <p class="muted">${d.photoUrl ? 'Using these replaces the photo-based points.' : ''}</p></details></div>
+      </div>
+      <fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="f">Show me as</legend>
+        <label class="row"><input type="radio" name="disp" value="mannequin" ${d.display === 'mannequin' ? 'checked' : ''}> Mannequin shaped like me</label>
+        <label class="row"><input type="radio" name="disp" value="photo" ${d.display === 'photo' ? 'checked' : ''} ${d.photoUrl ? '' : 'disabled'}> My photo (most realistic)</label></fieldset>
+      <div class="row" style="margin-top:16px;justify-content:space-between">
+        <span>${prof ? '<button class="ghost danger" id="mreset">Remove my model</button>' : ''}</span>
+        <span class="row"><button class="ghost" id="mcancel">Cancel</button><button class="primary" id="msave">Save</button></span></div>`, 'Make it look like me');
+    wire();
+  };
+
+  function refreshPreview() { $('#mprev').innerHTML = preview(); }
+
+  function drawCal() {
+    const svg = $('#cal'); if (!svg) return;
+    svg.querySelectorAll('.cal-el').forEach((n) => n.remove());
+    const p = d.pts, r = Math.max(5, d.W * 0.013);
+    const line = (a, b) => `<line class="cal-el skel" x1="${p[a][0]}" y1="${p[a][1]}" x2="${p[b][0]}" y2="${p[b][1]}" stroke-width="${r * 0.35}"/>`;
+    const lines = [['shL', 'shR'], ['hipL', 'hipR'], ['shL', 'hipL'], ['shR', 'hipR'], ['hipL', 'knL'], ['knL', 'anL'], ['hipR', 'knR'], ['knR', 'anR'], ['shL', 'wrL'], ['shR', 'wrR']].map(([a, b]) => line(a, b)).join('');
+    const dots = HANDLES.map(([k, label]) => `<circle class="cal-el handle" data-k="${k}" cx="${p[k][0]}" cy="${p[k][1]}" r="${r}" tabindex="0" role="button" aria-label="${label}: use arrow keys to move"/>`).join('');
+    svg.insertAdjacentHTML('beforeend', lines + dots);
+  }
+
+  function moveHandle(k, x, y) {
+    d.pts[k] = [Math.max(0, Math.min(d.W, x)), Math.max(0, Math.min(d.H, y))];
+    const svg = $('#cal'), el = svg.querySelector(`[data-k="${k}"]`);
+    drawCal(); // lines + dots are cheap to redraw; restore focus on the same dot
+    if (document.activeElement === document.body || document.activeElement === el) svg.querySelector(`[data-k="${k}"]`)?.focus();
+    refreshPreview();
+  }
+
+  function wire() {
+    $('#mcancel').onclick = closeModal;
+    document.querySelectorAll('[name=disp]').forEach((r) => (r.onchange = () => (d.display = r.value)));
+    document.querySelectorAll('[data-prop]').forEach((r) => (r.oninput = () => {
+      d.prop[r.dataset.prop] = +r.value;
+      Object.assign(d, fromProportions(d.prop)); d.photo = null; d.photoUrl = ''; d.display = 'mannequin';
+      refreshPreview();
+    }));
+    $('#mfile').onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      d.busy = true; d.warnings = []; $('#mstatus').textContent = 'Finding your body points… (first time takes a few seconds)';
+      try {
+        const { img } = await loadImage(f);
+        const canvas = toCanvas(img, 1000);
+        d.canvas = canvas; d.W = canvas.width; d.H = canvas.height;
+        d.photoUrl = canvas.toDataURL('image/jpeg', 0.9);
+        d.display = 'photo';
+        let lm = null;
+        try { lm = await detectPose(canvas); } catch (err) { console.warn(err); d.warnings.push('Automatic detection isn’t available in this browser — place the dots by hand.'); }
+        if (lm) { const r = fromLandmarks(lm, d.W, d.H); d.pts = r.body.pts; d.warnings.push(...r.warnings); }
+        else {
+          if (!d.warnings.length) d.warnings.push('I couldn’t find a full body in that photo. Drag the dots onto your joints, or try a clearer photo.');
+          const k = d.H / DEFAULT_BODY.H, ox = d.W / 2 - 150 * k;
+          d.pts = Object.fromEntries(Object.entries(DEFAULT_BODY.pts).map(([n, [x, y]]) => [n, [x * k + ox, y * k]]));
+        }
+      } catch (err) { d.warnings = [err.message]; }
+      d.busy = false; paint(); drawCal();
+    };
+    const svg = $('#cal');
+    if (svg) {
+      drawCal();
+      let drag = null;
+      const toSvg = (e) => { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+      svg.onpointerdown = (e) => { const k = e.target.dataset?.k; if (!k) return; drag = k; svg.setPointerCapture(e.pointerId); e.preventDefault(); };
+      svg.onpointermove = (e) => { if (!drag) return; const p = toSvg(e); moveHandle(drag, p.x, p.y); };
+      svg.onpointerup = svg.onpointercancel = () => (drag = null);
+      svg.onkeydown = (e) => {
+        const k = e.target.dataset?.k; if (!k) return;
+        const step = (e.shiftKey ? 10 : 2) * (d.W / 600), v = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
+        if (!v) return; e.preventDefault(); moveHandle(k, d.pts[k][0] + v[0], d.pts[k][1] + v[1]);
+      };
+    }
+    $('#msave').onclick = async () => {
+      let photo = d.photo;
+      if (d.photoUrl && d.canvas) photo = await canvasToBlob(d.canvas, 'image/jpeg', 0.9);
+      const rec = { id: 'me', W: d.W, H: d.H, pts: d.pts, photo: d.photoUrl ? photo : null, display: d.photoUrl ? d.display : 'mannequin' };
+      await put('profile', rec); S.profile = rec;
+      S.urls.delete('profile'); if (rec.photo) url('profile', rec.photo);
+      closeModal(); toast('Your model is saved ✓'); render();
+    };
+    if ($('#mreset')) $('#mreset').onclick = async () => {
+      if (!confirm('Remove your saved photo and proportions?')) return;
+      await del('profile', 'me'); S.profile = null; S.urls.delete('profile'); closeModal(); render();
+    };
+  }
+  paint();
+}
+
+/* ───────────────────────── try on ───────────────────────── */
+function stageHTML() {
+  return mannequin(S.outfit);
+}
+function refreshStage() { const s = $('#stage'); if (s) s.innerHTML = stageHTML(); }
+
+function renderTryon() {
+  const worn = outfitItems(S.outfit);
+  const pickList = S.items.filter((i) => i.type === S.tab);
+  const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
+  $('#main').innerHTML = `<div class="tryon">
+    <div>
+      <div class="stage" id="stage">${stageHTML()}</div>
+      <div class="row" style="margin-top:10px" role="group" aria-label="Model">
+        <button class="chip ${usingPhoto() ? '' : 'on'}" aria-pressed="${!usingPhoto()}" data-act="display" data-v="mannequin">${S.profile ? 'Mannequin shaped like me' : 'Mannequin'}</button>
+        <button class="chip ${usingPhoto() ? 'on' : ''}" aria-pressed="${usingPhoto()}" data-act="display" data-v="photo" ${S.profile?.photo ? '' : 'disabled'}>My photo</button>
+        <button class="ghost grow" data-act="setup">${S.profile ? 'Edit my model' : '✨ Make it look like me'}</button>
+      </div>
+      ${usingPhoto() ? '' : `<div class="row" style="margin-top:10px;justify-content:space-between">
+        <div class="swatches" role="group" aria-label="Skin tone">${SKIN.map((c, n) => `<button class="sw ${c === S.skin ? 'on' : ''}" aria-pressed="${c === S.skin}" data-act="skin" data-v="${c}" style="background:${c}" aria-label="Skin tone ${n + 1}"></button>`).join('')}</div>
+        <div class="swatches" role="group" aria-label="Hair colour">${HAIR.map((c, n) => `<button class="sw ${c === S.hair ? 'on' : ''}" aria-pressed="${c === S.hair}" data-act="hair" data-v="${c}" style="background:${c}" aria-label="Hair colour ${n + 1}"></button>`).join('')}</div>
+      </div>`}
+    </div>
+    <div>
+      <h2 class="view-title sr-only">Try on</h2>
+      <div class="row">
+        <select id="styleocc" aria-label="Occasion for Style me" style="width:auto"><option value="">Any occasion</option>${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select>
+        <button class="primary" data-act="styleme">✨ Style me</button>
+        <button class="ghost" data-act="clear">Clear</button>
+      </div>
+      <div class="chips" style="margin-top:12px" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}">${v.label}</button>`).join('')}</div>
+      <div class="picker-grid">${pickList.length ? pickList.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span></button>`).join('') : `<p class="muted" style="grid-column:1/-1">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>
+
+      <div class="panel"><h3>Wearing</h3>
+        ${Object.keys(worn).length ? `<div class="chips">${SLOTS.filter((s) => worn[s]).map((s) => `<button class="chip ${fit?.id === worn[s].id ? 'on' : ''}" aria-pressed="${fit?.id === worn[s].id}" data-act="fit" data-id="${worn[s].id}">${SLOT_LABEL[s]}: ${esc(worn[s].name)}</button>`).join('')}</div>` : '<p class="muted">Tap pieces above to dress the mannequin.</p>'}
+        ${fit ? `<div style="margin-top:10px"><div class="muted">Fit “${esc(fit.name)}” on the mannequin</div>
+          ${[['scale', 'Size', 0.5, 1.8, 0.02], ['dx', 'Left / right', -60, 60, 1], ['dy', 'Up / down', -80, 80, 1]].map(([k, l, a, b, st]) => `<label class="f" for="adj-${k}">${l}</label><input type="range" id="adj-${k}" data-adj="${k}" min="${a}" max="${b}" step="${st}" value="${fit.adj[k]}">`).join('')}
+          <button class="ghost" data-act="resetfit" data-id="${fit.id}" style="margin-top:6px">Reset</button></div>` : ''}
+      </div>
+
+      <div class="panel"><h3>Save or wear this look</h3>
+        <div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Look name (optional)" class="grow">
+        <select id="lookocc" aria-label="Occasion" style="width:auto"><option value="">Occasion</option>${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select></div>
+        <div class="row" style="margin-top:8px"><button class="ghost" data-act="savelook">💾 Save look</button>
+        <button class="primary" data-act="wearToday">👗 I’m wearing this today</button></div>
+        ${S.outfits.length ? `<h3 style="margin-top:14px">Saved looks</h3><div class="chips">${S.outfits.map((o) => `<span class="chip"><button class="ghost" style="border:0;padding:0" data-act="loadlook" data-id="${o.id}">${esc(o.name)}${o.occasion ? ' · ' + esc(o.occasion) : ''}</button> <button class="ghost danger" style="border:0;padding:0 0 0 6px" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : ''}
+      </div>
+    </div></div>`;
+  $('#main').querySelectorAll('[data-adj]').forEach((r) => {
+    r.oninput = async () => { fit.adj[r.dataset.adj] = +r.value; refreshStage(); };
+    r.onchange = () => put('items', fit);
+  });
+}
+
+async function logWear(date, occasion = '', note = '') {
+  const ids = Object.values(S.outfit);
+  if (!ids.length) return toast('Dress the mannequin first');
+  const w = { id: uid(), date, itemIds: ids, occasion, note, createdAt: Date.now() };
+  await put('wears', w); S.wears.push(w);
+  toast(`Logged for ${date} ✓`);
+}
+
+/* ───────────────────────── OOTD log ───────────────────────── */
+function renderPlanner() {
+  const y = S.month.getFullYear(), mo = S.month.getMonth();
+  const first = new Date(y, mo, 1), start = new Date(y, mo, 1 - first.getDay());
+  const today = iso(new Date());
+  const cells = Array.from({ length: 42 }, (_, n) => {
+    const d = new Date(start); d.setDate(start.getDate() + n);
+    const k = iso(d), ws = S.wears.filter((w) => w.date === k);
+    const last = ws[ws.length - 1];
+    return `<button class="day ${d.getMonth() !== mo ? 'off' : ''} ${k === S.date ? 'sel' : ''} ${k === today ? 'today' : ''}" aria-pressed="${k === S.date}" aria-label="${d.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}${ws.length ? `, ${ws.length} outfit${ws.length > 1 ? 's' : ''} logged` : ''}${k === today ? ', today' : ''}" data-act="pickday" data-v="${k}"><b aria-hidden="true">${d.getDate()}</b>${last ? mannequin(last.itemIds, 'mini') : ''}</button>`;
+  }).join('');
+  const dayWears = S.wears.filter((w) => w.date === S.date);
+  const counts = wearCounts();
+  const top = [...S.items].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0)).filter((i) => counts[i.id]).slice(0, 3);
+  const never = S.items.filter((i) => !counts[i.id] && !['accessories'].includes(i.type)).slice(0, 6);
+  $('#main').innerHTML = `<div class="planner"><div>
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <button class="ghost" data-act="month" data-v="-1" aria-label="Previous month">‹</button><h2 class="view-title">${S.month.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2><button class="ghost" data-act="month" data-v="1" aria-label="Next month">›</button></div>
+    <div class="cal">${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => `<div class="dow" aria-hidden="true">${d}</div>`).join('')}${cells}</div></div>
+    <div>
+      <div class="panel" style="margin-top:0"><h3>${new Date(S.date + 'T12:00').toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
+        ${dayWears.map((w) => `<div class="logrow"><div class="thumbs">${w.itemIds.map(itemById).filter(Boolean).map((i) => `<img src="${url(i.id)}" alt="${esc(i.name)}" title="${esc(i.name)}">`).join('')}</div>
+          <div class="grow muted">${esc(w.occasion || '')}${w.note ? ' — ' + esc(w.note) : ''}</div>
+          <button class="ghost danger" data-act="delwear" data-id="${w.id}" aria-label="Delete this entry"><span aria-hidden="true">×</span></button></div>`).join('') || '<p class="muted">Nothing logged for this day.</p>'}
+        <h3 style="margin-top:14px">Log an outfit</h3>
+        <p class="muted">Uses whatever is on the mannequin in Try On (${Object.keys(S.outfit).length} pieces).</p>
+        <select id="wocc" aria-label="Occasion"><option value="">Occasion</option>${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select>
+        <input type="text" id="wnote" aria-label="Note" placeholder="Note (e.g. got compliments!)" style="margin-top:6px">
+        <div class="row" style="margin-top:8px"><button class="primary" data-act="logday">Log it</button><button class="ghost" data-act="tab-tryon">Edit outfit</button></div></div>
+      <div class="panel"><h3>Closet stats</h3>
+        <div class="muted">Most worn</div>${top.map((i) => `<div class="logrow"><img src="${url(i.id)}" style="width:32px;height:32px;object-fit:contain" alt=""> <span class="grow">${esc(i.name)}</span><b>${counts[i.id]}×</b></div>`).join('') || '<div class="muted">Log some outfits to see this.</div>'}
+        ${never.length ? `<div class="muted" style="margin-top:10px">Never worn — give them a turn:</div><div class="thumbs" style="margin-top:4px">${never.map((i) => `<img src="${url(i.id)}" title="${esc(i.name)}" alt="${esc(i.name)}">`).join('')}</div>` : ''}</div>
+    </div></div>`;
+}
+
+/* ───────────────────────── inspo ───────────────────────── */
+function renderInspo() {
+  const d = S.inspo;
+  $('#main').innerHTML = `<div class="inspo"><div>
+    <h2 class="view-title sr-only">Inspo</h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="${d ? 'Replace inspo image' : 'Upload an inspo image'}">${d ? `<img src="${d.url}" alt="Your inspo image">` : '<h3>Drop a Pinterest pic here</h3><p class="muted">Click to upload, drag in, or paste (Ctrl/⌘+V) a screenshot or saved image.</p>'}</div>
+    <input type="file" id="ifile" accept="image/*" hidden>
+    <label class="f" for="plink">Pin link (optional — kept so you can find it again)</label>
+    <input type="url" id="plink" placeholder="https://pinterest.com/pin/…" value="${esc(d?.link || '')}">
+    <label class="f" for="iocc">Occasion</label>
+    <select id="iocc"><option value="">Any</option>${OCCASIONS.map((o) => `<option ${d?.occasion === o ? 'selected' : ''}>${o}</option>`).join('')}</select>
+    <label class="f" id="iwl">Pieces you can see in the photo</label>
+    <div class="chips" id="iwant" role="group" aria-labelledby="iwl">${['dress', 'top', 'bottom', 'outer', 'shoes', 'bag'].map((s) => `<button class="chip ${(d?.wanted || ['top', 'bottom', 'shoes']).includes(s) ? 'on' : ''}" aria-pressed="${(d?.wanted || ['top', 'bottom', 'shoes']).includes(s)}" data-s="${s}">${SLOT_LABEL[s]}</button>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><button class="primary" data-act="saveinspo" ${d ? '' : 'disabled'}>📌 Save inspo</button></div>
+    ${S.inspos.length ? `<h3 style="margin-top:16px">Saved inspo</h3><div class="inspo-saved">${S.inspos.map((n) => `<button class="thumbbtn" data-act="loadinspo" data-id="${n.id}" aria-label="Open saved inspo${n.occasion ? ' for ' + esc(n.occasion) : ''}"><img src="${url('inspo:' + n.id)}" alt=""></button>`).join('')}</div>` : ''}
+  </div><div id="iresult" aria-live="polite">${d ? '' : '<div class="empty"><h2>Shop your own closet</h2><p class="muted">Upload an outfit you love. I’ll pull its colour palette and rebuild the closest look from pieces you already own — and tell you what’s missing.</p></div>'}</div></div>`;
+
+  const drop = $('#drop'), file = $('#ifile');
+  drop.onclick = () => file.click();
+  drop.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); file.click(); } };
+  file.onchange = () => file.files[0] && setInspoFile(file.files[0]);
+  drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over'); };
+  drop.ondragleave = () => drop.classList.remove('over');
+  drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove('over'); const f = [...e.dataTransfer.files].find((x) => x.type.startsWith('image/')); f && setInspoFile(f); };
+  $('#plink').oninput = (e) => d && (d.link = e.target.value);
+  $('#iocc').onchange = (e) => { if (d) { d.occasion = e.target.value; showMatch(); } };
+  $('#iwant').onclick = (e) => {
+    const s = e.target.dataset.s; if (!s || !d) return;
+    d.wanted = d.wanted.includes(s) ? d.wanted.filter((x) => x !== s) : [...d.wanted, s];
+    e.target.classList.toggle('on'); e.target.setAttribute('aria-pressed', d.wanted.includes(s)); showMatch();
+  };
+  if (d) showMatch();
+}
+
+async function setInspoFile(file, extra = {}) {
+  try {
+    const { img, url: u } = await loadImage(file);
+    const canvas = toCanvas(img, 700);
+    S.inspo = { blob: file, url: u, palette: palette(canvas, 5, 18), link: '', occasion: '', wanted: ['top', 'bottom', 'shoes'], ...extra };
+    renderInspo();
+  } catch (e) { toast(e.message); }
+}
+
+function showMatch() {
+  const d = S.inspo, el = $('#iresult'); if (!d || !el) return;
+  const { picks, gaps } = matchInspo(S.items, d.palette, { wanted: d.wanted, occasion: d.occasion, wearCounts: wearCounts() });
+  d.picks = Object.fromEntries(Object.entries(picks).map(([s, p]) => [s, p.item.id]));
+  const rows = SLOTS.filter((s) => picks[s]).map((s) => `<div class="match"><img src="${url(picks[s].item.id)}" alt=""><div><b>${esc(picks[s].item.name)}</b><div class="muted">${SLOT_LABEL[s]} · ${esc(picks[s].item.color?.name || '')}</div></div><span class="score" aria-label="${picks[s].color} percent colour match">${picks[s].color}%</span></div>`).join('');
+  el.innerHTML = `<div class="row" style="align-items:flex-start;gap:20px">
+    <div style="flex:0 0 220px"><div class="stage">${mannequin(d.picks)}</div></div>
+    <div class="grow" style="min-width:240px"><h3>Inspo palette</h3>
+      <div class="pal">${d.palette.map((p) => `<span style="background:${p.hex};flex:${Math.max(p.share, .08)}">${colorName(p.hex)}</span>`).join('')}</div>
+      <h3>Your closest look</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
+      ${gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>.</div>`).join('')}
+      <div class="row" style="margin-top:12px"><button class="primary" data-act="tryinspo" ${rows ? '' : 'disabled'}>Try this on</button></div>
+    </div></div>`;
+}
+
+/* ───────────────────────── events ───────────────────────── */
+document.addEventListener('click', async (e) => {
+  const nav = e.target.closest('#nav button');
+  if (nav) return go(nav.dataset.view);
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const { act, id, v } = el.dataset;
+  e.preventDefault();
+  switch (act) {
+    case 'add': return openItemModal();
+    case 'samples': return loadSamples();
+    case 'edit': return openItemModal(itemById(id));
+    case 'ftype': S.filter.type = v; return renderCloset();
+    case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; return go('tryon'); }
+    case 'tab': S.tab = v; return renderTryon();
+    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; return renderTryon();
+    case 'fit': S.adjust = id; return renderTryon();
+    case 'resetfit': { const it = itemById(id); it.adj = { scale: 1, dx: 0, dy: 0 }; await put('items', it); return renderTryon(); }
+    case 'display': S.profile.display = v; await put('profile', S.profile); return renderTryon();
+    case 'setup': return openModelModal();
+    case 'skin': S.skin = v; store.set('skin', v); return renderTryon();
+    case 'hair': S.hair = v; store.set('hair', v); return renderTryon();
+    case 'clear': S.outfit = {}; return renderTryon();
+    case 'styleme': {
+      const o = $('#styleocc').value;
+      if (!S.items.length) return toast('Add some pieces first');
+      const r = styleMe(S.items, o, wearCounts());
+      if (!Object.keys(r).length) return toast(`Nothing tagged for ${o} yet`);
+      S.outfit = Object.fromEntries(Object.entries(r).map(([s, i]) => [s, i.id]));
+      return renderTryon();
+    }
+    case 'savelook': {
+      if (!Object.keys(S.outfit).length) return toast('Dress the mannequin first');
+      const occ = $('#lookocc').value;
+      const o = { id: uid(), name: $('#lookname').value.trim() || `Look ${S.outfits.length + 1}`, occasion: occ, outfit: { ...S.outfit } };
+      await put('outfits', o); S.outfits.push(o); toast('Look saved ✓'); return renderTryon();
+    }
+    case 'loadlook': S.outfit = { ...S.outfits.find((o) => o.id === id).outfit }; return renderTryon();
+    case 'dellook': await del('outfits', id); S.outfits = S.outfits.filter((o) => o.id !== id); return renderTryon();
+    case 'wearToday': S.date = iso(new Date()); S.month = new Date(); await logWear(S.date, $('#lookocc').value); return;
+    case 'tab-tryon': return go('tryon');
+    case 'month': S.month = new Date(S.month.getFullYear(), S.month.getMonth() + +v, 1); return renderPlanner();
+    case 'pickday': S.date = v; return renderPlanner();
+    case 'logday': await logWear(S.date, $('#wocc').value, $('#wnote').value.trim()); return renderPlanner();
+    case 'delwear': await del('wears', id); S.wears = S.wears.filter((w) => w.id !== id); return renderPlanner();
+    case 'saveinspo': {
+      const d = S.inspo; if (!d) return;
+      const link = /^https?:\/\//i.test(d.link) ? d.link : '';
+      const photoCanvas = toCanvas((await loadImage(d.blob)).img, 600);
+      const n = { id: d.id || uid(), photo: await canvasToBlob(photoCanvas, 'image/jpeg', 0.85), palette: d.palette, link, occasion: d.occasion, wanted: d.wanted, createdAt: Date.now() };
+      await put('inspos', n); S.inspos = S.inspos.filter((x) => x.id !== n.id).concat(n); url('inspo:' + n.id, n.photo);
+      toast('Inspo saved ✓'); return renderInspo();
+    }
+    case 'loadinspo': { const n = S.inspos.find((x) => x.id === id); return setInspoFile(n.photo, { id: n.id, link: n.link, occasion: n.occasion, wanted: n.wanted, palette: n.palette }); }
+    case 'tryinspo': S.outfit = { ...S.inspo.picks }; return go('tryon');
+  }
+});
+
+document.addEventListener('paste', (e) => {
+  if (S.view !== 'inspo') return;
+  const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith('image/'));
+  if (f) setInspoFile(f);
+});
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+
+(async () => {
+  await load();
+  render();
+  window.__closet = S; // handy for debugging
+})();

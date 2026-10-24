@@ -21,20 +21,6 @@ export const TYPES = {
 export const SLOTS = ['dress', 'top', 'bottom', 'outer', 'shoes', 'bag', 'acc'];
 export const SLOT_LABEL = { dress: 'Dress', top: 'Top', bottom: 'Bottom', outer: 'Outerwear', shoes: 'Shoes', bag: 'Bag', acc: 'Accessory' };
 
-// Drawing boxes on the 300x640 mannequin canvas, per type.
-export const BOX = {
-  tops:        { x: 62,  y: 96,  w: 176, h: 190 },
-  tanks:       { x: 74,  y: 96,  w: 152, h: 190 },
-  bodysuits:   { x: 70,  y: 96,  w: 160, h: 230 },
-  bottoms:     { x: 76,  y: 270, w: 148, h: 322 },
-  skirts:      { x: 68,  y: 268, w: 164, h: 200 },
-  dresses:     { x: 56,  y: 96,  w: 188, h: 420 },
-  outerwear:   { x: 38,  y: 92,  w: 224, h: 260 },
-  shoes:       { x: 72,  y: 580, w: 156, h: 56 },
-  bags:        { x: 214, y: 270, w: 80,  h: 100 },
-  accessories: { x: 100, y: 62,  w: 100, h: 70 },
-};
-
 // Paint order, back to front.
 export const Z = ['shoes', 'bottom', 'dress', 'top', 'outer', 'bag', 'acc'];
 
