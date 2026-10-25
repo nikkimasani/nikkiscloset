@@ -74,7 +74,7 @@ async function load() {
   S.profile = profiles[0] || null;
   if (S.profile?.photo) url('profile', S.profile.photo);
   S.items.sort((a, b) => a.createdAt - b.createdAt);
-  S.items.forEach((i) => url(i.id, i.cutout));
+  S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
 }
 
@@ -175,7 +175,7 @@ function openItemModal(existing, preset = {}) {
     id: existing?.id || uid(), name: existing?.name || '', type: existing?.type || 'tops',
     occasions: [...(existing?.occasions || [])], brand: existing?.brand || '', color: existing?.color || null,
     price: existing?.price ?? '', bought: existing?.bought || '', season: existing?.season || 'all', ...(existing ? {} : { ...(preset.type && { type: preset.type }), ...(preset.name && { name: preset.name }), ...(preset.occasions && { occasions: preset.occasions }) }),
-    tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample,
+    tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample, backCanvas: null, backBlob: existing?.backCutout || null, backUrl: '',
   };
   openModal();
   const paint = () => {
@@ -193,6 +193,9 @@ function openItemModal(existing, preset = {}) {
         <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
         <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aicut">${d.aiCanvas ? 'Redo AI cutout' : 'Cleaner cutout'}</button>${d.aiCanvas ? '<button type="button" class="ghost" id="aiundo">Use the on-device cutout</button>' : ''}<button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
         <div id="aimsg" class="muted" role="status" aria-live="polite">${esc(d.aiMsg || '')}</div></div>` : ''}
+      <div class="backbox"><label class="f" for="backfile">Back photo (optional — shows on the back of the 3D model)</label>
+        <input type="file" id="backfile" accept="image/*">
+        ${d.backUrl || d.backBlob ? `<div class="row" style="margin-top:8px"><img class="backthumb" src="${d.backUrl || (existing && url(existing.id + ':back')) || ''}" alt="Back of the piece" width="56" height="56"><button type="button" class="ghost" id="backrm">Remove back photo</button></div>` : ''}</div>
       <label class="f" for="name">Name</label><input type="text" id="name" value="${esc(d.name)}" placeholder="e.g. Black satin cami">
       <div class="row"><div class="grow"><label class="f" for="type">Type</label>
         <select id="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === d.type ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
@@ -243,6 +246,15 @@ function openItemModal(existing, preset = {}) {
         recut(); paint();
       } catch (err) { toast(err.message); }
     };
+    $('#backfile').onchange = async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        const { img } = await loadImage(f);
+        d.backCanvas = trimTransparent(removeBackground(toCanvas(img), { tolerance: d.tolerance }));
+        d.backUrl = d.backCanvas.toDataURL('image/png'); d.backBlob = null; paint();
+      } catch (err) { toast(err.message); }
+    };
+    if ($('#backrm')) $('#backrm').onclick = () => { d.backCanvas = null; d.backBlob = null; d.backUrl = ''; paint(); };
     const mpass = () => { const v = $('#mpass').value.trim(); if (!v) { toast('Enter your passcode first'); return null; } store.set('aipass', v); return v; };
     const aiBusy = (msg) => { const el = $('#aimsg'); if (el) el.textContent = msg; $('#aicut').disabled = $('#aitag').disabled = !!msg.endsWith('…'); };
     if ($('#aicut')) $('#aicut').onclick = async () => {
@@ -289,14 +301,16 @@ function openItemModal(existing, preset = {}) {
       if (!d.canvas && !d.cutout) return toast('Add a photo first 📸');
       if (!d.name.trim()) return toast('Give it a name');
       const cutout = d.canvas ? await canvasToBlob(d.canvas, 'image/webp', 0.92) : d.cutout; // WebP keeps the transparency at a fraction of PNG's size (browsers without WebP encoding fall back to PNG)
+      const backCutout = d.backCanvas ? await canvasToBlob(d.backCanvas, 'image/webp', 0.92) : d.backBlob || undefined;
       const item = {
-        ...(existing || {}), id: d.id, name: d.name.trim(), type: d.type, occasions: d.occasions, brand: d.brand.trim(),
+        ...(existing || {}), backCutout, id: d.id, name: d.name.trim(), type: d.type, occasions: d.occasions, brand: d.brand.trim(),
         color: d.color || existing?.color, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
         price: parseFloat(d.price) > 0 ? Math.round(parseFloat(d.price) * 100) / 100 : undefined, bought: d.bought || undefined, season: d.season,
         createdAt: existing?.createdAt || Date.now(), updatedAt: Date.now(),
       };
       await put('items', item);
       if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
+      S.urls.delete(item.id + ':back'); if (backCutout) url(item.id + ':back', backCutout);
       url(item.id, item.cutout);
       if (preset.onSaved) await preset.onSaved(item);
       closeModal(); toast(existing ? 'Updated ✓' : 'Added to your closet ✓'); render();
@@ -308,7 +322,7 @@ function openItemModal(existing, preset = {}) {
 /** Delete pieces everywhere they're referenced: closet, current outfit, saved looks, and cached images. */
 async function removeItems(ids) {
   const gone = new Set(ids);
-  for (const id of ids) { await del('items', id); const u = S.urls.get(id); if (u) { URL.revokeObjectURL(u); S.urls.delete(id); } }
+  for (const id of ids) { await del('items', id); for (const key of [id, id + ':back']) { const u = S.urls.get(key); if (u) { URL.revokeObjectURL(u); S.urls.delete(key); } } }
   S.items = S.items.filter((i) => !gone.has(i.id));
   for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
   for (const o of [...S.outfits]) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)

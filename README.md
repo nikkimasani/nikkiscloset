@@ -27,6 +27,8 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **OOTD Log** – calendar of what you wore each day, with per-item wear counts and "never worn" reminders.
 - **Inspo** – drop in a Pinterest screenshot/image (drag, upload, or paste). It extracts the palette, rebuilds the closest outfit from your closet with colour-match %, and tells you what you're missing ("look for a sage-green top").
 
+- **Back photo (optional)** on any piece: shows on the back of the 3D garment instead of a darkened copy of the front.
+
 ## Cloud sync (optional)
 - **Wardrobe → Cloud sync**: enter your private sync key to keep pieces, photos, outfits, diary and appearance in step across devices. Newest edit wins; deletes sync too. Nothing is uploaded until a key is entered.
 - Backend is a dedicated Supabase project (`sync_records`, `sync_blobs`). There are no accounts: row-level security only allows requests whose `x-sync-key` header hashes to the stored SHA-256 (the key itself is never stored). The URL and publishable key in `public/js/sync.js` are public by design. Treat the sync key like a password; to rotate it, update the hash in `sync_config`.

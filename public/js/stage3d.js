@@ -179,7 +179,7 @@ function maskGrid(e) {
  * sleeves and pant legs are slim, big panels are full) and rolls off smoothly at the outline. Returns a front and a back surface.
  * rect = {cx, top, w, h} in world units; hMax = half-thickness; zc = depth of the centre plane.
  */
-function inflate(grid, rect, hMax, zc) {
+function inflate(grid, rect, hMax, zc, flipBack = false) {
   const { nx, ny, dist, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, cell = (cw + ch) / 2;
   // 0.04 of the thickness is kept at the very edge (fabric has some), so front and back never z-fight
   const height = new Float32Array(nx * ny); // full thickness is reached a bit before the middle, so slim parts (legs, sleeves) still get filled out
@@ -189,7 +189,7 @@ function inflate(grid, rect, hMax, zc) {
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
       const k = j * nx + i;
       pos.set([rect.cx - rect.w / 2 + (i + 0.5) * cw, rect.top - (j + 0.5) * ch, zc + sign * height[k]], k * 3);
-      uv.set([(i + 0.5) / nx, 1 - (j + 0.5) / ny], k * 2);
+      uv.set([sign < 0 && flipBack ? 1 - (i + 0.5) / nx : (i + 0.5) / nx, 1 - (j + 0.5) / ny], k * 2);
     }
     for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
       const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
@@ -236,6 +236,27 @@ function getTexture(url) {
   return e;
 }
 
+// A real back photo, fitted onto a silhouette of the front in the garment's colour so any gaps in the back cutout stay filled.
+function backTexture(front, backUrl, hex) {
+  const key = `${backUrl}|${hex}`;
+  let e = S.textures.get(key);
+  if (e) return e;
+  e = { tex: null, ready: false };
+  S.textures.set(key, e);
+  const img = new Image();
+  img.onload = () => {
+    const w = front.tex.image.width, h = front.tex.image.height, c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    g.drawImage(front.tex.image, 0, 0, w, h); g.globalCompositeOperation = 'source-in'; g.fillStyle = hex || '#888'; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = 'source-over';
+    const f = Math.min(w / img.naturalWidth, h / img.naturalHeight), dw = img.naturalWidth * f, dh = img.naturalHeight * f;
+    g.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+    e.tex = new THREE.CanvasTexture(c); e.tex.colorSpace = THREE.SRGBColorSpace; e.tex.anisotropy = 4; e.ready = true; buildGarments();
+  };
+  img.src = backUrl;
+  return e;
+}
+
 function buildGarments() {
   if (!S?.ctx || !S.outfit) return;
   S.shells.forEach((g) => { S.figure.remove(g); g.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); }); });
@@ -254,10 +275,12 @@ function buildGarments() {
     const W = dw * a.scale, H = dh * a.scale;
     const sw = m.sw * (body.build || 1);
     const zc = it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.15 * m.sw : 0;
-    const [front, back, wall] = inflate(maskGrid(e), { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H }, (HMAX[it.type] || 0.24) * sw, zc);
+    const backUrl = S.outfit.urls.get(it.id + ':back'), be = backUrl ? backTexture(e, backUrl, it.color?.hex) : null;
+    const backTex = be?.ready ? be.tex : null;
+    const [front, back, wall] = inflate(maskGrid(e), { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H }, (HMAX[it.type] || 0.24) * sw, zc, !!backTex);
     const group = new THREE.Group();
     group.add(new THREE.Mesh(front, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
-    group.add(new THREE.Mesh(back, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true, color: 0xd9d9d9 }))); // back is the same photo, a little darker
+    group.add(new THREE.Mesh(back, new THREE.MeshLambertMaterial({ map: backTex || e.tex, alphaTest: 0.5, alphaToCoverage: true, color: backTex ? 0xffffff : 0xd9d9d9 }))); // no back photo: the front photo, a little darker
     group.add(new THREE.Mesh(wall, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, color: 0xe6e6e6 })));
     if (box.rot) group.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
     group.userData.slot = it.type;
@@ -317,5 +340,5 @@ export const stage3d = {
 
   setLabel(text) { ensure().renderer.domElement.setAttribute('aria-label', text); },
   setRole() { const c = ensure().renderer.domElement; c.setAttribute('role', 'img'); },
-  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height] }; },
+  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), backPhoto: S.shells.map((g) => !!g.children[1]?.material.map?.isCanvasTexture), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height] }; },
 };
