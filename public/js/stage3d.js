@@ -5,6 +5,7 @@
 import * as THREE from '../vendor/three/three.module.min.js';
 import { measures, place } from './body.js';
 import { webglOK } from './webgl.js';
+import { buildWorld } from './world.js';
 
 const webgl = webglOK;
 
@@ -29,9 +30,13 @@ function ensure() {
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); failed = true; });
   const cv = renderer.domElement;
   cv.style.touchAction = 'pan-y';
-  cv.addEventListener('pointerdown', (e) => { S.drag = { x: e.clientX }; cv.setPointerCapture(e.pointerId); });
-  cv.addEventListener('pointermove', (e) => { if (!S.drag) return; S.target += (e.clientX - S.drag.x) * 0.012; S.rot = S.target; S.drag.x = e.clientX; request(); });
-  const end = () => (S.drag = null);
+  cv.addEventListener('pointerdown', (e) => { S.drag = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', (e) => {
+    if (!S.drag) return;
+    if (S.world) { S.drag.moved += Math.abs(e.clientX - S.drag.x) + Math.abs(e.clientY - S.drag.y); S.world.yaw -= (e.clientX - S.drag.x) * 0.008; S.drag.x = e.clientX; S.drag.y = e.clientY; return; } // drag to look around
+    S.target += (e.clientX - S.drag.x) * 0.012; S.rot = S.target; S.drag.x = e.clientX; request();
+  });
+  const end = (e) => { const d = S.drag; S.drag = null; if (S.world && d && e.type === 'pointerup' && d.moved < 10 && performance.now() - d.t < 450) tapWorld(e); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   return S;
 }
@@ -59,7 +64,7 @@ function resize() {
 
 /** Camera that fits the whole figure (and its arms/bag) for the current aspect ratio. */
 function frame() {
-  if (!S?.ctx) return;
+  if (!S?.ctx || S.world) return;
   const { H, halfW } = S.ctx, t = Math.tan((S.camera.fov * Math.PI) / 360);
   const dist = Math.max((H * 0.56) / t, (halfW * 1.1) / (t * S.camera.aspect));
   S.camera.position.set(0, H * 0.5, dist);
@@ -110,6 +115,12 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
     sec(shY - 0.07 * T, 0.16 * sw, 0.12 * sw), sec(shY + 0.0 * T, 0.5 * sw, 0.15 * sw), sec(shY + 0.22 * T, 0.45 * sw, 0.19 * sw),
     sec(waistY, 0.33 * sw, 0.15 * sw), sec(hipY - 0.05 * T, 0.43 * sw, 0.19 * sw), sec(hipY + 0.1 * T, 0.46 * sw, 0.2 * sw), sec(hipY + 0.2 * T, 0.38 * sw, 0.17 * sw),
   ]), skinM));
+
+  // plain basics under everything, so the model is never bare (clothes sit over these)
+  const baseM = new THREE.MeshStandardMaterial({ color: 0xf6f1f7, roughness: 0.9, side: THREE.DoubleSide });
+  const basic = (y, a, d, h, rTop, rBot) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, h, 28, 1, true), baseM); o.scale.set(a * bf * 1.03, 1, d * bf * 1.03); o.position.set(0, gy - y, 0); g.add(o); };
+  basic(shY + 0.22 * T, 0.45 * sw, 0.19 * sw, 0.1 * T, 0.97, 1);
+  basic(hipY + 0.07 * T, 0.46 * sw, 0.2 * sw, 0.15 * T, 0.88, 0.97);
 
   // neck + head + hair
   const hc = V(p.headTop[0], p.headTop[1] + headH / 2);
@@ -282,7 +293,8 @@ function backTexture(front, backUrl, hex) {
 function bodyFit(grid, rect) {
   const { nx, ny, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, N = nx * ny;
   const hit = new Uint8Array(N), zf = new Float32Array(N), zb = new Float32Array(N);
-  const turned = S.figure.rotation.y; S.figure.rotation.y = 0; S.figure.updateMatrixWorld(true); // probe the body facing front
+  const turned = S.figure.rotation.clone(), spot = S.figure.position.clone();
+  S.figure.rotation.set(0, 0, 0); S.figure.position.set(0, 0, 0); S.figure.updateMatrixWorld(true); // probe the body at the origin, facing front
   const rc = new THREE.Raycaster(), from = new THREE.Vector3(), dir = new THREE.Vector3(0, 0, -1), far = S.ctx.H * 4;
   rc.far = far * 2;
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
@@ -291,7 +303,7 @@ function bodyFit(grid, rect) {
     const h = rc.intersectObjects(S.ctx.skinMeshes, false);
     if (h.length) { hit[k] = 1; zf[k] = far - h[0].distance; zb[k] = far - h[h.length - 1].distance; }
   }
-  S.figure.rotation.y = turned; S.figure.updateMatrixWorld(true);
+  S.figure.rotation.copy(turned); S.figure.position.copy(spot); S.figure.updateMatrixWorld(true);
   return { hit, zf, zb };
 }
 
@@ -330,6 +342,80 @@ function buildGarments() {
   request();
 }
 
+/* ───────── the walk-in world ───────── */
+const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+function worldTick(now) {
+  const w = S.world, U = w.U, k = w.keys;
+  const dt = Math.min(0.05, (now - w.last) / 1000); w.last = now; w.t += dt;
+  let ix = w.move.x + ((k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0));
+  let iy = w.move.y + ((k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0));
+  const il = Math.hypot(ix, iy); if (il > 1) { ix /= il; iy /= il; }
+  const sy = Math.sin(w.yaw), cy = Math.cos(w.yaw);
+  let vx = 0, vz = 0;
+  if (il > 0.12) { w.target = null; vx = ix * cy - iy * sy; vz = -ix * sy - iy * cy; } // stick/keys are relative to the camera
+  else if (w.target) {
+    const dx = w.target.x - w.pos.x, dz = w.target.z - w.pos.z, d = Math.hypot(dx, dz);
+    if (d < 0.05 * U) w.target = null; else { vx = dx / d; vz = dz / d; }
+  }
+  const sp = Math.hypot(vx, vz), moving = sp > 0.05;
+  if (moving) {
+    const step = 1.15 * U * Math.min(1, sp) * dt;
+    w.pos.x = Math.max(-w.room.bounds.x, Math.min(w.room.bounds.x, w.pos.x + (vx / sp) * step));
+    w.pos.z = Math.max(w.room.bounds.zMin, Math.min(w.room.bounds.zMax, w.pos.z + (vz / sp) * step));
+    w.face += wrap(Math.atan2(vx, vz) - w.face) * Math.min(1, dt * 12);
+  }
+  const f = S.figure;
+  f.position.set(w.pos.x, moving ? Math.abs(Math.sin(w.t * 10)) * 0.014 * U : 0, w.pos.z);
+  f.rotation.y = w.face; f.rotation.z = moving ? Math.sin(w.t * 10) * 0.035 : 0;
+  // follow camera
+  w.shift += (w.shiftTo - w.shift) * Math.min(1, dt * 6); // lift the avatar up the screen while a rail is open below
+  const d = (2.15 + 1.4 * w.shift) * U, want = new THREE.Vector3(w.pos.x + sy * d, (0.78 + 0.12 * w.shift) * U, w.pos.z + cy * d);
+  S.camera.position.lerp(want, 1 - Math.exp(-dt * 7));
+  S.camera.lookAt(w.pos.x, (0.5 - 0.65 * w.shift) * U, w.pos.z); // with a rail open, pull back so the avatar sits in the visible top half
+  if (S.shadow) S.shadow.position.set(w.pos.x, 0.5, w.pos.z);
+  // which pad are we standing on?
+  let near = null;
+  for (const st of w.room.stations) {
+    const on = Math.hypot(st.padPos.x - w.pos.x, st.padPos.z - w.pos.z) < 0.3 * U;
+    st.pad.userData.disk.material.opacity = on ? 0.75 : 0.35;
+    if (on && !near) near = st.type;
+  }
+  if (near !== w.near) { w.near = near; w.onNear?.(near); }
+  w.room.update(w.t);
+}
+
+function worldLoop(now) {
+  if (!S?.world) return;
+  S.world.raf = requestAnimationFrame(worldLoop);
+  worldTick(now);
+  S.renderer.render(S.scene, S.camera);
+}
+
+/** Tap the floor to walk there; tap a rack, sign or pad to walk to it. */
+function tapWorld(e) {
+  const w = S.world, r = S.renderer.domElement.getBoundingClientRect();
+  const rc = new THREE.Raycaster();
+  rc.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1)), S.camera);
+  const hit = rc.intersectObjects(w.room.stations.map((s) => s.group), true)[0];
+  if (hit) {
+    let o = hit.object; while (o && !o.userData?.type) o = o.parent;
+    const st = o && w.room.stations.find((x) => x.group === o);
+    if (st) { w.target = st.padPos.clone(); return; }
+  }
+  const p = new THREE.Vector3();
+  if (rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p)) {
+    w.target = new THREE.Vector3(Math.max(-w.room.bounds.x, Math.min(w.room.bounds.x, p.x)), 0, Math.max(w.room.bounds.zMin, Math.min(w.room.bounds.zMax, p.z)));
+  }
+}
+
+const onKey = (down) => (e) => {
+  const key = e.key.toLowerCase();
+  if (!['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) return;
+  e.preventDefault();
+  down ? S.world?.keys.add(key) : S.world?.keys.delete(key);
+};
+
 /* ───────── public API ───────── */
 export const stage3d = {
   get usable() { return webgl && !failed; },
@@ -361,6 +447,42 @@ export const stage3d = {
   /** @param {Record<string,object>} items slot -> item   @param {Map<string,string>} urls item.id -> image URL */
   setOutfit(items, urls) { ensure().outfit = { items, urls }; buildGarments(); },
 
+  /** Put the avatar in the walk-in closet. stations: [{ type, label, emoji, color, thumbs: [url] }] */
+  enterWorld({ stations, onNear, theme, keep = false }) {
+    const s = ensure(); if (!s.ctx) return;
+    const old = keep && s.world ? { pos: s.world.pos.clone(), face: s.world.face, yaw: s.world.yaw } : null;
+    this.exitWorld();
+    const U = s.ctx.H, room = buildWorld(U, stations, theme), cv = s.renderer.domElement;
+    s.scene.add(room.group); s.scene.background = new THREE.Color(0xffe3ee); s.scene.fog = new THREE.Fog(0xffe3ee, 8 * U, 15 * U);
+    s.camera.fov = 42; s.camera.updateProjectionMatrix();
+    const start = new THREE.Vector3(0, 0, 1.7 * U);
+    s.world = { U, room, move: { x: 0, y: 0 }, keys: new Set(), yaw: 0, pos: start.clone(), face: Math.PI, target: null, near: null, onNear, last: performance.now(), t: 0, raf: 0, down: onKey(true), up: onKey(false), clear: () => s.world?.keys.clear() };
+    if (old) { s.world.pos.copy(old.pos); s.world.face = old.face; s.world.yaw = old.yaw; }
+    s.world.shift = 0; s.world.shiftTo = 0;
+    s.camera.position.set(s.world.pos.x + Math.sin(s.world.yaw) * 2.15 * U, 0.78 * U, s.world.pos.z + Math.cos(s.world.yaw) * 2.15 * U);
+    s.figure.position.copy(s.world.pos); s.figure.rotation.set(0, s.world.face, 0);
+    cv.style.touchAction = 'none'; cv.tabIndex = 0;
+    cv.addEventListener('keydown', s.world.down); cv.addEventListener('keyup', s.world.up); cv.addEventListener('blur', s.world.clear);
+    s.world.raf = requestAnimationFrame(worldLoop);
+  },
+  exitWorld() {
+    const w = S?.world; if (!w) return;
+    cancelAnimationFrame(w.raf);
+    const cv = S.renderer.domElement;
+    cv.removeEventListener('keydown', w.down); cv.removeEventListener('keyup', w.up); cv.removeEventListener('blur', w.clear);
+    cv.style.touchAction = 'pan-y'; cv.removeAttribute('tabindex');
+    S.scene.remove(w.room.group); w.room.dispose();
+    S.scene.background = null; S.scene.fog = null; S.camera.fov = 26; S.camera.updateProjectionMatrix();
+    S.world = null; S.figure.position.set(0, 0, 0); S.figure.rotation.set(0, 0, 0); S.rot = S.target = 0;
+    S.shadow?.position.set(0, 0.5, 0);
+    frame(); request();
+  },
+  /** Joystick: x right, y forward, each -1..1 relative to the camera. */
+  setMove(x, y) { if (S?.world) S.world.move = { x, y }; },
+  setFraming(open) { if (S?.world) S.world.shiftTo = open ? 1 : 0; },
+  walkToStation(type) { const st = S?.world?.room.stations.find((x) => x.type === type); if (st) S.world.target = st.padPos.clone(); },
+  get inWorld() { return !!S?.world; },
+
   /** dir: -1 / +1 turn 45°, 0 face front */
   turn(dir) {
     const s = ensure();
@@ -381,5 +503,5 @@ export const stage3d = {
 
   setLabel(text) { ensure().renderer.domElement.setAttribute('aria-label', text); },
   setRole() { const c = ensure().renderer.domElement; c.setAttribute('role', 'img'); },
-  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), backPhoto: S.shells.map((g) => !!g.children[1]?.material.map?.isCanvasTexture), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height] }; },
+  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), backPhoto: S.shells.map((g) => !!g.children[1]?.material.map?.isCanvasTexture), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height], world: S.world && { near: S.world.near, pos: [Math.round(S.world.pos.x), Math.round(S.world.pos.z)], stations: S.world.room.stations.map((x) => x.type) } }; },
 };

@@ -30,7 +30,8 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **Back photo (optional)** on any piece: shows on the back of the 3D garment instead of a darkened copy of the front.
 
 ## Dress Up: walk-in closet and mirror
-- **Walk-in closet**: your clothes hang in cabinets by type. Tap a section and the avatar walks over; its rail opens and you scroll along the hangers, tapping as many pieces as you like into your basket.
+- **Walk-in closet (3D)**: a pink 3D room with a rack for every kind of clothing, your real photos hanging on them. Walk the avatar around with the on-screen stick (or WASD/arrow keys on a computer), tap the floor to walk there, drag to look around, or use the buttons under the room to jump to a rack. Step on a glowing pad and that rack's hangers open; tap as many pieces as you like. The mirror pad takes you to try them on. (Flat mode / no WebGL falls back to the 2D cabinets below.)
+- **2D closet**: your clothes hang in cabinets by type. Tap a section and the avatar walks over; its rail opens and you scroll along the hangers, tapping as many pieces as you like into your basket.
 - **Try on** takes the basket to the **mirror** (the 3D model in a framed mirror). Swap between grabbed pieces, **Mix my picks**, save the look or log it as today's outfit. The old picker is still there under the picks.
 - **Customize** (🎨) is docked inside the model's box like a create-a-sim panel: Skin, Hair, Style, Eyes, Lips, Body, Room.
 
