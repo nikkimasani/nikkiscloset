@@ -30,8 +30,9 @@ const mock = createServer((req, res) => {
 const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing flows exercise the 2D fallback; 3D has its own section below
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -69,12 +70,14 @@ try {
   await page.click('#occs [data-o="Date Night"]');
   await page.fill('#name', 'Red party dress');
   await page.click('#save');
+  await page.click('[data-view=closet]');
   await page.waitForSelector('.piece');
   ok((await page.locator('.piece').count()) === 1, 'uploaded piece appears in closet');
   const colorName = await page.locator('.piece .meta').innerText();
   ok(/red/i.test(colorName), `colour auto-detected (${colorName.trim()})`);
 
   await page.reload();
+  await page.click('[data-view=closet]');
   ok((await page.locator('.piece').count()) === 1, 'piece persists after reload (IndexedDB)');
 
   await page.click('[data-view=closet]');
@@ -86,11 +89,12 @@ try {
   await page.screenshot({ path: join(out, '2-tryon.png') });
 
   // Log + planner
+  await page.click('[data-act=drawer][data-v=looks]');
   await page.fill('#lookname', 'Test look');
-  await page.click('[data-act=savelook]');
+  await page.click('.drawer [data-act=savelook]');
   await page.waitForSelector('[data-act=loadlook]');
   ok(await page.locator('[data-act=loadlook]').count() === 1, 'look saved');
-  await page.click('[data-act=wearToday]');
+  await page.click('.tools [data-act=wearToday]');
   await page.waitForSelector('#toast.show');
   await page.click('[data-view=planner]');
   ok(await page.locator('.day .mannequin').count() === 1, 'OOTD appears on calendar');
@@ -120,14 +124,17 @@ try {
 // sample closet on a fresh profile
 try {
   const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+  await ctx.addInitScript(() => localStorage.setItem('flat', '1'));
   const p2 = await ctx.newPage(); p2.on('pageerror', (e) => errors.push(e.message));
   await p2.goto(`http://localhost:${PORT}/`);
   await p2.click('.empty [data-act=samples]');
+  await p2.waitForFunction(() => window.__closet?.items.length === 10);
+  await p2.click('[data-view=closet]');
   await p2.waitForSelector('.piece');
   ok((await p2.locator('.piece').count()) === 10, 'sample closet loads 10 pieces');
   await p2.screenshot({ path: join(out, '5-closet.png'), fullPage: true });
   await p2.click('[data-view=tryon]');
-  await p2.selectOption('#styleocc', 'Date Night');
+  await p2.click('[data-act=mood][data-v="Date Night"]');
   await p2.click('[data-act=styleme]');
   ok(await p2.locator('#stage image').count() >= 2, 'Style me builds an outfit');
   await p2.screenshot({ path: join(out, '6-styleme.png') });
@@ -163,6 +170,7 @@ try {
 
   // UI: proportions by hand
   const vb0 = await p2.getAttribute('#stage svg', 'viewBox');
+  await p2.click('[data-act=drawer][data-v=me]');
   await p2.click('[data-act=setup]');
   ok(await p2.locator('[role=dialog][aria-modal=true]').isVisible(), 'model dialog opens');
   ok(await p2.evaluate(() => document.querySelector('main').inert), 'background inert while dialog is open');
@@ -184,6 +192,7 @@ try {
     return c.toDataURL('image/jpeg', 0.9);
   });
   const figFile = join(out, 'fig.jpg'); writeFileSync(figFile, Buffer.from(fig.split(',')[1], 'base64'));
+  await p2.click('[data-act=drawer][data-v=me]');
   await p2.click('[data-act=setup]');
   await p2.setInputFiles('#mfile', figFile);
   await p2.waitForSelector('#cal .handle', { timeout: 60000 });
@@ -214,6 +223,7 @@ try {
 
   p2.on('dialog', (dlg) => dlg.accept());
   const steps = await p2.locator('#stage g[data-slot]').count();
+  await p2.click('[data-act=drawer][data-v=ai]');
   await p2.fill('#aipass', 'letmein');
   await p2.click('[data-act=airender]');
   await p2.waitForSelector('#stage svg > image[href^="data:image/png"]', { timeout: 30000 });
@@ -224,6 +234,56 @@ try {
   await p2.screenshot({ path: join(out, '9-ai-render.png') });
   await p2.click('[data-act=aiclear]');
   ok(await p2.locator('#stage svg > image:not([href^="data:image/png"])').count() === 1, 'can go back to the quick preview');
+
+
+  // ── 3D mannequin ──
+  const c3 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+  const p3 = await c3.newPage(); p3.on('pageerror', (e) => errors.push(e.message)); p3.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  await p3.goto(`http://localhost:${PORT}/`);
+  await p3.waitForFunction(() => window.__stage3d);
+  if (!(await p3.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D tests (no WebGL in this browser)');
+  else {
+    await p3.click('[data-act=samples]'); await p3.waitForFunction(() => window.__closet.items.length === 10);
+    await p3.click('[data-act=styleme]');
+    await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 2, null, { timeout: 15000 });
+    ok(await p3.locator('#stage canvas').count() === 1 && await p3.locator('#stage svg').count() === 0, '3D canvas replaces the flat mannequin');
+    const filled = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
+    ok(filled > 0.04 && filled < 0.6, `figure is actually drawn (${(filled * 100).toFixed(1)}% of canvas)`);
+    const before = (await p3.evaluate(() => window.__stage3d.debug())).rot;
+    await p3.click('[data-act=turn][data-v="1"]');
+    ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot - before - Math.PI / 4) < 1e-6, 'turn button rotates the model 45°');
+    await p3.click('[data-act=turn][data-v="0"]');
+    ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot) < 1e-6, 'Front button returns to facing the camera');
+    const box = await p3.locator('#stage canvas').boundingBox();
+    await p3.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p3.mouse.down(); await p3.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2, { steps: 4 }); await p3.mouse.up();
+    ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot) > 0.3, 'dragging the model spins it');
+    const types0 = (await p3.evaluate(() => window.__stage3d.debug())).types;
+    await p3.click('[data-act=mood][data-v="Dinner"]'); await p3.click('[data-act=styleme]'); await p3.waitForTimeout(600);
+    ok((await p3.evaluate(() => window.__stage3d.debug())).garments >= 2, `outfit changes update the 3D garments (was ${types0.join('+')})`);
+    await p3.evaluate(axeSource);
+    const r3 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    const bad3 = r3.violations.filter((v) => v.impact !== 'minor');
+    ok(bad3.length === 0, `axe (3D dress-up): ${bad3.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await p3.screenshot({ path: join(out, '10-3d.png') });
+    // customization
+    await p3.click('[data-act=drawer][data-v=look]');
+    await p3.click('[data-act=hairstyle][data-v=pony]'); await p3.click('[data-act=hair][data-v="#e8639a"]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
+    await p3.click('[data-act=bodytype][data-v="Plus size"]'); await p3.waitForTimeout(500);
+    const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin'), shape: JSON.parse(localStorage.getItem('shape') || 'null') }));
+    ok(saved.style === 'pony' && saved.hair === '#e8639a' && saved.skin === '#8a5636' && saved.shape?.build > 1.2, 'appearance choices are saved on the device');
+    await p3.locator('#sh-legs').fill('1.15');
+    ok((await p3.evaluate(() => JSON.parse(localStorage.getItem('shape')))).legs === 1.15 && (await p3.evaluate(() => localStorage.getItem('shapename'))) === 'Custom', 'sliders fine-tune the body (preset becomes Custom)');
+    const filled2 = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
+    ok(filled2 > 0.04 && filled2 < 0.6, `customized figure still renders in frame (${(filled2 * 100).toFixed(1)}% of canvas)`);
+    await p3.evaluate(axeSource);
+    const r4 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    const bad4 = r4.violations.filter((v) => v.impact !== 'minor');
+    ok(bad4.length === 0, `axe (customize tab): ${bad4.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await p3.click('[data-act=resetlook]');
+    ok((await p3.evaluate(() => localStorage.getItem('shape'))) === '', 'Reset appearance clears customizations');
+    await p3.click('[data-act=drawer][data-v=me]'); await p3.check('#flat');
+    ok(await p3.locator('#stage svg').count() === 1, 'Flat 2D toggle switches back to the SVG mannequin');
+  }
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
