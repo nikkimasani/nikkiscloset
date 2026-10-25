@@ -9,13 +9,8 @@ const webgl = (() => {
   try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
 })();
 
-// half-depth of each garment's shell as a fraction of shoulder width, sampled top -> bottom
-const DEPTH = {
-  tops: [.235], tanks: [.225], bodysuits: [.235, .235, .22, .2], outerwear: [.29],
-  dresses: [.235, .22, .25, .27, .28], bottoms: [.235, .2, .16, .14, .13], skirts: [.22, .25, .27, .28],
-  shoes: [.3], bags: [.03], accessories: [.03],
-};
-const FLAT = new Set(['bags', 'accessories']); // paper-thin pieces visible from both sides
+// Thickness (half-depth) of each kind of garment as a fraction of shoulder width. Outer layers are thicker so they sit over inner ones.
+const HMAX = { tops: .28, tanks: .26, bodysuits: .28, outerwear: .33, dresses: .28, bottoms: .27, skirts: .29, shoes: .17, bags: .07, accessories: .06 };
 
 let S = null;           // singleton state (one WebGL context for the whole app)
 let failed = false;
@@ -164,26 +159,71 @@ function buildBody(body, skin, hair, style = 'long') {
 }
 
 /* ───────── garments ───────── */
-function shell(rect, depths, flat) {
-  const rows = Math.max(depths.length * 2, 2), seg = 48, pos = [], uv = [], idx = [];
-  const lerp = (t) => { const f = t * (depths.length - 1), i = Math.min(Math.floor(f), depths.length - 2), u = f - i; return depths.length === 1 ? depths[0] : depths[i] * (1 - u) + depths[i + 1] * u; };
-  for (let r = 0; r <= rows; r++) {
-    const t = r / rows, y = rect.top - t * rect.h, d = lerp(t) * rect.sw;
-    for (let k = 0; k <= seg; k++) {
-      const a = (k / seg) * Math.PI * 2, c = Math.cos(a);
-      pos.push(rect.cx + (rect.w / 2) * c, y, d * Math.sin(a) + (rect.z || 0));
-      uv.push((c + 1) / 2, 1 - t);
+/** Per-photo "mask": which cells are garment, and how far each is from the outline (in cells). Cached with the texture. */
+function maskGrid(e) {
+  if (e.grid) return e.grid;
+  const iw = e.tex.image.width, ih = e.tex.image.height, G = 128;
+  const nx = Math.max(8, Math.round(iw >= ih ? G : (G * iw) / ih)), ny = Math.max(8, Math.round(ih >= iw ? G : (G * ih) / iw));
+  const c = document.createElement('canvas'); c.width = nx; c.height = ny;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(e.tex.image, 0, 0, nx, ny);
+  // any visible pixel counts as garment, so the mesh always covers the cutout (the texture's alpha makes the crisp outline)
+  const px = x.getImageData(0, 0, nx, ny).data, inside = new Uint8Array(nx * ny), dist = new Float32Array(nx * ny);
+  for (let i = 0; i < nx * ny; i++) { inside[i] = px[i * 4 + 3] > 8 ? 1 : 0; dist[i] = inside[i] ? 1e9 : 0; }
+  const at = (xx, yy) => (xx < 0 || yy < 0 || xx >= nx || yy >= ny ? 0 : dist[yy * nx + xx]); // outside the picture counts as outside the garment
+  for (let yy = 0; yy < ny; yy++) for (let xx = 0; xx < nx; xx++) { const i = yy * nx + xx; if (dist[i]) dist[i] = Math.min(dist[i], at(xx - 1, yy) + 1, at(xx, yy - 1) + 1, at(xx - 1, yy - 1) + 1.414, at(xx + 1, yy - 1) + 1.414); }
+  for (let yy = ny - 1; yy >= 0; yy--) for (let xx = nx - 1; xx >= 0; xx--) { const i = yy * nx + xx; if (dist[i]) dist[i] = Math.min(dist[i], at(xx + 1, yy) + 1, at(xx, yy + 1) + 1, at(xx + 1, yy + 1) + 1.414, at(xx - 1, yy + 1) + 1.414); }
+  return (e.grid = { nx, ny, dist, inside });
+}
+
+/**
+ * Inflate a garment's outline into a rounded 3D volume: thickness grows with distance from the edge (so thin parts like straps,
+ * sleeves and pant legs are slim, big panels are full) and rolls off smoothly at the outline. Returns a front and a back surface.
+ * rect = {cx, top, w, h} in world units; hMax = half-thickness; zc = depth of the centre plane.
+ */
+function inflate(grid, rect, hMax, zc) {
+  const { nx, ny, dist, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, cell = (cw + ch) / 2;
+  // 0.04 of the thickness is kept at the very edge (fabric has some), so front and back never z-fight
+  const height = new Float32Array(nx * ny); // full thickness is reached a bit before the middle, so slim parts (legs, sleeves) still get filled out
+  for (let i = 0; i < nx * ny; i++) if (inside[i]) { const t = Math.min(1, (dist[i] * cell) / (0.8 * hMax)); height[i] = hMax * (0.04 + 0.96 * Math.sqrt(1 - (1 - t) * (1 - t))); }
+  const build = (sign) => {
+    const pos = new Float32Array(nx * ny * 3), uv = new Float32Array(nx * ny * 2), idx = [];
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i;
+      pos.set([rect.cx - rect.w / 2 + (i + 0.5) * cw, rect.top - (j + 0.5) * ch, zc + sign * height[k]], k * 3);
+      uv.set([(i + 0.5) / nx, 1 - (j + 0.5) / ny], k * 2);
     }
-  }
-  for (let r = 0; r < rows; r++) for (let k = 0; k < seg; k++) {
-    const a = r * (seg + 1) + k, b = a + seg + 1;
-    idx.push(a, a + 1, b, a + 1, b + 1, b);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-  g.setIndex(idx); g.computeVertexNormals();
-  return g;
+    for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+      const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
+      if (!(inside[a] || inside[b] || inside[c] || inside[d])) continue;
+      if (sign > 0) idx.push(a, c, b, b, c, d); else idx.push(a, b, c, b, d, c);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  };
+  // side walls along the outline (and around holes) so a turned garment is a closed volume, not two floating sheets
+  const wall = (() => {
+    const pos = new Float32Array(nx * ny * 6), uv = new Float32Array(nx * ny * 4), idx = [], N = nx * ny;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i, x = rect.cx - rect.w / 2 + (i + 0.5) * cw, y = rect.top - (j + 0.5) * ch, u = (i + 0.5) / nx, v = 1 - (j + 0.5) / ny;
+      pos.set([x, y, zc + height[k]], k * 3); pos.set([x, y, zc - height[k]], (N + k) * 3);
+      uv.set([u, v], k * 2); uv.set([u, v], (N + k) * 2);
+    }
+    const at = (i, j) => (i < 0 || j < 0 || i >= nx || j >= ny ? false : inside[j * nx + i]);
+    const quad = (a, b) => idx.push(a, b, N + a, b, N + b, N + a); // front edge a-b down to the back edge
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      if (!at(i, j)) continue;
+      const k = j * nx + i;
+      if (at(i + 1, j)) { if (!at(i, j - 1) || !at(i + 1, j - 1)) quad(k, k + 1); if (!at(i, j + 1) || !at(i + 1, j + 1)) quad(k, k + 1); }
+      if (at(i, j + 1)) { if (!at(i - 1, j) || !at(i - 1, j + 1)) quad(k, k + nx); if (!at(i + 1, j) || !at(i + 1, j + 1)) quad(k, k + nx); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  })();
+  return [build(1), build(-1), wall];
 }
 
 function getTexture(url) {
@@ -199,7 +239,7 @@ function getTexture(url) {
 
 function buildGarments() {
   if (!S?.ctx || !S.outfit) return;
-  S.shells.forEach((m) => { S.figure.remove(m); m.geometry.dispose(); m.material.dispose(); });
+  S.shells.forEach((g) => { S.figure.remove(g); g.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); }); });
   S.shells = [];
   const { cx, gy, m, body } = S.ctx, k = body.H / 640;
   for (const it of Object.values(S.outfit.items)) {
@@ -213,13 +253,16 @@ function buildGarments() {
     const gcx = bcx + a.dx * k + (box.x + (box.w - dw) / 2 + dw / 2 - bcx) * a.scale;
     const gcy = bcy + a.dy * k + (iy + dh / 2 - bcy) * a.scale;
     const W = dw * a.scale, H = dh * a.scale;
-    const flat = FLAT.has(it.type);
-    const geo = shell({ cx: gcx - cx, top: gy - (gcy - H / 2), h: H, w: W, sw: m.sw * (body.build || 1), z: it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.06 * m.sw : 0 }, DEPTH[it.type] || [.235], flat);
-    const mat = new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, side: flat ? THREE.DoubleSide : THREE.FrontSide });
-    const mesh = new THREE.Mesh(geo, mat);
-    if (box.rot) mesh.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
-    mesh.userData.slot = it.type;
-    S.figure.add(mesh); S.shells.push(mesh);
+    const sw = m.sw * (body.build || 1);
+    const zc = it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.15 * m.sw : 0;
+    const [front, back, wall] = inflate(maskGrid(e), { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H }, (HMAX[it.type] || 0.24) * sw, zc);
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(front, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
+    group.add(new THREE.Mesh(back, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true, color: 0xd9d9d9 }))); // back is the same photo, a little darker
+    group.add(new THREE.Mesh(wall, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, color: 0xe6e6e6 })));
+    if (box.rot) group.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
+    group.userData.slot = it.type;
+    S.figure.add(group); S.shells.push(group);
   }
   request();
 }
@@ -264,5 +307,5 @@ export const stage3d = {
 
   setLabel(text) { ensure().renderer.domElement.setAttribute('aria-label', text); },
   setRole() { const c = ensure().renderer.domElement; c.setAttribute('role', 'img'); },
-  debug() { return S && { garments: S.shells.length, types: S.shells.map((m) => m.userData.slot), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height] }; },
+  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height] }; },
 };

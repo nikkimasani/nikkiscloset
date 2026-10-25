@@ -12,7 +12,7 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 
 ## What it does
 - **Dress Up (home)** – a game-style dressing room: your model stands in a room, a floating mood gem and three meters (mood fit, colours, freshness) react to the outfit, a wardrobe tray at the bottom lets you tap pieces on, and quick buttons (Style me, Undress, Save, Wear today) sit beside the model. Pick a mood (occasion) to tune Style me and the meters.
-- **3D model** – the mannequin is a real 3D figure (Three.js, bundled) built from your proportions. Drag it or use ◀ Front ▶ to turn it. Each garment photo is wrapped around the body as a curved, lit cutout, so you can see it from every angle. Falls back to the flat 2D mannequin if the device has no WebGL (or by choice under Dress Up → Me).
+- **3D model** – the mannequin is a real 3D figure (Three.js, bundled) built from your proportions. Drag it or use ◀ Front ▶ to turn it. Each garment photo is inflated into a rounded 3D volume that follows its own outline (slim sleeves and pant legs, fuller torsos and skirts), lit and shaded, so you can see it from every angle. Falls back to the flat 2D mannequin if the device has no WebGL (or by choice under Dress Up → Me).
 - **Customize your model** – Dress Up → 🎨 Customize: 10 skin tones + any colour, 12 hair colours + any colour, 6 hair styles (long, bob, pixie, bun, ponytail, curly), 8 body types (petite → plus size) and sliders for shoulders, hips, torso, legs and build. Saved on the device; works on the 3D and flat models.
 - **Wardrobe** – every piece shown on a hanger, on a shelf rail per category (tops, tank tops, bodysuits, bottoms, skirts, dresses, outerwear, shoes, bags, accessories). Filter by type, occasion (Work, Date Night, GNO, Casual, Brunch, Dinner…) or search.
 - **Add piece** – upload a photo; the background is removed in your browser (adjustable strength), cropped, colour-detected, and tagged with a type and occasions.
@@ -54,7 +54,7 @@ Keyboard-operable throughout (including the body-point editor), labelled control
 - All data (photos included) lives in your browser's IndexedDB — nothing is uploaded. Clearing site data erases it; export/backup is a good next step.
 - Cutout works best on a plain, contrasting background (bed sheet, wall). Busy backgrounds need a higher strength or a cleaner photo.
 - Pinterest has no open API, so inspo is image-based (upload/paste); pin links are saved for reference.
-- The 3D view wraps flat garment photos around the body; it has depth and lighting but **no cloth simulation** (no folds, drape or sleeves that follow the arms), and the back of a garment mirrors its front. Shoes and bags are the roughest pieces. Your own photo ("My photo") stays 2D.
+- The 3D view inflates flat garment photos into volumes; it has depth and lighting but **no cloth simulation** (no folds or drape; sleeves don't bend with the arms), the back of a garment mirrors its front, and outlines can look slightly rough up close. Shoes and bags are the roughest pieces. Your own photo ("My photo") stays 2D.
 - Try-on in photo mode is **fitted 2D layering**, not cloth simulation: a flat photo of a garment can't drape, fold, or follow a bent arm. Fit is as good as your body points and the garment photo. For photoreal drape, add a generative try-on model behind a serverless function (see below).
 - Pose detection needs a clear, front-facing, full-body photo; if it can't find you, you place the points by hand.
 
