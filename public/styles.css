@@ -261,4 +261,6 @@ main { overflow-x: clip; }
   .dress .room { position: sticky; top: calc(max(10px, env(safe-area-inset-top)) + 54px); z-index: 6; height: clamp(340px, 46vh, 440px); }
   .dress .moods { order: 1; }
   .dress-right { order: 2; }
+  /* anything scrolled or tabbed into view stops below the pinned model instead of hiding behind it */
+  html:has(.dress .room) { scroll-padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px + clamp(340px, 46vh, 440px) + 12px); scroll-padding-bottom: 96px; }
 }
