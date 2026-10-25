@@ -1,5 +1,6 @@
-import { all, put, del, uid } from './db.js';
-import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, slotOf, wear } from './data.js';
+import { all, get, put, del, uid } from './db.js';
+import { lookCard, shareOrDownload } from './sharecard.js';
+import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, EYES, LIPS, ROOMS, seasonRoom, slotOf, wear } from './data.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
 import { palette, colorName } from './color.js';
 import { mannequinSVG } from './mannequin.js';
@@ -9,7 +10,7 @@ import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js
 import { detectPose } from './pose.js';
 import { outfitMeters } from './meters.js';
 import { closetInsights, streak as wearStreak } from './insights.js';
-import { stage3d } from './stage3d.js';
+import { webglOK } from './webgl.js';
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor } from './aitryon.js';
@@ -29,6 +30,7 @@ const S = {
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
   skin: store.get('skin', SKIN[2]), hair: store.get('hair', HAIR[1]), hairStyle: store.get('hairstyle', 'long'),
+  eyes: store.get('eyes', EYES[0]), lips: store.get('lips', LIPS[0]), room: store.get('room', 'auto'),
   shape: (() => { try { return JSON.parse(store.get('shape', 'null')); } catch { return null; } })(), shapeName: store.get('shapename', ''),
   month: new Date(), date: iso(new Date()),
   inspo: null,                      // working inspo draft
@@ -85,7 +87,7 @@ const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto(
 function mannequin(src, cls = '') {
   const items = outfitItems(src), done = aiFor(items); // AI result replaces the photo; only un-rendered pieces are layered on
   const rest = done ? Object.fromEntries(Object.entries(items).filter(([slot]) => !done.includes(slot))) : items;
-  return mannequinSVG({ body: currentBody(), photoUrl: done ? S.ai.image : usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, items: rest, urls: S.urls, cls,
+  return mannequinSVG({ body: currentBody(), photoUrl: done ? S.ai.image : usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, face: { eyes: S.eyes, lips: S.lips }, items: rest, urls: S.urls, cls,
     label: done ? `Your photo wearing ${Object.values(items).map((i) => i.name).join(', ')}` : '' });
 }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
@@ -244,7 +246,7 @@ function openItemModal(existing, preset = {}) {
     $('#save').onclick = async () => {
       if (!d.canvas && !d.cutout) return toast('Add a photo first 📸');
       if (!d.name.trim()) return toast('Give it a name');
-      const cutout = d.canvas ? await canvasToBlob(d.canvas) : d.cutout;
+      const cutout = d.canvas ? await canvasToBlob(d.canvas, 'image/webp', 0.92) : d.cutout; // WebP keeps the transparency at a fraction of PNG's size (browsers without WebP encoding fall back to PNG)
       const item = {
         ...(existing || {}), id: d.id, name: d.name.trim(), type: d.type, occasions: d.occasions, brand: d.brand.trim(),
         color: d.color || existing?.color, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
@@ -275,7 +277,7 @@ async function removeItems(ids) {
 
 /* ───────────────────────── backup & restore ───────────────────────── */
 const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
-const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename'];
+const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room', 'budget'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
 const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
@@ -419,7 +421,7 @@ function openModelModal() {
     $('#msave').onclick = async () => {
       let photo = d.photo;
       if (d.photoUrl && d.canvas) photo = await canvasToBlob(d.canvas, 'image/jpeg', 0.9);
-      const rec = { id: 'me', W: d.W, H: d.H, pts: d.pts, photo: d.photoUrl ? photo : null, display: d.photoUrl ? d.display : 'mannequin' };
+      const rec = { id: 'me', rev: Date.now(), W: d.W, H: d.H, pts: d.pts, photo: d.photoUrl ? photo : null, display: d.photoUrl ? d.display : 'mannequin' };
       await put('profile', rec); S.profile = rec;
       S.urls.delete('profile'); if (rec.photo) url('profile', rec.photo);
       S.shape = null; S.shapeName = ''; store.set('shape', ''); store.set('shapename', ''); // the new model replaces any body-type preset
@@ -434,27 +436,51 @@ function openModelModal() {
 }
 
 /* ───────────────────────── AI try-on (fal.ai) ───────────────────────── */
+/* Saved renders + monthly budget: re-showing an outfit you've already rendered is free; spending is capped by a budget you set. */
+const aiKey = (steps) => [S.profile?.rev || 0, ...steps.map(([slot, it]) => `${slot}:${it.id}@${it.updatedAt || it.createdAt}`)].join('|');
+const monthKey = () => iso(new Date()).slice(0, 7);
+function spent() { try { const s = JSON.parse(store.get('spend', 'null')); return s?.m === monthKey() ? s.n : 0; } catch { return 0; } } // pieces rendered this month
+const addSpent = (n) => store.set('spend', JSON.stringify({ m: monthKey(), n: spent() + n }));
+const budget = () => { const b = parseFloat(store.get('budget', '5')); return b >= 0 ? b : 5; };
+
+/** If this exact outfit (same photo, same pieces) was rendered before, show it for free. Runs once per outfit. */
+async function restoreCachedRender() {
+  const steps = aiSteps(outfitItems(S.outfit));
+  if (!usingPhoto() || !steps.length || aiFor(outfitItems(S.outfit))) return;
+  const key = aiKey(steps);
+  if (S.aiChecked === key) return;
+  S.aiChecked = key;
+  const rec = await get('renders', key);
+  if (rec && S.aiChecked === key && S.view === 'tryon') { S.ai = { sig: aiSignature(steps), image: rec.image }; S.aiFromCache = true; renderTryon(); }
+}
+
 function aiPanel() {
   const steps = aiSteps(outfitItems(S.outfit)), cost = (steps.length * PRICE).toFixed(2);
-  const rendered = !!aiFor(outfitItems(S.outfit));
+  const rendered = !!aiFor(outfitItems(S.outfit)), left = budget() - spent() * PRICE;
   const why = !usingPhoto() ? 'Switch to “My photo” above (and set up your model) to use this.' : !steps.length ? 'Pick a top, bottom, dress or jacket first.' : '';
   return `<div class="panel"><h3>Photoreal try-on <span class="muted">(AI · uses your fal.ai credits)</span></h3>
     <p class="muted">Renders the real drape of your piece${steps.length > 1 ? 's' : ''} on your photo. Shoes, bags and accessories are layered on afterwards.${steps.length ? ` About <b>$${cost}</b> for ${steps.length} piece${steps.length > 1 ? 's' : ''}.` : ''}</p>
+    <p class="muted">This month: <b>${spent()}</b> piece${spent() === 1 ? '' : 's'} rendered ≈ <b>$${(spent() * PRICE).toFixed(2)}</b> of your <label class="sr-only" for="aibudget">monthly budget in dollars</label>$<input type="number" id="aibudget" min="0" step="1" value="${budget()}" style="width:80px;display:inline-block;min-height:36px;padding:4px 8px"> budget.${rendered && S.aiFromCache ? ' <b>Showing a saved render — free.</b>' : ''}${left < PRICE ? ' <b>Budget used up — raise it to render more.</b>' : ''}</p>
     <label class="f" for="aipass">Passcode</label>
     <input type="password" id="aipass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
     <div class="row" style="margin-top:8px">
-      ${S.aiBusy ? '<button class="ghost" data-act="aicancel">Cancel</button>' : `<button class="primary" data-act="airender" ${why ? 'disabled' : ''}>${rendered ? 'Render again' : '✨ Render on my photo'}</button>`}
+      ${S.aiBusy ? '<button class="ghost" data-act="aicancel">Cancel</button>' : `<button class="primary" data-act="${rendered ? 'airefresh' : 'airender'}" ${why ? 'disabled' : ''}>${rendered ? 'Render again (new cost)' : '✨ Render on my photo'}</button>`}
       ${rendered && !S.aiBusy ? '<button class="ghost" data-act="aiclear">Back to quick preview</button>' : ''}
     </div>
     <div id="aistatus" class="muted" role="status" aria-live="polite">${why && !S.aiBusy ? esc(why) : ''}${S.aiBusy ? 'Working…' : ''}</div>
     ${S.aiError ? `<div class="gap" role="alert">${esc(S.aiError)}</div>` : ''}</div>`;
 }
 
-async function runAIRender() {
+async function runAIRender(force = false) {
   const items = outfitItems(S.outfit), steps = aiSteps(items);
+  if (!force) { // a render you've already paid for is free to show again
+    const rec = await get('renders', aiKey(steps));
+    if (rec) { S.ai = { sig: aiSignature(steps), image: rec.image }; S.aiFromCache = true; S.aiChecked = aiKey(steps); toast('Showing your saved render — free'); return renderTryon(); }
+  }
   const pass = $('#aipass').value.trim();
   if (!pass) return toast('Enter your passcode first');
   store.set('aipass', pass);
+  if ((spent() + steps.length) * PRICE > budget() + 1e-9) return toast(`That would go over your $${budget()} monthly budget — raise it above to continue`);
   if (!confirm(`Render ${steps.length} piece${steps.length > 1 ? 's' : ''} with fal.ai? That's about $${(steps.length * PRICE).toFixed(2)} of your credits.`)) return;
   S.aiAbort = new AbortController(); S.aiBusy = true; S.aiError = ''; renderTryon();
   try {
@@ -463,12 +489,26 @@ async function runAIRender() {
       person: await personImage(S.profile.photo), steps: prepared, passcode: pass, signal: S.aiAbort.signal,
       onProgress: (m) => { const el = $('#aistatus'); if (el) el.textContent = m; },
     });
-    S.ai = { sig: aiSignature(steps), image }; toast('Rendered ✓');
+    S.ai = { sig: aiSignature(steps), image }; S.aiFromCache = false; addSpent(steps.length); toast('Rendered ✓');
+    const key = aiKey(steps); S.aiChecked = key;
+    await put('renders', { id: key, image, at: Date.now() });
+    const all2 = (await all('renders')).sort((a, b) => b.at - a.at); for (const old of all2.slice(40)) await del('renders', old.id); // keep the 40 most recent
   } catch (e) { if (e.name !== 'AbortError') S.aiError = e.message; else toast('Cancelled'); }
   S.aiBusy = false; S.aiAbort = null; if (S.view === 'tryon') renderTryon();
 }
 
 /* ───────────────────────── try on ───────────────────────── */
+// The 3D engine (~650 KB) is only downloaded the first time a 3D model is actually shown; until then this stand-in answers.
+let engine = null, enginePromise = null;
+const loadEngine = () => (enginePromise ||= import('./stage3d.js').then((m) => (engine = m.stage3d)));
+const stage3d = {
+  get usable() { return engine ? engine.usable : webglOK; },
+  get loaded() { return !!engine; },
+  attach: (el) => engine?.attach(el), setModel: (m) => engine?.setModel(m), setOutfit: (i, u) => engine?.setOutfit(i, u),
+  turn: (d) => engine?.turn(d), setLabel: (t) => engine?.setLabel(t), setRole: () => engine?.setRole(),
+  snapshot: () => engine?.snapshot() ?? null, debug: () => engine?.debug(),
+};
+
 // 3D when the device supports WebGL (and the user hasn't chosen flat); the 2D SVG mannequin is the fallback.
 const use3D = () => !usingPhoto() && stage3d.usable && store.get('flat', '') !== '1';
 async function setShape(shape, name) {
@@ -486,14 +526,20 @@ function outfitLabel() {
 function mountStage() {
   const el = $('#stage'); if (!el) return;
   if (!use3D()) { el.innerHTML = stageHTML(); return; }
+  if (!stage3d.loaded) { // show the flat model right away while the 3D engine downloads, then swap
+    el.innerHTML = mannequin(S.outfit);
+    loadEngine().then(() => { if ($('#stage') && use3D()) mountStage(); }).catch(() => { store.set('flat', '1'); renderTryon(); });
+    return;
+  }
+  el.replaceChildren();
   stage3d.attach(el);
-  stage3d.setModel({ body: currentBody(), skin: S.skin, hair: S.hair, hairStyle: S.hairStyle });
+  stage3d.setModel({ body: currentBody(), skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, face: { eyes: S.eyes, lips: S.lips } });
   stage3d.setOutfit(outfitItems(S.outfit), S.urls);
   stage3d.setRole(); stage3d.setLabel(outfitLabel());
 }
 function refreshStage() {
   const s = $('#stage'); if (!s) return;
-  if (use3D()) { stage3d.setOutfit(outfitItems(S.outfit), S.urls); stage3d.setLabel(outfitLabel()); } else s.innerHTML = stageHTML();
+  if (use3D() && stage3d.loaded) { stage3d.setOutfit(outfitItems(S.outfit), S.urls); stage3d.setLabel(outfitLabel()); } else s.innerHTML = use3D() ? mannequin(S.outfit) : stageHTML();
 }
 
 const DRAWERS = [['fit', '📏 Fit'], ['look', '🎨 Customize'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
@@ -513,6 +559,9 @@ function customizeHTML() {
   return `<h3>Skin tone</h3>${sw(SKIN, S.skin, 'skin', 'Skin tone')}
     <h3>Hair colour</h3>${sw(HAIR, S.hair, 'hair', 'Hair colour')}
     <h3>Hair style</h3><div class="chips" role="group" aria-label="Hair style">${HAIR_STYLES.map(([k, l]) => `<button class="chip ${S.hairStyle === k ? 'on' : ''}" aria-pressed="${S.hairStyle === k}" data-act="hairstyle" data-v="${k}">${l}</button>`).join('')}</div>
+    <h3>Eyes</h3>${sw(EYES, S.eyes, 'eyes', 'Eye colour')}
+    <h3>Lips</h3>${sw(LIPS, S.lips, 'lips', 'Lip colour')}
+    <h3>Room</h3><div class="chips" role="group" aria-label="Room">${[['auto', 'Follow the season'], ...Object.entries(ROOMS).map(([k, [l, e]]) => [k, `${e} ${l}`])].map(([k, l]) => `<button class="chip ${S.room === k ? 'on' : ''}" aria-pressed="${S.room === k}" data-act="room" data-v="${k}">${l}</button>`).join('')}</div>
     <h3>Body type</h3><div class="chips" role="group" aria-label="Body type">${Object.keys(BODY_TYPES).map((k) => `<button class="chip ${S.shape && S.shapeName === k ? 'on' : ''}" aria-pressed="${!!S.shape && S.shapeName === k}" data-act="bodytype" data-v="${k}">${k}</button>`).join('')}</div>
     <h3>Fine-tune</h3>${SHAPE_SLIDERS.map(([k, l, a, b]) => `<label class="f" for="sh-${k}">${l}</label><input type="range" id="sh-${k}" data-shape="${k}" min="${a}" max="${b}" step="0.01" value="${shape[k]}">`).join('')}
     <button class="ghost" data-act="resetlook" style="margin-top:12px">Reset appearance</button>`;
@@ -529,6 +578,7 @@ function drawerHTML(worn, fit) {
   if (S.drawer === 'looks') return `<div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Name this look (optional)" class="grow">
       <button class="ghost" data-act="savelook">💾 Save</button></div>
       <button class="primary wide" data-act="wearToday">📅 I’m wearing this today</button>
+      <button class="ghost wide" data-act="sharecard" style="margin-top:8px">📸 Share this look as a picture</button>
       ${S.outfits.length ? `<h3>Saved looks</h3><div class="chips">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}${o.occasion ? ' · ' + esc(o.occasion) : ''}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : '<p class="muted">Saved looks show up here.</p>'}`;
   if (S.drawer === 'look') return customizeHTML();
   if (S.drawer === 'ai') return aiPanel();
@@ -548,18 +598,21 @@ function renderTryon() {
   if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
   const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
   const worn = outfitItems(S.outfit);
+  const roomKey = S.room === 'auto' || !ROOMS[S.room] ? seasonRoom(new Date().getMonth()) : S.room;
+  const stk = wearStreak(S.wears, iso(new Date()));
   const m = outfitMeters(worn, S.mood, wearCounts());
   const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
   const pickList = S.items.filter((i) => i.type === S.tab), counts = wearCounts();
   $('#main').innerHTML = `<h2 class="view-title sr-only">Dress up</h2>
   <div class="dress">
     <div class="dress-left">
-      <div class="room ${usingPhoto() ? 'photo' : ''} ${use3D() ? 'is3d' : ''}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
-        <div class="wall" aria-hidden="true"><div class="window"></div><div class="art"></div><div class="plant">🪴</div></div>
+      <div class="room ${usingPhoto() ? 'photo' : ''} ${use3D() ? 'is3d' : ''} theme-${roomKey}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
+        <div class="wall" aria-hidden="true"><div class="window"></div><div class="art"></div><div class="plant">${ROOMS[roomKey][1]}</div></div>
         <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
         ${metersHTML(worn)}
+        ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${use3D() ? `<div class="turnbar" role="group" aria-label="Turn the model"><button data-act="turn" data-v="-1" aria-label="Turn left"><span aria-hidden="true">◀</span></button><button data-act="turn" data-v="0">Front</button><button data-act="turn" data-v="1" aria-label="Turn right"><span aria-hidden="true">▶</span></button></div>` : ''}
         <div class="tools" role="group" aria-label="Quick actions">
           <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
@@ -584,7 +637,7 @@ function renderTryon() {
       </section>
     </div></div>`;
   S.lastTab = S.tab; S.lastView = 'tryon';
-  mountStage();
+  mountStage(); restoreCachedRender();
   const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
   window.scrollTo(0, keepY);
   $('#main').querySelectorAll('[data-adj]').forEach((r) => {
@@ -618,6 +671,20 @@ async function logWear(date, occasion = '', note = '') {
   if (aiFor(outfitItems(S.outfit))) { w.render = await (await fetch(S.ai.image)).blob(); url('render:' + w.id, w.render); }
   await put('wears', w); S.wears.push(w);
   toast(`Logged for ${date} ✓`);
+}
+
+async function makeLookCard() {
+  const worn = outfitItems(S.outfit), list = SLOTS.map((s) => worn[s]).filter(Boolean);
+  if (!list.length) return toast('Dress the model first');
+  const name = $('#lookname')?.value.trim();
+  const blob = await lookCard({
+    title: name || (S.mood ? `${OCCASION_EMOJI[S.mood]} ${S.mood} look` : 'My look'),
+    sub: new Date().toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' }),
+    items: list.map((i) => ({ name: i.name, url: url(i.id) })),
+    model: use3D() && stage3d.loaded ? stage3d.snapshot() : null,
+  });
+  const r = await shareOrDownload(blob, `look-${iso(new Date())}.png`, 'My look');
+  if (r !== 'cancelled') toast(r === 'shared' ? 'Shared ✓' : 'Look picture saved');
 }
 
 /* ───────────────────────── insights ───────────────────────── */
@@ -743,9 +810,12 @@ document.addEventListener('click', async (e) => {
     case 'tab': S.tab = v; return renderTryon();
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; return renderTryon();
     case 'turn': return stage3d.turn(+v);
+    case 'eyes': S.eyes = v; store.set('eyes', v); return renderTryon();
+    case 'lips': S.lips = v; store.set('lips', v); return renderTryon();
+    case 'room': S.room = v; store.set('room', v); return renderTryon();
     case 'hairstyle': S.hairStyle = v; store.set('hairstyle', v); return renderTryon();
     case 'bodytype': await setShape({ ...BODY_TYPES[v] }, v); return renderTryon();
-    case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; ['skin', 'hair', 'hairstyle', 'shape', 'shapename'].forEach((k) => store.set(k, '')); return renderTryon();
+    case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; S.eyes = EYES[0]; S.lips = LIPS[0]; S.room = 'auto'; ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room'].forEach((k) => store.set(k, '')); return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
     case 'rmsamples': {
@@ -754,12 +824,14 @@ document.addEventListener('click', async (e) => {
       await removeItems(ids); toast('Sample pieces removed'); return render();
     }
     case 'wishgap': await wishFromGap(ctx, el.dataset.slot, el.dataset.hex, S.inspo?.occasion); return showMatch();
+    case 'sharecard': return makeLookCard();
     case 'gowx': return go('plan');
     case 'mood': S.mood = S.mood === v ? '' : v; return renderTryon();
     case 'drawer': S.drawer = v; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
     case 'resetfit': { const it = itemById(id); it.adj = { scale: 1, dx: 0, dy: 0 }; await put('items', it); return renderTryon(); }
     case 'airender': return runAIRender();
+    case 'airefresh': return runAIRender(true);
     case 'aicancel': return S.aiAbort?.abort();
     case 'aiclear': S.ai = null; return renderTryon();
     case 'display': S.profile.display = v; await put('profile', S.profile); return renderTryon();
@@ -805,15 +877,16 @@ document.addEventListener('click', async (e) => {
 
 document.addEventListener('input', (e) => {
   const t = e.target;
-  if (t.id === 'custom-skin' || t.id === 'custom-hair') { const k = t.id.slice(7); S[k] = t.value; store.set(k, t.value); mountStage(); }
+  if (/^custom-(skin|hair|eyes|lips)$/.test(t.id)) { const k = t.id.slice(7); S[k] = t.value; store.set(k, t.value); mountStage(); }
   if (t.dataset?.shape) { // live: reshape the model while dragging, save when released
     S.shape = { ...(S.shape || BODY_TYPES.Average), [t.dataset.shape]: +t.value }; S.shapeName = 'Custom';
     store.set('shape', JSON.stringify(S.shape)); store.set('shapename', 'Custom'); mountStage();
   }
 });
 document.addEventListener('change', (e) => {
+  if (e.target.id === 'aibudget') { store.set('budget', String(Math.max(0, parseFloat(e.target.value) || 0))); renderTryon(); return; }
   if (e.target.id === 'restore' && e.target.files[0]) { importBackup(e.target.files[0]); e.target.value = ''; return; }
-  if (e.target.id === 'custom-skin' || e.target.id === 'custom-hair' || e.target.dataset?.shape) renderTryon(); if (e.target.id === 'flat') { store.set('flat', e.target.checked ? '1' : ''); renderTryon(); } });
+  if (/^custom-(skin|hair|eyes|lips)$/.test(e.target.id) || e.target.dataset?.shape) renderTryon(); if (e.target.id === 'flat') { store.set('flat', e.target.checked ? '1' : ''); renderTryon(); } });
 
 document.addEventListener('paste', (e) => {
   if (S.view !== 'inspo') return;

@@ -25,5 +25,6 @@ async function tx(store, mode, fn) {
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 export const all = (store) => tx(store, 'readonly', (s) => s.getAll());
+export const get = (store, id) => tx(store, 'readonly', (s) => s.get(id));
 export const put = (store, obj) => tx(store, 'readwrite', (s) => s.put(obj));
 export const del = (store, id) => tx(store, 'readwrite', (s) => s.delete(id));

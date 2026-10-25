@@ -233,6 +233,19 @@ try {
   await p2.screenshot({ path: join(out, '9-ai-render.png') });
   await p2.click('[data-act=aiclear]');
   ok(await p2.locator('#stage svg > image:not([href^="data:image/png"])').count() === 1, 'can go back to the quick preview');
+  const callsAfterFirst = falCalls.length;
+  ok(await p2.evaluate(() => JSON.parse(localStorage.getItem('spend')).n) === callsAfterFirst, 'the budget tracker counts the pieces rendered');
+  await p2.click('[data-act=airender]');
+  await p2.waitForSelector('#stage svg > image[href^="data:image/png"]');
+  ok(falCalls.length === callsAfterFirst && /saved render/.test(await p2.locator('.drawer-body').innerText()), 'the same outfit shows its saved render for free (no new fal call)');
+  // a $0 budget blocks a brand-new render before any money is spent
+  await p2.evaluate(() => localStorage.setItem('budget', '0'));
+  await p2.evaluate(() => { const S = window.__closet; Object.values(S.outfit).forEach((id) => { S.items.find((i) => i.id === id).updatedAt = Date.now() + 1; }); S.ai = null; }); // editing a piece invalidates its saved render
+  await p2.click('[data-act=drawer][data-v=fit]'); await p2.click('[data-act=drawer][data-v=ai]'); await p2.fill('#aipass', 'letmein');
+  const blocked = falCalls.length;
+  await p2.click('[data-act=airender]');
+  await p2.waitForFunction(() => /monthly budget/.test(document.querySelector('#toast').textContent), null, { timeout: 8000 });
+  ok(falCalls.length === blocked, 'a $0 budget stops a new render before any money is spent');
 
 
   // ── 3D mannequin ──
@@ -246,6 +259,7 @@ try {
     await p3.click('[data-act=styleme]');
     await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 2, null, { timeout: 15000 });
     ok(await p3.locator('#stage canvas').count() === 1 && await p3.locator('#stage svg').count() === 0, '3D canvas replaces the flat mannequin');
+    ok(await p3.evaluate(() => performance.getEntriesByType('resource').some((e) => e.name.includes('three.module'))), '…and 3D mode loads it on demand');
     const filled = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
     ok(filled > 0.04 && filled < 0.6, `figure is actually drawn (${(filled * 100).toFixed(1)}% of canvas)`);
     const dbg3 = await p3.evaluate(() => window.__stage3d.debug());
@@ -290,6 +304,7 @@ try {
   // ── audit regressions ──
   const mk = async () => { const c = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, acceptDownloads: true }); await c.addInitScript(() => localStorage.setItem('flat', '1')); const pg = await c.newPage(); pg.on('pageerror', (e) => errors.push(e.message)); pg.on('dialog', (d) => d.accept()); await pg.goto(`http://localhost:${PORT}/`); await pg.waitForFunction(() => window.__stage3d); return pg; };
   const p4 = await mk();
+  ok(!(await p4.evaluate(() => performance.getEntriesByType('resource').some((e) => e.name.includes('three.module')))), 'flat mode never downloads the 3D engine');
   await p4.click('[data-act=samples]'); await p4.waitForFunction(() => window.__closet.items.length === 10);
   await p4.click('[data-view=closet]'); await p4.evaluate(() => window.scrollTo(0, 900)); await p4.click('[data-view=tryon]');
   ok(await p4.evaluate(() => Math.round(scrollY)) === 0, 'opening a screen starts at the top (scroll is not carried over)');
@@ -325,7 +340,7 @@ try {
   const [dl] = await Promise.all([p4.waitForEvent('download'), p4.click('[data-act=export]')]);
   const bak = join(out, 'backup.json'); await dl.saveAs(bak);
   const backup = JSON.parse((await import('node:fs')).readFileSync(bak, 'utf8'));
-  ok(backup.app === 'nikkis-closet' && backup.stores.items.length === 9 && backup.stores.items[0].cutout?.__blob?.startsWith('data:image/png'), 'backup file contains every piece with its image');
+  ok(backup.app === 'nikkis-closet' && backup.stores.items.length === 9 && backup.stores.items[0].cutout?.__blob?.match(/^data:image\/(png|webp)/), 'backup file contains every piece with its image');
   const p5 = await mk(); await p5.click('[data-view=closet]');
   ok((await p5.locator('.piece').count()) === 0, 'a fresh device starts empty');
   await p5.setInputFiles('#restore', bak);
@@ -425,6 +440,27 @@ try {
   ok(/\$25\.00\/wear/.test(await p9.locator('.panel:has-text("Closet insights")').innerText()), 'insights: cost per wear ($50 over 2 wears = $25)');
   await p9.click('[data-view=closet]');
   ok(/\$25\.00\/wear/.test(await p9.locator('.piece:has-text("White tee") .price').innerText()), 'card switches to cost per wear once worn');
+
+
+  // ── batch A2: look card, room themes + face options, saved renders + budget ──
+  if (await p3.evaluate(() => window.__stage3d.usable)) {
+    await p3.click('[data-act=drawer][data-v=me]'); if (await p3.locator('#flat').isChecked()) await p3.uncheck('#flat'); // back to 3D
+    await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 1);
+    await p3.click('[data-act=drawer][data-v=looks]');
+    const [shot] = await Promise.all([p3.waitForEvent('download'), p3.click('[data-act=sharecard]')]);
+    const cardPath = join(out, 'look-card.png'); await shot.saveAs(cardPath);
+    const png = fsx.readFileSync(cardPath), dims = { w: png.readUInt32BE(16), h: png.readUInt32BE(20) };
+    ok(png.subarray(1, 4).toString() === 'PNG' && dims.w === 1080 && dims.h === 1350, `look card is a 1080x1350 PNG (${(png.length / 1024).toFixed(0)} KB)`);
+  }
+  const p10 = await mk();
+  await p10.click('[data-act=samples]'); await p10.waitForFunction(() => window.__closet.items.length === 10);
+  await p10.click('[data-act=drawer][data-v=look]');
+  await p10.click('[data-act=room][data-v=night]'); await p10.click('[data-act=eyes]:nth-of-type(4)'); await p10.click('[data-act=lips]:nth-of-type(2)');
+  const look = await p10.evaluate(() => ({ cls: document.querySelector('.room').className, eyes: localStorage.getItem('eyes'), lips: localStorage.getItem('lips'), room: localStorage.getItem('room') }));
+  ok(look.cls.includes('theme-night') && look.room === 'night' && look.eyes && look.lips, 'room theme, eye and lip colours apply and are saved');
+  ok((await p10.locator('.mannequin').first().innerHTML()).includes(look.lips), 'the chosen lip colour is drawn on the model');
+  await p10.click('[data-act=resetlook]');
+  ok((await p10.evaluate(() => document.querySelector('.room').className)).match(/theme-(spring|pastel|autumn|winter)/) && (await p10.evaluate(() => localStorage.getItem('room'))) === '', 'Reset appearance returns the room to the seasonal default');
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
