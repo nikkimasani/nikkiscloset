@@ -21,6 +21,11 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **OOTD Log** – calendar of what you wore each day, with per-item wear counts and "never worn" reminders.
 - **Inspo** – drop in a Pinterest screenshot/image (drag, upload, or paste). It extracts the palette, rebuilds the closest outfit from your closet with colour-match %, and tells you what you're missing ("look for a sage-green top").
 
+## Backup & installing
+- **Wardrobe → Backup & restore** saves/restores everything (pieces, images, looks, diary, appearance) as one file.
+- The app is installable (Share → Add to Home Screen on iPhone; Install on Android/desktop Chrome) and opens offline after the first visit.
+- `npm test` runs automatically on every pull request (`.github/workflows/test.yml`). See `docs/AUDIT.md` for the latest audit, known limits and ideas.
+
 ## Deploy
 The app is static files in `public/` plus one serverless function (no build step), so it deploys as-is. Both configs ship the same security headers (strict CSP; camera only for this site).
 - **Vercel:** `npx vercel --prod` (uses `vercel.json`, output dir `public`) — or import the GitHub repo in the dashboard.

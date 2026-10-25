@@ -106,7 +106,7 @@ function hairBack(style, hcx, hcy, rx, headH, top, hair) {
 
 /** The proportional mannequin, drawn from the body's own joints. */
 export function figureSVG(body, skin, hair, style = 'long') {
-  const { pts: p } = body, { sm, hm, am, sw, hw, T, L, headH } = measures(body), bf = body.build || 1;
+  const { pts: p } = body, { sm, hm, am, sw, T, L, headH } = measures(body), bf = body.build || 1;
   const f = (n) => Math.round(n * 10) / 10;
   const shY = sm[1], hipY = hm[1], waistY = hipY - 0.3 * T, crotch = hipY + 0.16 * T;
   const LS = p.shL[0] - 0.12 * sw, RS = p.shR[0] + 0.12 * sw, nw = headH * 0.32;

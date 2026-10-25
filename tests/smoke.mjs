@@ -222,7 +222,6 @@ try {
   ok((await handleTryOn(new Request('http://x/api/tryon'), {})).status === 503, 'API refuses to run unconfigured (fail closed)');
 
   p2.on('dialog', (dlg) => dlg.accept());
-  const steps = await p2.locator('#stage g[data-slot]').count();
   await p2.click('[data-act=drawer][data-v=ai]');
   await p2.fill('#aipass', 'letmein');
   await p2.click('[data-act=airender]');
@@ -284,6 +283,56 @@ try {
     await p3.click('[data-act=drawer][data-v=me]'); await p3.check('#flat');
     ok(await p3.locator('#stage svg').count() === 1, 'Flat 2D toggle switches back to the SVG mannequin');
   }
+
+
+  // ── audit regressions ──
+  const mk = async () => { const c = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, acceptDownloads: true }); await c.addInitScript(() => localStorage.setItem('flat', '1')); const pg = await c.newPage(); pg.on('pageerror', (e) => errors.push(e.message)); pg.on('dialog', (d) => d.accept()); await pg.goto(`http://localhost:${PORT}/`); await pg.waitForFunction(() => window.__stage3d); return pg; };
+  const p4 = await mk();
+  await p4.click('[data-act=samples]'); await p4.waitForFunction(() => window.__closet.items.length === 10);
+  await p4.click('[data-view=closet]'); await p4.evaluate(() => window.scrollTo(0, 900)); await p4.click('[data-view=tryon]');
+  ok(await p4.evaluate(() => Math.round(scrollY)) === 0, 'opening a screen starts at the top (scroll is not carried over)');
+  await p4.click('[data-view=closet]');
+  await p4.locator('.piece:has-text("Silk blouse") .edit').click();
+  ok(await p4.locator('[role=dialog]').isVisible(), 'the ✎ Edit button on a piece opens the editor (not covered by the picture)');
+  await p4.keyboard.press('Escape');
+  await p4.evaluate(() => { window.__closet.items[0].name = '<img src=x onerror="window.__xss=1">"\'&'; });
+  for (const v of ['tryon', 'planner', 'closet', 'tryon']) await p4.click(`[data-view=${v}]`);
+  ok(!(await p4.evaluate(() => window.__xss)), 'hostile item names are escaped everywhere (no script runs)');
+  // delete a piece that is in the outfit, a saved look and the diary
+  await p4.click('[data-act=tab][data-v=tops]'); await p4.click('.pick:has-text("Silk blouse")');
+  await p4.click('[data-act=drawer][data-v=looks]'); await p4.fill('#lookname', 'Blouse look'); await p4.click('.drawer [data-act=savelook]'); await p4.click('.tools [data-act=wearToday]');
+  await p4.click('[data-view=closet]'); await p4.locator('.piece:has-text("Silk blouse") .edit').click(); await p4.click('#rm');
+  await p4.waitForFunction(() => window.__closet.items.length === 9);
+  const gone = await p4.evaluate(() => { const S = window.__closet; return { looks: S.outfits.length, outfit: Object.keys(S.outfit).length, wears: S.wears.length, urls: [...S.urls.keys()].filter((k) => !k.includes(':') && k !== 'profile').length }; });
+  ok(gone.looks === 0 && gone.outfit === 0, 'deleting a piece removes it from the current outfit and saved looks (no ghosts)');
+  ok(gone.wears === 1 && gone.urls === 9, 'diary history is kept and the deleted piece’s image is released');
+  // a new model replaces a body-type preset
+  await p4.click('[data-view=tryon]'); await p4.click('[data-act=drawer][data-v=look]'); await p4.click('[data-act=bodytype][data-v=Petite]');
+  ok(await p4.evaluate(() => !!localStorage.getItem('shape')), 'body type preset is saved');
+  await p4.click('[data-act=drawer][data-v=me]'); await p4.click('[data-act=setup]'); await p4.locator('#p-legs').fill('1.2'); await p4.click('#msave');
+  await p4.waitForFunction(() => localStorage.getItem('shape') === '');
+  ok(true, 'saving a new model clears the old body-type override');
+  // installable app
+  const pwa = await p4.evaluate(async () => ({ sw: (await navigator.serviceWorker.ready).active?.state, manifest: (await fetch('/manifest.webmanifest')).status, icon: (await fetch('/icon-192.png')).status, link: !!document.querySelector('link[rel=manifest]') }));
+  ok(pwa.sw === 'activated' && pwa.manifest === 200 && pwa.icon === 200 && pwa.link, 'installable: manifest, icons and service worker are live');
+  // wrong passcodes are slowed down
+  const t0 = Date.now(); await p4.evaluate(() => fetch('/api/tryon', { method: 'POST', headers: { 'x-app-passcode': 'nope' }, body: '{}' }));
+  ok(Date.now() - t0 >= 350, 'wrong passcode attempts are delayed');
+  // backup -> restore on a brand-new device -> remove samples
+  await p4.click('[data-view=closet]');
+  const [dl] = await Promise.all([p4.waitForEvent('download'), p4.click('[data-act=export]')]);
+  const bak = join(out, 'backup.json'); await dl.saveAs(bak);
+  const backup = JSON.parse((await import('node:fs')).readFileSync(bak, 'utf8'));
+  ok(backup.app === 'nikkis-closet' && backup.stores.items.length === 9 && backup.stores.items[0].cutout?.__blob?.startsWith('data:image/png'), 'backup file contains every piece with its image');
+  const p5 = await mk(); await p5.click('[data-view=closet]');
+  ok((await p5.locator('.piece').count()) === 0, 'a fresh device starts empty');
+  await p5.setInputFiles('#restore', bak);
+  await p5.waitForFunction(() => window.__closet?.items.length === 9, null, { timeout: 15000 });
+  await p5.click('[data-view=closet]');
+  ok((await p5.locator('.piece').count()) === 9 && (await p5.locator('.piece img').first().evaluate((i) => i.complete && i.naturalWidth > 0)), 'restore brings back all pieces and their images');
+  await p5.click('[data-act=rmsamples]');
+  await p5.waitForFunction(() => window.__closet.items.length === 0);
+  ok(true, 'sample pieces can be removed in one tap');
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {

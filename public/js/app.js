@@ -1,9 +1,9 @@
 import { all, put, del, uid } from './db.js';
 import { OCCASIONS, OCCASION_EMOJI, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, slotOf, wear } from './data.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
-import { palette, colorName, hexDist } from './color.js';
+import { palette, colorName } from './color.js';
 import { mannequinSVG } from './mannequin.js';
-import { matchInspo, styleMe, colorScore } from './stylist.js';
+import { matchInspo, styleMe } from './stylist.js';
 import { SAMPLES, sampleBlob } from './sample.js';
 import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js';
 import { detectPose } from './pose.js';
@@ -87,6 +87,7 @@ const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="n
 
 /* ───────────────────────── router ───────────────────────── */
 function go(view) {
+  if (view !== S.view) window.scrollTo(0, 0); // each screen starts at the top
   S.view = view;
   document.querySelectorAll('#nav button').forEach((b) => {
     const on = b.dataset.view === view; b.classList.toggle('on', on);
@@ -95,7 +96,8 @@ function go(view) {
   render();
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
-function render() { ({ closet: renderCloset, tryon: renderTryon, planner: renderPlanner, inspo: renderInspo })[S.view](); }
+function render() {
+  if (S.view !== 'tryon') S.lastView = S.view; ({ closet: renderCloset, tryon: renderTryon, planner: renderPlanner, inspo: renderInspo })[S.view](); }
 
 /* ───────────────────────── closet ───────────────────────── */
 function renderCloset() {
@@ -123,7 +125,12 @@ function renderCloset() {
       <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
       ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
     </div>
-    ${rails || emptyCloset()}`;
+    ${rails || emptyCloset()}
+    <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
+      <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
+      <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
+      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove sample pieces</button>' : ''}</div>
+      <input type="file" id="restore" accept=".json,application/json" hidden></section>`;
   const qEl = $('#q');
   qEl.oninput = () => { S.filter.q = qEl.value; const p = qEl.selectionStart; renderCloset(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
   $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
@@ -154,7 +161,6 @@ function openItemModal(existing) {
     occasions: [...(existing?.occasions || [])], brand: existing?.brand || '', color: existing?.color || null,
     tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample,
   };
-  const m = $('#modal');
   openModal();
   const paint = () => {
     paintSheet(`
@@ -216,9 +222,7 @@ function openItemModal(existing) {
     }
     if ($('#rm')) $('#rm').onclick = async () => {
       if (!confirm(`Delete “${existing.name}” from your closet?`)) return;
-      await del('items', existing.id);
-      S.items = S.items.filter((i) => i.id !== existing.id);
-      for (const k of Object.keys(S.outfit)) if (S.outfit[k] === existing.id) delete S.outfit[k];
+      await removeItems([existing.id]);
       closeModal(); render();
     };
     $('#save').onclick = async () => {
@@ -237,6 +241,50 @@ function openItemModal(existing) {
     };
   }
   paint();
+}
+
+/** Delete pieces everywhere they're referenced: closet, current outfit, saved looks, and cached images. */
+async function removeItems(ids) {
+  const gone = new Set(ids);
+  for (const id of ids) { await del('items', id); const u = S.urls.get(id); if (u) { URL.revokeObjectURL(u); S.urls.delete(id); } }
+  S.items = S.items.filter((i) => !gone.has(i.id));
+  for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
+  for (const o of [...S.outfits]) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)
+    const kept = Object.fromEntries(Object.entries(o.outfit).filter(([, v]) => !gone.has(v)));
+    if (!Object.keys(kept).length) { await del('outfits', o.id); S.outfits = S.outfits.filter((x) => x.id !== o.id); }
+    else if (Object.keys(kept).length !== Object.keys(o.outfit).length) { o.outfit = kept; await put('outfits', o); }
+  }
+}
+
+/* ───────────────────────── backup & restore ───────────────────────── */
+const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile'];
+const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename'];
+const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
+const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
+
+async function exportBackup() {
+  const stores = {};
+  for (const name of STORES) stores[name] = await Promise.all((await all(name)).map(packRecord));
+  const prefs = Object.fromEntries(PREFS.map((k) => [k, store.get(k, '')]));
+  const file = new Blob([JSON.stringify({ app: 'nikkis-closet', version: 1, exportedAt: new Date().toISOString(), stores, prefs })], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(file); a.download = `nikkis-closet-backup-${iso(new Date())}.json`;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast(`Saved a backup of ${S.items.length} piece${S.items.length === 1 ? '' : 's'}`);
+}
+
+async function importBackup(file) {
+  try {
+    const data = JSON.parse(await file.text());
+    if (data?.app !== 'nikkis-closet' || typeof data.stores !== 'object') throw new Error('That doesn’t look like a Nikki’s Closet backup.');
+    if (!confirm('Restore this backup? Anything with the same ID is replaced; everything else on this device is kept.')) return;
+    let n = 0;
+    for (const name of STORES) for (const rec of data.stores[name] || []) { await put(name, await unpackRecord(rec)); if (name === 'items') n++; }
+    for (const [k, v] of Object.entries(data.prefs || {})) if (PREFS.includes(k)) store.set(k, String(v));
+    try { sessionStorage.setItem('restored', String(n)); } catch { /* private mode */ }
+    location.reload(); // rebuild all state from what's now stored
+  } catch (e) { toast(e.message || 'Could not read that file'); }
 }
 
 async function loadSamples() {
@@ -357,6 +405,7 @@ function openModelModal() {
       const rec = { id: 'me', W: d.W, H: d.H, pts: d.pts, photo: d.photoUrl ? photo : null, display: d.photoUrl ? d.display : 'mannequin' };
       await put('profile', rec); S.profile = rec;
       S.urls.delete('profile'); if (rec.photo) url('profile', rec.photo);
+      S.shape = null; S.shapeName = ''; store.set('shape', ''); store.set('shapename', ''); // the new model replaces any body-type preset
       closeModal(); toast('Your model is saved ✓'); render();
     };
     if ($('#mreset')) $('#mreset').onclick = async () => {
@@ -473,7 +522,7 @@ function drawerHTML(worn, fit) {
 
 function renderTryon() {
   if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
-  const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = window.scrollY;
+  const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
   const worn = outfitItems(S.outfit);
   const m = outfitMeters(worn, S.mood, wearCounts());
   const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
@@ -509,7 +558,7 @@ function renderTryon() {
         <div class="drawer-body">${drawerHTML(worn, fit)}</div>
       </section>
     </div></div>`;
-  S.lastTab = S.tab;
+  S.lastTab = S.tab; S.lastView = 'tryon';
   mountStage();
   const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
   window.scrollTo(0, keepY);
@@ -532,7 +581,7 @@ function sparkle() {
 }
 
 async function logWear(date, occasion = '', note = '') {
-  const ids = Object.values(S.outfit);
+  const ids = Object.values(S.outfit).filter(itemById);
   if (!ids.length) return toast('Dress the mannequin first');
   const w = { id: uid(), date, itemIds: ids, occasion, note, createdAt: Date.now() };
   if (aiFor(outfitItems(S.outfit))) { w.render = await (await fetch(S.ai.image)).blob(); url('render:' + w.id, w.render); }
@@ -652,6 +701,13 @@ document.addEventListener('click', async (e) => {
     case 'hairstyle': S.hairStyle = v; store.set('hairstyle', v); return renderTryon();
     case 'bodytype': await setShape({ ...BODY_TYPES[v] }, v); return renderTryon();
     case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; ['skin', 'hair', 'hairstyle', 'shape', 'shapename'].forEach((k) => store.set(k, '')); return renderTryon();
+    case 'export': return exportBackup();
+    case 'restore': return $('#restore').click();
+    case 'rmsamples': {
+      const ids = S.items.filter((i) => i.sample).map((i) => i.id);
+      if (!ids.length || !confirm(`Remove the ${ids.length} sample pieces? Your own pieces stay.`)) return;
+      await removeItems(ids); toast('Sample pieces removed'); return render();
+    }
     case 'mood': S.mood = S.mood === v ? '' : v; return renderTryon();
     case 'drawer': S.drawer = v; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
@@ -678,7 +734,7 @@ document.addEventListener('click', async (e) => {
       const o = { id: uid(), name: $('#lookname')?.value.trim() || `Look ${S.outfits.length + 1}`, occasion: occ, outfit: { ...S.outfit } };
       await put('outfits', o); S.outfits.push(o); toast('Look saved ✓'); return renderTryon();
     }
-    case 'loadlook': S.outfit = { ...S.outfits.find((o) => o.id === id).outfit }; return renderTryon();
+    case 'loadlook': S.outfit = Object.fromEntries(Object.entries(S.outfits.find((o) => o.id === id).outfit).filter(([, v]) => itemById(v))); return renderTryon();
     case 'dellook': await del('outfits', id); S.outfits = S.outfits.filter((o) => o.id !== id); return renderTryon();
     case 'wearToday': S.date = iso(new Date()); S.month = new Date(); await logWear(S.date, S.mood); return renderTryon();
     case 'tab-tryon': return go('tryon');
@@ -708,6 +764,7 @@ document.addEventListener('input', (e) => {
   }
 });
 document.addEventListener('change', (e) => {
+  if (e.target.id === 'restore' && e.target.files[0]) { importBackup(e.target.files[0]); e.target.value = ''; return; }
   if (e.target.id === 'custom-skin' || e.target.id === 'custom-hair' || e.target.dataset?.shape) renderTryon(); if (e.target.id === 'flat') { store.set('flat', e.target.checked ? '1' : ''); renderTryon(); } });
 
 document.addEventListener('paste', (e) => {
@@ -723,4 +780,6 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#mod
   render();
   window.__closet = S; // handy for debugging
   window.__stage3d = stage3d;
+  try { const n = sessionStorage.getItem('restored'); if (n) { sessionStorage.removeItem('restored'); toast(`Restored ${n} piece${n === '1' ? '' : 's'} from your backup`); } } catch { /* private mode */ }
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('/sw.js').catch(() => {}); // lets it install as an app and open offline
 })();
