@@ -46,7 +46,7 @@ a security read of `lib/tryon.js` and the CSP, and the existing e2e/axe suite. 7
 **Smarter closet**
 4. **Auto-tag photos** (type, colour, season, occasion, formality) with a vision model instead of filling forms by hand.
 5. **Better cutouts** with an AI segmentation model so messy backgrounds work.
-6. Front *and* back photos per piece so the 3D back isn't a mirror; per-type 3D shapes with sleeves.
+6. ✅ *Done (back photo)* Front *and* back photos per piece so the 3D back isn't a mirror; per-type 3D shapes with sleeves.
 7. Price + purchase date → **cost per wear**, "haven't worn in 90 days" nudges, declutter/donate list.
 
 **Planning**
