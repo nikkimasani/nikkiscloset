@@ -54,3 +54,14 @@ export async function renderOutfit({ person, steps, passcode, signal, onProgress
   return current;
 }
 export const categoryFor = (slot) => CATEGORY[slot];
+
+/** Generic call to one of the passcode-protected helper endpoints. */
+export async function callAI(path, body, passcode) {
+  const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': passcode }, body: JSON.stringify(body) });
+  const out = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(out.error || `The AI service returned an error (${res.status}).`);
+  return out;
+}
+export const cutoutAI = async (canvas, passcode) => (await callAI('/api/cutout', { image: canvas.toDataURL('image/jpeg', 0.9) }, passcode)).image;
+export const tagAI = async (canvas, passcode) => (await callAI('/api/tag', { image: canvas.toDataURL('image/jpeg', 0.85) }, passcode)).tags;
+export const pinAI = async (url, passcode) => (await callAI('/api/pin', { url }, passcode)).image;

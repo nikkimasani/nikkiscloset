@@ -40,6 +40,15 @@
   "functions": {
     "api/tryon.js": {
       "maxDuration": 30
+    },
+    "api/cutout.js": {
+      "maxDuration": 30
+    },
+    "api/tag.js": {
+      "maxDuration": 30
+    },
+    "api/pin.js": {
+      "maxDuration": 20
     }
   }
 }

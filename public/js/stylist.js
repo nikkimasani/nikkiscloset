@@ -28,12 +28,13 @@ function rank(items, slot, pal, occasion, wearCounts) {
  * @returns {{picks: Record<string,{item,color}>, gaps: {slot,hex}[]}}
  */
 export function matchInspo(items, pal, { wanted, occasion, wearCounts = {} }) {
+  if (!pal.length) return { picks: {}, gaps: [] }; // no usable colours in the picture (e.g. fully transparent)
   const slots = wanted.includes('dress') ? wanted.filter((s) => s !== 'top' && s !== 'bottom') : wanted;
   const picks = {}, gaps = [];
   for (const slot of slots) {
     const best = rank(items, slot, pal, occasion, wearCounts)[0];
     if (best && best.color >= 35) picks[slot] = best;
-    else gaps.push({ slot, hex: pal[Math.min(gaps.length + 1, pal.length - 1)]?.hex || pal[0].hex, closest: best });
+    else gaps.push({ slot, hex: pal[Math.min(gaps.length + 1, pal.length - 1)]?.hex || pal[0]?.hex, closest: best });
   }
   return { picks, gaps };
 }
