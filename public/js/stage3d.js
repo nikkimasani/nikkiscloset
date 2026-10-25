@@ -4,10 +4,9 @@
 //    garment's silhouette). It gives depth, lighting and a full turn-around, but not real cloth folds or drape.
 import * as THREE from '../vendor/three/three.module.min.js';
 import { measures, place } from './body.js';
+import { webglOK } from './webgl.js';
 
-const webgl = (() => {
-  try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
-})();
+const webgl = webglOK;
 
 // Thickness (half-depth) of each kind of garment as a fraction of shoulder width. Outer layers are thicker so they sit over inner ones.
 const HMAX = { tops: .28, tanks: .26, bodysuits: .28, outerwear: .33, dresses: .28, bottoms: .27, skirts: .29, shoes: .17, bags: .07, accessories: .06 };
@@ -96,7 +95,7 @@ function limb(a, b, r1, r2, mat) {
   return g;
 }
 
-function buildBody(body, skin, hair, style = 'long') {
+function buildBody(body, skin, hair, style = 'long', face = {}) {
   const { pts: p } = body, m = measures(body), { sw, T, L, headH } = m, bf = body.build || 1;
   const gy = Math.max(p.anL[1], p.anR[1]) + 0.04 * L, cx = m.sm[0];
   const V = (x, y, z = 0) => new THREE.Vector3(x - cx, gy - y, z);
@@ -130,12 +129,12 @@ function buildBody(body, skin, hair, style = 'long') {
   if (style === 'bun') sph(headH * 0.2, 1, 1, 1, hc.x, hc.y + headH * 0.58, -headH * 0.1);
   if (style === 'pony') { const t = tube(headH * 0.12, headH * 0.04, headH * 1.1, hc.x, hc.y - headH * 0.35, -headH * 0.55, 1); t.rotation.x = -0.25; }
   if (style === 'curly') for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; sph(headH * 0.2, 1, 1, 1, hc.x + Math.cos(a) * headH * 0.4, hc.y + Math.sin(a) * headH * 0.42 + headH * 0.05, -headH * 0.12); }
-  const white = new THREE.MeshBasicMaterial({ color: 0xffffff }), pupil = new THREE.MeshBasicMaterial({ color: 0x2b1d17 });
+  const white = new THREE.MeshBasicMaterial({ color: 0xffffff }), pupil = new THREE.MeshBasicMaterial({ color: face.eyes || '#2b1d17' });
   for (const sd of [-1, 1]) {
     const w = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.05, 14, 10), white); w.scale.set(1.25, 0.85, 0.5); w.position.set(hc.x + sd * headH * 0.15, hc.y - headH * 0.08, headH * 0.4); g.add(w);
     const e = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.028, 12, 8), pupil); e.position.set(hc.x + sd * headH * 0.15, hc.y - headH * 0.08, headH * 0.43); g.add(e);
   }
-  const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: 0xc4505f }));
+  const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: face.lips || '#c4505f' }));
   mouth.scale.set(2.2, .7, .6); mouth.position.set(hc.x, hc.y - headH * 0.27, headH * 0.42); g.add(mouth);
 
   // arms + hands
@@ -278,13 +277,13 @@ export const stage3d = {
     resize();
   },
 
-  setModel({ body, skin, hair, hairStyle = 'long' }) {
-    const s = ensure(), key = JSON.stringify([body.W, body.H, body.pts, body.build, skin, hair, hairStyle]);
+  setModel({ body, skin, hair, hairStyle = 'long', face = {} }) {
+    const s = ensure(), key = JSON.stringify([body.W, body.H, body.pts, body.build, skin, hair, hairStyle, face]);
     if (key === s.bodyKey) return;
     s.bodyKey = key;
     s.figure.children.slice().forEach((c) => { s.figure.remove(c); dispose(c); });
     s.shells = [];
-    const built = buildBody(body, skin, hair, hairStyle);
+    const built = buildBody(body, skin, hair, hairStyle, face);
     s.figure.add(built.group); s.ctx = built.ctx;
     if (s.shadow) { s.scene.remove(s.shadow); s.shadow.geometry.dispose(); s.shadow.material.dispose(); }
     const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -303,6 +302,17 @@ export const stage3d = {
     const s = ensure();
     s.target = dir === 0 ? Math.round(s.target / (Math.PI * 2)) * Math.PI * 2 : s.target + dir * Math.PI / 4;
     request();
+  },
+
+  /** The current frame as a canvas (for look cards), or null. */
+  snapshot() {
+    if (!S) return null;
+    const { rot, target } = S, front = Math.round(target / (Math.PI * 2)) * Math.PI * 2;
+    S.figure.rotation.y = front; S.renderer.render(S.scene, S.camera); // always facing the camera, whatever angle you're viewing at
+    const src = S.renderer.domElement, copy = document.createElement('canvas');
+    copy.width = src.width; copy.height = src.height; copy.getContext('2d').drawImage(src, 0, 0);
+    S.figure.rotation.y = rot; S.rot = rot; S.target = target; request();
+    return copy;
   },
 
   setLabel(text) { ensure().renderer.domElement.setAttribute('aria-label', text); },

@@ -105,7 +105,7 @@ function hairBack(style, hcx, hcy, rx, headH, top, hair) {
 }
 
 /** The proportional mannequin, drawn from the body's own joints. */
-export function figureSVG(body, skin, hair, style = 'long') {
+export function figureSVG(body, skin, hair, style = 'long', face = {}) {
   const { pts: p } = body, { sm, hm, am, sw, T, L, headH } = measures(body), bf = body.build || 1;
   const f = (n) => Math.round(n * 10) / 10;
   const shY = sm[1], hipY = hm[1], waistY = hipY - 0.3 * T, crotch = hipY + 0.16 * T;
@@ -130,6 +130,6 @@ export function figureSVG(body, skin, hair, style = 'long') {
       <ellipse cx="${f(p.wrL[0])}" cy="${f(p.wrL[1] + sw * 0.1)}" rx="${f(sw * 0.07)}" ry="${f(sw * 0.12)}"/><ellipse cx="${f(p.wrR[0])}" cy="${f(p.wrR[1] + sw * 0.1)}" rx="${f(sw * 0.07)}" ry="${f(sw * 0.12)}"/>
       <rect x="${f(cx - nw / 2)}" y="${f(hcy + headH * 0.3)}" width="${f(nw)}" height="${f(shY - hcy)}"/><path d="${torso}"/><ellipse cx="${f(hcx)}" cy="${f(hcy)}" rx="${f(rx)}" ry="${f(headH / 2)}"/></g>
     <path d="M${f(hcx - rx * 1.03)} ${f(hcy - headH * 0.02)} C${f(hcx - rx * 1.15)} ${f(hcy - headH * 0.66)} ${f(hcx + rx * 1.15)} ${f(hcy - headH * 0.66)} ${f(hcx + rx * 1.03)} ${f(hcy - headH * 0.02)} C${f(hcx + rx * 0.8)} ${f(hcy - headH * 0.3)} ${f(hcx + rx * 0.3)} ${f(hcy - headH * 0.3)} ${f(hcx - rx * 0.15)} ${f(hcy - headH * 0.36)} C${f(hcx - rx * 0.6)} ${f(hcy - headH * 0.3)} ${f(hcx - rx * 0.9)} ${f(hcy - headH * 0.2)} ${f(hcx - rx * 1.03)} ${f(hcy - headH * 0.02)}Z" fill="${hair}"/>
-    <g fill="#2b1d17" opacity=".55"><circle cx="${f(hcx - rx * 0.4)}" cy="${f(hcy + headH * 0.04)}" r="${f(headH * 0.022)}"/><circle cx="${f(hcx + rx * 0.4)}" cy="${f(hcy + headH * 0.04)}" r="${f(headH * 0.022)}"/></g>
-    <path d="M${f(hcx - rx * 0.25)} ${f(hcy + headH * 0.24)} Q${f(hcx)} ${f(hcy + headH * 0.3)} ${f(hcx + rx * 0.25)} ${f(hcy + headH * 0.24)}" stroke="#b5584f" stroke-width="${f(headH * 0.03)}" fill="none" stroke-linecap="round"/>`;
+    <g fill="${face.eyes || '#2b1d17'}" opacity=".7"><circle cx="${f(hcx - rx * 0.4)}" cy="${f(hcy + headH * 0.04)}" r="${f(headH * 0.022)}"/><circle cx="${f(hcx + rx * 0.4)}" cy="${f(hcy + headH * 0.04)}" r="${f(headH * 0.022)}"/></g>
+    <path d="M${f(hcx - rx * 0.25)} ${f(hcy + headH * 0.24)} Q${f(hcx)} ${f(hcy + headH * 0.3)} ${f(hcx + rx * 0.25)} ${f(hcy + headH * 0.24)}" stroke="${face.lips || '#b5584f'}" stroke-width="${f(headH * 0.03)}" fill="none" stroke-linecap="round"/>`;
 }

@@ -237,3 +237,14 @@ main { overflow-x: clip; }
 .pack-item img { width: 40px; height: 40px; object-fit: contain; background: var(--tile); border-radius: 8px; }
 .gap-row { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
 .logrow a { color: var(--accent); }
+
+/* room themes (default is the pastel bedroom) */
+.streakbadge { position: absolute; left: 10px; top: 128px; z-index: 4; background: #5a2a10; border: 1px solid #ffb35a; border-radius: 99px; padding: 4px 10px; font-weight: 800; font-size: 13px; }
+.room.theme-studio .wall { background: linear-gradient(#f6f6f8, #e4e4ea); } .room.theme-studio .window, .room.theme-studio .art { display: none; }
+.room.theme-studio .floor { background: linear-gradient(#0000, #0001), #d8d8de; } .room.theme-studio .rug { background: radial-gradient(ellipse, #fff 0 40%, #ececf2 41%); }
+.room.theme-night .wall { background: radial-gradient(2px 2px at 20% 20%, #fff, #0000), radial-gradient(2px 2px at 70% 12%, #fff, #0000), radial-gradient(1.5px 1.5px at 45% 32%, #fff, #0000), radial-gradient(2px 2px at 88% 40%, #fff, #0000), linear-gradient(#1c1b4a, #3a2a6b); }
+.room.theme-night .wall::after { background: linear-gradient(#ffffff30, #ffffff18); border-top-color: #ffffff40; } .room.theme-night .window { background: linear-gradient(#0e1033, #2a2a6a); }
+.room.theme-night .floor { background: linear-gradient(#0000, #0006), repeating-linear-gradient(100deg, #6b4a3a 0 52px, #5e4132 52px 104px); }
+.room.theme-spring .wall { background: repeating-linear-gradient(90deg, #e6f6e4 0 34px, #d8efd6 34px 68px); } .room.theme-spring .window { background: linear-gradient(#9fe0ff, #f0fbff); }
+.room.theme-autumn .wall { background: repeating-linear-gradient(90deg, #f7e3cc 0 34px, #f0d6b8 34px 68px); } .room.theme-autumn .window { background: linear-gradient(#ffcf9f, #fff0dd); } .room.theme-autumn .rug { background: radial-gradient(ellipse, #e89a4a 0 38%, #c9722b 39% 62%, #a85a1e 63%); }
+.room.theme-winter .wall { background: repeating-linear-gradient(90deg, #e4effa 0 34px, #d7e6f6 34px 68px); } .room.theme-winter .window { background: linear-gradient(#cfe6ff, #fff); } .room.theme-winter .rug { background: radial-gradient(ellipse, #e0504e 0 38%, #b83a3a 39% 62%, #8e2a2a 63%); }

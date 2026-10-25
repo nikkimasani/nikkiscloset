@@ -26,6 +26,12 @@ export const TYPES = {
 // How warm a piece is, used with the weather. 'all' fits anything.
 export const SEASONS = [['light', '☀️ Light / summer'], ['all', '🍂 All-season'], ['warm', '❄️ Warm / winter']];
 
+export const EYES = ['#2b1d17', '#5a3a22', '#2e6f4f', '#2f6fb3', '#6b7280', '#7a4cc2'];
+export const LIPS = ['#c4505f', '#a8324a', '#e07a8a', '#7a2d3a', '#d9857a', '#f0a3b2'];
+// Rooms: 'auto' follows the season. [label, emoji]
+export const ROOMS = { pastel: ['Pastel bedroom', '🪴'], studio: ['Studio', '🪞'], night: ['Night in', '🌙'], spring: ['Spring', '🌷'], autumn: ['Autumn', '🍂'], winter: ['Winter', '🎄'] };
+export const seasonRoom = (month /* 0-11 */) => (month >= 2 && month <= 4 ? 'spring' : month <= 7 && month >= 5 ? 'pastel' : month >= 8 && month <= 10 ? 'autumn' : 'winter');
+
 export const SLOTS = ['dress', 'top', 'bottom', 'outer', 'shoes', 'bag', 'acc'];
 export const SLOT_LABEL = { dress: 'Dress', top: 'Top', bottom: 'Bottom', outer: 'Outerwear', shoes: 'Shoes', bag: 'Bag', acc: 'Accessory' };
 

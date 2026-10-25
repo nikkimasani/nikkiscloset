@@ -30,7 +30,7 @@ async function call(url, opts, passcode) {
 }
 
 /** Applies each garment in turn, feeding every result into the next step. Resolves with a data URI. */
-export async function renderOutfit({ person, steps, passcode, signal, onProgress = () => {}, pollMs = 2000 }) {
+export async function renderOutfit({ person, steps, passcode, signal, onProgress = () => {}, onPiece = () => {}, pollMs = 2000 }) {
   let current = person;
   for (let i = 0; i < steps.length; i++) {
     const label = `piece ${i + 1} of ${steps.length}`;
@@ -46,7 +46,7 @@ export async function renderOutfit({ person, steps, passcode, signal, onProgress
       await new Promise((r) => setTimeout(r, pollMs));
       if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
       const r = await call(`/api/tryon?${qs}`, { signal }, passcode);
-      if (r.status === 'done') { current = r.image; break; }
+      if (r.status === 'done') { current = r.image; onPiece(i); break; }
       if (r.status === 'failed') throw new Error(r.error || 'The render failed.');
       onProgress(`${r.status === 'queued' ? 'Waiting in line' : 'Rendering'} — ${label}…`);
     }
