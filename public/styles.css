@@ -251,3 +251,6 @@ main { overflow-x: clip; }
 
 .aibox { margin-top: 12px; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: 14px; background: #ffffff0a; }
 .aibox summary { cursor: pointer; font-weight: 700; }
+
+.backbox { margin-top: 12px; }
+.backthumb { object-fit: contain; border-radius: 10px; background: #ffffff14; }

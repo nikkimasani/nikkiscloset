@@ -535,6 +535,22 @@ try {
   await devA.click('[data-view=closet]'); await devA.click('[data-act=syncnow]'); await devA.waitForFunction(() => window.__closet?.items?.length === 0);
   ok(true, 'a delete on one device removes the piece on the other');
 
+  // front + back photos: the back photo is kept with the piece and wraps the back of the 3D garment
+  const pB = await mk(); await pB.click('[data-view=closet]'); await pB.click('[data-act=samples]'); await pB.waitForFunction(() => window.__closet.items.length === 10);
+  await pB.locator('.piece:has-text("White tee") .edit').click();
+  const backPhoto = join(out, 'back.jpg'); writeFileSync(backPhoto, Buffer.from((await pB.evaluate(() => { const c = document.createElement('canvas'); c.width = 600; c.height = 800; const x = c.getContext('2d'); x.fillStyle = '#e8dfd0'; x.fillRect(0, 0, 600, 800); x.fillStyle = '#2a4d9b'; x.beginPath(); x.moveTo(220, 100); x.lineTo(380, 100); x.lineTo(470, 700); x.lineTo(130, 700); x.fill(); return c.toDataURL('image/jpeg', 0.9); })).split(',')[1], 'base64'));
+  await pB.setInputFiles('#backfile', backPhoto); await pB.waitForSelector('.backthumb');
+  await pB.click('#save'); await pB.waitForFunction(() => window.__closet.items.some((i) => i.name === 'White tee' && i.backCutout instanceof Blob && i.backCutout.size > 0));
+  ok(true, 'a back photo is saved with the piece');
+  await pB.context().addInitScript(() => localStorage.removeItem('flat')); await pB.reload(); await pB.waitForFunction(() => window.__stage3d && window.__closet?.items?.length === 10); // back to the 3D model
+  await pB.evaluate(() => { const t = window.__closet.items.find((i) => i.name === 'White tee'); window.__closet.outfit[t.type] = t.id; });
+  await pB.click('[data-view=tryon]');
+  await pB.waitForFunction(() => window.__stage3d.debug()?.backPhoto?.includes(true), null, { timeout: 15000 });
+  ok(true, 'the 3D garment uses the back photo on its back');
+  await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .edit').click(); await pB.click('#backrm'); await pB.click('#save');
+  await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
+  ok(true, 'the back photo can be removed');
+
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
     await p2.evaluate(axeSource);
