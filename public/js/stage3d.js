@@ -102,7 +102,7 @@ function limb(a, b, r1, r2, mat) {
 }
 
 function buildBody(body, skin, hair, style = 'long') {
-  const { pts: p } = body, m = measures(body), { sw, hw, T, L, headH } = m, bf = body.build || 1;
+  const { pts: p } = body, m = measures(body), { sw, T, L, headH } = m, bf = body.build || 1;
   const gy = Math.max(p.anL[1], p.anR[1]) + 0.04 * L, cx = m.sm[0];
   const V = (x, y, z = 0) => new THREE.Vector3(x - cx, gy - y, z);
   const skinM = new THREE.MeshStandardMaterial({ color: skin, roughness: .75, metalness: 0 });
