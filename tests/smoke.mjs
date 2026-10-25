@@ -40,6 +40,11 @@ const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_K
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+// The existing tests exercise the mirror scene; the walk-in closet tests below reset this on purpose.
+const mirrorFirst = (c) => c.addInitScript(() => { if (localStorage.getItem('scene') === null) localStorage.setItem('scene', 'mirror'); });
+const _newContext = browser.newContext.bind(browser);
+browser.newContext = async (o) => { const c = await _newContext(o); await mirrorFirst(c); return c; };
+browser.newPage = async (o) => { const c = await _newContext(o); await mirrorFirst(c); return c.newPage(); };
 const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
 await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing flows exercise the 2D fallback; 3D has its own section below
 const errors = [];
@@ -291,8 +296,10 @@ try {
     await p3.screenshot({ path: join(out, '10-3d.png') });
     // customization
     await p3.click('[data-act=drawer][data-v=look]');
-    await p3.click('[data-act=hairstyle][data-v=pony]'); await p3.click('[data-act=hair][data-v="#e8639a"]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
-    await p3.click('[data-act=bodytype][data-v="Plus size"]'); await p3.waitForTimeout(500);
+    await p3.click('[data-act=cas][data-v=style]'); await p3.click('[data-act=hairstyle][data-v=pony]');
+    await p3.click('[data-act=cas][data-v=hair]'); await p3.click('[data-act=hair][data-v="#e8639a"]');
+    await p3.click('[data-act=cas][data-v=skin]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
+    await p3.click('[data-act=cas][data-v=body]'); await p3.click('[data-act=bodytype][data-v="Plus size"]'); await p3.waitForTimeout(500);
     const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin'), shape: JSON.parse(localStorage.getItem('shape') || 'null') }));
     ok(saved.style === 'pony' && saved.hair === '#e8639a' && saved.skin === '#8a5636' && saved.shape?.build > 1.2, 'appearance choices are saved on the device');
     await p3.locator('#sh-legs').fill('1.15');
@@ -333,7 +340,7 @@ try {
   ok(gone.looks === 0 && gone.outfit === 0, 'deleting a piece removes it from the current outfit and saved looks (no ghosts)');
   ok(gone.wears === 1 && gone.urls === 9, 'diary history is kept and the deleted piece’s image is released');
   // a new model replaces a body-type preset
-  await p4.click('[data-view=tryon]'); await p4.click('[data-act=drawer][data-v=look]'); await p4.click('[data-act=bodytype][data-v=Petite]');
+  await p4.click('[data-view=tryon]'); await p4.click('[data-act=drawer][data-v=look]'); await p4.click('[data-act=cas][data-v=body]'); await p4.click('[data-act=bodytype][data-v=Petite]');
   ok(await p4.evaluate(() => !!localStorage.getItem('shape')), 'body type preset is saved');
   await p4.click('[data-act=drawer][data-v=me]'); await p4.click('[data-act=setup]'); await p4.locator('#p-legs').fill('1.2'); await p4.click('#msave');
   await p4.waitForFunction(() => localStorage.getItem('shape') === '');
@@ -373,7 +380,7 @@ try {
   await p6.waitForSelector('#main .view-title', { state: 'attached', timeout: 15000 });
   ok(await p6.locator('nav#nav').isVisible() && (await p6.title()) === "Nikki's Closet", 'first visit is enough: the app reopens with no network');
   await p6.context().setOffline(false);
-  await p6.click('[data-view=tryon]'); await p6.click('[data-act=drawer][data-v=look]'); await p6.click('[data-act=hairstyle][data-v=bob]'); await p6.click('[data-act=resetlook]');
+  await p6.click('[data-view=tryon]'); await p6.click('[data-act=drawer][data-v=look]'); await p6.click('[data-act=cas][data-v=style]'); await p6.click('[data-act=hairstyle][data-v=bob]'); await p6.click('[data-act=resetlook]');
   await p6.reload(); await p6.waitForFunction(() => window.__closet);
   const dflt = await p6.evaluate(() => ({ skin: window.__closet.skin, hair: window.__closet.hair, style: window.__closet.hairStyle }));
   ok(/^#[0-9a-f]{6}$/i.test(dflt.skin) && /^#[0-9a-f]{6}$/i.test(dflt.hair) && dflt.style === 'long', 'Reset appearance survives a reload (defaults, not blanks)');
@@ -464,7 +471,7 @@ try {
   const p10 = await mk();
   await p10.click('[data-act=samples]'); await p10.waitForFunction(() => window.__closet.items.length === 10);
   await p10.click('[data-act=drawer][data-v=look]');
-  await p10.click('[data-act=room][data-v=night]'); await p10.click('[data-act=eyes]:nth-of-type(4)'); await p10.click('[data-act=lips]:nth-of-type(2)');
+  await p10.click('[data-act=cas][data-v=room]'); await p10.click('[data-act=room][data-v=night]'); await p10.click('[data-act=cas][data-v=eyes]'); await p10.click('[data-act=eyes]:nth-of-type(4)'); await p10.click('[data-act=cas][data-v=lips]'); await p10.click('[data-act=lips]:nth-of-type(2)');
   const look = await p10.evaluate(() => ({ cls: document.querySelector('.room').className, eyes: localStorage.getItem('eyes'), lips: localStorage.getItem('lips'), room: localStorage.getItem('room') }));
   ok(look.cls.includes('theme-night') && look.room === 'night' && look.eyes && look.lips, 'room theme, eye and lip colours apply and are saved');
   ok((await p10.locator('.mannequin').first().innerHTML()).includes(look.lips), 'the chosen lip colour is drawn on the model');
@@ -550,6 +557,41 @@ try {
   await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .edit').click(); await pB.click('#backrm'); await pB.click('#save');
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
   ok(true, 'the back photo can be removed');
+
+  // walk-in closet: walk to a section, grab several pieces, try them on in the mirror
+  const pw = await mk();
+  await pw.evaluate(() => localStorage.setItem('scene', '')); await pw.reload(); await pw.waitForFunction(() => window.__stage3d);
+  ok(await pw.locator('.closet-scene .hall').isVisible(), 'the walk-in closet is the default scene');
+  await pw.click('[data-act=samples]'); await pw.waitForFunction(() => window.__closet.items.length === 10);
+  ok((await pw.locator('.cabinet').count()) === 10, 'one cabinet per clothing section');
+  const x0 = await pw.evaluate(() => parseFloat(document.querySelector('#walker').style.left));
+  await pw.click('[data-act=section][data-v=tops]');
+  ok((await pw.evaluate(() => parseFloat(document.querySelector('#walker').style.left))) !== x0, 'the avatar walks over to the section');
+  await pw.waitForSelector('.railview .hanger');
+  ok((await pw.locator('.railview .hanger').count()) >= 2, 'the section opens as a rail of hangers');
+  await pw.click('.hanger >> nth=0'); await pw.click('.hanger >> nth=1');
+  ok((await pw.locator('.basketbadge').innerText()).includes('2 picked'), 'grabbing several pieces at once fills the basket');
+  await pw.click('[data-act=railnav][data-v="1"]'); await pw.click('.hanger >> nth=0');
+  ok((await pw.evaluate(() => window.__closet.basket.length)) === 3 && (await pw.locator('.basket .chip').count()) === 3, 'picks carry across sections and are listed');
+  await pw.click('.basket [data-act=ungrab] >> nth=2');
+  ok((await pw.evaluate(() => window.__closet.basket.length)) === 2, 'a pick can be put back');
+  await pw.click('.basket [data-act=tryon]');
+  await pw.waitForSelector('.room.mirror');
+  ok((await pw.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1, 'Try on dresses the model in the picks and opens the mirror');
+  ok((await pw.locator('.picks .pick').count()) === 2, 'the grabbed pieces stay handy at the mirror');
+  await pw.click('[data-act=mix]');
+  ok((await pw.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1, 'Mix my picks re-dresses from the basket');
+  await pw.click('[data-act=drawer][data-v=look]');
+  ok((await pw.locator('.room .cas').count()) === 1 && (await pw.locator('.room .cas [data-act=skin]').count()) > 3, 'the customizer opens inside the model box');
+  await pw.click('[data-act=cas][data-v=lips]'); await pw.click('.cas [data-act=lips]:nth-of-type(3)');
+  ok((await pw.evaluate(() => window.__closet.lips)) !== '#c4505f', 'picking a swatch changes the model right there');
+  await pw.evaluate(axeSource);
+  const axeCas = await pw.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+  ok(axeCas.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (mirror + customizer): ${axeCas.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
+  await pw.click('[data-act=scene][data-v=closet]');
+  await pw.evaluate(axeSource);
+  const axeHall = await pw.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+  ok(axeHall.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (walk-in closet): ${axeHall.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {

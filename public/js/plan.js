@@ -158,7 +158,7 @@ export const planActs = {
     renderPlan(c);
   },
   async planclear(c) { for (const p of c.S.plans) await c.del('plans', p.id); c.S.plans = []; renderPlan(c); },
-  plantry(c, el) { const p = c.S.plans.find((x) => x.date === el.dataset.date); c.S.outfit = outfitFromIds(c, p.itemIds); c.S.pop = true; c.go('tryon'); },
+  plantry(c, el) { const p = c.S.plans.find((x) => x.date === el.dataset.date); c.S.outfit = outfitFromIds(c, p.itemIds); c.S.pop = true; c.S.scene = 'mirror'; c.go('tryon'); },
   async planwear(c, el) {
     const p = c.S.plans.find((x) => x.date === el.dataset.date);
     await c.wearIds(el.dataset.date, p.itemIds.filter(c.itemById));

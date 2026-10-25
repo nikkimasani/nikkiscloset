@@ -27,6 +27,7 @@ const S = {
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
   urls: new Map(),
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
+  scene: store.get('scene', 'closet'), rail: '', basket: [], cas: false, casTab: 'skin', hallX: null, // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
@@ -324,6 +325,7 @@ async function removeItems(ids) {
   const gone = new Set(ids);
   for (const id of ids) { await del('items', id); for (const key of [id, id + ':back']) { const u = S.urls.get(key); if (u) { URL.revokeObjectURL(u); S.urls.delete(key); } } }
   S.items = S.items.filter((i) => !gone.has(i.id));
+  S.basket = S.basket.filter((id) => !gone.has(id));
   for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
   for (const o of [...S.outfits]) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)
     const kept = Object.fromEntries(Object.entries(o.outfit).filter(([, v]) => !gone.has(v)));
@@ -625,7 +627,7 @@ function refreshStage() {
   if (use3D() && stage3d.loaded) { stage3d.setOutfit(outfitItems(S.outfit), S.urls); stage3d.setLabel(outfitLabel()); } else s.innerHTML = use3D() ? mannequin(S.outfit) : stageHTML();
 }
 
-const DRAWERS = [['fit', '📏 Fit'], ['look', '🎨 Customize'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
+const DRAWERS = [['fit', '📏 Fit'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
 
 function metersHTML(worn) {
   const m = outfitMeters(worn, S.mood, wearCounts());
@@ -634,20 +636,29 @@ function metersHTML(worn) {
 }
 
 const SHAPE_SLIDERS = [['shoulders', 'Shoulders', .8, 1.25], ['hips', 'Hips', .8, 1.35], ['torso', 'Torso length', .85, 1.15], ['legs', 'Leg length', .8, 1.2], ['build', 'Build (soft ↔ full)', .85, 1.4]];
-function customizeHTML() {
-  if (usingPhoto()) return '<p class="muted">You’re showing your own photo. Switch to the mannequin under <b>Me</b> to customize it.</p>';
+const CAS_TABS = [['skin', 'Skin', '🧑'], ['hair', 'Hair', '🎨'], ['style', 'Style', '💇'], ['eyes', 'Eyes', '👁️'], ['lips', 'Lips', '💋'], ['body', 'Body', '🧍'], ['room', 'Room', '🏠']];
+/** The "create-a-sim" style picker: docked inside the model's box, one category at a time, options in a single scrolling strip. */
+function casHTML() {
+  const close = '<button class="cas-x" data-act="casclose" aria-label="Close customizer"><span aria-hidden="true">✕</span></button>';
+  if (usingPhoto()) return `<div class="cas" role="region" aria-label="Customize your model"><p class="muted">You’re showing your own photo. Switch to the mannequin under <b>Me</b> to customize it.</p>${close}</div>`;
   const shape = S.shape || BODY_TYPES.Average;
-  const sw = (list, cur, act, label) => `<div class="swatches wrap" role="group" aria-label="${label}">${list.map((c, n) => `<button class="sw ${c === cur ? 'on' : ''}" aria-pressed="${c === cur}" data-act="${act}" data-v="${c}" style="background:${c}" aria-label="${label} ${n + 1}"></button>`).join('')}
+  const sw = (list, cur, act, label) => `<div class="swatches" role="group" aria-label="${label}">${list.map((c, n) => `<button class="sw ${c === cur ? 'on' : ''}" aria-pressed="${c === cur}" data-act="${act}" data-v="${c}" style="background:${c}" aria-label="${label} ${n + 1}"></button>`).join('')}
     <label class="sw custom" title="Pick any colour"><span class="sr-only">Custom ${label.toLowerCase()}</span><input type="color" id="custom-${act}" value="${cur}"></label></div>`;
-  return `<h3>Skin tone</h3>${sw(SKIN, S.skin, 'skin', 'Skin tone')}
-    <h3>Hair colour</h3>${sw(HAIR, S.hair, 'hair', 'Hair colour')}
-    <h3>Hair style</h3><div class="chips" role="group" aria-label="Hair style">${HAIR_STYLES.map(([k, l]) => `<button class="chip ${S.hairStyle === k ? 'on' : ''}" aria-pressed="${S.hairStyle === k}" data-act="hairstyle" data-v="${k}">${l}</button>`).join('')}</div>
-    <h3>Eyes</h3>${sw(EYES, S.eyes, 'eyes', 'Eye colour')}
-    <h3>Lips</h3>${sw(LIPS, S.lips, 'lips', 'Lip colour')}
-    <h3>Room</h3><div class="chips" role="group" aria-label="Room">${[['auto', 'Follow the season'], ...Object.entries(ROOMS).map(([k, [l, e]]) => [k, `${e} ${l}`])].map(([k, l]) => `<button class="chip ${S.room === k ? 'on' : ''}" aria-pressed="${S.room === k}" data-act="room" data-v="${k}">${l}</button>`).join('')}</div>
-    <h3>Body type</h3><div class="chips" role="group" aria-label="Body type">${Object.keys(BODY_TYPES).map((k) => `<button class="chip ${S.shape && S.shapeName === k ? 'on' : ''}" aria-pressed="${!!S.shape && S.shapeName === k}" data-act="bodytype" data-v="${k}">${k}</button>`).join('')}</div>
-    <h3>Fine-tune</h3>${SHAPE_SLIDERS.map(([k, l, a, b]) => `<label class="f" for="sh-${k}">${l}</label><input type="range" id="sh-${k}" data-shape="${k}" min="${a}" max="${b}" step="0.01" value="${shape[k]}">`).join('')}
-    <button class="ghost" data-act="resetlook" style="margin-top:12px">Reset appearance</button>`;
+  const chip = (act, v, label, on) => `<button class="chip ${on ? 'on' : ''}" aria-pressed="${on}" data-act="${act}" data-v="${v}">${label}</button>`;
+  const panes = {
+    skin: sw(SKIN, S.skin, 'skin', 'Skin tone'),
+    hair: sw(HAIR, S.hair, 'hair', 'Hair colour'),
+    style: HAIR_STYLES.map(([k, l]) => chip('hairstyle', k, l, S.hairStyle === k)).join(''),
+    eyes: sw(EYES, S.eyes, 'eyes', 'Eye colour'),
+    lips: sw(LIPS, S.lips, 'lips', 'Lip colour'),
+    room: [['auto', 'Follow the season'], ...Object.entries(ROOMS).map(([k, [l, e]]) => [k, `${e} ${l}`])].map(([k, l]) => chip('room', k, l, S.room === k)).join(''),
+    body: Object.keys(BODY_TYPES).map((k) => chip('bodytype', k, k, !!S.shape && S.shapeName === k)).join('')
+      + SHAPE_SLIDERS.map(([k, l, a, b]) => `<label class="mini" for="sh-${k}"><span>${l}</span><input type="range" id="sh-${k}" data-shape="${k}" min="${a}" max="${b}" step="0.01" value="${shape[k]}"></label>`).join(''),
+  };
+  return `<div class="cas" role="region" aria-label="Customize your model">
+    <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}
+      <button data-act="resetlook" aria-label="Reset appearance"><span aria-hidden="true">↺</span><small>Reset</small></button>${close}</div>
+    <div class="cas-opts">${panes[S.casTab] || panes.skin}</div></div>`;
 }
 
 function weatherLine() {
@@ -663,7 +674,6 @@ function drawerHTML(worn, fit) {
       <button class="primary wide" data-act="wearToday">📅 I’m wearing this today</button>
       <button class="ghost wide" data-act="sharecard" style="margin-top:8px">📸 Share this look as a picture</button>
       ${S.outfits.length ? `<h3>Saved looks</h3><div class="chips">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}${o.occasion ? ' · ' + esc(o.occasion) : ''}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : '<p class="muted">Saved looks show up here.</p>'}`;
-  if (S.drawer === 'look') return customizeHTML();
   if (S.drawer === 'ai') return aiPanel();
   if (S.drawer === 'me') return `<div class="row" role="group" aria-label="Model">
         <button class="chip ${usingPhoto() ? '' : 'on'}" aria-pressed="${!usingPhoto()}" data-act="display" data-v="mannequin" ${S.profile ? '' : 'disabled'}>${S.profile ? 'Mannequin shaped like me' : 'Default mannequin'}</button>
@@ -677,7 +687,95 @@ function drawerHTML(worn, fit) {
     : '<p class="muted">Pick pieces from the wardrobe below to dress your model.</p>';
 }
 
-function renderTryon() {
+const sceneBar = () => `<div class="scenebar" role="group" aria-label="Where to dress up">
+  <button class="${S.scene === 'closet' ? 'on' : ''}" aria-pressed="${S.scene === 'closet'}" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>
+  <button class="${S.scene === 'mirror' ? 'on' : ''}" aria-pressed="${S.scene === 'mirror'}" data-act="scene" data-v="mirror"><span aria-hidden="true">🪞</span> Mirror</button></div>`;
+
+function picksPanel() {
+  const items = S.basket.map(itemById).filter(Boolean);
+  if (!items.length) return '';
+  return `<section class="tray picks" aria-label="Pieces you grabbed from the closet"><h3>🧺 From your closet</h3>
+    <div class="tray-row">${items.map((i) => { const on = S.outfit[slotOf(i.type)] === i.id; return `<button class="pick ${on ? 'on' : ''}" aria-pressed="${on}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${SLOT_LABEL[slotOf(i.type)]}</small></button>`; }).join('')}</div>
+    <div class="row"><button class="ghost" data-act="mix"><span aria-hidden="true">🔀</span> Mix my picks</button><button class="ghost" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Back to the closet</button></div></section>`;
+}
+
+/* ───────────────────────── walk-in closet ───────────────────────── */
+const SECTION_TYPES = Object.keys(TYPES);
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function hallHTML() {
+  return `<div class="hall" id="hall" role="group" aria-label="Wardrobe sections. Choose one to walk over to it."><div class="hall-track">
+    ${SECTION_TYPES.map((t) => { const list = S.items.filter((i) => i.type === t); return `<button class="cabinet" data-act="section" data-v="${t}" aria-label="${TYPES[t].label}, ${list.length} piece${list.length === 1 ? '' : 's'}. Walk over.">
+      <span class="cab-plate"><span aria-hidden="true">${TYPES[t].emoji}</span> ${TYPES[t].label}</span>
+      <span class="cab-rail" aria-hidden="true">${list.slice(0, 3).map((i) => `<img src="${url(i.id)}" alt="">`).join('') || '<em>empty</em>'}</span>
+      <small class="cab-count">${list.length}</small></button>`; }).join('')}
+    <div class="walker" id="walker" aria-hidden="true">${mannequin(S.outfit)}</div></div></div>`;
+}
+
+function railHTML(type) {
+  const t = TYPES[type], list = S.items.filter((i) => i.type === type);
+  return `<div class="railview" role="region" aria-labelledby="railh">
+    <div class="rail-head"><button class="ghost" data-act="hall"><span aria-hidden="true">←</span> Closet</button><h3 id="railh">${t.emoji} ${t.label} <small>(${list.length})</small></h3>
+      <span class="row" role="group" aria-label="Walk to another section"><button class="ghost" data-act="railnav" data-v="-1" aria-label="Previous section"><span aria-hidden="true">◀</span></button><button class="ghost" data-act="railnav" data-v="1" aria-label="Next section"><span aria-hidden="true">▶</span></button></span></div>
+    <div class="rail-bar" aria-hidden="true"></div>
+    ${list.length ? `<div class="rail-row" role="group" aria-label="${t.label}. Tap pieces to grab them.">${list.map((it) => { const on = S.basket.includes(it.id); return `<button class="hanger ${on ? 'on' : ''}" aria-pressed="${on}" data-act="grab" data-id="${it.id}"><span class="hook" aria-hidden="true"></span><img src="${url(it.id)}" alt=""><span class="hname">${esc(it.name)}</span><span class="tick" aria-hidden="true">${on ? '✓' : '+'}</span></button>`; }).join('')}</div>`
+    : `<p class="muted tray-empty">Nothing in ${t.label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>`;
+}
+
+function basketPanel() {
+  if (!S.items.length) return emptyCloset(); // first visit: add a piece or load the sample closet
+  const items = S.basket.map(itemById).filter(Boolean);
+  return `<section class="tray basket" aria-label="Your picks"><h3>🧺 Your picks <small>(${items.length})</small></h3>
+    ${items.length ? `<div class="chips">${items.map((i) => `<span class="chip"><img class="bthumb" src="${url(i.id)}" alt=""> ${esc(i.name)} <button class="bare danger" data-act="ungrab" data-id="${i.id}" aria-label="Put back ${esc(i.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="primary grow" data-act="tryon"><span aria-hidden="true">🪞</span> Try on</button><button class="ghost" data-act="clearbasket">Put all back</button></div>`
+    : '<p class="muted">Walk to a section and tap pieces to grab them — as many as you like. Then try them on in front of the mirror.</p>'}</section>`;
+}
+
+function renderWalkIn() {
+  if (S.rail && !TYPES[S.rail]) S.rail = '';
+  const roomKey = S.room === 'auto' || !ROOMS[S.room] ? seasonRoom(new Date().getMonth()) : S.room;
+  const oldRow = $('.rail-row'), keepX = oldRow && S.lastRail === S.rail ? oldRow.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
+  const focus = document.activeElement?.dataset, n = S.basket.length;
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Walk-in closet</h2>
+  <div class="dress">
+    <div class="dress-left">
+      ${sceneBar()}
+      <div class="room closet-scene theme-${roomKey}">
+        <div class="closet-hud"><span class="basketbadge" role="status"><span aria-hidden="true">🧺</span> ${n} picked</span>
+          <button class="primary" data-act="tryon" ${n ? '' : 'disabled'}><span aria-hidden="true">🪞</span> Try on</button></div>
+        ${S.rail ? railHTML(S.rail) : hallHTML()}
+      </div>
+    </div>
+    <div class="dress-right">${basketPanel()}</div>
+  </div>`;
+  S.lastRail = S.rail; S.lastView = 'tryon';
+  const row = $('.rail-row'); if (row) row.scrollLeft = keepX;
+  const hall = $('#hall'), w = $('#walker');
+  if (hall && w) { // stand where we last stopped
+    const cab = (S.hallType && hall.querySelector(`[data-v="${S.hallType}"]`)) || hall.querySelector('.cabinet');
+    const x = S.hallType ? cab.offsetLeft + cab.offsetWidth / 2 : 70;
+    w.style.left = x + 'px'; S.hallX = x;
+    if (S.hallType) hall.scrollLeft = Math.max(0, x - hall.clientWidth / 2);
+  }
+  window.scrollTo(0, keepY);
+  if (focus?.act) $(`#main [data-act="${focus.act}"]${focus.id ? `[data-id="${focus.id}"]` : focus.v ? `[data-v="${focus.v}"]` : ''}`)?.focus({ preventScroll: true });
+}
+
+/** Walk the avatar over to a section, then open its rail. */
+function walkTo(type) {
+  S.hallType = type;
+  const hall = $('#hall'), cab = hall?.querySelector(`[data-v="${type}"]`), w = $('#walker');
+  const open = () => { S.rail = type; renderWalkIn(); };
+  if (!cab || !w || reducedMotion()) return open();
+  const x = cab.offsetLeft + cab.offsetWidth / 2;
+  w.classList.toggle('left', x < (parseFloat(w.style.left) || 0)); w.classList.add('walking'); w.style.left = x + 'px';
+  hall.scrollTo({ left: Math.max(0, x - hall.clientWidth / 2), behavior: 'smooth' });
+  clearTimeout(S.walkT); S.walkT = setTimeout(open, 850);
+}
+
+function renderTryon() { return S.scene === 'closet' ? renderWalkIn() : renderMirror(); }
+
+function renderMirror() {
   if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
   const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
   const worn = outfitItems(S.outfit);
@@ -689,7 +787,8 @@ function renderTryon() {
   $('#main').innerHTML = `<h2 class="view-title sr-only">Dress up</h2>
   <div class="dress">
     <div class="dress-left">
-      <div class="room ${usingPhoto() ? 'photo' : ''} ${use3D() ? 'is3d' : ''} theme-${roomKey}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
+      ${sceneBar()}
+      <div class="room mirror ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''} ${use3D() ? 'is3d' : ''} theme-${roomKey}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
         <div class="wall" aria-hidden="true"><div class="window"></div><div class="art"></div><div class="plant">${ROOMS[roomKey][1]}</div></div>
         <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
         <div class="gem" aria-hidden="true"></div>
@@ -698,18 +797,21 @@ function renderTryon() {
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${use3D() ? `<div class="turnbar" role="group" aria-label="Turn the model"><button data-act="turn" data-v="-1" aria-label="Turn left"><span aria-hidden="true">◀</span></button><button data-act="turn" data-v="0">Front</button><button data-act="turn" data-v="1" aria-label="Turn right"><span aria-hidden="true">▶</span></button></div>` : ''}
         <div class="tools" role="group" aria-label="Quick actions">
+          <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
           <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
           <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
           <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
           <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
         </div>
+        ${S.cas ? casHTML() : ''}
       </div>
-      <div class="moods" role="group" aria-label="Mood: what’s the occasion?">
+      <div class="moods" role="group" aria-label="Mood": what’s the occasion?">
         ${OCCASIONS.map((o) => `<button class="chip ${S.mood === o ? 'on' : ''}" aria-pressed="${S.mood === o}" data-act="mood" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}</button>`).join('')}
       </div>
       ${weatherLine()}
     </div>
     <div class="dress-right">
+      ${picksPanel()}
       <section class="tray" aria-label="Wardrobe">
         <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
         ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
@@ -894,8 +996,29 @@ document.addEventListener('click', async (e) => {
     case 'samples': return loadSamples();
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
-    case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; return go('tryon'); }
+    case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'mirror'; return go('tryon'); }
     case 'tab': S.tab = v; return renderTryon();
+    case 'scene': clearTimeout(S.walkT); S.scene = v; store.set('scene', v); S.cas = false; return renderTryon();
+    case 'section': return walkTo(v);
+    case 'hall': S.rail = ''; return renderWalkIn();
+    case 'railnav': { const k = SECTION_TYPES.length; S.rail = SECTION_TYPES[(SECTION_TYPES.indexOf(S.rail) + (+v) + k) % k]; S.hallType = S.rail; return renderWalkIn(); }
+    case 'grab': S.basket = S.basket.includes(id) ? S.basket.filter((x) => x !== id) : [...S.basket, id]; return renderWalkIn();
+    case 'ungrab': S.basket = S.basket.filter((x) => x !== id); return renderWalkIn();
+    case 'clearbasket': S.basket = []; return renderWalkIn();
+    case 'tryon': {
+      let o = {}; for (const bid of S.basket) { const it = itemById(bid); if (it) o = wear(o, it); }
+      S.outfit = o; S.scene = 'mirror'; store.set('scene', 'mirror'); S.pop = true; S.adjust = null; return renderTryon();
+    }
+    case 'mix': {
+      const by = {}; S.basket.map(itemById).filter(Boolean).forEach((i) => (by[slotOf(i.type)] ||= []).push(i));
+      const pick = (a) => a[Math.floor(Math.random() * a.length)], next = {};
+      if (by.dress && (!(by.top || by.bottom) || Math.random() < 0.5)) next.dress = pick(by.dress).id;
+      else { if (by.top) next.top = pick(by.top).id; if (by.bottom) next.bottom = pick(by.bottom).id; }
+      for (const sl of ['outer', 'shoes', 'bag', 'acc']) if (by[sl]) next[sl] = pick(by[sl]).id;
+      S.outfit = next; S.adjust = null; S.pop = true; return renderTryon();
+    }
+    case 'cas': S.casTab = v; return renderTryon();
+    case 'casclose': S.cas = false; return renderTryon();
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; return renderTryon();
     case 'turn': return stage3d.turn(+v);
     case 'eyes': S.eyes = v; store.set('eyes', v); return renderTryon();
@@ -918,7 +1041,7 @@ document.addEventListener('click', async (e) => {
     case 'sharecard': return makeLookCard();
     case 'gowx': return go('plan');
     case 'mood': S.mood = S.mood === v ? '' : v; return renderTryon();
-    case 'drawer': S.drawer = v; return renderTryon();
+    case 'drawer': if (v === 'look') S.cas = !S.cas; else S.drawer = v; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
     case 'resetfit': { const it = itemById(id); it.adj = { scale: 1, dx: 0, dy: 0 }; await put('items', it); return renderTryon(); }
     case 'airender': return runAIRender();
@@ -970,7 +1093,7 @@ document.addEventListener('click', async (e) => {
         return setInspoFile(new File([blob], 'pin.jpg', { type: blob.type }), { link });
       } catch (e) { msg.textContent = e.message; return; }
     }
-    case 'tryinspo': S.outfit = { ...S.inspo.picks }; return go('tryon');
+    case 'tryinspo': S.outfit = { ...S.inspo.picks }; S.scene = 'mirror'; return go('tryon');
     default: if (planActs[act]) return planActs[act](ctx, el);
   }
 });
