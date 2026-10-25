@@ -146,7 +146,8 @@ label.f { display: block; margin: 12px 0 4px; font-size: 13px; color: var(--mute
 .day b { position: absolute; top: 2px; left: 2px; font-size: 11px; z-index: 1; background: #fffc; color: #2a1f4a; border-radius: 8px; padding: 0 5px; }
 .day .mannequin { height: 100%; width: auto; max-height: none; }
 .day .render { height: 100%; width: 100%; object-fit: cover; border-radius: 10px; }
-.logrow { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.logrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 0; border-top: 1px solid var(--line); }
+.logrow .grow { min-width: 0; flex: 1 1 140px; overflow-wrap: anywhere; }
 .thumbs { display: flex; gap: 4px; }
 .thumbs img { width: 38px; height: 38px; object-fit: contain; background: var(--tile); border-radius: 8px; }
 .render-thumb { width: 64px; height: 90px; object-fit: cover; border-radius: 10px; }
@@ -193,7 +194,7 @@ fieldset legend { padding: 0; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
 /* grid/flex children must be allowed to shrink, otherwise a scrolling row stretches the whole page */
-.dress > *, .planner > *, .inspo > *, .dress-left, .dress-right, .tray, .drawer { min-width: 0; }
+.dress > *, .planner > *, .inspo > *, .plan > *, .plan-day > *, .dress-left, .dress-right, .tray, .drawer { min-width: 0; }
 main { overflow-x: clip; }
 
 /* 3D stage */
@@ -210,3 +211,29 @@ main { overflow-x: clip; }
 .sw.custom input { position: absolute; inset: -6px; width: 44px; height: 44px; opacity: 0; cursor: pointer; padding: 0; min-height: 0; }
 .sw.custom:focus-within { outline: 3px solid #ffd24a; }
 .drawer h3:first-child { margin-top: 4px; }
+
+/* insights, streak, plan */
+.piece .meta.price { color: #0b6b3a; font-weight: 700; }
+.streak { margin: 0 0 12px; padding: 10px 14px; border-radius: 14px; background: linear-gradient(90deg, #5a2a10, #7a3d12); border: 1px solid #ffb35a; }
+
+/* plan tab */
+.plan { display: grid; gap: 4px; max-width: 760px; margin: 0 auto; }
+.plan .panel { margin-top: 10px; }
+.plan h4 { margin: 14px 0 4px; font-size: 14px; }
+.wxline { margin: 8px 2px 0; color: var(--muted); font-size: 13px; }
+.wx-strip { overflow-x: auto; padding: 10px 2px 4px; }
+.wx-inner { display: flex; gap: 8px; width: max-content; }
+.wx-day { flex: 0 0 76px; background: #ffffff12; border: 1px solid var(--line); border-radius: 14px; padding: 8px 4px; text-align: center; display: grid; gap: 2px; font-size: 13px; }
+.wx-day small { color: var(--muted); font-size: 11px; }
+.wx-ic { font-size: 24px; }
+.plan-day { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.plan-when { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.plan-when small { color: var(--muted); }
+.plan-items img { width: 44px; height: 44px; }
+.plan-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.plan-actions .ghost { padding: 4px 12px; min-height: 40px; }
+.pack-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; min-height: 44px; }
+.pack-item input { width: 22px; height: 22px; accent-color: var(--hot); }
+.pack-item img { width: 40px; height: 40px; object-fit: contain; background: var(--tile); border-radius: 8px; }
+.gap-row { display: grid; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.logrow a { color: var(--accent); }

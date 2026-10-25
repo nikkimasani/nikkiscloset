@@ -1,5 +1,5 @@
 import { all, put, del, uid } from './db.js';
-import { OCCASIONS, OCCASION_EMOJI, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, slotOf, wear } from './data.js';
+import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, slotOf, wear } from './data.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
 import { palette, colorName } from './color.js';
 import { mannequinSVG } from './mannequin.js';
@@ -8,7 +8,10 @@ import { SAMPLES, sampleBlob } from './sample.js';
 import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js';
 import { detectPose } from './pose.js';
 import { outfitMeters } from './meters.js';
+import { closetInsights, streak as wearStreak } from './insights.js';
 import { stage3d } from './stage3d.js';
+import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
+import { BANDS, toF, weatherEmoji } from './weather.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor } from './aitryon.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -17,7 +20,9 @@ const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
 const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return v === null || v === '' ? d : v; } catch { return d; } } /* '' means "unset" */, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } } };
 
 const S = {
-  items: [], outfits: [], wears: [], inspos: [], profile: null,
+  items: [], outfits: [], wears: [], inspos: [], profile: null, plans: [], wishlist: [],
+  loc: (() => { try { return JSON.parse(store.get('loc', 'null')); } catch { return null; } })(), forecast: null, weatherError: '',
+  pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
   urls: new Map(),
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
   filter: { type: 'all', occ: 'all', q: '' },
@@ -59,7 +64,7 @@ function paintSheet(html, title) {
 
 async function load() {
   let profiles;
-  [S.items, S.outfits, S.wears, S.inspos, profiles] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile'].map(all));
+  [S.items, S.outfits, S.wears, S.inspos, profiles, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist'].map(all));
   S.profile = profiles[0] || null;
   if (S.profile?.photo) url('profile', S.profile.photo);
   S.items.sort((a, b) => a.createdAt - b.createdAt);
@@ -97,7 +102,9 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
-  if (S.view !== 'tryon') S.lastView = S.view; ({ closet: renderCloset, tryon: renderTryon, planner: renderPlanner, inspo: renderInspo })[S.view](); }
+  if (S.view !== 'tryon') S.lastView = S.view;
+  ({ closet: renderCloset, tryon: renderTryon, plan: () => renderPlan(ctx), planner: renderPlanner, inspo: renderInspo })[S.view]();
+}
 
 /* ───────────────────────── closet ───────────────────────── */
 function renderCloset() {
@@ -151,14 +158,16 @@ function pieceCard(i) {
     <button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>
     <button class="img" data-act="tryit" data-id="${i.id}" aria-label="Try on ${esc(i.name)}"><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
-    <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div></article>`;
+    <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
+    ${i.price > 0 ? `<div class="meta price">${worn ? `$${(i.price / worn).toFixed(2)}/wear` : `$${i.price.toFixed(2)} · not worn yet`}</div>` : ''}</article>`;
 }
 
 /* ───────────────────────── add / edit modal ───────────────────────── */
-function openItemModal(existing) {
+function openItemModal(existing, preset = {}) {
   const d = {
     id: existing?.id || uid(), name: existing?.name || '', type: existing?.type || 'tops',
     occasions: [...(existing?.occasions || [])], brand: existing?.brand || '', color: existing?.color || null,
+    price: existing?.price ?? '', bought: existing?.bought || '', season: existing?.season || 'all', ...(existing ? {} : { ...(preset.type && { type: preset.type }), ...(preset.name && { name: preset.name }), ...(preset.occasions && { occasions: preset.occasions }) }),
     tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample,
   };
   openModal();
@@ -177,6 +186,10 @@ function openItemModal(existing) {
       <div class="row"><div class="grow"><label class="f" for="type">Type</label>
         <select id="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === d.type ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
         <div class="grow"><label class="f" for="brand">Brand (optional)</label><input type="text" id="brand" value="${esc(d.brand)}"></div></div>
+      <div class="row"><div class="grow"><label class="f" for="price">Price paid, $ (optional)</label><input type="number" id="price" min="0" step="0.01" inputmode="decimal" value="${esc(String(d.price))}"></div>
+        <div class="grow"><label class="f" for="bought">Bought on (optional)</label><input type="date" id="bought" value="${esc(d.bought)}"></div></div>
+      <label class="f" for="season">Warmth (used with the weather)</label>
+      <select id="season">${SEASONS.map(([k, l]) => `<option value="${k}" ${k === d.season ? 'selected' : ''}>${l}</option>`).join('')}</select>
       <label class="f" id="occl">Occasions</label>
       <div class="chips" id="occs" role="group" aria-labelledby="occl">${OCCASIONS.map((o) => `<button type="button" class="chip ${d.occasions.includes(o) ? 'on' : ''}" aria-pressed="${d.occasions.includes(o)}" data-o="${o}">${o}</button>`).join('')}</div>
       <label class="f" for="color">Main colour ${d.color ? `— ${esc(d.color.name)}` : ''}</label>
@@ -204,6 +217,9 @@ function openItemModal(existing) {
     };
     $('#name').oninput = (e) => (d.name = e.target.value);
     $('#brand').oninput = (e) => (d.brand = e.target.value);
+    $('#price').oninput = (e) => (d.price = e.target.value);
+    $('#bought').oninput = (e) => (d.bought = e.target.value);
+    $('#season').onchange = (e) => (d.season = e.target.value);
     $('#type').onchange = (e) => (d.type = e.target.value);
     $('#color').oninput = (e) => (d.color = { hex: e.target.value, name: colorName(e.target.value) });
     $('#file').onchange = async (e) => {
@@ -232,7 +248,8 @@ function openItemModal(existing) {
       const item = {
         ...(existing || {}), id: d.id, name: d.name.trim(), type: d.type, occasions: d.occasions, brand: d.brand.trim(),
         color: d.color || existing?.color, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
-        createdAt: existing?.createdAt || Date.now(),
+        price: parseFloat(d.price) > 0 ? Math.round(parseFloat(d.price) * 100) / 100 : undefined, bought: d.bought || undefined, season: d.season,
+        createdAt: existing?.createdAt || Date.now(), updatedAt: Date.now(),
       };
       await put('items', item);
       if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
@@ -257,7 +274,7 @@ async function removeItems(ids) {
 }
 
 /* ───────────────────────── backup & restore ───────────────────────── */
-const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile'];
+const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
 const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
@@ -291,7 +308,7 @@ async function loadSamples() {
   for (const s of SAMPLES) {
     const cutout = await sampleBlob(s);
     const item = {
-      id: uid(), name: s.name, type: s.type, occasions: s.occasions, brand: '', sample: true,
+      id: uid(), name: s.name, type: s.type, occasions: s.occasions, brand: '', sample: true, season: s.season || 'all',
       color: { hex: s.hex, name: colorName(s.hex) }, cutout, adj: { scale: 1, dx: 0, dy: 0 }, createdAt: Date.now(),
     };
     await put('items', item); S.items.push(item); url(item.id, cutout);
@@ -501,6 +518,13 @@ function customizeHTML() {
     <button class="ghost" data-act="resetlook" style="margin-top:12px">Reset appearance</button>`;
 }
 
+function weatherLine() {
+  const w = S.forecast?.find((d) => d.date === iso(new Date()));
+  return w
+    ? `<p class="wxline" role="status"><span aria-hidden="true">${weatherEmoji(w.code)}</span> ${toF(w.hiC)}°F today${S.loc?.name ? ' in ' + esc(S.loc.name) : ''} · ${BANDS[w.band].label}. <b>Style me</b> dresses for it.</p>`
+    : '<p class="wxline"><button class="link" data-act="gowx">Set your city</button> and Style me will dress for the weather.</p>';
+}
+
 function drawerHTML(worn, fit) {
   if (S.drawer === 'looks') return `<div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Name this look (optional)" class="grow">
       <button class="ghost" data-act="savelook">💾 Save</button></div>
@@ -547,6 +571,7 @@ function renderTryon() {
       <div class="moods" role="group" aria-label="Mood: what’s the occasion?">
         ${OCCASIONS.map((o) => `<button class="chip ${S.mood === o ? 'on' : ''}" aria-pressed="${S.mood === o}" data-act="mood" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}</button>`).join('')}
       </div>
+      ${weatherLine()}
     </div>
     <div class="dress-right">
       <section class="tray" aria-label="Wardrobe">
@@ -580,6 +605,12 @@ function sparkle() {
   }
 }
 
+/** Log an outfit for a given day from explicit piece ids (used by the week plan). */
+async function wearIds(date, ids) {
+  const w = { id: uid(), date, itemIds: ids, occasion: S.mood, note: '', createdAt: Date.now() };
+  await put('wears', w); S.wears.push(w);
+}
+
 async function logWear(date, occasion = '', note = '') {
   const ids = Object.values(S.outfit).filter(itemById);
   if (!ids.length) return toast('Dress the mannequin first');
@@ -587,6 +618,17 @@ async function logWear(date, occasion = '', note = '') {
   if (aiFor(outfitItems(S.outfit))) { w.render = await (await fetch(S.ai.image)).blob(); url('render:' + w.id, w.render); }
   await put('wears', w); S.wears.push(w);
   toast(`Logged for ${date} ✓`);
+}
+
+/* ───────────────────────── insights ───────────────────────── */
+const money = (n) => `$${n >= 100 ? Math.round(n) : n.toFixed(2)}`;
+function insightsHTML(ins) {
+  const row = (i, right) => `<div class="logrow"><img src="${url(i.id)}" style="width:32px;height:32px;object-fit:contain;background:var(--tile);border-radius:6px" alt=""> <span class="grow">${esc(i.name)}</span><b>${right}</b></div>`;
+  return `<div class="panel"><h3>Closet insights</h3>
+    ${ins.pricedCount ? `<p class="muted">${ins.pieces} pieces · <b>${money(ins.value)}</b> invested${ins.avgCostPerWear !== null ? ` · average <b>${money(ins.avgCostPerWear)}</b> per wear` : ''}</p>` : '<p class="muted">Add what you paid for a piece (✎ Edit) to see cost per wear and your best-value buys.</p>'}
+    ${ins.bestValue.length ? `<div class="muted">Best value so far</div>${ins.bestValue.map((b) => row(b.item, `${money(b.cpw)}/wear`)).join('')}` : ''}
+    ${ins.wearMore.length ? `<div class="muted" style="margin-top:8px">Worth wearing more — you paid for these</div>${ins.wearMore.map((i) => row(i, money(i.price))).join('')}` : ''}
+    ${ins.dormant.length ? `<div class="muted" style="margin-top:8px">Declutter check — not worn in 90+ days</div>${ins.dormant.map((d) => row(d.item, d.never ? 'never worn' : `${d.days} days`)).join('')}` : ''}</div>`;
 }
 
 /* ───────────────────────── OOTD log ───────────────────────── */
@@ -604,11 +646,13 @@ function renderPlanner() {
   const counts = wearCounts();
   const top = [...S.items].sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0)).filter((i) => counts[i.id]).slice(0, 3);
   const never = S.items.filter((i) => !counts[i.id] && !['accessories'].includes(i.type)).slice(0, 6);
+  const todayIso = iso(new Date()), st = wearStreak(S.wears, todayIso), ins = closetInsights(S.items, S.wears, todayIso);
   $('#main').innerHTML = `<div class="planner"><div>
     <div class="row" style="justify-content:space-between;margin-bottom:10px">
       <button class="ghost" data-act="month" data-v="-1" aria-label="Previous month">‹</button><h2 class="view-title">${S.month.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2><button class="ghost" data-act="month" data-v="1" aria-label="Next month">›</button></div>
     <div class="cal">${['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d) => `<div class="dow" aria-hidden="true">${d}</div>`).join('')}${cells}</div></div>
     <div>
+      ${st ? `<p class="streak" role="status"><span aria-hidden="true">🔥</span> <b>${st}-day outfit streak</b> — keep it going!</p>` : ''}
       <div class="panel" style="margin-top:0"><h3>${new Date(S.date + 'T12:00').toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
         ${dayWears.map((w) => `<div class="logrow">${w.render ? `<img class="render-thumb" src="${url('render:' + w.id, w.render)}" alt="Photo of this outfit">` : ''}<div class="thumbs">${w.itemIds.map(itemById).filter(Boolean).map((i) => `<img src="${url(i.id)}" alt="${esc(i.name)}" title="${esc(i.name)}">`).join('')}</div>
           <div class="grow muted">${esc(w.occasion || '')}${w.note ? ' — ' + esc(w.note) : ''}</div>
@@ -618,6 +662,7 @@ function renderPlanner() {
         <select id="wocc" aria-label="Occasion"><option value="">Occasion</option>${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select>
         <input type="text" id="wnote" aria-label="Note" placeholder="Note (e.g. got compliments!)" style="margin-top:6px">
         <div class="row" style="margin-top:8px"><button class="primary" data-act="logday">Log it</button><button class="ghost" data-act="tab-tryon">Edit outfit</button></div></div>
+      ${insightsHTML(ins)}
       <div class="panel"><h3>Closet stats</h3>
         <div class="muted">Most worn</div>${top.map((i) => `<div class="logrow"><img src="${url(i.id)}" style="width:32px;height:32px;object-fit:contain" alt=""> <span class="grow">${esc(i.name)}</span><b>${counts[i.id]}×</b></div>`).join('') || '<div class="muted">Log some outfits to see this.</div>'}
         ${never.length ? `<div class="muted" style="margin-top:10px">Never worn — give them a turn:</div><div class="thumbs" style="margin-top:4px">${never.map((i) => `<img src="${url(i.id)}" title="${esc(i.name)}" alt="${esc(i.name)}">`).join('')}</div>` : ''}</div>
@@ -677,7 +722,7 @@ function showMatch() {
     <div class="grow" style="min-width:240px"><h3>Inspo palette</h3>
       <div class="pal">${d.palette.map((p) => `<span style="background:${p.hex};flex:${Math.max(p.share, .08)}">${colorName(p.hex)}</span>`).join('')}</div>
       <h3>Your closest look</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
-      ${gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>.</div>`).join('')}
+      ${gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>. <button class="chip" data-act="wishgap" data-slot="${g.slot}" data-hex="${g.hex}">+ Wishlist</button></div>`).join('')}
       <div class="row" style="margin-top:12px"><button class="primary" data-act="tryinspo" ${rows ? '' : 'disabled'}>Try this on</button></div>
     </div></div>`;
 }
@@ -688,7 +733,7 @@ document.addEventListener('click', async (e) => {
   if (nav) return go(nav.dataset.view);
   const el = e.target.closest('[data-act]'); if (!el) return;
   const { act, id, v } = el.dataset;
-  e.preventDefault();
+  if (el.tagName !== 'INPUT') e.preventDefault(); // let checkboxes toggle
   switch (act) {
     case 'add': return openItemModal();
     case 'samples': return loadSamples();
@@ -708,6 +753,8 @@ document.addEventListener('click', async (e) => {
       if (!ids.length || !confirm(`Remove the ${ids.length} sample pieces? Your own pieces stay.`)) return;
       await removeItems(ids); toast('Sample pieces removed'); return render();
     }
+    case 'wishgap': await wishFromGap(ctx, el.dataset.slot, el.dataset.hex, S.inspo?.occasion); return showMatch();
+    case 'gowx': return go('plan');
     case 'mood': S.mood = S.mood === v ? '' : v; return renderTryon();
     case 'drawer': S.drawer = v; return renderTryon();
     case 'fit': S.adjust = id; return renderTryon();
@@ -723,7 +770,7 @@ document.addEventListener('click', async (e) => {
     case 'styleme': {
       const o = S.mood;
       if (!S.items.length) return toast('Add some pieces first');
-      const r = styleMe(S.items, o, wearCounts());
+      const r = styleMe(S.items, o, wearCounts(), todayWeather(ctx));
       if (!Object.keys(r).length) return toast(`Nothing tagged for ${o} yet`);
       S.outfit = Object.fromEntries(Object.entries(r).map(([s, i]) => [s, i.id]));
       S.pop = true; return renderTryon();
@@ -752,6 +799,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'loadinspo': { const n = S.inspos.find((x) => x.id === id); return setInspoFile(n.photo, { id: n.id, link: n.link, occasion: n.occasion, wanted: n.wanted, palette: n.palette }); }
     case 'tryinspo': S.outfit = { ...S.inspo.picks }; return go('tryon');
+    default: if (planActs[act]) return planActs[act](ctx, el);
   }
 });
 
@@ -775,8 +823,12 @@ document.addEventListener('paste', (e) => {
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
 
+// helpers handed to the Plan tab
+const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, mannequin, wearCounts, go, wearIds, openItemModal: (x, p) => openItemModal(x, p) };
+
 (async () => {
   await load();
+  loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); }); // so "Style me" and the weather chip know today's weather
   render();
   window.__closet = S; // handy for debugging
   window.__stage3d = stage3d;

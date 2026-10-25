@@ -38,12 +38,26 @@ export function matchInspo(items, pal, { wanted, occasion, wearCounts = {} }) {
   return { picks, gaps };
 }
 
-/** "Style me": a random, balanced outfit for an occasion that favours pieces you rarely wear. */
-export function styleMe(items, occasion, wearCounts = {}) {
+/** Does a piece suit this weather band? (pieces with no season count as all-season) */
+export function suitsWeather(item, band) {
+  const s = item.season || 'all';
+  if (!band || s === 'all') return true;
+  if (band === 'cold') return s === 'warm';
+  if (band === 'cool') return s !== 'light';
+  if (band === 'warm' || band === 'hot') return s === 'light';
+  return true; // mild: anything goes
+}
+
+/**
+ * "Style me": a random, balanced outfit for an occasion that favours pieces you rarely wear.
+ * @param {{band?:string, rain?:number, avoid?:Set<string>}} weather band picks suitable layers; avoid = ids to steer away from (e.g. already used this week)
+ */
+export function styleMe(items, occasion, wearCounts = {}, weather = {}) {
+  const { band, rain = 0, avoid = new Set() } = weather;
   const pool = (slot) => items.filter((i) => slotOf(i.type) === slot && (!occasion || i.occasions?.includes(occasion)));
   const pick = (arr) => {
     if (!arr.length) return null;
-    const w = arr.map((i) => 1 / (1 + (wearCounts[i.id] || 0)));
+    const w = arr.map((i) => (1 / (1 + (wearCounts[i.id] || 0))) * (suitsWeather(i, band) ? 3 : 1) * (avoid.has(i.id) ? 0.15 : 1));
     let r = Math.random() * w.reduce((a, b) => a + b, 0);
     return arr[w.findIndex((x) => (r -= x) < 0)] || arr[0];
   };
@@ -52,7 +66,12 @@ export function styleMe(items, occasion, wearCounts = {}) {
   const useDress = dresses.length && (!(tops.length && bottoms.length) || Math.random() < 0.35);
   if (useDress) out.dress = pick(dresses);
   else { out.top = pick(tops); out.bottom = pick(bottoms); }
-  for (const s of ['outer', 'shoes', 'bag']) { const p = pick(pool(s)); if (p && (s === 'shoes' || Math.random() < 0.5)) out[s] = p; }
+  const wantOuter = band ? band === 'cold' || band === 'cool' || rain >= 50 : Math.random() < 0.5; // layers when it's chilly or wet
+  for (const s of ['outer', 'shoes', 'bag']) {
+    if (s === 'outer' && !wantOuter && band) continue;
+    const p = pick(pool(s));
+    if (p && (s === 'shoes' || s === 'outer' && band || Math.random() < 0.5)) out[s] = p;
+  }
   return Object.fromEntries(Object.entries(out).filter(([, v]) => v));
 }
 

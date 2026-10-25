@@ -23,6 +23,9 @@ export const TYPES = {
   accessories: { label: 'Accessories', slot: 'acc',    emoji: '💍' },
 };
 
+// How warm a piece is, used with the weather. 'all' fits anything.
+export const SEASONS = [['light', '☀️ Light / summer'], ['all', '🍂 All-season'], ['warm', '❄️ Warm / winter']];
+
 export const SLOTS = ['dress', 'top', 'bottom', 'outer', 'shoes', 'bag', 'acc'];
 export const SLOT_LABEL = { dress: 'Dress', top: 'Top', bottom: 'Bottom', outer: 'Outerwear', shoes: 'Shoes', bag: 'Bag', acc: 'Accessory' };
 

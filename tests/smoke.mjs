@@ -360,6 +360,72 @@ try {
   const rest = await p7.evaluate(() => ({ skin: window.__closet.skin, style: window.__closet.hairStyle }));
   ok(/^#[0-9a-f]{6}$/i.test(rest.skin) && rest.style === 'long', 'restoring a default-appearance backup keeps the defaults');
 
+
+  // ── batch A: price/cost-per-wear, weather, week plan, packing, gaps, wishlist, insights, streak ──
+  const p8 = await mk();
+  const isoLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const days7 = Array.from({ length: 7 }, (_, n) => { const d = new Date(); d.setDate(d.getDate() + n); return isoLocal(d); });
+  await p8.route('https://geocoding-api.open-meteo.com/**', (r) => r.fulfill({ json: { results: [{ name: 'Houston', admin1: 'Texas', latitude: 29.76, longitude: -95.37 }] } }));
+  await p8.route('https://api.open-meteo.com/**', (r) => r.fulfill({ json: { daily: { time: days7, temperature_2m_max: [5, 12, 20, 26, 31, 18, 9], temperature_2m_min: [1, 6, 13, 19, 24, 12, 3], precipitation_probability_max: [80, 0, 10, 0, 0, 60, 0], weathercode: [61, 0, 1, 0, 0, 63, 3] } } }));
+  await p8.click('[data-act=samples]'); await p8.waitForFunction(() => window.__closet.items.length === 10);
+  await p8.click('[data-view=plan]'); await p8.fill('#locq', 'Houston'); await p8.click('[data-act=wxcity]');
+  await p8.waitForSelector('.wx-day');
+  ok((await p8.locator('.wx-day').count()) === 7, 'weather: 7-day forecast loads (and the strict security policy allows the weather service)');
+  await p8.click('[data-view=tryon]');
+  ok(/41°F today in Houston/.test(await p8.locator('.wxline').innerText()), 'Dress Up shows today’s weather');
+  let layered = 0;
+  for (let n = 0; n < 6; n++) { await p8.click('[data-act=styleme]'); if (await p8.evaluate(() => !!window.__closet.outfit.outer)) layered++; }
+  ok(layered === 6, 'Style me adds a coat on a cold, rainy day (6/6)');
+  await p8.click('[data-view=plan]'); await p8.click('[data-act=planweek]');
+  await p8.waitForFunction(() => window.__closet.plans.length === 7);
+  ok((await p8.locator('.plan-day .plan-items img').count()) >= 14, 'week plan fills all 7 days');
+  const firstPlan = await p8.evaluate(() => { const S = window.__closet, p = S.plans.find((x) => x.date === S.forecast[0].date); return p.itemIds.map((id) => S.items.find((i) => i.id === id).type); });
+  ok(firstPlan.includes('outerwear'), `the cold day is planned with a coat (${firstPlan.join(', ')})`);
+  await p8.locator('[data-act=planreroll]').first().click();
+  ok((await p8.evaluate(() => window.__closet.plans.length)) === 7, 're-rolling a day keeps the plan intact');
+  const wearsBefore = await p8.evaluate(() => window.__closet.wears.length);
+  await p8.locator('[data-act=planwear]').first().click();
+  await p8.waitForFunction((n) => window.__closet.wears.length === n + 1, wearsBefore);
+  await p8.locator('[data-act=plantry]').first().click();
+  ok((await p8.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 2 && (await p8.locator('#stage').count()) === 1, 'a planned outfit opens on the model');
+  await p8.click('[data-view=plan]');
+  await p8.fill('#packdays', '5'); await p8.selectOption('#packband', 'cold'); await p8.click('[data-act=packmood][data-v="Work / Office"]');
+  await p8.click('[data-act=packbuild]'); await p8.waitForSelector('.pack-result');
+  const pack = await p8.evaluate(() => ({ boxes: document.querySelectorAll('.pack-item input').length, text: document.querySelector('.pack-result').innerText }));
+  ok(pack.boxes >= 4 && /different outfit/.test(pack.text), `packing list builds (${pack.boxes} pieces)`);
+  await p8.locator('.pack-item input').first().check();
+  ok((await p8.evaluate(() => window.__closet.pack.checked.size)) === 1, 'packing checkboxes tick');
+  const gaps = await p8.locator('.gap-row').count();
+  ok(gaps > 0, `wardrobe gaps found for under-stocked occasions (${gaps})`);
+  await p8.locator('[data-act=wishgapadd]').first().click();
+  await p8.waitForFunction(() => window.__closet.wishlist.length === 1);
+  await p8.locator('.plan details summary').click(); await p8.fill('#wnote2', 'sage linen shirt'); await p8.fill('#wbudget', '60'); await p8.fill('#wlink', 'javascript:alert(1)');
+  await p8.click('[data-act=wishadd]');
+  await p8.waitForFunction(() => window.__closet.wishlist.length === 2);
+  const wl = await p8.evaluate(() => window.__closet.wishlist);
+  ok(wl.length === 2 && wl[1].link === '', 'wishlist: add from a gap and by hand; unsafe links are dropped');
+  await p8.locator('[data-act=wishgot]').first().click();
+  await p8.waitForSelector('[role=dialog]');
+  ok(await p8.locator('[role=dialog]').isVisible() && (await p8.inputValue('#type')) !== '', '“Got it” opens Add piece with the type filled in');
+  await p8.keyboard.press('Escape');
+  await p8.evaluate(axeSource);
+  const rp = await p8.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+  const badp = rp.violations.filter((v) => v.impact !== 'minor');
+  ok(badp.length === 0, `axe (Plan tab): ${badp.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+  await p8.screenshot({ path: join(out, '11-plan.png'), fullPage: true });
+  // price -> cost per wear -> insights + streak (fresh closet, so no earlier wears interfere)
+  const p9 = await mk(); await p9.click('[data-act=samples]'); await p9.waitForFunction(() => window.__closet.items.length === 10);
+  await p9.click('[data-view=closet]'); await p9.locator('.piece:has-text("White tee") .edit').click();
+  await p9.fill('#price', '50'); await p9.selectOption('#season', 'light'); await p9.click('#save');
+  await p9.waitForSelector('.piece:has-text("White tee") .price');
+  ok(/\$50\.00 · not worn yet/.test(await p9.locator('.piece:has-text("White tee") .price').innerText()), 'price shows on the piece card');
+  await p9.evaluate(async () => { const S = window.__closet, t = S.items.find((i) => i.name === 'White tee'); const d = new Date(); const iso = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; const y = new Date(d); y.setDate(d.getDate() - 1); S.wears.push({ id: 'w1', date: iso(d), itemIds: [t.id], occasion: '', note: '', createdAt: 1 }, { id: 'w2', date: iso(y), itemIds: [t.id], occasion: '', note: '', createdAt: 2 }); });
+  await p9.click('[data-view=planner]'); await p9.waitForSelector('.streak');
+  ok(/2-day outfit streak/.test(await p9.locator('.streak').innerText()), 'Diary shows the outfit streak');
+  ok(/\$25\.00\/wear/.test(await p9.locator('.panel:has-text("Closet insights")').innerText()), 'insights: cost per wear ($50 over 2 wears = $25)');
+  await p9.click('[data-view=closet]');
+  ok(/\$25\.00\/wear/.test(await p9.locator('.piece:has-text("White tee") .price').innerText()), 'card switches to cost per wear once worn');
+
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
     await p2.evaluate(axeSource);
@@ -367,7 +433,7 @@ try {
     const bad = r.violations.filter((v) => v.impact !== 'minor');
     ok(bad.length === 0, `axe (${name}): ${bad.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
   };
-  for (const v of ['closet', 'tryon', 'planner', 'inspo']) { await p2.click(`[data-view=${v}]`); await axe(v); }
+  for (const v of ['closet', 'tryon', 'plan', 'planner', 'inspo']) { await p2.click(`[data-view=${v}]`); await axe(v); }
   await p2.click('[data-view=closet]'); await p2.click('header [data-act=add]'); await axe('add dialog'); await p2.keyboard.press('Escape');
   ok(await p2.evaluate(() => !document.querySelector('main').inert), 'Esc closes dialog and restores the page');
 } catch (e) { console.error(e); failed++; }

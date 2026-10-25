@@ -1,11 +1,11 @@
 // IndexedDB wrapper. Photos are stored as Blobs, so everything stays on-device.
 const DB_NAME = 'nikkis-closet';
-const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile'];
+const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist', 'renders'];
 let dbPromise;
 
 function open() {
   dbPromise ||= new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 2);
+    const req = indexedDB.open(DB_NAME, 3);
     req.onupgradeneeded = () => STORES.forEach((s) => { if (!req.result.objectStoreNames.contains(s)) req.result.createObjectStore(s, { keyPath: 'id' }); });
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);

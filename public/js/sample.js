@@ -16,12 +16,12 @@ const bag = (col) => draw(220, 240, (c) => { c.strokeStyle = col; c.lineWidth = 
 export const SAMPLES = [
   { name: 'White tee', type: 'tops', make: () => tee('#f4f1ea'), occasions: ['Casual Outing', 'Brunch', 'Travel'], hex: '#f4f1ea' },
   { name: 'Silk blouse', type: 'tops', make: () => tee('#e6a9b8'), occasions: ['Work / Office', 'Dinner', 'Date Night'], hex: '#e6a9b8' },
-  { name: 'Black tank', type: 'tanks', make: () => tank('#1d1d20'), occasions: ['GNO', 'Date Night', 'Casual Outing'], hex: '#1d1d20' },
+  { name: 'Black tank', season: 'light', type: 'tanks', make: () => tank('#1d1d20'), occasions: ['GNO', 'Date Night', 'Casual Outing'], hex: '#1d1d20' },
   { name: 'Blue jeans', type: 'bottoms', make: () => jeans('#46628f'), occasions: ['Casual Outing', 'Brunch', 'GNO'], hex: '#46628f' },
   { name: 'Black trousers', type: 'bottoms', make: () => jeans('#26262b'), occasions: ['Work / Office', 'Dinner'], hex: '#26262b' },
-  { name: 'Satin midi skirt', type: 'skirts', make: () => skirt('#a8482a'), occasions: ['Date Night', 'Dinner', 'Brunch'], hex: '#a8482a' },
+  { name: 'Satin midi skirt', season: 'light', type: 'skirts', make: () => skirt('#a8482a'), occasions: ['Date Night', 'Dinner', 'Brunch'], hex: '#a8482a' },
   { name: 'Emerald wrap dress', type: 'dresses', make: () => dress('#1f7a5a'), occasions: ['Date Night', 'Formal / Event', 'Dinner'], hex: '#1f7a5a' },
-  { name: 'Camel blazer', type: 'outerwear', make: () => blazer('#c19a6b'), occasions: ['Work / Office', 'Dinner'], hex: '#c19a6b' },
+  { name: 'Camel blazer', season: 'warm', type: 'outerwear', make: () => blazer('#c19a6b'), occasions: ['Work / Office', 'Dinner'], hex: '#c19a6b' },
   { name: 'Nude heels', type: 'shoes', make: () => heels('#d9b79a'), occasions: ['Work / Office', 'Date Night', 'GNO', 'Dinner'], hex: '#d9b79a' },
   { name: 'Black mini bag', type: 'bags', make: () => bag('#222'), occasions: ['Date Night', 'GNO', 'Dinner'], hex: '#222222' },
 ];
