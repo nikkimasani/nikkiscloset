@@ -124,6 +124,13 @@ async function savePlan(c, date, outfit) {
   c.S.plans = c.S.plans.filter((p) => p.date !== date).concat(rec);
 }
 
+/** Copy the Days / Weather boxes into state before the tab re-renders, so changing a chip doesn't reset them. */
+function keepPackInputs(c) {
+  const p = c.S.pack, d = c.$('#packdays'), b = c.$('#packband');
+  if (d) p.days = Math.max(1, Math.min(30, parseInt(d.value, 10) || 3));
+  if (b) p.band = b.value;
+}
+
 export const planActs = {
   async wxcity(c) {
     const q = c.$('#locq').value.trim();
@@ -157,10 +164,10 @@ export const planActs = {
     await c.wearIds(el.dataset.date, p.itemIds.filter(c.itemById));
     c.toast(`Logged for ${el.dataset.date} ✓`);
   },
-  packmood(c, el) { const m = c.S.pack.moods, v = el.dataset.v; c.S.pack.moods = m.includes(v) ? m.filter((x) => x !== v) : [...m, v]; renderPlan(c); },
+  packmood(c, el) { const m = c.S.pack.moods, v = el.dataset.v; keepPackInputs(c); c.S.pack.moods = m.includes(v) ? m.filter((x) => x !== v) : [...m, v]; renderPlan(c); },
   packbuild(c) {
     const p = c.S.pack;
-    p.days = Math.max(1, Math.min(30, parseInt(c.$('#packdays').value, 10) || 3)); p.band = c.$('#packband').value;
+    keepPackInputs(c);
     const f = c.S.forecast?.slice(0, p.days);
     const band = p.band === 'auto' ? (f?.length ? bandFor(f.reduce((s, d) => s + d.hiC, 0) / f.length) : 'mild') : p.band;
     const rain = p.band === 'auto' && f?.length ? Math.max(...f.map((d) => d.rain)) : 0;
@@ -185,8 +192,8 @@ export const planActs = {
   async wishdel(c, el) { await c.del('wishlist', el.dataset.id); c.S.wishlist = c.S.wishlist.filter((w) => w.id !== el.dataset.id); renderPlan(c); },
   async wishgot(c, el) {
     const w = c.S.wishlist.find((x) => x.id === el.dataset.id);
-    await c.del('wishlist', w.id); c.S.wishlist = c.S.wishlist.filter((x) => x.id !== w.id);
-    c.openItemModal(null, { type: w.type, name: w.note || '', occasions: w.occasion ? [w.occasion] : [] });
+    // the wish is only crossed off once the piece is actually saved, so cancelling the dialog loses nothing
+    c.openItemModal(null, { type: w.type, name: w.note || '', occasions: w.occasion ? [w.occasion] : [], onSaved: async () => { await c.del('wishlist', w.id); c.S.wishlist = c.S.wishlist.filter((x) => x.id !== w.id); } });
   },
 };
 
