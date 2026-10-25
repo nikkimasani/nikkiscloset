@@ -201,7 +201,28 @@ function inflate(grid, rect, hMax, zc, flipBack = false) {
     g.setIndex(idx); g.computeVertexNormals();
     return g;
   };
-  return [build(1), build(-1)];
+  // side walls along the outline (and around holes) so a turned garment is a closed volume, not two floating sheets
+  const wall = (() => {
+    const pos = new Float32Array(nx * ny * 6), uv = new Float32Array(nx * ny * 4), idx = [], N = nx * ny;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i, x = rect.cx - rect.w / 2 + (i + 0.5) * cw, y = rect.top - (j + 0.5) * ch, u = (i + 0.5) / nx, v = 1 - (j + 0.5) / ny;
+      pos.set([x, y, zc + height[k]], k * 3); pos.set([x, y, zc - height[k]], (N + k) * 3);
+      uv.set([u, v], k * 2); uv.set([u, v], (N + k) * 2);
+    }
+    const at = (i, j) => (i < 0 || j < 0 || i >= nx || j >= ny ? false : inside[j * nx + i]);
+    const quad = (a, b) => idx.push(a, b, N + a, b, N + b, N + a); // front edge a-b down to the back edge
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      if (!at(i, j)) continue;
+      const k = j * nx + i;
+      if (at(i + 1, j)) { if (!at(i, j - 1) || !at(i + 1, j - 1)) quad(k, k + 1); if (!at(i, j + 1) || !at(i + 1, j + 1)) quad(k, k + 1); }
+      if (at(i, j + 1)) { if (!at(i - 1, j) || !at(i - 1, j + 1)) quad(k, k + nx); if (!at(i + 1, j) || !at(i + 1, j + 1)) quad(k, k + nx); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  })();
+  return [build(1), build(-1), wall];
 }
 
 function getTexture(url) {
@@ -253,13 +274,14 @@ function buildGarments() {
     const gcy = bcy + a.dy * k + (iy + dh / 2 - bcy) * a.scale;
     const W = dw * a.scale, H = dh * a.scale;
     const sw = m.sw * (body.build || 1);
-    const zc = it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.08 * m.sw : 0;
+    const zc = it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.15 * m.sw : 0;
     const backUrl = S.outfit.urls.get(it.id + ':back'), be = backUrl ? backTexture(e, backUrl, it.color?.hex) : null;
     const backTex = be?.ready ? be.tex : null;
-    const [front, back] = inflate(maskGrid(e), { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H }, (HMAX[it.type] || 0.24) * sw, zc, !!backTex);
+    const [front, back, wall] = inflate(maskGrid(e), { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H }, (HMAX[it.type] || 0.24) * sw, zc, !!backTex);
     const group = new THREE.Group();
     group.add(new THREE.Mesh(front, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
     group.add(new THREE.Mesh(back, new THREE.MeshLambertMaterial({ map: backTex || e.tex, alphaTest: 0.5, alphaToCoverage: true, color: backTex ? 0xffffff : 0xd9d9d9 }))); // no back photo: the front photo, a little darker
+    group.add(new THREE.Mesh(wall, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, color: 0xe6e6e6 })));
     if (box.rot) group.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
     group.userData.slot = it.type;
     S.figure.add(group); S.shells.push(group);
