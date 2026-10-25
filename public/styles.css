@@ -366,3 +366,14 @@ main { overflow-x: clip; }
 .world-jump .chip { flex: 0 0 auto; }
 .world-jump .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 @media (max-width: 919px) { .dress .room.world { height: clamp(400px, 58vh, 540px); } }
+
+/* the 3D closet is a full-height game screen (not pinned over the page); picks and jump buttons sit below it */
+@media (max-width: 919px) {
+  .dress .room.world { position: relative; top: auto; z-index: 1; height: max(420px, calc(100dvh - 232px)); }
+}
+@media (min-width: 920px) { .room.world { height: min(70vh, 640px); } }
+.world-rail { height: auto; max-height: 52%; min-height: 150px; overflow: hidden; }
+.world-rail .rail-row { min-height: 128px; }
+.world-rail .tray-empty { padding: 14px 6px; }
+.world-jump { padding-top: 12px; }
+html:has(.room.world) { scroll-padding-top: 70px; }

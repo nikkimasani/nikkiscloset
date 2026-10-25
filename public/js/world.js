@@ -37,28 +37,49 @@ function pad(U, color) {
   return g;
 }
 
+/** A rounded slab (front face rounded corners), so the furniture is soft instead of boxy. */
+function slab(w, h, d, r, color, archTop = false) {
+  const sh = new THREE.Shape(), x = -w / 2; r = Math.min(r, w / 2, h / 2);
+  sh.moveTo(x + r, 0); sh.lineTo(x + w - r, 0); sh.quadraticCurveTo(x + w, 0, x + w, r);
+  if (archTop) { sh.lineTo(x + w, h - w / 2); sh.absarc(0, h - w / 2, w / 2, 0, Math.PI, false); sh.lineTo(x, r); }
+  else { sh.lineTo(x + w, h - r); sh.quadraticCurveTo(x + w, h, x + w - r, h); sh.lineTo(x + r, h); sh.quadraticCurveTo(x, h, x, h - r); sh.lineTo(x, r); }
+  sh.quadraticCurveTo(x, 0, x + r, 0);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelSize: d * 0.12, bevelThickness: d * 0.12, bevelSegments: 3, curveSegments: 14 });
+  g.translate(0, 0, -d / 2);
+  return new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color }));
+}
+
+/** A soft round shadow on the floor. */
+function blob(U, w, d) {
+  const t = canvasTexture(64, 64, (g, s) => { const gr = g.createRadialGradient(s / 2, s / 2, 2, s / 2, s / 2, s / 2); gr.addColorStop(0, 'rgba(60,20,60,.38)'); gr.addColorStop(1, 'rgba(60,20,60,0)'); g.fillStyle = gr; g.fillRect(0, 0, s, s); });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.004 * U;
+  return m;
+}
+
 const box = (w, h, d, color) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color }));
 
 /** A clothes rack with a rail, your photos hanging from it, and a name plate. Local +z is the front. */
 function rack(U, st, loader) {
-  const g = new THREE.Group(), tint = new THREE.Color(st.color);
-  const back = box(0.84 * U, 1.1 * U, 0.03 * U, tint.clone().lerp(new THREE.Color('#ffffff'), 0.55)); back.position.set(0, 0.62 * U, -0.14 * U); g.add(back);
-  for (const sx of [-1, 1]) { const side = box(0.04 * U, 1.1 * U, 0.3 * U, tint); side.position.set(sx * 0.42 * U, 0.62 * U, 0); g.add(side); }
-  const top = box(0.9 * U, 0.06 * U, 0.34 * U, tint); top.position.set(0, 1.19 * U, 0); g.add(top);
-  const base = box(0.9 * U, 0.06 * U, 0.34 * U, tint); base.position.set(0, 0.06 * U, 0); g.add(base);
-  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.014 * U, 0.014 * U, 0.8 * U, 10), new THREE.MeshLambertMaterial({ color: 0xdfe4ee }));
+  const g = new THREE.Group(), tint = new THREE.Color(st.color), pale = tint.clone().lerp(new THREE.Color('#ffffff'), 0.6);
+  const frame = slab(0.98 * U, 1.42 * U, 0.1 * U, 0.08 * U, tint, true); frame.position.set(0, 0, -0.17 * U); g.add(frame);       // coloured arch
+  const inner = slab(0.8 * U, 1.3 * U, 0.06 * U, 0.06 * U, pale, true); inner.position.set(0, 0.05 * U, -0.1 * U); g.add(inner);   // pale panel
+  for (const sx of [-1, 1]) { const post = slab(0.05 * U, 1.05 * U, 0.12 * U, 0.025 * U, tint); post.position.set(sx * 0.44 * U, 0, -0.04 * U); g.add(post); }
+  const base = slab(1.0 * U, 0.1 * U, 0.34 * U, 0.04 * U, tint); base.position.set(0, 0, -0.02 * U); g.add(base);
+  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.016 * U, 0.016 * U, 0.86 * U, 14), new THREE.MeshLambertMaterial({ color: 0xe9edf5 }));
   rail.rotation.z = Math.PI / 2; rail.position.set(0, 1.0 * U, 0.02 * U); g.add(rail);
-  // your real pieces, hanging from the rail (they are flat photo cutouts, like paper dolls)
-  const n = Math.min(5, st.thumbs.length), step = 0.8 * U / Math.max(n, 1);
+  // your real pieces, hanging from the rail (flat photo cutouts, like paper dolls)
+  const n = Math.min(5, st.thumbs.length), step = 0.82 * U / Math.max(n, 1);
   st.thumbs.slice(0, 5).forEach((u, i) => {
     const tex = loader.load(u); tex.colorSpace = SRGB;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(0.28 * U, 0.4 * U), new THREE.MeshBasicMaterial({ map: tex, alphaTest: 0.4, side: THREE.DoubleSide }));
-    m.position.set(-0.4 * U + step * (i + 0.5), 0.78 * U, 0.04 * U); m.rotation.z = (i % 2 ? 1 : -1) * 0.03;
-    const hook = box(0.012 * U, 0.06 * U, 0.012 * U, 0xdfe4ee); hook.position.set(m.position.x, 0.99 * U, 0.04 * U);
+    m.position.set(-0.41 * U + step * (i + 0.5), 0.78 * U, 0.05 * U); m.rotation.z = (i % 2 ? 1 : -1) * 0.03;
+    const hook = box(0.012 * U, 0.06 * U, 0.012 * U, 0xe9edf5); hook.position.set(m.position.x, 0.99 * U, 0.05 * U);
     g.add(m, hook);
   });
   if (!n) { const e = sign(U * 0.5, '', 'empty', '#9aa3b8'); e.position.set(0, 0.7 * U, 0.1 * U); g.add(e); }
-  const plate = sign(U, st.emoji, st.label, st.color); plate.position.set(0, 1.46 * U, 0.05 * U); g.add(plate);
+  const plate = sign(U, st.emoji, st.label, st.color); plate.position.set(0, 1.62 * U, 0.05 * U); g.add(plate);
+  const shadow = blob(U, 1.3 * U, 0.8 * U); shadow.position.z = 0.2 * U; g.add(shadow);
   const p = pad(U, tint); p.position.set(0, 0, 0.62 * U); g.add(p);
   g.userData = { type: st.type, pad: p };
   return g;
@@ -77,6 +98,7 @@ function mirror(U, st) {
   frame.scale.set(1, 1.55, 1); frame.position.set(0, 0.95 * U, -0.095 * U);
   g.add(pane, frame);
   const plate = sign(U, st.emoji, st.label, st.color); plate.position.set(0, 1.92 * U, 0.05 * U); g.add(plate);
+  const shadow = blob(U, 1.0 * U, 0.7 * U); shadow.position.z = 0.15 * U; g.add(shadow);
   const p = pad(U, new THREE.Color(st.color)); p.position.set(0, 0, 0.62 * U); g.add(p);
   g.userData = { type: st.type, pad: p };
   return g;

@@ -604,7 +604,10 @@ try {
     await pd.waitForFunction(() => window.__stage3d.debug()?.world, null, { timeout: 20000 });
     ok((await pd.evaluate(() => window.__stage3d.debug().world.stations.length)) === 11, 'the 3D closet has a rack per section plus the mirror');
     const z0 = await pd.evaluate(() => window.__stage3d.debug().world.pos[1]);
-    await pd.evaluate(() => window.__stage3d.setMove(0, 1)); await pd.waitForTimeout(600); await pd.evaluate(() => window.__stage3d.setMove(0, 0));
+    await pd.evaluate(() => window.__stage3d.setMove(0, 1));
+    let swung = 0; for (let n = 0; n < 8; n++) { await pd.waitForTimeout(90); swung = Math.max(swung, await pd.evaluate(() => window.__stage3d.debug().world.swing)); }
+    await pd.evaluate(() => window.__stage3d.setMove(0, 0));
+    ok(swung > 0.1, `legs and clothes swing while walking (peak ${swung})`);
     ok((await pd.evaluate(() => window.__stage3d.debug().world.pos[1])) < z0, 'pushing the stick forward walks the avatar into the room');
     await pd.evaluate(() => window.__stage3d.walkToStation('tops'));
     await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tops', null, { timeout: 20000 });

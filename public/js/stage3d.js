@@ -26,7 +26,7 @@ function ensure() {
   const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(180, 420, 520); scene.add(key);
   const rim = new THREE.DirectionalLight(0xbfe4ff, .7); rim.position.set(-300, 200, -300); scene.add(rim);
   const figure = new THREE.Group(); scene.add(figure);
-  S = { renderer, scene, camera, figure, shadow: null, rot: 0, target: 0, drag: null, raf: 0, bodyKey: '', ctx: null, outfit: null, textures: new Map(), shells: [], el: null, ro: null };
+  S = { sw: { legA: { value: 0 }, legB: { value: 0 }, armA: { value: 0 }, armB: { value: 0 } }, renderer, scene, camera, figure, shadow: null, rot: 0, target: 0, drag: null, raf: 0, bodyKey: '', ctx: null, outfit: null, textures: new Map(), shells: [], el: null, ro: null };
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); failed = true; });
   const cv = renderer.domElement;
   cv.style.touchAction = 'pan-y';
@@ -78,7 +78,7 @@ function dispose(group) {
 }
 
 /* ───────── body ───────── */
-function loft(sections, seg = 36) {
+function loft(sections, seg = 48) {
   const pos = [], idx = [];
   sections.forEach((s) => { for (let k = 0; k <= seg; k++) { const t = (k / seg) * Math.PI * 2; pos.push((s.x || 0) + s.a * Math.cos(t), s.y, s.d * Math.sin(t)); } });
   for (let i = 0; i < sections.length - 1; i++) for (let k = 0; k < seg; k++) {
@@ -92,11 +92,11 @@ function loft(sections, seg = 36) {
 
 function limb(a, b, r1, r2, mat) {
   const g = new THREE.Group(), len = a.distanceTo(b);
-  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, len, 20, 1, true), mat);
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, len, 28, 1, true), mat);
   cyl.position.copy(a).add(b).multiplyScalar(0.5);
   cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
   g.add(cyl);
-  for (const [p, r] of [[a, r1], [b, r2]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), mat); s.position.copy(p); g.add(s); }
+  for (const [p, r] of [[a, r1], [b, r2]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 18), mat); s.position.copy(p); g.add(s); }
   return g;
 }
 
@@ -148,26 +148,37 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
   const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: face.lips || '#c4505f' }));
   mouth.scale.set(2.2, .7, .6); mouth.position.set(hc.x, hc.y - headH * 0.27, headH * 0.42); g.add(mouth);
 
-  // arms + hands
+  // arms + hands, each hanging from a pivot at the shoulder so they can swing
+  const rig = { legs: [], arms: [] };
   for (const [s, w, side] of [[p.shL, p.wrL, -1], [p.shR, p.wrR, 1]]) {
     const sh = V(s[0] - side * 0.02 * sw, s[1] + 0.05 * T), wr = V(w[0], w[1]);
     const el = V((s[0] + w[0]) / 2 + side * sw * 0.07, (s[1] + w[1]) / 2);
-    g.add(limb(sh, el, 0.125 * sw * bf, 0.1 * sw * bf, skinM), limb(el, wr, 0.1 * sw * bf, 0.07 * sw * bf, skinM));
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.085 * sw, 14, 10), skinM);
-    hand.scale.set(0.8, 1.35, 0.6); hand.position.set(wr.x, wr.y - 0.09 * sw, 0); g.add(hand);
+    const piv = new THREE.Group(); piv.position.copy(sh);
+    const rel = (v) => v.clone().sub(sh);
+    piv.add(limb(rel(sh), rel(el), 0.125 * sw * bf, 0.1 * sw * bf, skinM), limb(rel(el), rel(wr), 0.1 * sw * bf, 0.07 * sw * bf, skinM));
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.085 * sw, 18, 12), skinM);
+    hand.scale.set(0.8, 1.35, 0.6); hand.position.set(wr.x - sh.x, wr.y - 0.09 * sw - sh.y, 0); piv.add(hand);
+    g.add(piv); rig.arms.push({ piv, x: sh.x, y: sh.y });
   }
-  // legs + feet
+  // legs + feet, hanging from the hips
   for (const [h, k, a] of [[p.hipL, p.knL, p.anL], [p.hipR, p.knR, p.anR]]) {
     const hp = V(h[0], h[1] + 0.04 * T), kn = V(k[0], k[1]), an = V(a[0], a[1]);
-    g.add(limb(hp, kn, 0.25 * sw * bf, 0.155 * sw * bf, skinM), limb(kn, an, 0.155 * sw * bf, 0.09 * sw * bf, skinM));
-    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.1 * sw, 14, 10), skinM);
-    foot.scale.set(0.85, 0.5, 2.1); foot.position.set(an.x, an.y - 0.02 * L, 0.1 * sw); g.add(foot);
+    const piv = new THREE.Group(); piv.position.copy(hp);
+    const rel = (v) => v.clone().sub(hp);
+    piv.add(limb(rel(hp), rel(kn), 0.25 * sw * bf, 0.155 * sw * bf, skinM), limb(rel(kn), rel(an), 0.155 * sw * bf, 0.09 * sw * bf, skinM));
+    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.1 * sw, 18, 12), skinM);
+    foot.scale.set(0.85, 0.5, 2.1); foot.position.set(an.x - hp.x, an.y - 0.02 * L - hp.y, 0.1 * sw); piv.add(foot);
+    g.add(piv); rig.legs.push({ piv, x: hp.x, y: hp.y });
   }
+  rig.legs.sort((p1, p2) => p1.x - p2.x); rig.arms.sort((p1, p2) => p1.x - p2.x); // [0] is the one at smaller x
+  // numbers the clothes' vertex shader needs to swing with the limbs
+  rig.hip = new THREE.Vector4(rig.legs[0].x, (rig.legs[0].y + rig.legs[1].y) / 2, rig.legs[1].x, 0.35 * T);
+  rig.sh = new THREE.Vector4(rig.arms[0].x, (rig.arms[0].y + rig.arms[1].y) / 2, rig.arms[1].x, 0.42 * sw * bf);
 
   const skinMeshes = []; // what clothes are fitted around (not hair or the head)
   g.traverse((o) => { if (o.isMesh && o.material === skinM && o !== head && o !== neck) skinMeshes.push(o); });
   const top = gy - p.headTop[1], halfW = Math.max(sw * 1.6, Math.abs(p.wrR[0] - cx) + sw * 0.7);
-  return { group: g, ctx: { cx, gy, H: top * 1.08, halfW, m, body, skinMeshes } };
+  return { group: g, ctx: { cx, gy, H: top * 1.08, halfW, m, body, skinMeshes, rig } };
 }
 
 /* ───────── garments ───────── */
@@ -289,12 +300,43 @@ function backTexture(front, backUrl, hex) {
   return e;
 }
 
+/**
+ * Lets a garment swing with the walk cycle: its vertices below the hips follow the leg on their side, and (for sleeves and bags)
+ * the vertices out beside the torso follow the arm. Done in the vertex shader, so it costs nothing per frame on the CPU.
+ */
+function swingy(mat, mode) {
+  const rig = S.ctx.rig, sw = S.sw;
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { uLegA: sw.legA, uLegB: sw.legB, uArmA: sw.armA, uArmB: sw.armB, uHip: { value: rig.hip }, uSh: { value: rig.sh }, uMode: { value: new THREE.Vector2(mode.leg, mode.arm) } });
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+uniform float uLegA; uniform float uLegB; uniform float uArmA; uniform float uArmB; uniform vec4 uHip; uniform vec4 uSh; uniform vec2 uMode;
+vec3 swingX(vec3 p, vec3 pivot, float a) { float c = cos(a), s = sin(a); vec3 d = p - pivot; return pivot + vec3(d.x, d.y * c - d.z * s, d.y * s + d.z * c); }`)
+      .replace('#include <begin_vertex>', `vec3 transformed = vec3( position );
+float mid = 0.5 * (uHip.x + uHip.z), dxm = position.x - mid;
+if (uMode.x > 0.0) {
+  float below = smoothstep(0.0, 1.0, clamp((uHip.y - position.y) / uHip.w, 0.0, 1.0));
+  float tB = smoothstep(-uHip.w * 0.5, uHip.w * 0.5, dxm);
+  transformed = swingX(transformed, vec3(mix(uHip.x, uHip.z, tB), uHip.y, 0.0), mix(uLegA, uLegB, tB) * below * uMode.x);
+}
+if (uMode.y > 0.0) {
+  float sideB = step(0.0, dxm);
+  float m = uMode.y > 1.5 ? 1.0 : smoothstep(uSh.w, uSh.w * 1.5, abs(dxm)) * (1.0 - smoothstep(uSh.y + uHip.w * 0.2, uSh.y + uHip.w * 1.2, position.y));
+  transformed = swingX(transformed, vec3(mix(uSh.x, uSh.z, sideB), uSh.y, 0.0), mix(uArmA, uArmB, sideB) * m);
+}`);
+  };
+  mat.customProgramCacheKey = () => 'swing1';
+  return mat;
+}
+const SWING = { tops: { leg: 0, arm: 1 }, tanks: { leg: 0, arm: 1 }, bodysuits: { leg: 0, arm: 1 }, outerwear: { leg: 0, arm: 1 }, dresses: { leg: 0.3, arm: 1 }, bottoms: { leg: 0.85, arm: 0 }, skirts: { leg: 0.3, arm: 0 }, shoes: { leg: 1, arm: 0 }, bags: { leg: 0, arm: 2 }, accessories: { leg: 0, arm: 0 } };
+
 /** Shoot rays front-to-back through the body at every garment cell: where they hit, the garment can wrap the body. */
 function bodyFit(grid, rect) {
   const { nx, ny, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, N = nx * ny;
   const hit = new Uint8Array(N), zf = new Float32Array(N), zb = new Float32Array(N);
   const turned = S.figure.rotation.clone(), spot = S.figure.position.clone();
-  S.figure.rotation.set(0, 0, 0); S.figure.position.set(0, 0, 0); S.figure.updateMatrixWorld(true); // probe the body at the origin, facing front
+  const swung = [...S.ctx.rig.legs, ...S.ctx.rig.arms].map((l) => l.piv.rotation.x); [...S.ctx.rig.legs, ...S.ctx.rig.arms].forEach((l) => (l.piv.rotation.x = 0));
+  S.figure.rotation.set(0, 0, 0); S.figure.position.set(0, 0, 0); S.figure.updateMatrixWorld(true); // probe the body at the origin, facing front, limbs at rest
   const rc = new THREE.Raycaster(), from = new THREE.Vector3(), dir = new THREE.Vector3(0, 0, -1), far = S.ctx.H * 4;
   rc.far = far * 2;
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
@@ -303,6 +345,7 @@ function bodyFit(grid, rect) {
     const h = rc.intersectObjects(S.ctx.skinMeshes, false);
     if (h.length) { hit[k] = 1; zf[k] = far - h[0].distance; zb[k] = far - h[h.length - 1].distance; }
   }
+  [...S.ctx.rig.legs, ...S.ctx.rig.arms].forEach((l, n) => (l.piv.rotation.x = swung[n]));
   S.figure.rotation.copy(turned); S.figure.position.copy(spot); S.figure.updateMatrixWorld(true);
   return { hit, zf, zb };
 }
@@ -331,10 +374,10 @@ function buildGarments() {
     const backTex = be?.ready ? be.tex : null;
     const grid = maskGrid(e), rect = { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H };
     const [front, back, wall] = inflate(grid, rect, (HMAX[it.type] || 0.24) * sw, zc, !!backTex, FITS.has(it.type) ? bodyFit(grid, rect) : null);
-    const group = new THREE.Group();
-    group.add(new THREE.Mesh(front, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
-    group.add(new THREE.Mesh(back, new THREE.MeshLambertMaterial({ map: backTex || e.tex, alphaTest: 0.5, alphaToCoverage: true, color: backTex ? 0xffffff : 0xd9d9d9 }))); // no back photo: the front photo, a little darker
-    group.add(new THREE.Mesh(wall, new THREE.MeshLambertMaterial({ color: new THREE.Color(it.color?.hex || '#888888').multiplyScalar(0.8), side: THREE.DoubleSide }))); // solid fabric edge: always visible, never clipped by the photo's soft outline
+    const group = new THREE.Group(), mode = SWING[it.type] || { leg: 0, arm: 0 }, Mat = (o) => swingy(new THREE.MeshLambertMaterial(o), mode);
+    group.add(new THREE.Mesh(front, Mat({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
+    group.add(new THREE.Mesh(back, Mat({ map: backTex || e.tex, alphaTest: 0.5, alphaToCoverage: true, color: backTex ? 0xffffff : 0xd9d9d9 }))); // no back photo: the front photo, a little darker
+    group.add(new THREE.Mesh(wall, Mat({ color: new THREE.Color(it.color?.hex || '#888888').multiplyScalar(0.8), side: THREE.DoubleSide }))); // solid fabric edge: always visible, never clipped by the photo's soft outline
     if (box.rot) group.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
     group.userData.slot = it.type;
     S.figure.add(group); S.shells.push(group);
@@ -358,20 +401,31 @@ function worldTick(now) {
     const dx = w.target.x - w.pos.x, dz = w.target.z - w.pos.z, d = Math.hypot(dx, dz);
     if (d < 0.05 * U) w.target = null; else { vx = dx / d; vz = dz / d; }
   }
-  const sp = Math.hypot(vx, vz), moving = sp > 0.05;
+  // ease into and out of a walk instead of snapping to full speed
+  const want = Math.hypot(vx, vz) > 0.02 ? Math.min(1, Math.hypot(vx, vz)) : 0, k2 = 1 - Math.exp(-dt * 9);
+  const tx = want ? vx / Math.hypot(vx, vz) : w.dir.x, tz = want ? vz / Math.hypot(vx, vz) : w.dir.z;
+  w.dir.x = tx; w.dir.z = tz;
+  w.speed += (want - w.speed) * k2;
+  const sp = w.speed, moving = sp > 0.04;
   if (moving) {
-    const step = 1.15 * U * Math.min(1, sp) * dt;
-    w.pos.x = Math.max(-w.room.bounds.x, Math.min(w.room.bounds.x, w.pos.x + (vx / sp) * step));
-    w.pos.z = Math.max(w.room.bounds.zMin, Math.min(w.room.bounds.zMax, w.pos.z + (vz / sp) * step));
-    w.face += wrap(Math.atan2(vx, vz) - w.face) * Math.min(1, dt * 12);
+    const step = 1.15 * U * sp * dt;
+    w.pos.x = Math.max(-w.room.bounds.x, Math.min(w.room.bounds.x, w.pos.x + w.dir.x * step));
+    w.pos.z = Math.max(w.room.bounds.zMin, Math.min(w.room.bounds.zMax, w.pos.z + w.dir.z * step));
+    w.face += wrap(Math.atan2(w.dir.x, w.dir.z) - w.face) * Math.min(1, dt * 10);
   }
+  // walk cycle: legs and arms swing in opposition; the clothes follow (see swingy), the body bobs and leans into it
+  w.phase += dt * (3 + 9 * sp) * (moving ? 1 : 0);
+  const amt = Math.min(1, sp * 1.4), a = Math.sin(w.phase) * 0.62 * amt;
+  const [la, lb] = S.ctx.rig.legs, [aa, ab] = S.ctx.rig.arms;
+  la.piv.rotation.x = a; lb.piv.rotation.x = -a; aa.piv.rotation.x = -a * 0.7; ab.piv.rotation.x = a * 0.7;
+  S.sw.legA.value = a; S.sw.legB.value = -a; S.sw.armA.value = -a * 0.7; S.sw.armB.value = a * 0.7;
   const f = S.figure;
-  f.position.set(w.pos.x, moving ? Math.abs(Math.sin(w.t * 10)) * 0.014 * U : 0, w.pos.z);
-  f.rotation.y = w.face; f.rotation.z = moving ? Math.sin(w.t * 10) * 0.035 : 0;
+  f.position.set(w.pos.x, Math.abs(Math.sin(w.phase)) * 0.018 * U * amt, w.pos.z);
+  f.rotation.y = w.face; f.rotation.x = 0.07 * amt; f.rotation.z = Math.sin(w.phase) * 0.03 * amt;
   // follow camera
   w.shift += (w.shiftTo - w.shift) * Math.min(1, dt * 6); // lift the avatar up the screen while a rail is open below
-  const d = (2.15 + 1.4 * w.shift) * U, want = new THREE.Vector3(w.pos.x + sy * d, (0.78 + 0.12 * w.shift) * U, w.pos.z + cy * d);
-  S.camera.position.lerp(want, 1 - Math.exp(-dt * 7));
+  const d = (2.15 + 1.4 * w.shift) * U, camWant = new THREE.Vector3(w.pos.x + sy * d, (0.78 + 0.12 * w.shift) * U, w.pos.z + cy * d);
+  S.camera.position.lerp(camWant, 1 - Math.exp(-dt * 7));
   S.camera.lookAt(w.pos.x, (0.5 - 0.65 * w.shift) * U, w.pos.z); // with a rail open, pull back so the avatar sits in the visible top half
   if (S.shadow) S.shadow.position.set(w.pos.x, 0.5, w.pos.z);
   // which pad are we standing on?
@@ -456,11 +510,11 @@ export const stage3d = {
     s.scene.add(room.group); s.scene.background = new THREE.Color(0xffe3ee); s.scene.fog = new THREE.Fog(0xffe3ee, 8 * U, 15 * U);
     s.camera.fov = 42; s.camera.updateProjectionMatrix();
     const start = new THREE.Vector3(0, 0, 1.7 * U);
-    s.world = { U, room, move: { x: 0, y: 0 }, keys: new Set(), yaw: 0, pos: start.clone(), face: Math.PI, target: null, near: null, onNear, last: performance.now(), t: 0, raf: 0, down: onKey(true), up: onKey(false), clear: () => s.world?.keys.clear() };
+    s.world = { U, room, move: { x: 0, y: 0 }, keys: new Set(), yaw: 0, pos: start.clone(), face: Math.PI, target: null, near: null, dir: { x: 0, z: -1 }, speed: 0, phase: 0, onNear, last: performance.now(), t: 0, raf: 0, down: onKey(true), up: onKey(false), clear: () => s.world?.keys.clear() };
     if (old) { s.world.pos.copy(old.pos); s.world.face = old.face; s.world.yaw = old.yaw; }
     s.world.shift = 0; s.world.shiftTo = 0;
     s.camera.position.set(s.world.pos.x + Math.sin(s.world.yaw) * 2.15 * U, 0.78 * U, s.world.pos.z + Math.cos(s.world.yaw) * 2.15 * U);
-    s.figure.position.copy(s.world.pos); s.figure.rotation.set(0, s.world.face, 0);
+    s.figure.rotation.order = 'YXZ'; s.figure.position.copy(s.world.pos); s.figure.rotation.set(0, s.world.face, 0);
     cv.style.touchAction = 'none'; cv.tabIndex = 0;
     cv.addEventListener('keydown', s.world.down); cv.addEventListener('keyup', s.world.up); cv.addEventListener('blur', s.world.clear);
     s.world.raf = requestAnimationFrame(worldLoop);
@@ -473,7 +527,9 @@ export const stage3d = {
     cv.style.touchAction = 'pan-y'; cv.removeAttribute('tabindex');
     S.scene.remove(w.room.group); w.room.dispose();
     S.scene.background = null; S.scene.fog = null; S.camera.fov = 26; S.camera.updateProjectionMatrix();
-    S.world = null; S.figure.position.set(0, 0, 0); S.figure.rotation.set(0, 0, 0); S.rot = S.target = 0;
+    S.world = null; S.figure.position.set(0, 0, 0); S.figure.rotation.set(0, 0, 0); S.figure.rotation.order = 'XYZ'; S.rot = S.target = 0;
+    for (const l of [...(S.ctx?.rig.legs || []), ...(S.ctx?.rig.arms || [])]) l.piv.rotation.x = 0;
+    for (const u of Object.values(S.sw)) u.value = 0;
     S.shadow?.position.set(0, 0.5, 0);
     frame(); request();
   },
@@ -503,5 +559,5 @@ export const stage3d = {
 
   setLabel(text) { ensure().renderer.domElement.setAttribute('aria-label', text); },
   setRole() { const c = ensure().renderer.domElement; c.setAttribute('role', 'img'); },
-  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), backPhoto: S.shells.map((g) => !!g.children[1]?.material.map?.isCanvasTexture), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height], world: S.world && { near: S.world.near, pos: [Math.round(S.world.pos.x), Math.round(S.world.pos.z)], stations: S.world.room.stations.map((x) => x.type) } }; },
+  debug() { return S && { garments: S.shells.length, types: S.shells.map((g) => g.userData.slot), depths: S.shells.map((g) => { const b = new THREE.Box3().setFromObject(g); return Math.round(b.max.z - b.min.z); }), backPhoto: S.shells.map((g) => !!g.children[1]?.material.map?.isCanvasTexture), rot: S.target, canvas: [S.renderer.domElement.width, S.renderer.domElement.height], world: S.world && { swing: Math.round(Math.abs(S.sw.legA.value) * 100) / 100, speed: Math.round(S.world.speed * 100) / 100, near: S.world.near, pos: [Math.round(S.world.pos.x), Math.round(S.world.pos.z)], stations: S.world.room.stations.map((x) => x.type) } }; },
 };
