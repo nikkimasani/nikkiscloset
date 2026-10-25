@@ -254,6 +254,7 @@ function openItemModal(existing, preset = {}) {
       await put('items', item);
       if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
       url(item.id, item.cutout);
+      if (preset.onSaved) await preset.onSaved(item);
       closeModal(); toast(existing ? 'Updated ✓' : 'Added to your closet ✓'); render();
     };
   }
