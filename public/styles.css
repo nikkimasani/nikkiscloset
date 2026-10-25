@@ -254,3 +254,11 @@ main { overflow-x: clip; }
 
 .backbox { margin-top: 12px; }
 .backthumb { object-fit: contain; border-radius: 10px; background: #ffffff14; }
+
+/* phones: keep the model pinned under the header while you scroll the wardrobe and options, so changes are always visible */
+@media (max-width: 919px) {
+  .dress-left { display: contents; }
+  .dress .room { position: sticky; top: calc(max(10px, env(safe-area-inset-top)) + 54px); z-index: 6; height: clamp(340px, 46vh, 440px); }
+  .dress .moods { order: 1; }
+  .dress-right { order: 2; }
+}

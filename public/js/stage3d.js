@@ -167,9 +167,9 @@ function maskGrid(e) {
   const nx = Math.max(8, Math.round(iw >= ih ? G : (G * iw) / ih)), ny = Math.max(8, Math.round(ih >= iw ? G : (G * ih) / iw));
   const c = document.createElement('canvas'); c.width = nx; c.height = ny;
   const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(e.tex.image, 0, 0, nx, ny);
-  // any visible pixel counts as garment, so the mesh always covers the cutout (the texture's alpha makes the crisp outline)
+  // cells that are mostly garment; the texture's alpha makes the crisp outline, and a solid colour edge stays inside it
   const px = x.getImageData(0, 0, nx, ny).data, inside = new Uint8Array(nx * ny), dist = new Float32Array(nx * ny);
-  for (let i = 0; i < nx * ny; i++) { inside[i] = px[i * 4 + 3] > 8 ? 1 : 0; dist[i] = inside[i] ? 1e9 : 0; }
+  for (let i = 0; i < nx * ny; i++) { inside[i] = px[i * 4 + 3] > 96 ? 1 : 0; dist[i] = inside[i] ? 1e9 : 0; }
   const at = (xx, yy) => (xx < 0 || yy < 0 || xx >= nx || yy >= ny ? 0 : dist[yy * nx + xx]); // outside the picture counts as outside the garment
   for (let yy = 0; yy < ny; yy++) for (let xx = 0; xx < nx; xx++) { const i = yy * nx + xx; if (dist[i]) dist[i] = Math.min(dist[i], at(xx - 1, yy) + 1, at(xx, yy - 1) + 1, at(xx - 1, yy - 1) + 1.414, at(xx + 1, yy - 1) + 1.414); }
   for (let yy = ny - 1; yy >= 0; yy--) for (let xx = nx - 1; xx >= 0; xx--) { const i = yy * nx + xx; if (dist[i]) dist[i] = Math.min(dist[i], at(xx + 1, yy) + 1, at(xx, yy + 1) + 1, at(xx + 1, yy + 1) + 1.414, at(xx - 1, yy + 1) + 1.414); }
@@ -195,7 +195,7 @@ function inflate(grid, rect, hMax, zc, flipBack = false, fit = null) {
     const h = fit?.hit[i];
     zf[i] = h ? fit.zf[i] + ease : zc + height[i] * 0.6; zb[i] = h ? fit.zb[i] - ease : zc - height[i] * 0.6;
   }
-  if (fit) for (let pass = 0; pass < 3; pass++) for (const arr of [zf, zb]) {
+  if (fit) for (let pass = 0; pass < 6; pass++) for (const arr of [zf, zb]) {
     const src = arr.slice();
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
       const k = j * nx + i; if (!inside[k]) continue;
