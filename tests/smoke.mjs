@@ -177,7 +177,7 @@ try {
   await p2.locator('#p-legs').fill('1.25');
   await p2.locator('#p-shoulders').fill('0.85');
   await p2.click('#msave');
-  await p2.waitForSelector('#stage svg');
+  await p2.waitForSelector('#modal', { state: 'hidden' });
   const vb1 = await p2.getAttribute('#stage svg', 'viewBox');
   ok(vb0 !== vb1, `mannequin re-shaped to my proportions (${vb0} -> ${vb1})`);
   ok(await p2.locator('#stage image').count() >= 2, 'garments still render on the re-shaped body');
@@ -333,6 +333,30 @@ try {
   await p5.click('[data-act=rmsamples]');
   await p5.waitForFunction(() => window.__closet.items.length === 0);
   ok(true, 'sample pieces can be removed in one tap');
+
+
+  // review follow-ups: offline-ready on the first visit; appearance defaults survive reset + backup
+  const fsx = await import('node:fs');
+  const swSrc = fsx.readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
+  const missing = fsx.readdirSync(new URL('../public/js/', import.meta.url)).filter((f) => f.endsWith('.js') && !swSrc.includes(`/js/${f}`));
+  ok(missing.length === 0, `service worker precaches every module (${missing.join(', ') || 'none missing'})`);
+  const p6 = await mk();
+  await p6.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await p6.context().setOffline(true);
+  await p6.reload();
+  await p6.waitForSelector('#main .view-title', { state: 'attached', timeout: 15000 });
+  ok(await p6.locator('nav#nav').isVisible() && (await p6.title()) === "Nikki's Closet", 'first visit is enough: the app reopens with no network');
+  await p6.context().setOffline(false);
+  await p6.click('[data-view=tryon]'); await p6.click('[data-act=drawer][data-v=look]'); await p6.click('[data-act=hairstyle][data-v=bob]'); await p6.click('[data-act=resetlook]');
+  await p6.reload(); await p6.waitForFunction(() => window.__closet);
+  const dflt = await p6.evaluate(() => ({ skin: window.__closet.skin, hair: window.__closet.hair, style: window.__closet.hairStyle }));
+  ok(/^#[0-9a-f]{6}$/i.test(dflt.skin) && /^#[0-9a-f]{6}$/i.test(dflt.hair) && dflt.style === 'long', 'Reset appearance survives a reload (defaults, not blanks)');
+  await p6.click('[data-view=closet]');
+  const [dl2] = await Promise.all([p6.waitForEvent('download'), p6.click('[data-act=export]')]);
+  const bak2 = join(out, 'backup-default.json'); await dl2.saveAs(bak2);
+  const p7 = await mk(); await p7.click('[data-view=closet]'); await p7.setInputFiles('#restore', bak2); await p7.waitForSelector('#toast.show'); await p7.waitForFunction(() => window.__closet && window.__closet.skin);
+  const rest = await p7.evaluate(() => ({ skin: window.__closet.skin, style: window.__closet.hairStyle }));
+  ok(/^#[0-9a-f]{6}$/i.test(rest.skin) && rest.style === 'long', 'restoring a default-appearance backup keeps the defaults');
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {

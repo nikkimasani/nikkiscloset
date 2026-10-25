@@ -3,7 +3,15 @@
 const CACHE = 'closet-v1';
 const HEAVY = ['/vendor/', '/models/'];
 
-self.addEventListener('install', () => self.skipWaiting());
+// The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
+const SHELL = ['/', '/styles.css', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
+  '/js/app.js', '/js/aitryon.js', '/js/body.js', '/js/color.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/mannequin.js', '/js/meters.js',
+  '/js/pose.js', '/js/sample.js', '/js/stage3d.js', '/js/stylist.js', '/vendor/three/three.module.min.js'];
+
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then((c) => Promise.allSettled(SHELL.map((u) => c.add(u)))));
+});
 self.addEventListener('activate', (e) => e.waitUntil((async () => {
   for (const k of await caches.keys()) if (k !== CACHE) await caches.delete(k);
   await self.clients.claim();

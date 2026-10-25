@@ -14,7 +14,7 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const store = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } } };
+const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return v === null || v === '' ? d : v; } catch { return d; } } /* '' means "unset" */, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } } };
 
 const S = {
   items: [], outfits: [], wears: [], inspos: [], profile: null,
@@ -266,7 +266,7 @@ const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.
 async function exportBackup() {
   const stores = {};
   for (const name of STORES) stores[name] = await Promise.all((await all(name)).map(packRecord));
-  const prefs = Object.fromEntries(PREFS.map((k) => [k, store.get(k, '')]));
+  const prefs = Object.fromEntries(PREFS.map((k) => [k, store.get(k, '')]).filter(([, v]) => v)); // only what was actually customized
   const file = new Blob([JSON.stringify({ app: 'nikkis-closet', version: 1, exportedAt: new Date().toISOString(), stores, prefs })], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(file); a.download = `nikkis-closet-backup-${iso(new Date())}.json`;
@@ -281,7 +281,7 @@ async function importBackup(file) {
     if (!confirm('Restore this backup? Anything with the same ID is replaced; everything else on this device is kept.')) return;
     let n = 0;
     for (const name of STORES) for (const rec of data.stores[name] || []) { await put(name, await unpackRecord(rec)); if (name === 'items') n++; }
-    for (const [k, v] of Object.entries(data.prefs || {})) if (PREFS.includes(k)) store.set(k, String(v));
+    for (const [k, v] of Object.entries(data.prefs || {})) if (PREFS.includes(k) && v) store.set(k, String(v));
     try { sessionStorage.setItem('restored', String(n)); } catch { /* private mode */ }
     location.reload(); // rebuild all state from what's now stored
   } catch (e) { toast(e.message || 'Could not read that file'); }
