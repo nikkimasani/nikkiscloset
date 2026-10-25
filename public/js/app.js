@@ -47,12 +47,15 @@ function toast(msg) {
 }
 
 let lastFocus;
+let modalSeq = 0; // bumps whenever a dialog opens or closes, so slow AI replies can tell they've gone stale
 function openModal() {
+  modalSeq++;
   lastFocus = document.activeElement;
   $('#modal').hidden = false;
   document.querySelectorAll('header, main').forEach((e) => (e.inert = true));
 }
 function closeModal() {
+  modalSeq++;
   $('#modal').hidden = true;
   document.querySelectorAll('header, main').forEach((e) => (e.inert = false));
   lastFocus?.isConnected && lastFocus.focus();
@@ -221,7 +224,7 @@ function openItemModal(existing, preset = {}) {
       d.occasions = d.occasions.includes(o) ? d.occasions.filter((x) => x !== o) : [...d.occasions, o];
       e.target.classList.toggle('on'); e.target.setAttribute('aria-pressed', d.occasions.includes(o));
     };
-    $('#name').oninput = (e) => (d.name = e.target.value);
+    $('#name').oninput = (e) => { d.name = e.target.value; d.autoName = false; };
     $('#brand').oninput = (e) => (d.brand = e.target.value);
     $('#price').oninput = (e) => (d.price = e.target.value);
     $('#bought').oninput = (e) => (d.bought = e.target.value);
@@ -232,7 +235,7 @@ function openItemModal(existing, preset = {}) {
       const f = e.target.files[0]; if (!f) return;
       try {
         const { img, url: u } = await loadImage(f);
-        d.source = u; d.base = toCanvas(img);
+        d.source = u; d.base = toCanvas(img); d.photoSeq = (d.photoSeq || 0) + 1;
         if (!d.name) { d.name = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40); d.autoName = true; }
         d.aiCanvas = null; d.aiMsg = '';
         recut(); paint();
@@ -243,19 +246,23 @@ function openItemModal(existing, preset = {}) {
     if ($('#aicut')) $('#aicut').onclick = async () => {
       const pass = mpass(); if (!pass) return;
       aiBusy('Cutting it out…');
+      const seq = modalSeq, photo = d.photoSeq;
       try {
         const img = new Image(); img.src = await cutoutAI(d.base, pass); await img.decode();
+        if (seq !== modalSeq || photo !== d.photoSeq) return; // the dialog closed or a different photo was chosen meanwhile
         const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0);
         d.aiCanvas = trimTransparent(c); d.aiMsg = 'Done — AI cutout applied. Use the button below to go back if it looks worse.';
         recut(); paint();
-      } catch (e) { aiBusy(e.message); }
+      } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
     if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.aiMsg = ''; recut(); paint(); };
     if ($('#aitag')) $('#aitag').onclick = async () => {
       const pass = mpass(); if (!pass) return;
       aiBusy('Looking at it…');
+      const seq = modalSeq, photo = d.photoSeq;
       try {
         const t = await tagAI(d.base, pass), bits = [];
+        if (seq !== modalSeq || photo !== d.photoSeq) return;
         if (t.name && (!d.name.trim() || d.autoName)) { d.name = t.name; d.autoName = false; bits.push(t.name); }
         if (t.type) { d.type = t.type; bits.push(TYPES[t.type].label); }
         if (t.season) d.season = t.season;
@@ -263,7 +270,7 @@ function openItemModal(existing, preset = {}) {
         if (t.brand && !d.brand.trim()) d.brand = t.brand;
         d.aiMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
         paint();
-      } catch (e) { aiBusy(e.message); }
+      } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
     const tol = $('#tol');
     if (tol) {
