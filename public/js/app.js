@@ -11,6 +11,7 @@ import { detectPose } from './pose.js';
 import { outfitMeters } from './meters.js';
 import { closetInsights, streak as wearStreak } from './insights.js';
 import { webglOK } from './webgl.js';
+import { syncState, connect as syncConnect, disconnect as syncDisconnect, syncNow } from './sync.js';
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI } from './aitryon.js';
@@ -18,7 +19,7 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return v === null || v === '' ? d : v; } catch { return d; } } /* '' means "unset" */, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } } };
+const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return v === null || v === '' ? d : v; } catch { return d; } } /* '' means "unset" */, set: (k, v) => { try { localStorage.setItem(k, v); if (PREFS.includes(k)) localStorage.setItem('prefs_u', String(Date.now())); } catch { /* private mode */ } } };
 
 const S = {
   items: [], outfits: [], wears: [], inspos: [], profile: null, plans: [], wishlist: [],
@@ -142,7 +143,8 @@ function renderCloset() {
       <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
       <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
       ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove sample pieces</button>' : ''}</div>
-      <input type="file" id="restore" accept=".json,application/json" hidden></section>`;
+      <input type="file" id="restore" accept=".json,application/json" hidden></section>
+    ${syncPanel()}`;
   const qEl = $('#q');
   qEl.oninput = () => { S.filter.q = qEl.value; const p = qEl.selectionStart; renderCloset(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
   $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
@@ -314,6 +316,30 @@ async function removeItems(ids) {
     if (!Object.keys(kept).length) { await del('outfits', o.id); S.outfits = S.outfits.filter((x) => x.id !== o.id); }
     else if (Object.keys(kept).length !== Object.keys(o.outfit).length) { o.outfit = kept; await put('outfits', o); }
   }
+}
+
+/* ───────────────────────── cloud sync ───────────────────────── */
+let syncMsg = '';
+function syncPanel() {
+  const st = syncState();
+  return `<section class="panel" aria-label="Cloud sync"><h3>Cloud sync</h3>
+    ${st.on
+    ? `<p class="muted">Connected. Your closet, outfits and photos sync between your devices${st.last ? ` · last synced ${new Date(st.last).toLocaleString()}` : ''}.</p>
+       <div class="row"><button class="ghost" data-act="syncnow">⟳ Sync now</button><button class="ghost danger" data-act="syncoff">Disconnect</button></div>`
+    : `<p class="muted">Keep your closet on every phone and computer. Enter your private sync key — it works like a password, so anyone with it can see your closet.</p>
+       <label class="f" for="synckey">Sync key</label><input id="synckey" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="word-word-word-…"></label>
+       <div class="row"><button class="ghost" data-act="syncconnect">Connect &amp; sync</button></div>`}
+    <p class="muted" id="syncmsg" role="status">${esc(syncMsg)}</p></section>`;
+}
+async function runSync() {
+  syncMsg = 'Syncing…'; const m = $('#syncmsg'); if (m) m.textContent = syncMsg;
+  try {
+    const r = await syncNow();
+    syncMsg = `Synced ✓ (${r.pulled} from the cloud, ${r.pushed} sent)`;
+    if (r.pulled || r.removed) { try { sessionStorage.setItem('synced', syncMsg); } catch { /* private mode */ } location.reload(); return true; }
+  } catch (e) { syncMsg = e.message || 'Sync failed — check your connection'; if (S.view === 'closet') render(); return false; }
+  if (S.view === 'closet') render();
+  return true;
 }
 
 /* ───────────────────────── backup & restore ───────────────────────── */
@@ -866,6 +892,9 @@ document.addEventListener('click', async (e) => {
     case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; S.eyes = EYES[0]; S.lips = LIPS[0]; S.room = 'auto'; ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room'].forEach((k) => store.set(k, '')); return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
+    case 'syncconnect': { const k = $('#synckey').value; if (!k.trim()) return toast('Enter your sync key first'); syncConnect(k); if (!(await runSync())) { syncDisconnect(); render(); } return; }
+    case 'syncnow': return runSync();
+    case 'syncoff': if (confirm('Disconnect? Your closet stays on this device; the cloud copy is left as it is.')) { syncDisconnect(); syncMsg = ''; render(); } return;
     case 'rmsamples': {
       const ids = S.items.filter((i) => i.sample).map((i) => i.id);
       if (!ids.length || !confirm(`Remove the ${ids.length} sample pieces? Your own pieces stay.`)) return;
@@ -962,6 +991,8 @@ const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, manneq
   render();
   window.__closet = S; // handy for debugging
   window.__stage3d = stage3d;
+  try { const m = sessionStorage.getItem('synced'); if (m) { sessionStorage.removeItem('synced'); syncMsg = m; toast(m); } } catch { /* private mode */ }
+  if (syncState().on) runSync(); // pick up changes from other devices
   try { const n = sessionStorage.getItem('restored'); if (n) { sessionStorage.removeItem('restored'); toast(`Restored ${n} piece${n === '1' ? '' : 's'} from your backup`); } } catch { /* private mode */ }
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('/sw.js').catch(() => {}); // lets it install as an app and open offline
 })();
