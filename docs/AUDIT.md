@@ -39,7 +39,7 @@ a security read of `lib/tryon.js` and the CSP, and the existing e2e/axe suite. 7
 
 ## Ideas, roughly by value
 **Make it safer / cheaper**
-1. **Cloud sync + sign-in** (e.g. Supabase) so the closet follows you across phone/laptop and survives a cleared browser.
+1. ✅ *Done (sync-key based, no accounts)* **Cloud sync + sign-in** (e.g. Supabase) so the closet follows you across phone/laptop and survives a cleared browser.
 2. **Cache AI renders** per photo+piece so re-viewing an outfit never re-bills; add a daily render cap on the server.
 3. Compress stored images (WebP) and lazy-load the 3D engine for a faster first load.
 

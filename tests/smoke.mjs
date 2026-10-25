@@ -497,6 +497,44 @@ try {
   await p11.waitForSelector('.drop img');
   ok((await p11.inputValue('#plink')).endsWith('/pin/1') && (await p11.locator('.pal span').count()) > 0, 'a pin link fetches the picture into Inspo and keeps the link');
 
+  // cloud sync: two devices against an in-memory stand-in for the Supabase REST API
+  const cloud = { records: new Map(), blobs: new Map() }, SYNC_KEY = 'amber-apple-arrow';
+  const cloudRoute = (r) => {
+    const req = r.request(), u = new URL(req.url()), t = u.pathname.split('/').pop(), h = req.headers();
+    const json = (o, status = 200) => r.fulfill({ status, json: o, headers: { 'access-control-allow-origin': '*' } });
+    if (req.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
+    if (h['x-sync-key'] !== SYNC_KEY || !h.apikey) return json([], 401);
+    const rows = req.method() === 'POST' ? JSON.parse(req.postData()) : [];
+    if (t === 'sync_records') {
+      if (req.method() === 'POST') { for (const x of rows) cloud.records.set(`${x.store}/${x.id}`, x); return r.fulfill({ status: 201, headers: { 'access-control-allow-origin': '*' } }); }
+      const gt = Number((u.searchParams.get('updated_at') || 'gt.0').slice(3));
+      return json([...cloud.records.values()].filter((x) => x.updated_at > gt).sort((a, b) => a.updated_at - b.updated_at));
+    }
+    if (req.method() === 'POST') { for (const x of rows) cloud.blobs.set(x.key, x); return r.fulfill({ status: 201, headers: { 'access-control-allow-origin': '*' } }); }
+    const b = cloud.blobs.get((u.searchParams.get('key') || '').slice(3));
+    return json(b ? [b] : []);
+  };
+  const devA = await mk(), devB = await mk();
+  for (const d of [devA, devB]) await d.context().route('https://kyswqvjgbgztkqamkmac.supabase.co/**', cloudRoute);
+  await devA.click('[data-view=closet]'); await devA.click('[data-act=samples]'); await devA.waitForFunction(() => window.__closet.items.length === 10);
+  await devA.fill('#synckey', 'wrong-key'); await devA.click('[data-act=syncconnect]');
+  await devA.waitForFunction(() => /rejected/.test(document.querySelector('#syncmsg')?.textContent || ''));
+  ok(cloud.records.size === 0, 'a wrong sync key is refused and nothing is uploaded');
+  await devA.fill('#synckey', 'Amber Apple Arrow'); await devA.click('[data-act=syncconnect]');
+  await devA.waitForFunction(() => /Synced/.test(document.querySelector('#syncmsg')?.textContent || ''));
+  ok([...cloud.records.keys()].filter((k) => k.startsWith('items/')).length === 10 && cloud.blobs.size >= 10, 'device A uploads its pieces and their photos');
+  await devB.click('[data-view=closet]'); await devB.fill('#synckey', SYNC_KEY); await devB.click('[data-act=syncconnect]');
+  await devB.waitForFunction(() => window.__closet?.items?.length === 10);
+  ok(await devB.evaluate(() => window.__closet.items.every((i) => i.cutout instanceof Blob && i.cutout.size > 0)), 'device B receives the pieces with working photos');
+  await devA.evaluate(() => { const i = window.__closet.items[0]; return import('/js/db.js').then((m) => m.put('items', { ...i, name: 'Renamed on A' })); });
+  await devA.click('[data-act=syncnow]'); await devA.waitForFunction(() => /Synced/.test(document.querySelector('#syncmsg')?.textContent || ''));
+  await devB.click('[data-view=closet]'); await devB.click('[data-act=syncnow]'); await devB.waitForFunction(() => window.__closet?.items?.some((i) => i.name === 'Renamed on A'));
+  ok(true, 'an edit on one device reaches the other (newest edit wins)');
+  await devB.click('[data-view=closet]'); await devB.click('[data-act=rmsamples]'); await devB.waitForFunction(() => window.__closet.items.length === 0);
+  await devB.click('[data-act=syncnow]'); await devB.waitForFunction(() => /Synced/.test(document.querySelector('#syncmsg')?.textContent || ''));
+  await devA.click('[data-view=closet]'); await devA.click('[data-act=syncnow]'); await devA.waitForFunction(() => window.__closet?.items?.length === 0);
+  ok(true, 'a delete on one device removes the piece on the other');
+
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
     await p2.evaluate(axeSource);

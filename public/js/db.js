@@ -26,5 +26,11 @@ async function tx(store, mode, fn) {
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 export const all = (store) => tx(store, 'readonly', (s) => s.getAll());
 export const get = (store, id) => tx(store, 'readonly', (s) => s.get(id));
-export const put = (store, obj) => tx(store, 'readwrite', (s) => s.put(obj));
-export const del = (store, id) => tx(store, 'readwrite', (s) => s.delete(id));
+// Every write is time-stamped (_u) and every delete leaves a tombstone, so cloud sync knows what changed. Sync's own writes pass { sync: true }.
+export const put = (store, obj, opt) => { if (!opt?.sync) obj._u = Date.now(); return tx(store, 'readwrite', (s) => s.put(obj)); };
+export const del = (store, id, opt) => {
+  if (!opt?.sync && localStorage.getItem('synckey')) { const t = tombstones(); t[`${store}/${id}`] = Date.now(); try { localStorage.setItem('sync_tombs', JSON.stringify(t)); } catch { /* private mode */ } }
+  return tx(store, 'readwrite', (s) => s.delete(id));
+};
+export const tombstones = () => { try { return JSON.parse(localStorage.getItem('sync_tombs') || '{}'); } catch { return {}; } };
+export const clearTombstones = () => { try { localStorage.removeItem('sync_tombs'); } catch { /* private mode */ } };

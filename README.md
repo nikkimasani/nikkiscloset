@@ -27,6 +27,11 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **OOTD Log** – calendar of what you wore each day, with per-item wear counts and "never worn" reminders.
 - **Inspo** – drop in a Pinterest screenshot/image (drag, upload, or paste). It extracts the palette, rebuilds the closest outfit from your closet with colour-match %, and tells you what you're missing ("look for a sage-green top").
 
+## Cloud sync (optional)
+- **Wardrobe → Cloud sync**: enter your private sync key to keep pieces, photos, outfits, diary and appearance in step across devices. Newest edit wins; deletes sync too. Nothing is uploaded until a key is entered.
+- Backend is a dedicated Supabase project (`sync_records`, `sync_blobs`). There are no accounts: row-level security only allows requests whose `x-sync-key` header hashes to the stored SHA-256 (the key itself is never stored). The URL and publishable key in `public/js/sync.js` are public by design. Treat the sync key like a password; to rotate it, update the hash in `sync_config`.
+- Photos are stored in the cloud as base64 rows; the free tier is plenty for a closet.
+
 ## Backup & installing
 - **Wardrobe → Backup & restore** saves/restores everything (pieces, images, looks, diary, appearance) as one file.
 - The app is installable (Share → Add to Home Screen on iPhone; Install on Android/desktop Chrome) and opens offline after the first visit.
@@ -64,7 +69,7 @@ As with try-on, the fal request/response fields come from fal's public docs and 
 Keyboard-operable throughout (including the body-point editor), labelled controls, `aria-pressed` state on filters, dialogs that trap focus and restore it on close, screen-reader text for outfits and calendar days, live-region announcements, visible focus, and reduced-motion support. Automated axe (WCAG 2.1 AA) checks run in `npm test`; a manual screen-reader pass is still worth doing.
 
 ## Notes & limits
-- All data (photos included) lives in your browser's IndexedDB — nothing is uploaded. Clearing site data erases it; export/backup is a good next step.
+- All data (photos included) lives in your browser's IndexedDB — nothing is uploaded unless you turn on cloud sync. Clearing site data erases it; export/backup is a good next step.
 - Cutout works best on a plain, contrasting background (bed sheet, wall). Busy backgrounds need a higher strength or a cleaner photo.
 - Pinterest has no open API, so inspo is image-based (upload/paste); pin links are saved for reference.
 - The 3D view inflates flat garment photos into volumes; it has depth and lighting but **no cloth simulation** (no folds or drape; sleeves don't bend with the arms), the back of a garment mirrors its front, and outlines can look slightly rough up close. Shoes and bags are the roughest pieces. Your own photo ("My photo") stays 2D.
