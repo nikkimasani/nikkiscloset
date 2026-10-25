@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/smoke.mjs",
+    "test": "node --test tests/unit.mjs && node tests/smoke.mjs",
     "deploy:cloudflare": "npx wrangler deploy",
-    "deploy:vercel": "npx vercel --prod"
+    "deploy:vercel": "npx vercel --prod",
+    "test:unit": "node --test tests/unit.mjs"
   },
   "license": "MIT",
   "devDependencies": {

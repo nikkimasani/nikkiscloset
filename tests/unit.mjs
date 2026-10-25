@@ -1,0 +1,126 @@
+// Pure-logic unit tests: node --test tests/unit.mjs
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { closetInsights, costPerWear, streak, gapAnalysis, wearCountMap } from '../public/js/insights.js';
+import { bandFor, parseForecast, geocode, weatherEmoji } from '../public/js/weather.js';
+import { styleMe, suitsWeather } from '../public/js/stylist.js';
+import { planWeek, packingList } from '../public/js/planner.js';
+import { outfitMeters } from '../public/js/meters.js';
+import { colorName, hexDist, toLab, unhex } from '../public/js/color.js';
+import { fromProportions, measures, place, DEFAULT_BODY } from '../public/js/body.js';
+import { wear } from '../public/js/data.js';
+
+const it = (id, type, extra = {}) => ({ id, name: id, type, occasions: ['Work / Office'], color: { hex: '#222222' }, createdAt: 0, ...extra });
+const closet = [
+  it('t1', 'tops', { price: 20, color: { hex: '#f4f1ea' } }), it('t2', 'tops', { price: 80, color: { hex: '#e6a9b8' } }), it('t3', 'tanks', { season: 'light' }),
+  it('b1', 'bottoms', { price: 60, color: { hex: '#46628f' } }), it('s1', 'skirts', { season: 'light' }), it('d1', 'dresses'),
+  it('o1', 'outerwear', { season: 'warm', color: { hex: '#c19a6b' } }), it('h1', 'shoes'), it('g1', 'bags'),
+];
+
+test('cost per wear divides price by wears, and is null without a price or wears', () => {
+  const c = { t1: 4 };
+  assert.equal(costPerWear(closet[0], c), 5);
+  assert.equal(costPerWear(closet[2], c), null);
+  assert.equal(costPerWear(closet[1], c), null);
+});
+
+test('insights: value, best value, dormant pieces', () => {
+  const wears = [{ date: '2026-10-20', itemIds: ['t1', 'b1'] }, { date: '2026-10-21', itemIds: ['t1'] }, { date: '2026-01-02', itemIds: ['t2'] }];
+  const r = closetInsights(closet, wears, '2026-10-25');
+  assert.equal(r.value, 160);
+  assert.equal(r.bestValue[0].item.id, 't1');
+  assert.equal(r.bestValue[0].cpw, 10);
+  assert.ok(r.dormant.some((d) => d.item.id === 't2' && d.days > 90), 'worn in January → dormant');
+  assert.ok(r.dormant.every((d) => d.item.id !== 't1'));
+});
+
+test('streak counts consecutive logged days, tolerating an unlogged today', () => {
+  const w = (d) => ({ date: d, itemIds: ['t1'] });
+  assert.equal(streak([w('2026-10-25'), w('2026-10-24'), w('2026-10-23')], '2026-10-25'), 3);
+  assert.equal(streak([w('2026-10-24'), w('2026-10-23')], '2026-10-25'), 2, 'today not logged yet → streak from yesterday');
+  assert.equal(streak([w('2026-10-22')], '2026-10-25'), 0);
+  assert.equal(streak([w('2026-10-25'), w('2026-10-23')], '2026-10-25'), 1, 'a gap breaks it');
+  assert.equal(streak([w('2026-10-31'), w('2026-11-01')], '2026-11-01'), 2, 'month boundary');
+});
+
+test('gap analysis finds what an occasion is missing', () => {
+  const rows = gapAnalysis([it('t', 'tops', { occasions: ['Brunch'] }), it('h', 'shoes', { occasions: ['Brunch'] })]);
+  const brunch = rows.find((r) => r.occasion === 'Brunch');
+  assert.deepEqual(brunch.missing, ['a bottom']);
+  const none = rows.find((r) => r.occasion === 'Travel');
+  assert.ok(none.missing.includes('shoes') && none.total === 0);
+  assert.equal(gapAnalysis([it('d', 'dresses', { occasions: ['GNO'] }), it('h', 'shoes', { occasions: ['GNO'] })]).find((r) => r.occasion === 'GNO').missing.length, 0, 'dress + shoes is a full outfit');
+});
+
+test('weather bands and forecast parsing', () => {
+  assert.deepEqual(['0', '10', '20', '26', '35'].map((n) => bandFor(+n)), ['cold', 'cool', 'mild', 'warm', 'hot']);
+  const f = parseForecast({ daily: { time: ['2026-10-25', '2026-10-26'], temperature_2m_max: [5, 31], temperature_2m_min: [1, 22], precipitation_probability_max: [80, 0], weathercode: [61, 0] } });
+  assert.equal(f[0].band, 'cold'); assert.equal(f[0].rain, 80); assert.equal(f[1].band, 'hot');
+  assert.throws(() => parseForecast({}), /unexpected/);
+  assert.equal(weatherEmoji(0), '☀️');
+});
+
+test('geocode returns the first hit and a friendly error for none', async () => {
+  const ok = async () => ({ ok: true, json: async () => ({ results: [{ name: 'Houston', admin1: 'Texas', latitude: 29.7, longitude: -95.3 }] }) });
+  assert.deepEqual(await geocode('Houston', ok), { lat: 29.7, lon: -95.3, name: 'Houston, Texas' });
+  await assert.rejects(geocode('zzzz', async () => ({ ok: true, json: async () => ({}) })), /No place called/);
+});
+
+test('weather rules: cold needs warm pieces, hot needs light ones', () => {
+  assert.ok(suitsWeather({ season: 'warm' }, 'cold') && !suitsWeather({ season: 'light' }, 'cold'));
+  assert.ok(suitsWeather({ season: 'light' }, 'hot') && !suitsWeather({ season: 'warm' }, 'hot'));
+  assert.ok(suitsWeather({}, 'cold'), 'unlabelled = all-season');
+});
+
+test('Style me adds outerwear when cold or rainy, and skips it when hot', () => {
+  let cold = 0, hot = 0;
+  for (let n = 0; n < 40; n++) { if (styleMe(closet, '', {}, { band: 'cold' }).outer) cold++; if (styleMe(closet, '', {}, { band: 'hot' }).outer) hot++; }
+  assert.equal(cold, 40); assert.equal(hot, 0);
+  assert.ok(styleMe(closet, '', {}, { band: 'mild', rain: 90 }).outer, 'rain → layer');
+});
+
+test('week plan: one outfit per day, respects weather, avoids repeating pieces', () => {
+  const days = ['2026-10-26', '2026-10-27', '2026-10-28'].map((date, n) => ({ date, band: n === 0 ? 'cold' : 'mild', rain: 0 }));
+  const plan = planWeek(closet, days, {}, '');
+  assert.equal(plan.length, 3);
+  assert.ok(plan[0].outfit.outer, 'cold day gets a coat');
+  assert.ok(plan.every((p) => Object.keys(p.outfit).length >= 2));
+});
+
+test('packing list: right counts, layers for cold, reports what is missing', () => {
+  const r = packingList(closet, { days: 5, band: 'cold' });
+  assert.ok(r.list.outer.length === 1 && r.list.shoes.length >= 1 && r.list.bag.length === 1);
+  assert.ok(r.list.top.length >= 1 && r.outfits >= 1);
+  const tiny = packingList([it('t', 'tops')], { days: 7, band: 'mild' });
+  assert.ok(tiny.missing.some((m) => m.slot === 'bottom') && tiny.missing.some((m) => m.slot === 'top'));
+});
+
+test('outfit meters: neutrals harmonise, three loud hues do not, mood fit counts tagged pieces', () => {
+  const p = (hex, occ = ['Brunch']) => ({ id: hex, color: { hex }, occasions: occ });
+  assert.equal(outfitMeters({ top: p('#222222'), bottom: p('#f4f1ea') }, '', {}).harmony, 100);
+  assert.ok(outfitMeters({ a: p('#ff0000'), b: p('#00ff00'), c: p('#0000ff') }, '', {}).harmony <= 50);
+  assert.equal(outfitMeters({ top: p('#222222'), bottom: p('#f4f1ea', ['Work / Office']) }, 'Brunch', {}).fit, 50);
+  assert.equal(outfitMeters({}, '', {}), null);
+});
+
+test('colour helpers', () => {
+  assert.equal(colorName('#46628f'), 'Denim');
+  assert.ok(hexDist('#000000', '#ffffff') > 90 && hexDist('#123456', '#123456') === 0);
+  assert.ok(toLab(unhex('#ffffff'))[0] > 99);
+});
+
+test('body model: proportions change the figure, garments scale with build', () => {
+  const tall = measures(fromProportions({ legs: 1.2 })), norm = measures(DEFAULT_BODY);
+  assert.ok(tall.L > norm.L * 1.15 && Math.abs(tall.sw - norm.sw) < 1);
+  const wide = place('tops', { ...fromProportions({ build: 1.3 }) }), slim = place('tops', fromProportions({ build: 1 }));
+  assert.ok(wide.w > slim.w * 1.25);
+});
+
+test('wearing a dress removes top and bottom, and tapping again takes it off', () => {
+  let o = wear({}, { id: 't', type: 'tops' }); o = wear(o, { id: 'b', type: 'bottoms' });
+  o = wear(o, { id: 'd', type: 'dresses' });
+  assert.deepEqual(o, { dress: 'd' });
+  assert.deepEqual(wear(o, { id: 'd', type: 'dresses' }), {});
+});
+
+test('wear counts', () => assert.deepEqual(wearCountMap([{ itemIds: ['a', 'b'] }, { itemIds: ['a'] }]), { a: 2, b: 1 }));
