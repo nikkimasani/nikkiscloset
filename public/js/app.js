@@ -1,7 +1,7 @@
 import { all, get, put, del, uid } from './db.js';
 import { lookCard, shareOrDownload } from './sharecard.js';
 import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, BODY_TYPES, EYES, LIPS, ROOMS, seasonRoom, slotOf, wear } from './data.js';
-import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
+import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName } from './color.js';
 import { mannequinSVG } from './mannequin.js';
 import { matchInspo, styleMe } from './stylist.js';
@@ -13,7 +13,7 @@ import { closetInsights, streak as wearStreak } from './insights.js';
 import { webglOK } from './webgl.js';
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
-import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor } from './aitryon.js';
+import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI } from './aitryon.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -47,12 +47,15 @@ function toast(msg) {
 }
 
 let lastFocus;
+let modalSeq = 0; // bumps whenever a dialog opens or closes, so slow AI replies can tell they've gone stale
 function openModal() {
+  modalSeq++;
   lastFocus = document.activeElement;
   $('#modal').hidden = false;
   document.querySelectorAll('header, main').forEach((e) => (e.inert = true));
 }
 function closeModal() {
+  modalSeq++;
   $('#modal').hidden = true;
   document.querySelectorAll('header, main').forEach((e) => (e.inert = false));
   lastFocus?.isConnected && lastFocus.focus();
@@ -183,7 +186,11 @@ function openItemModal(existing, preset = {}) {
       </div>
       ${d.source ? `<label class="f" for="tol">Background removal strength: <span id="tolv">${d.tolerance}</span></label>
         <input type="range" id="tol" min="8" max="110" value="${d.tolerance}">
-        <label class="row" style="margin-top:6px"><input type="checkbox" id="keep" ${d.keep ? 'checked' : ''}> Keep original background</label>` : ''}
+        <label class="row" style="margin-top:6px"><input type="checkbox" id="keep" ${d.keep ? 'checked' : ''}> Keep original background</label>
+      <div class="aibox"><div class="muted"><b>✨ AI helpers</b> — use a little of your fal credits</div>
+        <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
+        <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aicut">${d.aiCanvas ? 'Redo AI cutout' : 'Cleaner cutout'}</button>${d.aiCanvas ? '<button type="button" class="ghost" id="aiundo">Use the on-device cutout</button>' : ''}<button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
+        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc(d.aiMsg || '')}</div></div>` : ''}
       <label class="f" for="name">Name</label><input type="text" id="name" value="${esc(d.name)}" placeholder="e.g. Black satin cami">
       <div class="row"><div class="grow"><label class="f" for="type">Type</label>
         <select id="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === d.type ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
@@ -204,7 +211,7 @@ function openItemModal(existing, preset = {}) {
 
   const recut = () => {
     if (!d.base) return;
-    d.canvas = d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance });
+    d.canvas = d.aiCanvas || (d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance }));
     d.cutoutUrl = d.canvas.toDataURL('image/png');
     const pal = palette(d.canvas, 1)[0];
     if (pal) d.color = { hex: pal.hex, name: colorName(pal.hex) };
@@ -217,7 +224,7 @@ function openItemModal(existing, preset = {}) {
       d.occasions = d.occasions.includes(o) ? d.occasions.filter((x) => x !== o) : [...d.occasions, o];
       e.target.classList.toggle('on'); e.target.setAttribute('aria-pressed', d.occasions.includes(o));
     };
-    $('#name').oninput = (e) => (d.name = e.target.value);
+    $('#name').oninput = (e) => { d.name = e.target.value; d.autoName = false; };
     $('#brand').oninput = (e) => (d.brand = e.target.value);
     $('#price').oninput = (e) => (d.price = e.target.value);
     $('#bought').oninput = (e) => (d.bought = e.target.value);
@@ -228,13 +235,46 @@ function openItemModal(existing, preset = {}) {
       const f = e.target.files[0]; if (!f) return;
       try {
         const { img, url: u } = await loadImage(f);
-        d.source = u; d.base = toCanvas(img);
-        if (!d.name) d.name = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40);
+        d.source = u; d.base = toCanvas(img); d.photoSeq = (d.photoSeq || 0) + 1;
+        if (!d.name) { d.name = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40); d.autoName = true; }
+        d.aiCanvas = null; d.aiMsg = '';
         recut(); paint();
       } catch (err) { toast(err.message); }
     };
+    const mpass = () => { const v = $('#mpass').value.trim(); if (!v) { toast('Enter your passcode first'); return null; } store.set('aipass', v); return v; };
+    const aiBusy = (msg) => { const el = $('#aimsg'); if (el) el.textContent = msg; $('#aicut').disabled = $('#aitag').disabled = !!msg.endsWith('…'); };
+    if ($('#aicut')) $('#aicut').onclick = async () => {
+      const pass = mpass(); if (!pass) return;
+      aiBusy('Cutting it out…');
+      const seq = modalSeq, photo = d.photoSeq;
+      try {
+        const img = new Image(); img.src = await cutoutAI(d.base, pass); await img.decode();
+        if (seq !== modalSeq || photo !== d.photoSeq) return; // the dialog closed or a different photo was chosen meanwhile
+        const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0);
+        d.aiCanvas = trimTransparent(c); d.aiMsg = 'Done — AI cutout applied. Use the button below to go back if it looks worse.';
+        recut(); paint();
+      } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
+    };
+    if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.aiMsg = ''; recut(); paint(); };
+    if ($('#aitag')) $('#aitag').onclick = async () => {
+      const pass = mpass(); if (!pass) return;
+      aiBusy('Looking at it…');
+      const seq = modalSeq, photo = d.photoSeq;
+      try {
+        const t = await tagAI(d.base, pass), bits = [];
+        if (seq !== modalSeq || photo !== d.photoSeq) return;
+        if (t.name && (!d.name.trim() || d.autoName)) { d.name = t.name; d.autoName = false; bits.push(t.name); }
+        if (t.type) { d.type = t.type; bits.push(TYPES[t.type].label); }
+        if (t.season) d.season = t.season;
+        if (t.occasions.length) { d.occasions = t.occasions; bits.push(t.occasions.join(', ')); }
+        if (t.brand && !d.brand.trim()) d.brand = t.brand;
+        d.aiMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
+        paint();
+      } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
+    };
     const tol = $('#tol');
     if (tol) {
+      if (d.aiCanvas) { tol.disabled = true; $('#keep').disabled = true; }
       tol.oninput = () => { d.tolerance = +tol.value; $('#tolv').textContent = tol.value; recut(); $('#cutbox').innerHTML = `<img id="cutimg" src="${d.cutoutUrl}" alt="Background-removed preview">`; };
       $('#keep').onchange = (e) => { d.keep = e.target.checked; recut(); paint(); };
     }
@@ -748,6 +788,9 @@ function renderInspo() {
     <input type="file" id="ifile" accept="image/*" hidden>
     <label class="f" for="plink">Pin link (optional — kept so you can find it again)</label>
     <input type="url" id="plink" placeholder="https://pinterest.com/pin/…" value="${esc(d?.link || '')}">
+    <details class="aibox" style="margin-top:8px"><summary>✨ Fetch the picture from this link (uses your passcode)</summary>
+      <label class="f" for="ipass">Passcode</label><input type="password" id="ipass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
+      <button type="button" class="ghost" data-act="pinfetch" style="margin-top:8px">Fetch from Pinterest</button><div id="pinmsg" class="muted" role="status" aria-live="polite"></div></details>
     <label class="f" for="iocc">Occasion</label>
     <select id="iocc"><option value="">Any</option>${OCCASIONS.map((o) => `<option ${d?.occasion === o ? 'selected' : ''}>${o}</option>`).join('')}</select>
     <label class="f" id="iwl">Pieces you can see in the photo</label>
@@ -776,7 +819,9 @@ function renderInspo() {
 async function setInspoFile(file, extra = {}) {
   try {
     const { img, url: u } = await loadImage(file);
-    const canvas = toCanvas(img, 700);
+    const raw = toCanvas(img, 700), canvas = document.createElement('canvas'); // flatten onto white so transparent PNGs still have colours
+    canvas.width = raw.width; canvas.height = raw.height;
+    const cg = canvas.getContext('2d'); cg.fillStyle = '#fff'; cg.fillRect(0, 0, canvas.width, canvas.height); cg.drawImage(raw, 0, 0);
     S.inspo = { blob: file, url: u, palette: palette(canvas, 5, 18), link: '', occasion: '', wanted: ['top', 'bottom', 'shoes'], ...extra };
     renderInspo();
   } catch (e) { toast(e.message); }
@@ -873,6 +918,15 @@ document.addEventListener('click', async (e) => {
       toast('Inspo saved ✓'); return renderInspo();
     }
     case 'loadinspo': { const n = S.inspos.find((x) => x.id === id); return setInspoFile(n.photo, { id: n.id, link: n.link, occasion: n.occasion, wanted: n.wanted, palette: n.palette }); }
+    case 'pinfetch': {
+      const link = $('#plink').value.trim(), pass = $('#ipass').value.trim(), msg = $('#pinmsg');
+      if (!link || !pass) { msg.textContent = 'Paste the pin link and enter your passcode.'; return; }
+      store.set('aipass', pass); msg.textContent = 'Fetching…';
+      try {
+        const blob = await (await fetch(await pinAI(link, pass))).blob();
+        return setInspoFile(new File([blob], 'pin.jpg', { type: blob.type }), { link });
+      } catch (e) { msg.textContent = e.message; return; }
+    }
     case 'tryinspo': S.outfit = { ...S.inspo.picks }; return go('tryon');
     default: if (planActs[act]) return planActs[act](ctx, el);
   }

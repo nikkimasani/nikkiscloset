@@ -248,3 +248,6 @@ main { overflow-x: clip; }
 .room.theme-spring .wall { background: repeating-linear-gradient(90deg, #e6f6e4 0 34px, #d8efd6 34px 68px); } .room.theme-spring .window { background: linear-gradient(#9fe0ff, #f0fbff); }
 .room.theme-autumn .wall { background: repeating-linear-gradient(90deg, #f7e3cc 0 34px, #f0d6b8 34px 68px); } .room.theme-autumn .window { background: linear-gradient(#ffcf9f, #fff0dd); } .room.theme-autumn .rug { background: radial-gradient(ellipse, #e89a4a 0 38%, #c9722b 39% 62%, #a85a1e 63%); }
 .room.theme-winter .wall { background: repeating-linear-gradient(90deg, #e4effa 0 34px, #d7e6f6 34px 68px); } .room.theme-winter .window { background: linear-gradient(#cfe6ff, #fff); } .room.theme-winter .rug { background: radial-gradient(ellipse, #e0504e 0 38%, #b83a3a 39% 62%, #8e2a2a 63%); }
+
+.aibox { margin-top: 12px; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: 14px; background: #ffffff0a; }
+.aibox summary { cursor: pointer; font-weight: 700; }

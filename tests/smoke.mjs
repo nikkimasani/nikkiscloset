@@ -11,7 +11,7 @@ const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-co
 
 const PORT = 5199, FAL = 5198;
 // Mock of fal's queue API so the whole AI try-on path runs offline (field names per fal's public docs).
-const falCalls = [];
+const falCalls = [], aiCalls = [];
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
 const polls = {};
@@ -24,10 +24,19 @@ const mock = createServer((req, res) => {
     });
   } else if (req.url.endsWith('/status')) { polls[req.url] = (polls[req.url] || 0) + 1; send({ status: polls[req.url] < 2 ? 'IN_PROGRESS' : 'COMPLETED' }); }
   else if (req.url.startsWith('/fal-ai/fashn/requests/')) send({ images: [{ url: `${base}/media/out.png`, content_type: 'image/png' }] });
+  else if (req.method === 'POST' && (req.url === '/fal-ai/imageutils/rembg' || req.url === '/fal-ai/any-llm/vision')) {
+    let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
+      const body = JSON.parse(b); aiCalls.push({ path: req.url, auth: req.headers.authorization, hasImage: !!(body.image_url || body.image_urls?.[0])?.startsWith?.('data:image') || !!body.image_urls?.[0]?.startsWith('data:image') });
+      if (req.url.includes('rembg')) send({ image: { url: `${base}/media/cut.png` } });
+      else send({ output: 'Here you go: {"name":"Satin cami","type":"tanks","season":"light","occasions":["GNO","Date Night"],"brand":""}' });
+    });
+  }
+  else if (req.url === '/pin/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><meta property="og:image" content="${base}/media/pin.png"></head></html>`); }
+  else if (req.url === '/media/cut.png' || req.url === '/media/pin.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else send({ detail: 'nope' }, 404);
 }).listen(FAL);
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}` }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -461,6 +470,32 @@ try {
   ok((await p10.locator('.mannequin').first().innerHTML()).includes(look.lips), 'the chosen lip colour is drawn on the model');
   await p10.click('[data-act=resetlook]');
   ok((await p10.evaluate(() => document.querySelector('.room').className)).match(/theme-(spring|pastel|autumn|winter)/) && (await p10.evaluate(() => localStorage.getItem('room'))) === '', 'Reset appearance returns the room to the seasonal default');
+
+
+  // ── batch B: AI helpers (cutout, auto-fill, Pinterest import) ──
+  const p11 = await mk();
+  await p11.click('header [data-act=add]'); await p11.setInputFiles('#file', join(out, 'photo.jpg')); await p11.waitForSelector('#cutimg');
+  await p11.fill('#mpass', 'wrong'); await p11.click('#aitag');
+  await p11.waitForFunction(() => /Wrong passcode/.test(document.querySelector('#aimsg').textContent));
+  ok(aiCalls.length === 0, 'a wrong passcode never reaches fal');
+  await p11.fill('#mpass', 'letmein'); await p11.click('#aitag');
+  await p11.waitForFunction(() => /Filled in/.test(document.querySelector('#aimsg').textContent));
+  ok((await p11.inputValue('#name')) === 'Satin cami' && (await p11.inputValue('#type')) === 'tanks' && (await p11.inputValue('#season')) === 'light', 'Auto-fill sets name, type and warmth from the photo');
+  ok((await p11.locator('#occs [aria-pressed=true]').allInnerTexts()).sort().join() === 'Date Night,GNO', 'Auto-fill ticks the suggested occasions');
+  await p11.click('#aicut'); await p11.waitForSelector('#aiundo');
+  ok(aiCalls.length === 2 && aiCalls.every((c) => c.auth === 'Key test-key' && c.hasImage), 'both helpers called fal with the server-side key and an image');
+  ok(await p11.locator('#tol').isDisabled(), 'on-device sliders switch off while the AI cutout is used');
+  await p11.click('#aiundo');
+  ok(!(await p11.locator('#aiundo').count()) && !(await p11.locator('#tol').isDisabled()), 'can go back to the on-device cutout');
+  await p11.click('#save'); await p11.waitForFunction(() => window.__closet.items.length === 1);
+  ok((await p11.evaluate(() => window.__closet.items[0].type)) === 'tanks', 'the auto-filled piece is saved');
+  await p11.click('[data-view=inspo]'); await p11.locator('summary:has-text("Fetch the picture")').click();
+  await p11.fill('#plink', 'https://evil.example.com/pin/1'); await p11.fill('#ipass', 'letmein'); await p11.click('[data-act=pinfetch]');
+  await p11.waitForFunction(() => /Pinterest link/.test(document.querySelector('#pinmsg').textContent));
+  ok(true, 'non-Pinterest links are refused');
+  await p11.fill('#plink', `http://localhost:${FAL}/pin/1`); await p11.click('[data-act=pinfetch]');
+  await p11.waitForSelector('.drop img');
+  ok((await p11.inputValue('#plink')).endsWith('/pin/1') && (await p11.locator('.pal span').count()) > 0, 'a pin link fetches the picture into Inspo and keeps the link');
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {

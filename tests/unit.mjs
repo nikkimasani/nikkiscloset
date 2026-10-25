@@ -124,3 +124,43 @@ test('wearing a dress removes top and bottom, and tapping again takes it off', (
 });
 
 test('wear counts', () => assert.deepEqual(wearCountMap([{ itemIds: ['a', 'b'] }, { itemIds: ['a'] }]), { a: 2, b: 1 }));
+
+// ── AI helper endpoints (pure parts) ──
+import { parseTags, extractOgImage, pinUrlOk, handleCutout, handleTag, handlePin } from '../lib/ai.js';
+
+test('auto-tag parser keeps only values the app accepts', () => {
+  const t = parseTags('Sure! ```json\n{"name":"Satin <b>cami</b>","type":"tanks","season":"light","occasions":["GNO","Bogus","Date Night"],"brand":"Zara"}\n```');
+  assert.deepEqual(t, { name: 'Satin cami', brand: 'Zara', type: 'tanks', season: 'light', occasions: ['GNO', 'Date Night'] });
+  assert.equal(parseTags('{"type":"spaceship","season":"monsoon"}').type, null);
+  assert.equal(parseTags('{"type":"tops"}').season, null);
+  assert.throws(() => parseTags('no json here'), /didn’t include details/);
+  assert.throws(() => parseTags('{type: tops, oops}'), /readable/);
+});
+
+test('Pinterest import only trusts Pinterest hosts', () => {
+  for (const ok of ['https://www.pinterest.com/pin/123/', 'https://pin.it/abc', 'https://i.pinimg.com/736x/a.jpg', 'https://uk.pinterest.co.uk/pin/1']) assert.ok(pinUrlOk(ok), ok);
+  for (const bad of ['http://pinterest.com/pin/1', 'https://evil.com/pinterest.com', 'https://pinterest.com.evil.com/x', 'https://localhost/x', 'file:///etc/passwd', 'not a url', 'https://169.254.169.254/']) assert.ok(!pinUrlOk(bad), bad);
+  assert.ok(pinUrlOk('http://localhost:5198/pin/1', ['localhost:5198']), 'test allow-list works');
+});
+
+test('og:image extraction handles attribute order and entities', () => {
+  assert.equal(extractOgImage('<meta property="og:image" content="https://i.pinimg.com/a.jpg?x=1&amp;y=2">'), 'https://i.pinimg.com/a.jpg?x=1&y=2');
+  assert.equal(extractOgImage("<meta content='https://i.pinimg.com/b.jpg' name='twitter:image'>"), 'https://i.pinimg.com/b.jpg');
+  assert.equal(extractOgImage('<html></html>'), null);
+});
+
+test('AI endpoints fail closed and demand the passcode', async () => {
+  const req = (pass) => new Request('http://x/api/tag', { method: 'POST', headers: { 'x-app-passcode': pass ?? '' }, body: '{}' });
+  for (const h of [handleCutout, handleTag, handlePin]) {
+    assert.equal((await h(req('x'), {})).status, 503, 'unconfigured');
+    assert.equal((await h(req('wrong'), { FAL_KEY: 'k', APP_PASSCODE: 'right' })).status, 401, 'wrong passcode');
+    assert.equal((await h(new Request('http://x', { method: 'GET' }), { FAL_KEY: 'k', APP_PASSCODE: 'right' })).status, 405);
+  }
+  const bad = await handleCutout(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'http://evil/x.png' }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
+  assert.equal(bad.status, 400, 'URLs are not accepted as images');
+});
+
+import { matchInspo } from '../public/js/stylist.js';
+test('inspo matching copes with a picture that has no usable colours', () => {
+  assert.deepEqual(matchInspo(closet, [], { wanted: ['top', 'bottom'], occasion: '' }), { picks: {}, gaps: [] });
+});

@@ -86,4 +86,16 @@ function crop(src, img, isBg) {
   return res;
 }
 
+/** Crop away fully transparent margins (with a little padding). */
+export function trimTransparent(src, pad = 4) {
+  const g = src.getContext('2d', { willReadFrequently: true }), { width: w, height: h } = src, d = g.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (d[(y * w + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 <= x0 || y1 <= y0) return src;
+  x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(w - 1, x1 + pad); y1 = Math.min(h - 1, y1 + pad);
+  const c = document.createElement('canvas'); c.width = x1 - x0 + 1; c.height = y1 - y0 + 1;
+  c.getContext('2d').drawImage(src, x0, y0, c.width, c.height, 0, 0, c.width, c.height);
+  return c;
+}
+
 export const canvasToBlob = (c, type = 'image/png', q) => new Promise((r) => c.toBlob(r, type, q));
