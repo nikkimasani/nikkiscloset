@@ -289,6 +289,7 @@ function openItemModal(existing, preset = {}) {
       await put('items', item);
       if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
       url(item.id, item.cutout);
+      if (preset.onSaved) await preset.onSaved(item);
       closeModal(); toast(existing ? 'Updated ✓' : 'Added to your closet ✓'); render();
     };
   }
@@ -515,15 +516,17 @@ async function runAIRender(force = false) {
   store.set('aipass', pass);
   if ((spent() + steps.length) * PRICE > budget() + 1e-9) return toast(`That would go over your $${budget()} monthly budget — raise it above to continue`);
   if (!confirm(`Render ${steps.length} piece${steps.length > 1 ? 's' : ''} with fal.ai? That's about $${(steps.length * PRICE).toFixed(2)} of your credits.`)) return;
+  const key = aiKey(steps); // keyed on what was asked for, even if the model photo or a piece changes while it renders
   S.aiAbort = new AbortController(); S.aiBusy = true; S.aiError = ''; renderTryon();
   try {
     const prepared = await Promise.all(steps.map(async ([slot, it]) => ({ category: categoryFor(slot), garment: await garmentImage(it.cutout) })));
     const image = await renderOutfit({
       person: await personImage(S.profile.photo), steps: prepared, passcode: pass, signal: S.aiAbort.signal,
       onProgress: (m) => { const el = $('#aistatus'); if (el) el.textContent = m; },
+      onPiece: () => addSpent(1), // each finished piece has already cost credits, even if a later one fails
     });
-    S.ai = { sig: aiSignature(steps), image }; S.aiFromCache = false; addSpent(steps.length); toast('Rendered ✓');
-    const key = aiKey(steps); S.aiChecked = key;
+    S.ai = { sig: aiSignature(steps), image }; S.aiFromCache = false; toast('Rendered ✓');
+    S.aiChecked = key;
     await put('renders', { id: key, image, at: Date.now() });
     const all2 = (await all('renders')).sort((a, b) => b.at - a.at); for (const old of all2.slice(40)) await del('renders', old.id); // keep the 40 most recent
   } catch (e) { if (e.name !== 'AbortError') S.aiError = e.message; else toast('Cancelled'); }
