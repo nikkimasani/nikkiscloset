@@ -248,6 +248,8 @@ try {
     ok(await p3.locator('#stage canvas').count() === 1 && await p3.locator('#stage svg').count() === 0, '3D canvas replaces the flat mannequin');
     const filled = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
     ok(filled > 0.04 && filled < 0.6, `figure is actually drawn (${(filled * 100).toFixed(1)}% of canvas)`);
+    const dbg3 = await p3.evaluate(() => window.__stage3d.debug());
+    ok(dbg3.depths.length >= 2 && dbg3.depths.every((d) => d >= 8), `clothes are real 3D volumes, not flat sheets (thickness per piece: ${dbg3.depths.join(', ')} units)`);
     const before = (await p3.evaluate(() => window.__stage3d.debug())).rot;
     await p3.click('[data-act=turn][data-v="1"]');
     ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot - before - Math.PI / 4) < 1e-6, 'turn button rotates the model 45°');
