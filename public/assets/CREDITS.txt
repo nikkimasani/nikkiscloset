@@ -1,0 +1,3 @@
+3D assets used in the apartment (all CC0 1.0, see CC0-1.0.txt; credit is not required but appreciated):
+- Characters: "Mini Characters" by Kenney (kenney.nl), via the open @netforge/asset-library-files collection.
+- Furniture: "Furniture Bits" by Kay Lousberg (KayKit, kaylousberg.com).

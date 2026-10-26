@@ -65,3 +65,6 @@ export function wear(outfit, item) {
   if (slot === 'top' || slot === 'bottom') delete next.dress;
   return next;
 }
+
+// The twelve ready-made 3D characters (see avatar.js); kept here so the app doesn't load the 3D code just to list them.
+export const AVATARS = ['mini_female_a', 'mini_female_b', 'mini_female_c', 'mini_female_d', 'mini_female_e', 'mini_female_f', 'mini_male_a', 'mini_male_b', 'mini_male_c', 'mini_male_d', 'mini_male_e', 'mini_male_f'];
