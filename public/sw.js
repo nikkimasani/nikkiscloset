@@ -24,8 +24,8 @@ async function takeShare(request) {
     const f = await request.formData(), file = f.get('photo');
     if (file && file.size) { const c = await caches.open('closet-share'); await c.put('/shared/photo', new Response(file, { headers: { 'content-type': file.type || 'image/png' } })); }
     const link = String(f.get('url') || f.get('text') || '').match(/https?:\/\/[^\s]+/)?.[0] || '';
-    return Response.redirect(`/?add=shared${link ? '&u=' + encodeURIComponent(link) : ''}`, 303);
-  } catch { return Response.redirect('/', 303); }
+    return Response.redirect(new URL(`/?add=shared${link ? '&u=' + encodeURIComponent(link) : ''}`, request.url).href, 303); // Response.redirect needs an absolute URL
+  } catch { return Response.redirect(new URL('/', request.url).href, 303); }
 }
 
 self.addEventListener('fetch', (e) => {
