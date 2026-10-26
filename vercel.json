@@ -28,7 +28,7 @@
       ]
     },
     {
-      "source": "/lab/(?!segment)(.*)",
+      "source": "/lab/cutout(.*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
