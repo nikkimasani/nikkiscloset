@@ -564,3 +564,14 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .lb img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; }
 .logrow .lb { width: 54px; flex: 0 0 auto; }
 .lbbig { display: block; max-width: 100%; max-height: 62vh; margin: 0 auto; border-radius: 14px; }
+
+/* the base picture: clothes sit on it with their own soft shadow */
+.doll .gar { pointer-events: none; }
+.dbthumb { width: 34px; height: 34px; object-fit: contain; border-radius: 8px; background: #ffffff22; flex: 0 0 auto; }
+.dbname { display: flex; align-items: center; gap: 8px; }
+.myphoto { display: block; max-width: 100%; max-height: 60vh; margin: 0 auto; border-radius: 14px; }
+.anchors .ptlist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 14px; font-size: 13px; }
+.anchors .ptlist li { display: flex; justify-content: space-between; border-bottom: 1px solid #ffffff22; }
+.anchors code { font-size: 12px; }
+
+.dbgchip { position: absolute; left: 10px; top: 10px; z-index: 6; min-height: 36px; padding: 4px 12px; border-radius: 999px; border: 1px solid #ffffff66; background: #0b1b33cc; color: #fff; font: inherit; font-size: 13px; cursor: pointer; }

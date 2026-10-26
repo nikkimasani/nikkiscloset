@@ -44,11 +44,7 @@ const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_K
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
-// The existing tests exercise the mirror scene; the walk-in closet tests below reset this on purpose.
-const mirrorFirst = (c) => c.addInitScript(() => { if (localStorage.getItem('scene') === null) localStorage.setItem('scene', 'mirror'); });
-const _newContext = browser.newContext.bind(browser);
-browser.newContext = async (o) => { const c = await _newContext(o); await mirrorFirst(c); return c; };
-browser.newPage = async (o) => { const c = await _newContext(o); await mirrorFirst(c); return c.newPage(); };
+const _newContext = browser.newContext.bind(browser); // (kept as an alias: some sections below start from a fresh, raw context on purpose)
 const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
 await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing flows exercise the 2D fallback; 3D has its own section below
 const errors = [];
@@ -102,7 +98,7 @@ try {
 
   // Try on
   await page.click('.piece .img');
-  ok(await page.locator('#stage image').count() === 1, 'tapping a piece puts it on the mannequin');
+  ok(await page.locator('#stage .gar image').count() === 1, 'tapping a piece puts it on the model');
   await page.click('[data-act=tab][data-v=shoes]');
   await page.screenshot({ path: join(out, '2-tryon.png') });
 
@@ -115,7 +111,7 @@ try {
   await page.click('.tools [data-act=wearToday]');
   await page.waitForSelector('#toast.show');
   await page.click('[data-view=planner]');
-  ok(await page.locator('.day .mannequin').count() === 1, 'OOTD appears on calendar');
+  ok(await page.locator('.day svg.doll').count() === 1, 'OOTD appears on calendar');
   await page.screenshot({ path: join(out, '3-planner.png') });
 
   // Inspo: a pink/blue "pin" should match against the closet and surface a gap for shoes
@@ -157,52 +153,13 @@ try {
   ok(await p2.locator('#stage image').count() >= 2, 'Style me builds an outfit');
   await p2.screenshot({ path: join(out, '6-styleme.png') });
 
-  // ── personalised model ──
+  // ── my photo (used by the photoreal try-on) ──
   await p2.click('[data-view=tryon]');
-  // geometry: synthetic landmarks of a 1000x1500 photo -> garments land on the right body parts
-  const geo = await p2.evaluate(async () => {
-    const { fromLandmarks, place, measures } = await import('/js/body.js');
-    const lm = Array.from({ length: 33 }, () => ({ x: 0.5, y: 0.5, visibility: 1 }));
-    const set = (i, x, y) => (lm[i] = { x, y, visibility: 1 });
-    set(0, .5, .12); set(11, .6, .24); set(12, .4, .24); set(15, .66, .5); set(16, .34, .5);
-    set(23, .56, .5); set(24, .44, .5); set(25, .57, .73); set(26, .43, .73); set(27, .57, .94); set(28, .43, .94);
-    const { body, warnings } = fromLandmarks(lm, 1000, 1500);
-    const m = measures(body), b = (t) => place(t, body);
-    return { warnings, sw: m.sw, top: b('tops'), bottom: b('bottoms'), shoes: b('shoes'), dress: b('dresses'), skirt: b('skirts'),
-      shoulderY: m.sm[1], hipY: m.hm[1], ankleY: m.am[1], L: body.pts.shL[0], R: body.pts.shR[0] };
-  });
-  ok(geo.warnings.length === 0 && geo.L < geo.R, 'landmarks -> body (image-left/right normalised, no warnings)');
-  ok(geo.top.y < geo.shoulderY + 1 && geo.top.y > geo.shoulderY - 80 && geo.top.w > geo.sw * 1.4, 'top sits on the shoulders and is wider than them');
-  ok(geo.bottom.y > geo.shoulderY && geo.bottom.y < geo.hipY && Math.abs(geo.bottom.y + geo.bottom.h - geo.ankleY) < 0.1 * geo.ankleY, 'trousers span waist to ankle');
-  ok(Math.abs(geo.shoes.y + geo.shoes.h - (geo.ankleY + 0.12 * (geo.ankleY - geo.hipY))) < 5 || geo.shoes.y > geo.ankleY - 0.15 * geo.ankleY, 'shoes sit at the ankles');
-  ok(geo.dress.y < geo.skirt.y, 'dress starts at shoulders, skirt at waist');
-
-  // on-device pose model loads (under the production CSP) and handles an image with no person
-  const pose = await p2.evaluate(async () => {
-    const { detectPose } = await import('/js/pose.js');
-    const c = document.createElement('canvas'); c.width = 200; c.height = 300;
-    c.getContext('2d').fillStyle = '#ddd'; c.getContext('2d').fillRect(0, 0, 200, 300);
-    try { return { r: await detectPose(c) }; } catch (e) { return { err: String(e) }; }
-  });
-  ok(!pose.err && pose.r === null, `pose model loads and returns null for an empty image ${pose.err || ''}`);
-
-  // UI: proportions by hand
-  const vb0 = await p2.getAttribute('#stage svg', 'viewBox');
   await p2.click('[data-act=drawer][data-v=me]');
   await p2.click('[data-act=setup]');
-  ok(await p2.locator('[role=dialog][aria-modal=true]').isVisible(), 'model dialog opens');
+  ok(await p2.locator('[role=dialog][aria-modal=true]').isVisible(), 'photo dialog opens');
   ok(await p2.evaluate(() => document.querySelector('main').inert), 'background inert while dialog is open');
-  await p2.locator('#p-legs').fill('1.25');
-  await p2.locator('#p-shoulders').fill('0.85');
-  await p2.click('#msave');
-  await p2.waitForSelector('#modal', { state: 'hidden' });
-  const vb1 = await p2.getAttribute('#stage svg', 'viewBox');
-  ok(vb0 !== vb1, `mannequin re-shaped to my proportions (${vb0} -> ${vb1})`);
-  ok(await p2.locator('#stage image').count() >= 2, 'garments still render on the re-shaped body');
-  await p2.reload(); await p2.click('[data-view=tryon]');
-  ok((await p2.getAttribute('#stage svg', 'viewBox')) === vb1, 'my proportions persist after reload');
-
-  // UI: photo -> calibration handles (a drawn figure; detector may or may not accept it) -> photo mode
+  await p2.click('#mcancel'); await p2.waitForSelector('#modal', { state: 'hidden' });
   const fig = await p2.evaluate(() => {
     const c = document.createElement('canvas'); c.width = 500; c.height = 800; const x = c.getContext('2d');
     x.fillStyle = '#eee'; x.fillRect(0, 0, 500, 800); x.fillStyle = '#c99'; x.beginPath(); x.arc(250, 90, 45, 0, 7); x.fill();
@@ -213,20 +170,15 @@ try {
   await p2.click('[data-act=drawer][data-v=me]');
   await p2.click('[data-act=setup]');
   await p2.setInputFiles('#mfile', figFile);
-  await p2.waitForSelector('#cal .handle', { timeout: 60000 });
-  ok((await p2.locator('#cal .handle').count()) === 11, '11 draggable body points shown');
-  const h = p2.locator('#cal [data-k=shL]');
-  const before = await h.getAttribute('cx');
-  await h.focus(); await p2.keyboard.press('Shift+ArrowRight');
-  const after = await p2.locator('#cal [data-k=shL]').getAttribute('cx');
-  ok(+after > +before, `body point moves with the keyboard (${before} -> ${after})`);
-  await p2.screenshot({ path: join(out, '7-calibrate.png') });
+  await p2.waitForSelector('#modal img.myphoto');
   await p2.click('#msave');
   await p2.waitForSelector('[data-act=display][data-v=photo]:not([disabled])');
   await p2.click('[data-act=styleme]');
-  ok(await p2.locator('#stage svg > image').count() === 1, 'photo is the model base');
-  ok(await p2.locator('#stage g[data-slot]').count() >= 2, 'garments are layered on the photo');
+  ok(await p2.locator('#stage img.myphoto').count() === 1 && await p2.locator('#stage svg.doll').count() === 0, 'with a saved photo shown, the stage shows the photo');
   await p2.screenshot({ path: join(out, '8-photo-model.png') });
+  await p2.click('[data-act=drawer][data-v=me]'); await p2.click('[data-act=display][data-v=model]'); await p2.waitForSelector('#stage svg.doll');
+  ok(await p2.locator('#stage svg.doll').count() === 1, 'switching back shows the model');
+  await p2.click('[data-act=drawer][data-v=me]'); await p2.click('[data-act=display][data-v=photo]'); await p2.waitForSelector('#stage img.myphoto');
 
 
   // ── AI try-on (fal.ai via serverless function; mocked here) ──
@@ -243,18 +195,18 @@ try {
   await p2.click('[data-act=drawer][data-v=ai]');
   await p2.fill('#aipass', 'letmein');
   await p2.click('[data-act=airender]');
-  await p2.waitForSelector('#stage svg > image[href^="data:image/png"]', { timeout: 30000 });
+  await p2.waitForSelector('#stage img.myphoto[src^="data:image/png"]', { timeout: 30000 });
   ok(falCalls.length >= 1 && falCalls.every((c) => c.auth === 'Key test-key'), `fal called with the server-side key (${falCalls.length} calls)`);
   ok(falCalls.length < 2 || falCalls[1].model_image.startsWith('data:image/png'), 'multi-piece outfit chains each result into the next piece');
   ok(falCalls.every((c) => c.garment_image.startsWith('data:image/jpeg') && ['tops', 'bottoms', 'one-pieces'].includes(c.category)), 'garments sent as white-background JPEGs with a valid category');
-  ok(await p2.locator('#stage svg > image').count() === 1, 'AI render replaces the photo as the base');
+  ok(await p2.locator('#stage img.myphoto[src^="data:image/png"]').count() === 1, 'AI render replaces the photo as the base');
   await p2.screenshot({ path: join(out, '9-ai-render.png') });
   await p2.click('[data-act=aiclear]');
-  ok(await p2.locator('#stage svg > image:not([href^="data:image/png"])').count() === 1, 'can go back to the quick preview');
+  ok(await p2.locator('#stage img.myphoto:not([src^="data:image/png"])').count() === 1, 'can go back to the plain photo');
   const callsAfterFirst = falCalls.length;
   ok(await p2.evaluate(() => JSON.parse(localStorage.getItem('spend')).n) === callsAfterFirst, 'the budget tracker counts the pieces rendered');
   await p2.click('[data-act=airender]');
-  await p2.waitForSelector('#stage svg > image[href^="data:image/png"]');
+  await p2.waitForSelector('#stage img.myphoto[src^="data:image/png"]');
   ok(falCalls.length === callsAfterFirst && /saved render/.test(await p2.locator('.drawer-body').innerText()), 'the same outfit shows its saved render for free (no new fal call)');
   // a $0 budget blocks a brand-new render before any money is spent
   await p2.evaluate(() => localStorage.setItem('budget', '0'));
@@ -284,23 +236,34 @@ try {
     const bad3 = r3.violations.filter((v) => v.impact !== 'minor');
     ok(bad3.length === 0, `axe (dress-up): ${bad3.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
     await p3.screenshot({ path: join(out, '10-doll.png') });
-    // customization
+    // the base picture is fixed art: the doll's customizer only offers the room and the anchor points
     await p3.click('[data-act=drawer][data-v=look]');
-    await p3.click('[data-act=cas][data-v=style]'); await p3.click('[data-act=hairstyle][data-v=pony]'); await p3.waitForSelector('#modal .shoplist');
-    ok(await p3.evaluate(() => localStorage.getItem('hairstyle') !== 'pony'), 'a hairstyle you haven’t bought opens the shop instead of changing');
-    await p3.click('#shopclose'); await p3.click('[data-act=hairstyle][data-v=bob]');
-    await p3.click('[data-act=cas][data-v=hair]'); await p3.click('[data-act=hair][data-v="#e8639a"]');
-    await p3.click('[data-act=cas][data-v=skin]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
-    const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin') }));
-    ok(saved.style === 'bob' && saved.hair === '#e8639a' && saved.skin === '#8a5636', 'appearance choices are saved on the device');
-    const svgHtml = await p3.locator('#stage svg.doll').innerHTML();
-    ok(svgHtml.includes('#8a5636') && svgHtml.includes('#e8639a'), 'skin and hair colours reach the doll');
+    ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["anchors","room"]', 'Customize on the doll offers only Anchors and Room (no dead face, hair or body options)');
+    ok(await p3.locator('.ptlist li').count() >= 15, 'the anchor points are listed with their coordinates');
+    ok(await p3.locator('#stage .pointsdbg').count() === 0, 'the debug overlay is off by default');
+    await p3.click('.cas [data-act=dbgpts]');
+    ok(await p3.locator('.cas').count() === 0 && await p3.locator('.dbgchip').count() === 1, 'turning the points on closes the panel so they can be seen, with a chip to hide them');
+    ok(await p3.locator('#stage .pointsdbg circle').count() >= 15 && await p3.locator('#stage .pointsdbg rect').count() >= 2, 'the debug overlay draws every point and the box of each piece worn');
+    await p3.screenshot({ path: join(out, '10b-anchors.png') });
+    // clothes snap to the points: shirt centred on the shoulders and sized by them, trousers by the hips
+    const snap = await p3.evaluate(() => {
+      const d = document.querySelector('#stage svg.doll'), box = (slot) => { const g = d.querySelector(`.gar[data-slot="${slot}"]`); if (!g) return null; const r = g.querySelector('image').getBoundingClientRect(); return r; };
+      const ctm = d.getScreenCTM(), k = ctm.a, X = (px) => (px - ctm.e) / k;
+      return { top: box('top') && { x0: X(box('top').left), x1: X(box('top').right) }, bottom: box('bottom') && { x0: X(box('bottom').left), x1: X(box('bottom').right) } };
+    });
+    const cfg = await p3.evaluate(async () => (await (await fetch('/assets/avatar/config.json')).json()).points);
+    if (snap.top) ok(Math.abs((snap.top.x0 + snap.top.x1) / 2 - (cfg.shoulderL[0] + cfg.shoulderR[0]) / 2) < 25, 'the top is centred on the shoulders');
+    if (snap.bottom) ok(Math.abs((snap.bottom.x0 + snap.bottom.x1) / 2 - (cfg.hipL[0] + cfg.hipR[0]) / 2) < 25, 'the bottom is centred on the hips');
+    await p3.click('.dbgchip');
+    ok(await p3.locator('#stage .pointsdbg').count() === 0, 'the chip turns the overlay off again');
+    await p3.click('[data-act=drawer][data-v=look]'); await p3.click('[data-act=cas][data-v=room]'); await p3.click('[data-act=room][data-v=night]');
+    ok(await p3.evaluate(() => localStorage.getItem('room') === 'night') && await p3.evaluate(() => document.querySelector('.room').className.includes('theme-night')), 'the room choice works and is saved');
     await p3.evaluate(axeSource);
     const r4 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
     const bad4 = r4.violations.filter((v) => v.impact !== 'minor');
     ok(bad4.length === 0, `axe (customize tab): ${bad4.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
     await p3.click('[data-act=resetlook]');
-    ok((await p3.evaluate(() => localStorage.getItem('shape'))) === '', 'Reset appearance clears customizations');
+    ok((await p3.evaluate(() => localStorage.getItem('room'))) === '', 'Reset appearance clears the room choice');
     // ── the daily challenge: theme, rating with reasons, coins, streak ──
     ok(/Theme:/.test(await p3.locator('.gamebar .gb-theme').innerText()), 'the day starts with a themed challenge banner');
     const coins0 = await p3.evaluate(() => window.__closet.game.coins), energy0 = await p3.evaluate(() => window.__closet.game.day.energy);
@@ -367,12 +330,6 @@ try {
   const gone = await p4.evaluate(() => { const S = window.__closet; return { looks: S.outfits.length, outfit: Object.keys(S.outfit).length, wears: S.wears.length, urls: [...S.urls.keys()].filter((k) => !k.includes(':') && k !== 'profile').length }; });
   ok(gone.looks === 0 && gone.outfit === 0, 'deleting a piece removes it from the current outfit and saved looks (no ghosts)');
   ok(gone.wears === 1 && gone.urls === 9, 'diary history is kept and the deleted piece’s image is released');
-  // a new model replaces a body-type preset
-  await p4.click('[data-view=tryon]'); await p4.click('[data-act=drawer][data-v=look]'); await p4.click('[data-act=cas][data-v=body]'); await p4.click('[data-act=bodytype][data-v=Petite]');
-  ok(await p4.evaluate(() => !!localStorage.getItem('shape')), 'body type preset is saved');
-  await p4.click('[data-act=drawer][data-v=me]'); await p4.click('[data-act=setup]'); await p4.locator('#p-legs').fill('1.2'); await p4.click('#msave');
-  await p4.waitForFunction(() => localStorage.getItem('shape') === '');
-  ok(true, 'saving a new model clears the old body-type override');
   // installable app
   const pwa = await p4.evaluate(async () => ({ sw: (await navigator.serviceWorker.ready).active?.state, manifest: (await fetch('/manifest.webmanifest')).status, icon: (await fetch('/icon-192.png')).status, link: !!document.querySelector('link[rel=manifest]') }));
   ok(pwa.sw === 'activated' && pwa.manifest === 200 && pwa.icon === 200 && pwa.link, 'installable: manifest, icons and service worker are live');
@@ -408,16 +365,16 @@ try {
   await p6.waitForSelector('#main .view-title', { state: 'attached', timeout: 15000 });
   ok(await p6.locator('nav#nav').isVisible() && (await p6.title()) === "Nikki's Closet", 'first visit is enough: the app reopens with no network');
   await p6.context().setOffline(false);
-  await p6.click('[data-view=tryon]'); await p6.click('[data-act=drawer][data-v=look]'); await p6.click('[data-act=cas][data-v=style]'); await p6.click('[data-act=hairstyle][data-v=bob]'); await p6.click('[data-act=resetlook]');
+  await p6.click('[data-view=tryon]'); await p6.click('[data-act=drawer][data-v=look]'); await p6.click('[data-act=cas][data-v=room]'); await p6.click('[data-act=room][data-v=night]'); await p6.click('[data-act=resetlook]');
   await p6.reload(); await p6.waitForFunction(() => window.__closet);
-  const dflt = await p6.evaluate(() => ({ skin: window.__closet.skin, hair: window.__closet.hair, style: window.__closet.hairStyle }));
-  ok(/^#[0-9a-f]{6}$/i.test(dflt.skin) && /^#[0-9a-f]{6}$/i.test(dflt.hair) && dflt.style === 'long', 'Reset appearance survives a reload (defaults, not blanks)');
+  const dflt = await p6.evaluate(() => ({ skin: window.__closet.skin, hair: window.__closet.hair, room: window.__closet.room }));
+  ok(/^#[0-9a-f]{6}$/i.test(dflt.skin) && /^#[0-9a-f]{6}$/i.test(dflt.hair) && dflt.room === 'auto', 'Reset appearance survives a reload (defaults, not blanks)');
   await p6.click('[data-view=closet]');
   const [dl2] = await Promise.all([p6.waitForEvent('download'), p6.click('[data-act=export]')]);
   const bak2 = join(out, 'backup-default.json'); await dl2.saveAs(bak2);
   const p7 = await mk(); await p7.click('[data-view=closet]'); await p7.setInputFiles('#restore', bak2); await p7.waitForSelector('#toast.show'); await p7.waitForFunction(() => window.__closet && window.__closet.skin);
-  const rest = await p7.evaluate(() => ({ skin: window.__closet.skin, style: window.__closet.hairStyle }));
-  ok(/^#[0-9a-f]{6}$/i.test(rest.skin) && rest.style === 'long', 'restoring a default-appearance backup keeps the defaults');
+  const rest = await p7.evaluate(() => ({ skin: window.__closet.skin, room: window.__closet.room }));
+  ok(/^#[0-9a-f]{6}$/i.test(rest.skin) && rest.room === 'auto', 'restoring a default-appearance backup keeps the defaults');
 
 
   // ── batch A: price/cost-per-wear, weather, week plan, packing, gaps, wishlist, insights, streak ──
@@ -498,10 +455,9 @@ try {
   const p10 = await mk();
   await p10.click('[data-act=samples]'); await p10.waitForFunction(() => window.__closet.items.length === 10);
   await p10.click('[data-act=drawer][data-v=look]');
-  await p10.click('[data-act=cas][data-v=room]'); await p10.click('[data-act=room][data-v=night]'); await p10.click('[data-act=cas][data-v=eyes]'); await p10.click('[data-act=eyes]:nth-of-type(4)'); await p10.click('[data-act=cas][data-v=lips]'); await p10.click('[data-act=lips]:nth-of-type(2)');
-  const look = await p10.evaluate(() => ({ cls: document.querySelector('.room').className, eyes: localStorage.getItem('eyes'), lips: localStorage.getItem('lips'), room: localStorage.getItem('room') }));
-  ok(look.cls.includes('theme-night') && look.room === 'night' && look.eyes && look.lips, 'room theme, eye and lip colours apply and are saved');
-  ok((await p10.locator('.mannequin').first().innerHTML()).includes(look.lips), 'the chosen lip colour is drawn on the model');
+  await p10.click('[data-act=cas][data-v=room]'); await p10.click('[data-act=room][data-v=night]');
+  const look = await p10.evaluate(() => ({ cls: document.querySelector('.room').className, room: localStorage.getItem('room') }));
+  ok(look.cls.includes('theme-night') && look.room === 'night', 'room theme applies and is saved');
   await p10.click('[data-act=resetlook]');
   ok((await p10.evaluate(() => document.querySelector('.room').className)).match(/theme-(spring|pastel|autumn|winter)/) && (await p10.evaluate(() => localStorage.getItem('room'))) === '', 'Reset appearance returns the room to the seasonal default');
 
@@ -577,7 +533,7 @@ try {
   const cdl = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await cdl.addInitScript(() => localStorage.setItem('flat', '1'));
   const pdl = await cdl.newPage(); pdl.on('pageerror', (e) => errors.push(e.message)); pdl.on('dialog', (d) => d.accept());
   await pdl.goto(`http://localhost:${PORT}/`); await pdl.waitForSelector('svg.doll');
-  ok((await pdl.locator('.dollmode').count()) === 1 && (await pdl.getAttribute('svg.doll', 'data-pack')) === 'studio', 'Dress up opens on the 2D doll by default, drawn from the swappable art pack');
+  ok((await pdl.locator('.dollmode').count()) === 1 && (await pdl.getAttribute('svg.doll', 'data-pack')) === 'base', 'Dress up opens on the base picture by default');
   await pdl.click('[data-act=samples]'); await pdl.waitForFunction(() => window.__closet.items.length === 10);
   const wearOne = async (tab, name) => { await pdl.click(`[data-act=tab][data-v=${tab}]`); await pdl.click(`.pick:has-text("${name}")`); };
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); await wearOne('outerwear', 'Camel blazer'); await wearOne('shoes', 'Nude heels');
@@ -592,13 +548,13 @@ try {
   ok((await tfm()) !== tf0, 'a nudge button moves the piece');
   await pdl.dispatchEvent('[data-act=dsize][data-v="0.03"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dsize][data-v="0.03"]', 'pointerup');
   await pdl.dispatchEvent('[data-act=drot][data-v="2"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=drot][data-v="2"]', 'pointerup');
-  const saved = () => pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio);
-  await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio?.dx > 0);
+  const saved = () => pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.base);
+  await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.base?.dx > 0);
   const f1 = await saved(); ok(f1.dx > 0 && f1.scale > 1 && f1.rot > 0, `size, turn and position are all kept (${JSON.stringify(f1)})`);
   // drag the piece on the doll
   const box = await pdl.locator('#stage svg.doll').boundingBox(), dx0 = f1.dx;
-  await pdl.mouse.move(box.x + box.width / 2, box.y + box.height * 0.42); await pdl.mouse.down(); await pdl.mouse.move(box.x + box.width / 2 + 40, box.y + box.height * 0.42 + 20, { steps: 4 }); await pdl.mouse.up();
-  const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.studio || {});
+  await pdl.mouse.move(box.x + box.width / 2, box.y + box.height * 0.28); await pdl.mouse.down(); await pdl.mouse.move(box.x + box.width / 2 + 40, box.y + box.height * 0.28 + 20, { steps: 4 }); await pdl.mouse.up();
+  const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.base || {});
   ok(f2.dx > 10 && f2.dy > 5 && (await saved()).dx === dx0, `touching a piece selects it and dragging moves just that piece (jacket moved ${Math.round(f2.dx)}, ${Math.round(f2.dy)}; tee stayed)`);
   await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
   // tucked in: the top goes under the bottoms and is cut at the waist
@@ -606,13 +562,21 @@ try {
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'top', 'bottom', 'outer']) && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tucking in puts the top under the bottoms');
   await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1].dataset.slot === 'bottom');
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'and untucking puts it back over them');
-  await pdl.reload(); await pdl.waitForSelector('svg.doll'); await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio?.dx > 0);
+  await pdl.reload(); await pdl.waitForSelector('svg.doll'); await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.base?.dx > 0);
   ok(true, 'fit survives a reload');
-  await pdl.click('[data-act=samples]').catch(() => {});
-  await pdl.click('[data-act=dreset]').catch(() => {});
-  await pdl.click('[data-act=drawer][data-v=look]'); await pdl.click('[data-act=skin]:nth-of-type(9)');
-  ok((await pdl.locator('#stage svg.doll').innerHTML()).includes(await pdl.evaluate(() => window.__closet.skin)), 'the customizer’s skin colour reaches the doll');
-  ok((await pdl.locator('.cas-tabs [data-v=body]').count()) === 0, 'body sliders are hidden for the doll (they shape the 3D model)');
+  // the fit panel names the piece it is fitting, and tapping picks the piece you touched (not just a box that covers the spot)
+  const bar = async () => (await pdl.locator('#dollbar .dbname').innerText());
+  await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); // (the outfit isn't kept across a reload)
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  ok(/White tee/.test(await bar()) && /Top/.test(await bar()), 'the fit panel says which piece: "Top: White tee"');
+  ok((await pdl.locator('#dollbar .dbthumb').getAttribute('src')) === (await pdl.evaluate(() => document.querySelector('#stage .gar[data-slot=top] image').getAttribute('href'))), 'and shows that piece’s own picture');
+  const sel = await pdl.evaluate(() => { const g = document.querySelector('#stage .gar.sel'), a = g.querySelector('image').getBoundingClientRect(), b = g.querySelector('.selbox').getBoundingClientRect(); return { sel: g.dataset.slot, inside: b.left >= a.left - 1 && b.right <= a.right + 1 && b.top >= a.top - 1 && b.bottom <= a.bottom + 1 }; });
+  ok(sel.sel === 'top' && sel.inside, 'the dashed box belongs to the selected piece and sits inside its picture');
+  const box2 = await pdl.locator('#stage svg.doll').boundingBox();
+  await pdl.mouse.click(box2.x + box2.width * 0.5, box2.y + box2.height * 0.64); // knee height: only the jeans are there
+  ok(/Blue jeans/.test(await bar()), 'tapping the legs selects the jeans, and the label follows ("Bottom: Blue jeans")');
+  await pdl.mouse.click(box2.x + box2.width * 0.02, box2.y + box2.height * 0.5); // empty background, far from every piece
+  ok(/Blue jeans/.test(await bar()), 'tapping empty space does not switch to a piece that merely has a box there');
   await pdl.evaluate(axeSource);
   const axeD = await pdl.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
   ok(axeD.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (2D doll): ${axeD.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
@@ -647,6 +611,7 @@ try {
   await devB.click('[data-view=closet]'); await devB.fill('#synckey', SYNC_KEY); await devB.click('[data-act=syncconnect]');
   await devB.waitForFunction(() => window.__closet?.items?.length === 10);
   ok(await devB.evaluate(() => window.__closet.items.every((i) => i.cutout instanceof Blob && i.cutout.size > 0)), 'device B receives the pieces with working photos');
+  await devB.waitForLoadState('load'); await devB.waitForTimeout(2000); await devB.waitForFunction(() => window.__closet?.items?.length === 10); // the app reloads itself after a sync that pulled data; let that settle
   await devA.evaluate(() => { const i = window.__closet.items[0]; return import('/js/db.js').then((m) => m.put('items', { ...i, name: 'Renamed on A' })); });
   await devA.click('[data-act=syncnow]'); await devA.waitForFunction(() => /Synced/.test(document.querySelector('#syncmsg')?.textContent || ''));
   await devB.click('[data-view=closet]'); await devB.click('[data-act=syncnow]'); await devB.waitForFunction(() => window.__closet?.items?.some((i) => i.name === 'Renamed on A'));
@@ -741,9 +706,6 @@ try {
       ok(await pb.evaluate(() => window.__closet.game.coins === 480 && window.__closet.game.owned.includes('furn:cactus_small_A')), 'buying furniture spends coins and puts it in storage');
       await pb.click('[data-act=shoptab][data-v=room]'); await pb.click('[data-act=shopbuy][data-v="room:sage"]'); await pb.click('[data-act=shopuse][data-v="room:sage"]');
       ok(await pb.evaluate(() => window.__closet.game.decor === 'sage' && window.__closet.game.coins === 400), 'a bought room can be used (the walls and floor change)');
-      await pb.click('[data-act=shoptab][data-v=hair]');
-      await pb.click('[data-act=shopbuy][data-v="hair:bun"]'); await pb.click('[data-act=shopuse][data-v="hair:bun"]');
-      ok(await pb.evaluate(() => localStorage.getItem('hairstyle') === 'bun' && window.__closet.game.coins === 360), 'a bought hairstyle can be worn');
       await pb.click('#shopclose');
       // build mode
       await pb.click('[data-act=build]'); await pb.waitForSelector('#buildbar:not([hidden]) [data-act=bplace]');

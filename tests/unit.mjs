@@ -7,7 +7,6 @@ import { styleMe, suitsWeather } from '../public/js/stylist.js';
 import { planWeek, packingList } from '../public/js/planner.js';
 import { outfitMeters } from '../public/js/meters.js';
 import { colorName, hexDist, toLab, unhex } from '../public/js/color.js';
-import { fromProportions, measures, place, DEFAULT_BODY } from '../public/js/body.js';
 import { wear } from '../public/js/data.js';
 
 const it = (id, type, extra = {}) => ({ id, name: id, type, occasions: ['Work / Office'], color: { hex: '#222222' }, createdAt: 0, ...extra });
@@ -109,13 +108,6 @@ test('colour helpers', () => {
   assert.ok(toLab(unhex('#ffffff'))[0] > 99);
 });
 
-test('body model: proportions change the figure, garments scale with build', () => {
-  const tall = measures(fromProportions({ legs: 1.2 })), norm = measures(DEFAULT_BODY);
-  assert.ok(tall.L > norm.L * 1.15 && Math.abs(tall.sw - norm.sw) < 1);
-  const wide = place('tops', { ...fromProportions({ build: 1.3 }) }), slim = place('tops', fromProportions({ build: 1 }));
-  assert.ok(wide.w > slim.w * 1.25);
-});
-
 test('wearing a dress removes top and bottom, and tapping again takes it off', () => {
   let o = wear({}, { id: 't', type: 'tops' }); o = wear(o, { id: 'b', type: 'bottoms' });
   o = wear(o, { id: 'd', type: 'dresses' });
@@ -214,51 +206,75 @@ test('product endpoint demands the passcode but not a fal key', async () => {
   assert.equal((await handleProduct(new Request('http://x', { method: 'GET' }), { APP_PASSCODE: 'right' })).status, 405);
 });
 
-// ── 2D doll: art is separate from the placement and layering rules ──
-import { dollSVG, fitOf, garmentTransform, tokens, mix, isTuckable } from '../public/js/doll.js';
-import { readFileSync, readdirSync } from 'node:fs';
-const studio = JSON.parse(readFileSync(new URL('../public/dolls/studio/pack.json', import.meta.url), 'utf8'));
-const studioFiles = Object.fromEntries(readdirSync(new URL('../public/dolls/studio/', import.meta.url)).filter((f) => f.endsWith('.svg')).map((f) => [f, readFileSync(new URL(`../public/dolls/studio/${f}`, import.meta.url), 'utf8')]));
-const pack = { ...studio, files: studioFiles };
+// ── the dress-up figure: a picture shown as it is, plus points and rules for the clothes ──
+import { dollSVG, fitOf, garmentTransform, isTuckable, deriveAnchors, withPoints, bodyWidth, levelY, contentBox, imageRect } from '../public/js/doll.js';
+import { readFileSync, existsSync } from 'node:fs';
+const config = JSON.parse(readFileSync(new URL('../public/assets/avatar/config.json', import.meta.url), 'utf8'));
+const pack = { ...withPoints(config), files: { 'base.png': '/assets/avatar/base.png' }, base: '/assets/avatar/' };
 const mkItem = (id, type, extra = {}) => ({ id, type, name: id, ...extra });
 const urls = new Map([['t', 'blob:t'], ['b', 'blob:b'], ['j', 'blob:j']]);
 const slotsIn = (svg) => [...svg.matchAll(/data-slot="(\w+)"/g)].map((m) => m[1]);
 
-test('the studio pack covers every clothing type and every file it names exists', async () => {
-  const { TYPES } = await import('../public/js/data.js');
-  for (const t of Object.keys(TYPES)) assert.ok(studio.anchors[t], `anchor for ${t}`);
-  for (const f of Object.values(studio.layers)) for (const g of f.includes('{style}') ? studio.hairStyles.map((s) => f.replace('{style}', s)) : [f]) assert.ok(studioFiles[g], g);
+test('base.png is shown unchanged: the picture is an <image> at its own size and nothing draws a body', () => {
+  assert.ok(existsSync(new URL('../public/assets/avatar/base.png', import.meta.url)), 'base.png is in the repo');
+  const png = readFileSync(new URL('../public/assets/avatar/base.png', import.meta.url));
+  assert.equal(png.readUInt32BE(16), config.size[0]); assert.equal(png.readUInt32BE(20), config.size[1]); // the config's size is the picture's real size
+  const svg = dollSVG({ pack, items: {}, urls });
+  assert.match(svg, /<image class="basepic" href="\/assets\/avatar\/base\.png" x="0" y="0" width="896" height="1776"\/>/);
+  assert.match(svg, /viewBox="0 0 896 1776"/);
+  assert.ok(!/<(path|circle|ellipse|polygon)\b/.test(svg), 'no code-drawn shapes');
 });
 
-test('doll layers stack in the right order, and tucking swaps top and bottom', () => {
+test('the config gives every clothing type a box, worked out from the body points', async () => {
+  const { TYPES } = await import('../public/js/data.js');
+  for (const t of Object.keys(TYPES)) { const a = pack.anchors[t]; assert.ok(a && a.w > 50 && a.h > 50, `box for ${t}`); assert.ok(a.x >= 0 && a.x + a.w <= 896 + 1 && a.y + a.h <= 1776 + 120, `${t} stays on the picture`); }
+  const P = config.points, shoulder = bodyWidth(P, 'shoulder'), hip = bodyWidth(P, 'hip');
+  assert.ok(shoulder > 300 && hip > 300, 'widths come from the left and right points');
+  assert.equal(pack.anchors.tops.w, Math.round(shoulder * config.rules.tops.w[1] * 10) / 10, 'shirts are sized by the shoulders');
+  assert.equal(pack.anchors.bottoms.w, Math.round(hip * config.rules.bottoms.w[1] * 10) / 10, 'trousers are sized by the hips');
+  assert.ok(Math.abs(pack.anchors.tops.x + pack.anchors.tops.w / 2 - (P.shoulderL[0] + P.shoulderR[0]) / 2) < 0.2, 'a shirt is centred on the shoulders');
+  assert.equal(pack.anchors.shoes.y + pack.anchors.shoes.h, levelY(P, 'foot') + config.rules.shoes.y1[1], 'shoes end at the feet');
+  // moving the points moves the clothes, with no other change
+  const wider = deriveAnchors({ ...P, shoulderL: [P.shoulderL[0] - 50, P.shoulderL[1]], shoulderR: [P.shoulderR[0] + 50, P.shoulderR[1]] }, config.rules);
+  assert.ok(wider.tops.w > pack.anchors.tops.w + 100 && wider.bottoms.w === pack.anchors.bottoms.w);
+});
+
+test('layers stack as base, clothes, then accessories, and tucking swaps top and bottom', () => {
   const items = { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms'), outer: mkItem('j', 'outerwear') };
-  const look = { skin: '#eec3a0', hair: '#4a2e1e', hairStyle: 'bob', eyes: '#2b1d17', lips: '#c4505f' };
-  assert.deepEqual(slotsIn(dollSVG({ pack, look, items, urls })), ['bottom', 'top', 'outer']);
-  const tucked = { ...items, top: { ...items.top, fit: { studio: { tuck: true } } } };
-  const svg = dollSVG({ pack, look, items: tucked, urls });
+  assert.deepEqual(slotsIn(dollSVG({ pack, items, urls })), ['bottom', 'top', 'outer']);
+  const tucked = { ...items, top: { ...items.top, fit: { base: { tuck: true } } } };
+  const svg = dollSVG({ pack, items: tucked, urls });
   assert.deepEqual(slotsIn(svg), ['top', 'bottom', 'outer']);
   assert.match(svg, /clip-path="url\(#tuckclip-\d+\)"/);
-  assert.ok(!/\{\{/.test(svg), 'no unfilled art tokens');
-  assert.ok(svg.includes('#4a2e1e') || svg.includes('4a2e1e'), 'hair colour reaches the art');
+  const body = svg.indexOf('class="basepic"'), first = svg.indexOf('class="gar'); assert.ok(body > 0 && body < first, 'the picture is under the clothes');
+  assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
-test('each art pack remembers its own fit for a piece', () => {
-  const it = mkItem('t', 'tops', { fit: { studio: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
-  assert.equal(fitOf(it, { id: 'studio' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);
-  const a = studio.anchors.tops;
-  assert.match(garmentTransform(a, { scale: 1, dx: 0, dy: 0, rot: 0 }), /^translate\(250 347\) rotate\(0\) scale\(1\) translate\(-145 -135\)$/);
+test('each piece remembers a small fit for this picture only', () => {
+  const it = mkItem('t', 'tops', { fit: { base: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
+  assert.equal(fitOf(it, { id: 'base' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);
+  const a = { x: 100, y: 200, w: 300, h: 400 };
+  assert.match(garmentTransform(a, { scale: 1, dx: 0, dy: 0, rot: 0 }), /^translate\(250 400\) rotate\(0\) scale\(1\) translate\(-150 -200\)$/);
   assert.ok(isTuckable(mkItem('t', 'tops'), pack) && !isTuckable(mkItem('d', 'dresses'), pack));
 });
 
-test('a different art pack changes the drawing and the placement without touching the rules', () => {
-  const alt = { ...pack, id: 'alt', view: [0, 0, 1000, 1800], anchors: { ...pack.anchors, tops: { x: 300, y: 400, w: 400, h: 400, align: 'xMidYMin' } }, layers: { ...pack.layers, body: 'mybody.svg' }, files: { ...studioFiles, 'mybody.svg': '<rect id="mine" width="10" height="10" fill="{{skin}}"/>' } };
-  const svg = dollSVG({ pack: alt, look: { skin: '#123456', hair: '#000000', hairStyle: 'pixie', eyes: '#000000', lips: '#ff0000' }, items: { top: mkItem('t', 'tops') }, urls });
-  assert.match(svg, /viewBox="0 0 1000 1800"/); assert.match(svg, /id="mine"[^>]*fill="#123456"/); assert.match(svg, /translate\(500 600\)/);
+test('the dashed selection box hugs the visible part of the cutout, not the whole box', () => {
+  const a = { x: 0, y: 0, w: 400, h: 400, align: 'xMidYMin' };
+  const wide = { iw: 200, ih: 100, bx: 0.1, by: 0.2, bw: 0.8, bh: 0.6 };      // a wide picture in a square box: scaled to 400 x 200, top-aligned
+  assert.deepEqual(imageRect(a, wide), { x: 0, y: 0, w: 400, h: 200 });
+  assert.deepEqual(contentBox(a, wide), { x: 40, y: 40, w: 320, h: 120 });
+  const tall = { iw: 100, ih: 200, bx: 0, by: 0, bw: 1, bh: 1 };              // a tall picture: 200 x 400, centred across
+  assert.deepEqual(contentBox(a, tall), { x: 100, y: 0, w: 200, h: 400 });
+  assert.deepEqual(contentBox(a, null), { x: 0, y: 0, w: 400, h: 400 }, 'unknown size: the whole box');
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops') }, urls, meta: new Map([['t', { iw: 100, ih: 100, bx: 0.25, by: 0.25, bw: 0.5, bh: 0.5 }]]), selected: 't' });
+  const box = svg.match(/class="selbox" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/);
+  assert.ok(box && +box[3] < pack.anchors.tops.w, 'the box is smaller than the anchor box when the cutout has empty margins');
 });
 
-test('skin and hair shades are derived from the customizer colours', () => {
-  const t = tokens({ skin: '#eec3a0', hair: '#4a2e1e' });
-  assert.notEqual(t.skinShade, t.skin); assert.equal(mix('#000000', '#ffffff', 0.5), '#808080');
+test('the debug overlay draws every point from the config', () => {
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops') }, urls, debug: true });
+  for (const name of Object.keys(config.points)) assert.ok(svg.includes(`>${name}</text>`), `${name} is labelled`);
+  assert.ok(svg.includes('class="pointsdbg"')); assert.ok(!dollSVG({ pack, items: {}, urls }).includes('pointsdbg'));
 });
 
 test('every API route is registered on all three hosts (local server, Vercel, Cloudflare worker)', () => {
