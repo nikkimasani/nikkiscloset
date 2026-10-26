@@ -89,7 +89,7 @@ export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
       const l = rs[0][0], r = rs[rs.length - 1][1], y = destY(sy);
       add('side' + f + 'L', [l, sy], [cx - widthAt(y) / 2, y]); add('side' + f + 'R', [r, sy], [cx + widthAt(y) / 2, y]);
     }
-    return { ctl, widen: null, s };
+    return { ctl, widen: { y0: Math.round(topY), y1: Math.round(waistY), top: true }, s };
   }
 
   // tops, outerwear and dresses
@@ -117,8 +117,39 @@ export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
     const wl = pt('waistL'), wr = pt('waistR');
     if (wl && wr) { const e = spanAt(body, waistY), c = 1 + ease * 0.6; add('waistL', wl, [cx - (cx - e.l) * c, waistY]); add('waistR', wr, [cx + (e.r - cx) * c, waistY]); }
     widen = { y0: Math.round(waistY), y1: Math.round(hemY) + 4, hang: { y: hipY, y1: hemY + 4 } };
-  } else widen = null;
+  } else widen = { y0: Math.round((P.bustL[1] + P.bustR[1]) / 2 - 40), y1: Math.round(waistY), top: true }; // a top hugs the body down to the waist; below it, it keeps its own width
   return { ctl, widen, s };
+}
+
+/** Where a sleeve goes: its shoulder and armpit on the body's, its cuff down the arm (a long sleeve to the wrist), with its width kept
+ *  at least the arm's own width plus a little ease at the elbow and the cuff. */
+function sleeveControls(q, pl, pack, body, cut) {
+  const P = pack.points, arm = pack.arms[q.t], ctl = pl.ctl, dstOf = (n) => ctl.find((c) => c.name === n)?.dst;
+  const shD = dstOf('shoulder' + q.t), apD = dstOf('armpit' + q.t) || P['armpit' + q.t]; if (!shD) return ctl;
+  const top = lerp(q.sh, q.ap, 0.5), len = dist(top, q.se) * pl.s, armLen = pathLength(arm), torsoLen = dist(q.sh, q.hem);
+  const long = dist(top, q.se) > torsoLen * 0.6, t = long ? 1 : Math.min(0.95, len / armLen); // a long sleeve ends at the wrist; a short one part way down the upper arm
+  const data = cut.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, cut.width, cut.height).data, W = cut.width;
+  const srcHalf = (p, dir) => { // the sleeve's half-width at p, across its own direction
+    const n = [-dir[1], dir[0]]; let a = 0, b = 0;
+    const on = (k) => { const x = Math.round(p[0] + n[0] * k), y = Math.round(p[1] + n[1] * k); return x >= 0 && y >= 0 && x < W && y < cut.height && data[(y * W + x) * 4 + 3] > 100; };
+    while (a < 400 && on(-a - 1)) a++; while (b < 400 && on(b + 1)) b++;
+    let l = 0, r = 0; const onH = (k) => { const x = Math.round(p[0] + k), y = Math.round(p[1]); return x >= 0 && x < W && y >= 0 && y < cut.height && data[(y * W + x) * 4 + 3] > 100; };
+    while (l < 400 && onH(-l - 1)) l++; while (r < 400 && onH(r + 1)) r++;
+    return Math.max(6, Math.min((a + b) / 2, (l + r) / 2)); // (the narrower of across-the-sleeve and level: a slanted cut reads too wide)
+  };
+  const armHalf = (p) => { const y = Math.round(p[1]), rs = rowRuns(body.img.data, body.img.width, Math.max(0, Math.min(body.img.height - 1, y)), { thr: 128, gap: 1, min: 3 }); const r = rs.find((r) => r[0] - 4 <= p[0] && p[0] <= r[1] + 4 && !(r[0] <= body.cx && body.cx < r[1])); return r ? (r[1] - r[0]) / 2 : 22; };
+  const sdir = (() => { const d = [q.se[0] - top[0], q.se[1] - top[1]], l = Math.hypot(...d) || 1; return [d[0] / l, d[1] / l]; })();
+  const out = [{ name: 'shoulder', src: q.sh, dst: shD }, { name: 'armpit', src: q.ap, dst: apD }];
+  for (const f of [0.5, 1]) {
+    const sp = lerp(top, q.se, f), dp = alongPath(arm, t * f), dp2 = alongPath(arm, Math.min(1, t * f + 0.02)), dp0 = alongPath(arm, Math.max(0, t * f - 0.02));
+    const ad = [dp2[0] - dp0[0], dp2[1] - dp0[1]], al = Math.hypot(...ad) || 1, an = [-ad[1] / al, ad[0] / al], sn = [-sdir[1], sdir[0]];
+    const half = Math.max(srcHalf(sp, sdir) * pl.s, armHalf(dp) * (long ? 1.12 : 1.06));
+    const sh = srcHalf(sp, sdir);
+    out.push({ name: 'sleeveC' + f, src: sp, dst: dp });
+    out.push({ name: 'sleeveA' + f, src: [sp[0] + sn[0] * sh, sp[1] + sn[1] * sh], dst: [dp[0] + an[0] * half, dp[1] + an[1] * half] });
+    out.push({ name: 'sleeveB' + f, src: [sp[0] - sn[0] * sh, sp[1] - sn[1] * sh], dst: [dp[0] - an[0] * half, dp[1] - an[1] * half] });
+  }
+  return out;
 }
 
 /**
@@ -136,20 +167,44 @@ export function fitGarment(cut, type, marks, pack, body, { ease = easeOf(type), 
     for (const p of b) if (!near(p)) { S.push(p); D.push(aff(p[0], p[1])); }
     return warpMesh(img, tps(S, D, 120), W, H, { cols: 44, rows: 60 });
   };
-  let out;
+  let out, sleeves = [];
+  // sleeves: cut off at the shoulder-armpit line and warped on their own along each arm (a flat lay's sleeves lie beside the body)
+  const ptOf = (n) => (marks?.[n] ? [marks[n][0] * cut.width, marks[n][1] * cut.height] : null);
+  const sleevePlan = groupOf(type) === 'top' && !strapless ? ['L', 'R'].map((t) => ({ t, sh: ptOf('shoulder' + t), ap: ptOf('armpit' + t), se: ptOf('sleeve' + t), hem: ptOf('hem' + t) })).filter((q) => q.sh && q.ap && q.se && q.hem) : [];
+  const sleeveSide = (q, keep) => { // the garment on one side of shoulder -> armpit -> hem (keep 'out': the sleeve, 'in': the rest)
+    const c = document.createElement('canvas'); c.width = cut.width; c.height = cut.height; const g = c.getContext('2d'), edge = q.t === 'L' ? 0 : cut.width;
+    const o = keep === 'out' ? (q.t === 'L' ? 1 : -1) * Math.max(4, cut.width * 0.012) : 0; // the sleeve keeps a sliver of the body: it's drawn underneath, so no seam can open
+    g.beginPath(); g.moveTo(edge, 0); g.lineTo(q.sh[0] + o, 0); g.lineTo(q.sh[0] + o, q.sh[1]); g.lineTo(q.ap[0] + o, q.ap[1]); g.lineTo(q.hem[0] + o, q.hem[1]); g.lineTo(q.hem[0] + o, cut.height); g.lineTo(edge, cut.height); g.closePath();
+    if (keep === 'out') { g.clip(); g.drawImage(cut, 0, 0); } else { g.drawImage(cut, 0, 0); g.globalCompositeOperation = 'destination-out'; g.fill(); }
+    return c;
+  };
+  let body0 = cut;
+  if (sleevePlan.length === 2) {
+    body0 = sleevePlan.reduce((img, q) => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const g = c.getContext('2d'); g.drawImage(img, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(sleeveSide(q, 'in'), 0, 0); return c; }, cut);
+    sleeves = sleevePlan.map((q) => ({ q, img: sleeveSide(q, 'out') }));
+  }
   if (pl.seam) { // trousers: each leg is warped on its own along its leg, the two halves meeting at the seam (waist middle, crotch, between the hems)
     const [[cx0, cy0], [hx, hy]] = pl.seam, half = (left) => {
       const c = document.createElement('canvas'); c.width = cut.width; c.height = cut.height; const g = c.getContext('2d'), e = left ? 1 : -1;
       g.beginPath(); g.moveTo(left ? 0 : cut.width, 0); g.lineTo(cx0 + e, 0); g.lineTo(cx0 + e, cy0); g.lineTo(hx + e, hy); g.lineTo(hx + e, cut.height); g.lineTo(left ? 0 : cut.width, cut.height); g.closePath(); g.clip(); g.drawImage(cut, 0, 0); return c; };
     const legCtl = (t) => pl.ctl.filter((c) => ['crotch', 'waistM', 'waist' + t].includes(c.name) || c.name.startsWith('hem' + t) || c.name.startsWith('leg' + t));
     out = warpWith(half(true), legCtl('L')); out.getContext('2d').drawImage(warpWith(half(false), legCtl('R')), 0, 0);
-  } else out = warpWith(cut, pl.ctl);
+  } else out = warpWith(body0, sleeves.length ? pl.ctl.filter((c) => !c.name.startsWith('sleeve')) : pl.ctl);
   // the hips follow base.png's own outline; below the crotch each trouser leg follows its own leg (a skirt or dress hangs over both)
   const outline = (y) => { const o = body.outlineAt(y); return o ? [[o.l, o.r]] : []; }, w = pl.widen;
   if (rows && w) {
     const y1 = w.y1 + 70; // (a little past the hem landmarks: a hem is rarely level)
     if (pl.seam) { out = widenRows(out, outline, { y0: w.y0, y1: Math.floor(body.crotchY) - 1, ease, debug }); out = widenRows(out, (y) => body.runs(y), { y0: Math.ceil(body.crotchY), y1, ease, debug }); }
-    else out = widenRows(out, outline, { y0: w.y0, y1, ease, hang: w.hang, debug });
+    else if (w.top) { // above the armpits base.png's outline includes the arms, so the bust points give the width there
+      const P = pack.points, apY = (P.armpitL[1] + P.armpitR[1]) / 2;
+      const torso = (y) => (y < apY + 12 ? [[P.bustL[0], P.bustR[0]]] : outline(y));
+      out = widenRows(out, torso, { y0: w.y0, y1: w.y1, ease: 0.04, debug });
+    } else out = widenRows(out, outline, { y0: w.y0, y1, ease, hang: w.hang, debug });
+  }
+  if (sleeves.length) { // each sleeve along its arm: shoulder -> elbow -> wrist, at least as wide as the arm so no skin shows past a long sleeve
+    const under = document.createElement('canvas'); under.width = W; under.height = H; const ug = under.getContext('2d');
+    for (const { q, img } of sleeves) ug.drawImage(warpWith(img, sleeveControls(q, pl, pack, body, img)), 0, 0); // (widths are measured on the sleeve alone)
+    ug.drawImage(out, 0, 0); out = under;
   }
   if (type === 'bottoms') { // trousers are two separate legs: nothing hangs in the gap between them below the crotch
     const g = out.getContext('2d');
