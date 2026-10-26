@@ -2,7 +2,8 @@
 // pinch to zoom), an optional brush touch-up, then the garment's landmarks (draggable) with a live preview on the model.
 import { solve, warpMesh } from './warp.js';
 import { loadPicture, selectByTaps, closeEngine, samProblem } from './segment.js';
-import { upsampleMask, cutoutFrom } from './cutmask.js';
+import { upsampleMask, cutoutFrom, cleanMask, stackedPieces } from './cutmask.js';
+import { trimTransparent } from './cutout.js';
 import { suggestFor, namesFor, groupOf, sleevesFromName } from './landmarks.js';
 import { loadPack } from './doll.js';
 import { bodyOf } from './fitting.js';
@@ -58,7 +59,7 @@ function fgOf(im) {
   return { bg, fg };
 }
 /**
- * A first guess at the crop. A screenshot (a phone-shaped picture with app chrome) is cut down to its product photo: the tallest band of rows
+ * A first guess at the crop. A phone screenshot (phone-shaped, a status bar at the top, the app's chrome around the photo) is cut down to its product photo: the tallest band of rows
  * with something in it, which leaves out the status bar, the app's buttons and the text under the photo. Anything else keeps the whole picture.
  * im: ImageData-like { data, width, height }. Returns four corners [[x, y] x4] (clockwise from top left).
  */
@@ -68,6 +69,9 @@ export function productBox(im) {
   const gap = Math.max(3, Math.round(h * 0.005)), blocks = []; let s = -1, last = -1;
   for (let y = 0; y <= h; y++) { if (y < h && busy[y]) { if (s < 0) s = y; else if (y - last > gap) { blocks.push([s, last + 1]); s = y; } last = y; } }
   if (s >= 0) blocks.push([s, last + 1]);
+  // only a phone screenshot gets this treatment: phone-shaped, with a thin status bar at the very top
+  const shot = h / w > 1.85 && h / w < 2.4 && blocks.length >= 3 && blocks[0][0] < h * 0.06 && blocks[0][1] - blocks[0][0] < h * 0.04;
+  if (!shot) return whole;
   const big = blocks.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]))[0];
   if (!big || big[1] - big[0] > h * 0.85 || big[1] - big[0] < h * 0.15) return whole; // a plain photo (or nothing found): keep it all
   let x0 = w, x1 = -1; for (let y = big[0]; y < big[1]; y++) for (let x = 0; x < w; x++) if (fg[y * w + x]) { if (x < x0) x0 = x; if (x > x1) x1 = x; }
@@ -215,7 +219,7 @@ export function openCutEditor(o) {
         try {
           if (!S.picReady) S.picReady = loadPicture(await new Promise((r) => C.toBlob(r, 'image/png'))); await S.picReady;
           const m = await selectByTaps({ pos: S.pos, neg: S.neg, rect: [0, 0, 1, 1] }); if (my !== token || !m) return;
-          S.alpha = upsampleMask(m, W, H); S.engine = m.engine;
+          S.alpha = upsampleMask(cleanMask(m, S.pos), W, H); S.engine = m.engine;
           const p = samProblem(); msg(m.engine === 'sam2' ? 'Selected with SAM 2.' : `Selected on this device${p ? ` (SAM 2 unavailable: ${p})` : ''}.`); paint();
         } catch (err) { if (my === token) { S.picReady = null; msg(err.message || 'Could not select that.'); } }
       };
@@ -245,13 +249,18 @@ export function openCutEditor(o) {
       root.querySelectorAll('[data-tool]').forEach((b) => (b.onclick = () => { S.brushTool = b.dataset.tool; root.querySelectorAll('[data-tool]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); }); }));
       root.querySelector('#brush').oninput = (e) => (S.brush = +e.target.value);
       root.querySelector('#undoall').onclick = () => { S.edits.fill(0); paint(); };
-      root.querySelector('#cutnext').onclick = () => { S.cutCanvas = cutoutFrom(C, finalAlpha()); S.marks = null; if (!groupOf(S.type)) return saveOut(); goto('marks'); };
+      root.querySelector('#cutnext').onclick = () => { S.cutCanvas = S.fullCut = cutoutFrom(C, finalAlpha()); S.marks = null; if (!groupOf(S.type)) return saveOut(); goto('marks'); };
       paint();
     };
 
     /* ── 4. fit: landmarks ── */
     const drawMarks = async () => {
-      const cut = S.cutCanvas, ids = Object.keys(TYPES).filter((t) => groupOf(t));
+      const ids = Object.keys(TYPES).filter((t) => groupOf(t));
+      // a set photographed together (top + shorts): fit only the piece this item is; the other can be added as its own piece
+      const stack = S.fullCut ? stackedPieces(S.fullCut) : null, half = stack && (groupOf(S.type) === 'bottom' ? 'lower' : groupOf(S.type) === 'top' ? 'upper' : null);
+      if (half && !S.wholeSet) { const [y0, y1] = stack[half], c = document.createElement('canvas'); c.width = S.fullCut.width; c.height = y1 - y0; c.getContext('2d').drawImage(S.fullCut, 0, -y0); S.cutCanvas = trimTransparent(c, 2); }
+      else S.cutCanvas = S.fullCut || S.cutCanvas;
+      const cut = S.cutCanvas;
       if (!S.type || !groupOf(S.type)) S.type = 'tops';
       const sugg = () => { S.marks = suggestFor(S.type, cut, { sleeves: S.sleeves }); };
       if (!S.marks) { if (S.sleeves === undefined) S.sleeves = sleevesFromName(S.type, o.name) ?? (S.type === 'tops' || S.type === 'outerwear' || S.type === 'dresses'); sugg(); }
@@ -262,15 +271,16 @@ export function openCutEditor(o) {
         ${hasSleeves ? `<label class="chk"><input type="checkbox" id="slv" ${S.sleeves ? 'checked' : ''}> Sleeves</label>` : ''}<button type="button" class="ghost" id="resug">Re-guess</button></div>
         <div class="marksplit"><div class="cutstage"><canvas id="cvs" aria-label="The piece with its landmarks"></canvas></div><div class="cutstage"><canvas id="prev" aria-label="The piece on the model"></canvas></div></div>
         <p class="muted" id="fitmsg" role="status" aria-live="polite"></p>
+        ${half ? `<p class="muted" role="status">This photo has two pieces; only the ${half === 'upper' ? 'top' : 'bottom'} one is used for ${esc(TYPES[S.type].label.toLowerCase())}. Add the other as its own piece. <button type="button" class="ghost" id="wholeset">${S.wholeSet ? 'Use one piece' : 'Use both'}</button></p>` : ''}
         ${S.mode === 'hanger' ? '<p class="muted">Hanger photo: sloping shoulders are levelled and drooping sleeves are laid along the arms.</p>' : ''}</div>
         <div class="cutfoot"><button type="button" class="primary" id="cutdone">Save this piece</button></div>`;
       root.querySelector('#cutdone').onclick = saveOut; // (ready straight away: the preview below loads in the background)
       const cv = root.querySelector('#cvs'), g = cv.getContext('2d'), k = Math.min(1, 600 / Math.max(cut.width, cut.height));
       cv.width = Math.round(cut.width * k); cv.height = Math.round(cut.height * k);
       const [sw, sh] = space(); fitCanvas(cv, cv.width, cv.height, sw, sh);
-      const prev = root.querySelector('#prev'), pg = prev.getContext('2d'), pack = await loadPack(), body = pack && await bodyOf(pack).catch(() => null);
+      const prev = root.querySelector('#prev'), pg = prev.getContext('2d');
       prev.width = 300; prev.height = Math.round(300 * 1776 / 896); fitCanvas(prev, prev.width, prev.height, sw, sh);
-      let baseImg = null; if (pack) { baseImg = new Image(); baseImg.src = pack.files[pack.layers.body]; await baseImg.decode().catch(() => {}); }
+      let pack = null, body = null, baseImg = null; // loaded in the background; the controls work straight away
       const names = () => namesFor(S.type, S.marks);
       const paint = () => {
         const sc = cv.width / cv.getBoundingClientRect().width;
@@ -296,7 +306,11 @@ export function openCutEditor(o) {
       root.querySelector('#mtype').onchange = (e) => { S.type = e.target.value; S.sleeves = S.type === 'tops' || S.type === 'outerwear' || S.type === 'dresses' ? S.sleeves ?? true : false; S.marks = null; drawMarks(); };
       const slv = root.querySelector('#slv'); if (slv) slv.onchange = () => { S.sleeves = slv.checked; sugg(); paint(); refit(); };
       root.querySelector('#resug').onclick = () => { sugg(); paint(); refit(); };
-      paint(); refit();
+      const ws = root.querySelector('#wholeset'); if (ws) ws.onclick = () => { S.wholeSet = !S.wholeSet; S.marks = null; drawMarks(); };
+      paint();
+      const mine = S.step; pack = await loadPack(); body = pack && await bodyOf(pack).catch(() => null);
+      if (pack) { const im = new Image(); im.src = pack.files[pack.layers.body]; await im.decode().catch(() => {}); baseImg = im; }
+      if (S.step === mine && root.contains(prev)) refit();
     };
 
     const draw = () => {

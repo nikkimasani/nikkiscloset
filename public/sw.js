@@ -1,6 +1,6 @@
 // Service worker: lets the app install on a phone and open offline.
 // App code/styles are network-first (so updates show up right away); the big, never-changing pictures and libraries are cache-first.
-const CACHE = 'closet-v1';
+const CACHE = 'closet-v2'; // raise to drop every cached file on the next visit
 const HEAVY = ['/vendor/', '/assets/'];
 
 // The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (e) => {
   const r = e.request, u = new URL(r.url);
   if (r.method === 'POST' && u.origin === location.origin && u.pathname === '/share') { e.respondWith(takeShare(r)); return; }
   if (r.method !== 'GET' || u.origin !== location.origin || u.pathname.startsWith('/api/')) return; // never cache the AI endpoint
-  const heavy = HEAVY.some((p) => u.pathname.startsWith(p));
+  const heavy = HEAVY.some((p) => u.pathname.startsWith(p)) && !u.pathname.endsWith('.json'); // (settings files like config.json always come fresh when online)
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     if (heavy) { const hit = await cache.match(r); if (hit) return hit; }

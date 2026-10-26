@@ -420,3 +420,22 @@ test('closet: pieces hang on the rails and sit on the shelves without spilling o
   const shoes = layoutSection(SECTIONS.find((s) => s.k === 'shoes'), [{ id: 's', ar: 2 }])[0]; assert.ok(shoes.w <= 0.86 * 210 + 1e-6 && shoes.y + shoes.h <= 457);
   assert.deepEqual(layoutSection(SECTIONS.find((s) => s.k === 'vanity'), [{ id: 'x', ar: 1 }]), [], 'nothing is placed where nothing belongs');
 });
+
+/* ── selection clean-up and the screenshot crop ── */
+import { cleanMask } from '../public/js/cutmask.js';
+import { productBox } from '../public/js/editor.js';
+test('a selection keeps the garment you tapped and drops a thin stray line', () => {
+  const w = 100, h = 100, data = new Uint8Array(w * h);
+  for (let y = 20; y < 80; y++) for (let x = 40; x < 60; x++) data[y * w + x] = 255; // the garment
+  for (let x = 0; x < 40; x++) data[78 * w + x] = 255; // a 1px divider line touching it
+  for (let y = 5; y < 10; y++) for (let x = 85; x < 95; x++) data[y * w + x] = 255; // a separate speck
+  const out = cleanMask({ w, h, data }, [[0.5, 0.5]]).data;
+  assert.equal(out[50 * w + 50], 255); assert.equal(out[78 * w + 5], 0, 'line gone'); assert.equal(out[7 * w + 90], 0, 'speck gone');
+});
+test('only a phone screenshot is cropped to its product photo; a set photographed with a gap is kept whole', () => {
+  const img = (w, h, bands) => { const data = new Uint8ClampedArray(w * h * 4).fill(255); for (const [y0, y1] of bands) for (let y = y0; y < y1; y++) for (let x = w * 0.1; x < w * 0.9; x++) { const o = (y * w + Math.floor(x)) * 4; data[o] = data[o + 1] = data[o + 2] = 40; } return { data, width: w, height: h }; };
+  const shot = productBox(img(100, 216, [[3, 8], [30, 140], [150, 156], [170, 180]]));
+  assert.deepEqual([shot[0][1], shot[2][1]], [30, 140], 'status bar, text and buttons left out');
+  const set = productBox(img(100, 280, [[10, 120], [150, 270]]));
+  assert.deepEqual(set, [[0, 0], [100, 0], [100, 280], [0, 280]], 'two pieces with a gap: nothing cut away');
+});

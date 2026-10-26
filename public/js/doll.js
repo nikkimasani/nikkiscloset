@@ -14,7 +14,7 @@ export function loadPack(id = DEFAULT_PACK) {
   const entry = { pack: null };
   entry.promise = (async () => {
     const base = '/assets/avatar/', meta = await (await fetch(base + 'config.json')).json(), files = {};
-    await Promise.all(Object.values(meta.layers).map(async (f) => { const r = await fetch(base + f, { method: 'HEAD' }); if (!r.ok) throw new Error(f); files[f] = base + f; }));
+    await Promise.all(Object.values(meta.layers).map(async (f) => { const r = await fetch(base + f, { method: 'HEAD' }); if (!r.ok) throw new Error(f); files[f] = base + f + (meta.version ? `?v=${meta.version}` : ''); })); // (the version makes a phone fetch a replaced picture instead of its cached copy)
     return (entry.pack = withPoints({ ...meta, files, base }));
   })().catch(() => { packs.delete(id); return null; });
   packs.set(id, entry);

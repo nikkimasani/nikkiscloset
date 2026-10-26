@@ -247,8 +247,8 @@ function openItemModal(existing, preset = {}) {
         <button type="button" class="srcbtn ${d.linkOpen ? 'on' : ''}" id="srclink" aria-expanded="${d.linkOpen}"><span aria-hidden="true">🔗</span> From a link</button>
       </div>
       <input type="file" id="file" accept="image/*" hidden><input type="file" id="camfile" accept="image/*" capture="environment" hidden>
-      ${d.linkOpen ? `<div class="linkrow"><label class="f" for="plink2">Product page link</label>
-        <div class="row"><input type="url" id="plink2" class="grow" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://shop.com/…" value="${esc(d.link || '')}"><button type="button" class="ghost" id="linkgo">Get picture</button></div>
+      ${d.linkOpen ? `<div class="linkrow"><label class="f" for="plink2">Product page or Pinterest pin link(s)</label>
+        <div class="row"><textarea id="plink2" class="grow" rows="2" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="A shop page or Pinterest pin. Paste several (one per line) to add them one after another.">${esc(d.link || '')}</textarea><button type="button" class="ghost" id="linkgo">Get picture</button></div>
         ${store.get('aipass', '') ? '' : '<label class="f" for="lpass">Passcode</label><input type="password" id="lpass" autocomplete="current-password">'}</div>` : ''}
       <div id="intakemsg" class="muted" role="status" aria-live="polite">${esc(d.busy || 'Screenshots from shopping apps work too: you’ll crop to the product next. You can also paste (Ctrl/⌘+V) or share a link.')}</div>
       <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="ghost" id="cancel">Cancel</button></div>`, existing ? 'New photo' : 'Add a piece');
@@ -349,6 +349,10 @@ function openItemModal(existing, preset = {}) {
     if (!pass) { d.linkOpen = true; d.link = link; paint(); say('Enter your passcode to fetch links.'); $('#lpass')?.focus(); return; }
     store.set('aipass', pass); d.link = link; say('Opening the page…'); const seq = modalSeq;
     try {
+      if (/(^|\.)pinterest\.[a-z.]+$|^pin\.it$/i.test(new URL(link).hostname)) { // a pin: the server fetches the pin's picture
+        const image = await pinAI(link, pass); if (seq !== modalSeq) return;
+        d.linkOpen = false; return fromData(image, {});
+      }
       const r = await productAI(link, pass);
       if (seq !== modalSeq) return;
       d.linkOpen = false; toast(r.title ? `Got “${tidyTitle(r.title, r.brand)}” from ${r.host}` : `Got the picture from ${r.host}`);
@@ -379,7 +383,11 @@ function openItemModal(existing, preset = {}) {
     $('#srcpick').onclick = () => $('#file').click();
     $('#srccam').onclick = () => $('#camfile').click();
     $('#srclink').onclick = () => { d.linkOpen = !d.linkOpen; paint(); if (d.linkOpen) $('#plink2').focus(); };
-    if ($('#linkgo')) { $('#linkgo').onclick = () => { const l = firstLink($('#plink2').value); if (!l) return say('Paste a link that starts with https://'); fetchLink(l); }; $('#plink2').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#linkgo').click(); } }; }
+    if ($('#linkgo')) { $('#linkgo').onclick = () => {
+      const all = [...new Set(($('#plink2').value.match(/https?:\/\/[^\s<>"')]+/gi) || []).map((x) => x.replace(/[.,;!?]+$/, '')))];
+      if (!all.length) return say('Paste a link that starts with https://');
+      d.queue = all.slice(1); if (d.queue.length) toast(`${all.length} links: you’ll add them one after another`);
+      fetchLink(all[0]); }; $('#plink2').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#linkgo').click(); } }; }
     $('#srcpaste').onclick = async () => {
       try {
         const clip = await navigator.clipboard.read(), files = [];
@@ -391,7 +399,7 @@ function openItemModal(existing, preset = {}) {
     if (d.pending) { // opened from a deep link or a shared file
       const p = d.pending; d.pending = null;
       if (p.file) ingestFile(p.file);
-      else if (p.mode === 'link') { d.linkOpen = true; d.link = p.url; if (p.url) fetchLink(p.url); else { paint(); $('#plink2')?.focus(); } }
+      else if (p.mode === 'link') { d.linkOpen = true; d.link = p.url; d.queue = p.queue || []; if (p.url) fetchLink(p.url); else { paint(); $('#plink2')?.focus(); } }
       else if (p.mode === 'paste') { say('Tap Paste to bring in what you copied.'); $('#srcpaste').focus(); }
     }
   }
@@ -452,7 +460,9 @@ function openItemModal(existing, preset = {}) {
       S.urls.delete(item.id + ':back'); if (backCutout) url(item.id + ':back', backCutout);
       url(item.id, item.cutout); S.meta.delete(item.id); await analyseItem(item);
       if (preset.onSaved) await preset.onSaved(item);
-      closeModal(); toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your closet ✓'); render();
+      closeModal(); render();
+      if (d.queue?.length) { const [next, ...rest] = d.queue; toast(`Saved “${item.name}” ✓ — ${d.queue.length} to go`); return openItemModal(undefined, { intake: { mode: 'link', url: next, queue: rest } }); }
+      toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your closet ✓');
       if (again) openItemModal(undefined, { type: item.type });
     };
     $('#save').onclick = () => save(false);

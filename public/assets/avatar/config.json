@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "id": "base",
   "name": "Base model",
   "about": "base.png is shown exactly as it is, at its own proportions. Nothing here draws the body. The numbers below are only coordinates laid over the picture, in the picture's own pixels (896 x 1776), so clothes know where to go. Turn on the debug overlay (Customize > Anchors) to see them on the picture, then edit them here. The armpit, crotch, waistband and arm points are where a garment's matching landmarks (neckline, armpits, crotch, hems, sleeve ends) are warped to; the body's outline for the 'widen to the body' pass is read from base.png's own transparency.",
@@ -371,5 +372,6 @@
         900
       ]
     ]
-  }
+  },
+  "versionAbout": "Raise 'version' whenever base.png is replaced, so phones fetch the new picture instead of a cached copy."
 }
