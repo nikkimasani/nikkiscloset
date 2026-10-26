@@ -713,7 +713,8 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .starterready { margin: 8px 0; }
 
 /* ── Dress up on a phone: the model gets most of the screen, head to feet; Hair / Anchors / Fit open as a bottom sheet ── */
-.gb-pill { display: none; }
+.gb-pill, .gb-pillrow { display: none; }
+.room.dollroom .stage:not(.fitting) .selbox { display: none; } /* the dashed outline only while fitting */
 .rate-fab { display: none; }
 .hairchip.on, .hairsw.on { color: #3b1f2a; } /* (dark text on the light highlight) */
 .hairchip.on small, .hairsw.on small { color: #3b1f2a; }
@@ -724,9 +725,8 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
   .dress.dollmode .tools, .dress.dollmode .meters, .dress.dollmode .moods, .dress.dollmode .wxline { order: 3; }
   /* the challenge collapses into a pill; Rate my look floats on the model */
   .dress.dollmode .gamebar:not(.big) { padding: 0; background: none; border: 0; box-shadow: none; }
-  .dress.dollmode .gamebar:not(.big) .gb-pill { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 6px 14px; border-radius: 99px; border: 1px solid #ffffff30; background: #2a1440d9; color: #fff; font-weight: 700; font-size: 14px; text-align: left; }
+  .dress.dollmode .gamebar:not(.big) .gb-pillrow .gb-pill { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 6px 14px; border-radius: 99px; border: 1px solid #ffffff30; background: #2a1440d9; color: #fff; font-weight: 700; font-size: 14px; text-align: left; }
   .gb-pill .gb-coins { margin-left: auto; font-weight: 800; } .gb-pill .gb-caret { transition: transform .2s; } .gamebar.open .gb-caret { transform: rotate(180deg); }
-  .dress.dollmode .gamebar:not(.big):not(.open) > :not(.gb-pill) { display: none; }
   .dress.dollmode .gamebar.open:not(.big) { padding: 0 0 10px; }
   .dress.dollmode .gamebar.open:not(.big) .gb-rate { display: none; }
   .rate-fab { display: inline-flex; align-items: center; gap: 6px; position: absolute; left: 12px; bottom: 12px; z-index: 7; min-height: 44px; padding: 6px 16px; border-radius: 99px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 14px; box-shadow: 0 6px 18px #0005; }
@@ -744,3 +744,28 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 }
 @media (max-width: 919px) { body.dsheet .dress.dollmode::before { content: ''; position: fixed; inset: 0; z-index: 29; background: #071a2c; } }
 .dbpieces { flex-wrap: nowrap; overflow-x: auto; } .dbpieces .chip { flex: 0 0 auto; color: #fff; } .dbpieces .chip.on { color: var(--accent-ink); }
+/* phone: one screen holds the challenge row, the scene and the whole item strip (nothing slides under the model) */
+@media (max-width: 919px) {
+  .dress.dollmode > .scenebar, .dress.dollmode .dress-left > .scenebar { display: none; }
+  .dress.dollmode .gamebar:not(.big) .gb-pillrow { display: flex; gap: 6px; }
+  .gb-pillrow .gb-pill { flex: 1; min-width: 0; } .gb-pillrow .gb-pill > :first-child + * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gb-ratebtn, .gb-closet { flex: 0 0 auto; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 99px; border: 0; font-weight: 800; font-size: 14px; }
+  .gb-ratebtn { background: var(--accent); color: var(--accent-ink); } .gb-ratebtn:disabled { opacity: .5; }
+  .gb-closet { background: #2a1440d9; color: #fff; border: 1px solid #ffffff30; padding: 0; }
+  .dress.dollmode .gamebar:not(.big):not(.open) > :not(.gb-pillrow) { display: none; }
+  .dress.dollmode .room.dollroom { position: relative; top: auto; height: max(400px, calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - 64px - 176px)); }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 8px); }
+  .dress.dollmode .tray { padding: 6px 8px; }
+  .dress.dollmode .tabs { padding-bottom: 4px; } .dress.dollmode .tabs .tab { min-height: 36px; padding: 2px 10px; font-size: 12px; }
+  .dress.dollmode .tray-row { padding: 2px 2px 6px; } .dress.dollmode .pick { flex-basis: 92px; padding: 4px; } .dress.dollmode .pick img { height: 72px; }
+}
+@media (max-width: 919px) {
+  .dress.dollmode .dollfit, .dress.dollmode .dollhint { display: none; } /* (the pieces on the model are listed in the Fit sheet) */
+  .dress.dollmode .tabs .tab { display: inline-flex; flex-direction: row; align-items: center; gap: 4px; white-space: nowrap; }
+  .dress.dollmode .tabs .tab > [aria-hidden] { font-size: 16px; }
+}
+@media (max-width: 919px) {
+  .dress.dollmode .pick { flex-basis: 84px; gap: 0; } .dress.dollmode .pick img { height: 60px; }
+  .dress.dollmode .pick span { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dress.dollmode .pick small { display: none; }
+  .dress.dollmode .room.dollroom { height: max(400px, calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - 60px - 170px)); }
+}

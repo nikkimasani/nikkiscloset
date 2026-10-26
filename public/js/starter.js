@@ -66,6 +66,19 @@ function formMask(d, w, h, inItem, itemArea, minFrac = 0.03) {
     if (tl > itemArea * minFrac && edge >= Math.max(edgeMin, 0.6 * Math.sqrt(tl))) for (let t = 0; t < tl; t++) out[q[t]] = 1; }
   return out;
 }
+/** Light, colourless patches touching the top or bottom of the item (a dress form's neck or stand, a strip of backdrop), as a 0/1 mask. */
+function edgeLightMask(d, w, h, inItem, itemArea, minFrac = 0.004) {
+  let y0 = h, y1 = -1; for (let i = 0; i < w * h; i++) if (inItem(i)) { const y = (i / w) | 0; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const band = Math.max(2, Math.round((y1 - y0) * 0.06)), a = new Uint8Array(w * h), out = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) if (inItem(i) && isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) a[i] = 1;
+  const lab = new Int32Array(w * h), q = new Int32Array(w * h);
+  for (let i = 0, k = 0; i < w * h; i++) { if (!a[i] || lab[i]) continue; k++; let hd = 0, tl = 0, edge = false, outside = 0; q[tl++] = i; lab[i] = k;
+    while (hd < tl) { const p = q[hd++], x = p % w, y = (p / w) | 0; if (y <= y0 + band || y >= y1 - band) edge = true;
+      for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) { if (j < 0 || j >= w * h || !inItem(j)) { outside++; continue; } if (a[j] && !lab[j]) { lab[j] = k; q[tl++] = j; } } }
+    // it has to stick out past the piece (open to the outside along a real stretch), not sit inside it like the light part of a print
+    if (edge && tl > itemArea * minFrac && outside >= Math.max(4, 0.6 * Math.sqrt(tl))) for (let t = 0; t < tl; t++) out[q[t]] = 1; }
+  return out;
+}
 /** Runs of item pixels in one row of a mask: [[x0, x1], ...]. */
 const runs = (fg, w, y) => { const out = []; let st = -1; for (let x = 0; x <= w; x++) { const on = x < w && fg[y * w + x]; if (on && st < 0) st = x; if (!on && st >= 0) { out.push([st, x - 1]); st = -1; } } return out; };
 
@@ -130,6 +143,7 @@ export function checkPicture(img, it) {
   if (n && skin / n > (WARM.test(colours) ? 0.35 : 0.08)) reasons.push('skin-coloured areas (a person or a body form?)');
   let light = 0; for (let i = 0; i < w * h; i++) if (fg[i] && isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) light++;
   const lightPiece = LIGHT.test(colours) || light / Math.max(1, n) > 0.65; // the piece itself is white, cream or grey: a form can't be told apart by colour
+  if (n && !lightPiece) { const em = edgeLightMask(d, w, h, (i) => fg[i], n); let e = 0; for (let i = 0; i < w * h; i++) e += em[i]; if (e / n > 0.01) reasons.push('a white patch at the top or bottom edge (a form’s neck or stand?)'); }
   if (n && !lightPiece) { const fm = formMask(d, w, h, (i) => fg[i], n); for (let i = 0; i < w * h; i++) form += fm[i]; if (form / n > 0.03) reasons.push('a white or grey body shape (a dress form?)'); }
   if (n > 200 && !colourMatches(d, w, h, fg, it)) reasons.push(`colour doesn’t look ${it.colors.join(' / ')}`);
   // a neck stand on top or a pole underneath: the clothing's outline narrows to one thin, centred strip at its top or bottom
@@ -148,10 +162,11 @@ export function checkPicture(img, it) {
  *  stand or pole, and anything not joined to the main piece. Returns a new trimmed canvas (to be checked again before it can be Ready). */
 export function cleanUp(cut, it) {
   const w = cut.width, h = cut.height, g = cut.getContext('2d', { willReadFrequently: true }), id = g.getImageData(0, 0, w, h), d = id.data;
-  const colours = it.colors.join(' '), dropSkin = !/nude|beige|camel|tan|clear/.test(colours), dropForm = !LIGHT.test(colours);
-  const keep = new Uint8Array(w * h); let area = 0; for (let i = 0; i < w * h; i++) if (d[i * 4 + 3] >= 40) area++;
-  const fm = dropForm ? formMask(d, w, h, (i) => d[i * 4 + 3] >= 40, area) : null;
-  for (let i = 0; i < w * h; i++) { const o = i * 4; if (d[o + 3] < 40) continue; keep[i] = (dropSkin && isSkin(d[o], d[o + 1], d[o + 2])) || fm?.[i] ? 0 : 1; }
+  const colours = it.colors.join(' '), dropSkin = !/nude|beige|camel|tan|clear/.test(colours); let dropForm = !LIGHT.test(colours);
+  const keep = new Uint8Array(w * h); let area = 0, light = 0; for (let i = 0; i < w * h; i++) if (d[i * 4 + 3] >= 40) { area++; if (isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) light++; }
+  if (light / Math.max(1, area) > 0.65) dropForm = false; // the piece itself is mostly white or cream: its light parts are the piece
+  const fm = dropForm ? formMask(d, w, h, (i) => d[i * 4 + 3] >= 40, area) : null, em = dropForm ? edgeLightMask(d, w, h, (i) => d[i * 4 + 3] >= 40, area) : null;
+  for (let i = 0; i < w * h; i++) { const o = i * 4; if (d[o + 3] < 40) continue; keep[i] = (dropSkin && isSkin(d[o], d[o + 1], d[o + 2])) || fm?.[i] || em?.[i] ? 0 : 1; }
   // thin centred strips at the top and bottom (neck stand, pole) go too
   let y0 = 0, y1 = h - 1; while (y0 < h && !runs(keep, w, y0).length) y0++; while (y1 > 0 && !runs(keep, w, y1).length) y1--;
   let bw = 0; for (let y = y0; y <= y1; y++) { const r = runs(keep, w, y); if (r.length) bw = Math.max(bw, r[r.length - 1][1] - r[0][0] + 1); }
@@ -170,17 +185,22 @@ export function cleanUp(cut, it) {
 /** The normal pipeline on a white-background product photo: checked, background off (no tap needed), cropped, colours read. */
 export async function process(blob, it) {
   const { img, url } = await loadImage(blob); URL.revokeObjectURL(url);
-  const check = checkPicture(img, it);
-  const cut = removeBackground(toCanvas(img, 1000), { tolerance: 18 }); // pure white studio background; kept tight so white and cream pieces keep their edges
-  return finish(cut, check);
+  const first = checkPicture(img, it);
+  // every cutout is tidied (stray fragments, skin, form scraps at the edges), and the tidy cutout is checked again: Ready needs both to pass
+  const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it), after = checkPicture(padded(cut), it); // (a pure white studio background; kept tight so white and cream pieces keep their edges)
+  return finish(cut, { ok: first.ok && after.ok, reasons: [...new Set([...first.reasons, ...after.reasons.map((r) => `after clean-up: ${r}`)])] });
+}
+/** A cutout on white with a margin, so it's checked like a photo. */
+function padded(cut) {
+  const pad = document.createElement('canvas'); pad.width = Math.round(cut.width * 1.2) + 4; pad.height = Math.round(cut.height * 1.2) + 4;
+  const pg = pad.getContext('2d'); pg.fillStyle = '#fff'; pg.fillRect(0, 0, pad.width, pad.height); pg.drawImage(cut, (pad.width - cut.width) / 2, (pad.height - cut.height) / 2);
+  return pad;
 }
 /** The last resort for a picture that failed its check after the automatic remakes: clean the cutout, then check the clean cutout. */
 export async function processCleaned(blob, it, firstCheck) {
   const { img, url } = await loadImage(blob); URL.revokeObjectURL(url);
   const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it);
-  const pad = document.createElement('canvas'); pad.width = Math.round(cut.width * 1.2); pad.height = Math.round(cut.height * 1.2); // checked with a white margin, like a photo
-  const pg = pad.getContext('2d'); pg.fillStyle = '#fff'; pg.fillRect(0, 0, pad.width, pad.height); pg.drawImage(cut, (pad.width - cut.width) / 2, (pad.height - cut.height) / 2);
-  const check = checkPicture(pad, it);
+  const check = checkPicture(padded(cut), it);
   if (LIGHT.test(it.colors.join(' ')) && firstCheck?.reasons.some((r) => /dress form|neck stand|pole|body form/.test(r))) // a white or cream piece on a white form: the two can't be told apart by colour
     check.ok = false, check.reasons = [...check.reasons, 'a light piece on a form: the form could not be removed automatically'];
   return { ...(await finish(cut, check)), cleaned: true };
@@ -196,7 +216,7 @@ async function finish(cut, check) {
 export const sleevesOf = (it) => (/sleeveless|strapless|tube|cami|tank|halter|corset|vest|one-shoulder|thin straps/i.test(`${it.name} ${it.detail}`) ? false
   : /sleeve|sweater|turtleneck|button-down|blouse|tee|t-shirt|cardigan|blazer|coat|jacket|duster|puffer|shirt/i.test(`${it.name} ${it.detail}`) ? true : undefined);
 /** Starter pieces checked by an older version are checked again (the check keeps getting stricter). */
-export const CHECK_VERSION = 2;
+export const CHECK_VERSION = 3;
 export const toItem = (it, done, original) => ({
   checkVersion: CHECK_VERSION, ...(sleevesOf(it) !== undefined && ['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses'].includes(it.type) && { sleeves: sleevesOf(it) }),
   id: uid(), starterId: it.id, source: 'starter', ready: !!done.ready, review: done.ready ? undefined : done.why, ...(it.acc && { acc: it.acc }), name: it.name, type: it.type, occasions: [...it.occasions], season: it.season, brand: '',

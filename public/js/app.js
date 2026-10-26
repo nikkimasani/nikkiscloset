@@ -883,7 +883,7 @@ function gameBarHTML(big) {
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
   const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. Tap End the day to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
   return `<div class="gamebar ${big ? 'big' : ''} ${S.gbOpen ? 'open' : ''}" role="region" aria-label="Today’s challenge">
-    ${big ? '' : `<button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>`}
+    ${big ? '' : `<div class="gb-pillrow"><button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>${d.phase === 'done' ? '' : `<button class="gb-ratebtn" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate</button>`}<button class="gb-closet" data-act="scene" data-v="closet" aria-label="Walk-in closet"><span aria-hidden="true">✨</span></button></div>`}
     <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span><button class="gb-shop" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
@@ -1097,7 +1097,6 @@ function renderMirror() {
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
-        ${dollOn() && S.game.day && S.game.day.phase !== 'done' ? `<button class="rate-fab" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>` : ''}
         ${S.cas ? casHTML() : ''}
         ${dollOn() ? dollBarHTML(fit) : ''}
       </div>
@@ -1181,6 +1180,7 @@ function refreshDollFit() {
   if (chips) chips.outerHTML = dollFitHTML(worn, fit);
   $('.dolltoggle')?.setAttribute('aria-expanded', String(!!S.fitOpen));
   $('#stage')?.classList.toggle('fitting', !!fit && !!S.fitOpen);
+  document.body.classList.toggle('dsheet', !!(dollOn() && (S.cas || (S.fitOpen && fit)))); // (on a phone the Fit controls are a bottom sheet)
 }
 
 /** The piece you actually touched: the topmost garment with a visible pixel under the finger (not just a box that happens to cover it). */

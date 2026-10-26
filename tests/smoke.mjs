@@ -17,7 +17,8 @@ const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], limitAt:
 // review grid can be checked tile by tile. Two pieces come back bad at first: one passes on its 3rd try, one never does.
 const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/items.js');
 // (tie.png is a blouse on a dress form: the check rightly fails it, so it isn't a stand-in for a good picture)
-const WHITE = ['dress', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
+// (no stripes: white stripes reaching the edge read like a form's scraps)
+const WHITE = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
 const BAD = { 'starter-cream-crochet-cami': 2, 'starter-navy-halter-top': 99 };
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
@@ -588,7 +589,12 @@ try {
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'layers stack correctly: shoes, bottom, top, jacket over top');
   ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
   // fit: select the top, nudge, and it is remembered
-  await pdl.click('.dfpieces [data-act=fit]:has-text("Top") >> visible=true').catch(() => pdl.click('.dbpieces [data-act=fit]:has-text("Top")')); // (on a phone, with the Fit sheet open, the pieces are listed in the sheet)
+  const fitPiece = async (label) => { // on a wide screen the worn pieces are chips under the model; on a phone they're in the Fit sheet
+    if (await pdl.locator(`.dfpieces [data-act=fit]:has-text("${label}")`).isVisible()) return pdl.click(`.dfpieces [data-act=fit]:has-text("${label}")`);
+    if (!(await pdl.locator('.dbpieces').count())) await pdl.click('[data-act=dfit]');
+    return pdl.click(`.dbpieces [data-act=fit]:has-text("${label}")`);
+  };
+  await fitPiece('Top');
   const tfm = () => pdl.getAttribute('#stage .gar[data-slot=top]', 'transform');
   const tf0 = await tfm();
   await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerup');
@@ -604,7 +610,7 @@ try {
   await pdl.mouse.move(bx, by); await pdl.mouse.down(); await pdl.mouse.move(bx + 40, by + 20, { steps: 4 }); await pdl.mouse.up();
   const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.base || {});
   ok(f2.dx > 10 && f2.dy > 5 && (await saved()).dx === dx0, `touching a piece selects it and dragging moves just that piece (jacket moved ${Math.round(f2.dx)}, ${Math.round(f2.dy)}; tee stayed)`);
-  await pdl.click('.dfpieces [data-act=fit]:has-text("Top") >> visible=true').catch(() => pdl.click('.dbpieces [data-act=fit]:has-text("Top")')); // (on a phone, with the Fit sheet open, the pieces are listed in the sheet)
+  await fitPiece('Top');
   // tucked in: the top goes under the bottoms and is cut at the waist
   await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelector('#stage .gar').dataset.slot === 'shoes' && document.querySelectorAll('#stage .gar')[1].dataset.slot === 'top');
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'top', 'bottom', 'outer']) && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tucking in puts the top under the bottoms');
@@ -615,7 +621,7 @@ try {
   // the fit panel names the piece it is fitting, and tapping picks the piece you touched (not just a box that covers the spot)
   const bar = async () => (await pdl.locator('#dollbar .dbname').innerText());
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); // (the outfit isn't kept across a reload)
-  await pdl.click('.dfpieces [data-act=fit]:has-text("Top") >> visible=true').catch(() => pdl.click('.dbpieces [data-act=fit]:has-text("Top")')); // (on a phone, with the Fit sheet open, the pieces are listed in the sheet)
+  await fitPiece('Top');
   ok(/White tee/.test(await bar()) && /Top/.test(await bar()), 'the fit panel says which piece: "Top: White tee"');
   ok((await pdl.locator('#dollbar .dbthumb').getAttribute('src')) === (await pdl.evaluate(() => window.__closet.urls.get(window.__closet.items.find((i) => i.name === 'White tee').id))), 'and shows that piece’s own picture');
   const sel = await pdl.evaluate(() => { const g = document.querySelector('#stage .gar.sel'), a = g.querySelector('image').getBoundingClientRect(), b = g.querySelector('.selbox').getBoundingClientRect(); return { sel: g.dataset.slot, inside: b.left >= a.left - 1 && b.right <= a.right + 1 && b.top >= a.top - 1 && b.bottom <= a.bottom + 1 }; });
@@ -687,7 +693,7 @@ try {
     const pw = await cw.newPage(); pw.setDefaultTimeout(60000); pw.on('pageerror', (e) => errors.push(e.message)); pw.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await pw.goto(`http://localhost:${PORT}/`); await pw.waitForFunction(() => window.__closet); await loadFixtures(pw);
     ok(await pw.evaluate(() => !('__apt' in window) && !document.querySelector('#joy, .camrot, .world-jump')), 'the 3D apartment, the walking avatar, the stick and the rotate buttons are gone');
-    await pw.click('[data-act=scene][data-v=closet]'); await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
+    await pw.click('[data-act=scene][data-v=closet] >> visible=true'); // (the scene switch, or the ✨ button in the challenge row on a phone) await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
     ok(await pw.evaluate(() => getComputedStyle(document.querySelector('header.top')).display === 'none' && getComputedStyle(document.querySelector('#nav')).display === 'none'), 'the closet fills the screen: no app header or tabs, just a thin bar');
     ok(await pw.locator('.wic-top [data-act=wicmirror]').count() === 1 && /\d/.test(await pw.locator('.wic-coins').innerText()) && await pw.locator('.wic-top [data-act=shop]').count() === 1, 'the top bar has back, coins and Shop');
     const geo = await pw.evaluate(() => { const v = document.querySelector('.wic-view').getBoundingClientRect(), st = document.querySelector('.wic-strip').getBoundingClientRect(), parts = [...document.querySelectorAll('.wic-top, .wic-pillbox, .wic-tip')].map((e) => e.getBoundingClientRect()); return { over: parts.some((r) => r.bottom > st.top), share: parts.reduce((a, r) => a + r.width * r.height, 0) / (v.width * v.height), sw: document.documentElement.scrollWidth }; });
@@ -811,7 +817,7 @@ try {
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
     ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
-    await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 60000 }).catch(async (e) => { console.log('TILES', JSON.stringify(await pS.locator('.startertile').evaluateAll((t) => t.map((x) => x.className + ' | ' + x.innerText.replace(/\s+/g, ' '))))); throw e; });
+    await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
     ok(cf.calls.length === 24 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && /plain pure white background, soft even lighting/.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures)`);
     const tops = SITEMS.filter((i) => i.batch === 'tops');
     ok(tops.every((it, k) => cf.calls.find((c) => c.prompt === sPrompt(it)).seed === 110000 + k), 'each piece starts from a stable seed for its category (tops 110000 + its place)');
