@@ -520,7 +520,7 @@ try {
   await pI.waitForSelector('#cutimg');
   ok((await pI.inputValue('#name')) === 'Satin Cami Top' && (await pI.inputValue('#brand')) === 'Zara' && (await pI.inputValue('#price')) === '29.9', 'a product link fills in the name, brand and price');
   ok((await pI.inputValue('#type')) === 'tanks' && /guessed/.test(await pI.locator('label[for=type]').innerText()), 'the category is guessed from the title and flagged as a guess');
-  ok((await pI.locator('.swatch').count()) > 0 && (await pI.locator('#cutimg').count()) === 1, 'colours are suggested from the cutout');
+  ok((await pI.locator('.cswatch').count()) > 0 && (await pI.locator('#cutimg').count()) === 1, 'colours are suggested from the cutout');
   await pI.click('#saveadd'); await pI.waitForFunction(() => window.__closet.items.length === 1);
   await pI.waitForSelector('#srcpick');
   ok((await pI.inputValue('#name')) === '' && (await pI.evaluate(() => window.__closet.items[0].colors.length)) > 0, 'Save & add another keeps the first piece and opens a blank form');
@@ -535,7 +535,7 @@ try {
     const b = await new Promise((r) => c.toBlob(r, 'image/png')), dt = new DataTransfer(); dt.items.add(new File([b], 'p.png', { type: 'image/png' }));
     document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
   });
-  await pI.waitForSelector('#cutimg'); ok((await pI.locator('.swatch').count()) > 0, 'pasting a picture (⌘/Ctrl+V) brings it into the add dialog');
+  await pI.waitForSelector('#cutimg'); ok((await pI.locator('.cswatch').count()) > 0, 'pasting a picture (⌘/Ctrl+V) brings it into the add dialog');
   await pI.click('#cancel');
   await pI.goto(`http://localhost:${PORT}/?add=link&u=${encodeURIComponent('http://localhost:5198/shop/1')}`);
   await pI.waitForFunction(() => document.querySelector('#name')?.value === 'Satin Cami Top');
@@ -549,6 +549,51 @@ try {
   ok(/staticimgly\.com/.test(hdr[0]) && /frame-ancestors 'self'/.test(hdr[0]) && !/staticimgly/.test(hdr[1]) && /frame-ancestors 'none'/.test(hdr[1]), 'only the lab page may reach the model host; the main app policy is unchanged');
   await pI.goto(`http://localhost:${PORT}/?add=paste`); await pI.waitForSelector('#srcpaste:focus');
   ok(/Tap Paste/.test(await pI.locator('#intakemsg').innerText()), '?add=paste opens the dialog ready for the Paste button');
+
+  // ── phase 2: the 2D paper doll ──
+  const cdl = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await cdl.addInitScript(() => localStorage.setItem('flat', '1'));
+  const pdl = await cdl.newPage(); pdl.on('pageerror', (e) => errors.push(e.message)); pdl.on('dialog', (d) => d.accept());
+  await pdl.goto(`http://localhost:${PORT}/`); await pdl.waitForSelector('svg.doll');
+  ok((await pdl.locator('.dollmode').count()) === 1 && (await pdl.getAttribute('svg.doll', 'data-pack')) === 'studio', 'Dress up opens on the 2D doll by default, drawn from the swappable art pack');
+  await pdl.click('[data-act=samples]'); await pdl.waitForFunction(() => window.__closet.items.length === 10);
+  const wearOne = async (tab, name) => { await pdl.click(`[data-act=tab][data-v=${tab}]`); await pdl.click(`.pick:has-text("${name}")`); };
+  await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); await wearOne('outerwear', 'Camel blazer'); await wearOne('shoes', 'Nude heels');
+  const slots = () => pdl.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
+  ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'layers stack correctly: shoes, bottom, top, jacket over top');
+  ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
+  // fit: select the top, nudge, and it is remembered
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  const tfm = () => pdl.getAttribute('#stage .gar[data-slot=top]', 'transform');
+  const tf0 = await tfm();
+  await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerup');
+  ok((await tfm()) !== tf0, 'a nudge button moves the piece');
+  await pdl.dispatchEvent('[data-act=dsize][data-v="0.03"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dsize][data-v="0.03"]', 'pointerup');
+  await pdl.dispatchEvent('[data-act=drot][data-v="2"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=drot][data-v="2"]', 'pointerup');
+  const saved = () => pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio);
+  await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio?.dx > 0);
+  const f1 = await saved(); ok(f1.dx > 0 && f1.scale > 1 && f1.rot > 0, `size, turn and position are all kept (${JSON.stringify(f1)})`);
+  // drag the piece on the doll
+  const box = await pdl.locator('#stage svg.doll').boundingBox(), dx0 = f1.dx;
+  await pdl.mouse.move(box.x + box.width / 2, box.y + box.height * 0.42); await pdl.mouse.down(); await pdl.mouse.move(box.x + box.width / 2 + 40, box.y + box.height * 0.42 + 20, { steps: 4 }); await pdl.mouse.up();
+  const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.studio || {});
+  ok(f2.dx > 10 && f2.dy > 5 && (await saved()).dx === dx0, `touching a piece selects it and dragging moves just that piece (jacket moved ${Math.round(f2.dx)}, ${Math.round(f2.dy)}; tee stayed)`);
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  // tucked in: the top goes under the bottoms and is cut at the waist
+  await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelector('#stage .gar').dataset.slot === 'shoes' && document.querySelectorAll('#stage .gar')[1].dataset.slot === 'top');
+  ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'top', 'bottom', 'outer']) && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tucking in puts the top under the bottoms');
+  await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1].dataset.slot === 'bottom');
+  ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'and untucking puts it back over them');
+  await pdl.reload(); await pdl.waitForSelector('svg.doll'); await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio?.dx > 0);
+  ok(true, 'fit survives a reload');
+  await pdl.click('[data-act=samples]').catch(() => {});
+  await pdl.click('[data-act=dreset]').catch(() => {});
+  await pdl.click('[data-act=drawer][data-v=look]'); await pdl.click('[data-act=skin]:nth-of-type(9)');
+  ok((await pdl.locator('#stage svg.doll').innerHTML()).includes(await pdl.evaluate(() => window.__closet.skin)), 'the customizer’s skin colour reaches the doll');
+  ok((await pdl.locator('.cas-tabs [data-v=body]').count()) === 0, 'body sliders are hidden for the doll (they shape the 3D model)');
+  await pdl.evaluate(axeSource);
+  const axeD = await pdl.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+  ok(axeD.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (2D doll): ${axeD.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
+  await pdl.screenshot({ path: join(out, 'doll.png') });
 
   // cloud sync: two devices against an in-memory stand-in for the Supabase REST API
   const cloud = { records: new Map(), blobs: new Map() }, SYNC_KEY = 'amber-apple-arrow';
@@ -606,8 +651,8 @@ try {
 
   // walk-in closet: walk to a section, grab several pieces, try them on in the mirror
   const pw = await mk();
-  await pw.evaluate(() => localStorage.setItem('scene', '')); await pw.reload(); await pw.waitForFunction(() => window.__stage3d);
-  ok(await pw.locator('.closet-scene .hall').isVisible(), 'the walk-in closet is the default scene');
+  await pw.evaluate(() => localStorage.setItem('scene', 'closet')); await pw.reload(); await pw.waitForFunction(() => window.__stage3d);
+  ok(await pw.locator('.closet-scene .hall').isVisible(), 'the walk-in closet scene shows');
   await pw.click('[data-act=samples]'); await pw.waitForFunction(() => window.__closet.items.length === 10);
   ok((await pw.locator('.cabinet').count()) === 10, 'one cabinet per clothing section');
   const x0 = await pw.evaluate(() => parseFloat(document.querySelector('#walker').style.left));
@@ -642,7 +687,7 @@ try {
   // the 3D walk-in world: walk around, step on a pad, grab pieces, go to the mirror
   const c5 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const pd = await c5.newPage(); pd.on('pageerror', (e) => errors.push(e.message));
-  await pd.goto(`http://localhost:${PORT}/`); await pd.evaluate(() => localStorage.setItem('scene', '')); await pd.reload();
+  await pd.goto(`http://localhost:${PORT}/`); await pd.evaluate(() => localStorage.setItem('scene', 'closet')); await pd.reload();
   await pd.waitForFunction(() => window.__stage3d);
   if (!(await pd.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D world tests (no WebGL in this browser)');
   else {

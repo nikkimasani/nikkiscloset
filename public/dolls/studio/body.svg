@@ -1,0 +1,20 @@
+<g id="body">
+<path d="M333,450 C335,520 323,600 318,640 C322,690 316,742 310,796 C312,818 316,834 336,844 C350,852 346,866 316,867 C282,868 270,860 273,846 C276,826 281,812 281,796 C277,740 278,690 274,640 C268,600 258,540 253,486 Z" fill="url(#skinG)"/><path d="M 167,450 C 165,520 177,600 182,640 C 178,690 184,742 190,796 C 188,818 184,834 164,844 C 150,852 154,866 184,867 C 218,868 230,860 227,846 C 224,826 219,812 219,796 C 223,740 222,690 226,640 C 232,600 242,540 247,486 Z" fill="url(#skinG)"/>
+<path d="M248,203 L269,203 L270,224 C293,228 322,232 335,254 C336,276 331,292 327,306 C320,332 306,352 304,386 C304,414 336,426 336,454 C336,472 302,488 248,490 L248,203 Z" fill="url(#skinG)"/><path d="M 252,203 L 231,203 L 230,224 C 207,228 178,232 165,254 C 164,276 169,292 173,306 C 180,332 194,352 196,386 C 196,414 164,426 164,454 C 164,472 198,488 252,490 L 252,203 Z" fill="url(#skinG)"/>
+<path d="M320,242 C346,244 362,264 364,292 C366,322 365,336 367,352 C371,382 375,412 379,440 C390,452 394,476 386,492 C378,506 360,502 356,486 C354,472 354,454 352,440 C346,412 339,382 333,358 C326,332 321,302 321,280 Z" fill="url(#skinG)"/><path d="M 180,242 C 154,244 138,264 136,292 C 134,322 135,336 133,352 C 129,382 125,412 121,440 C 110,452 106,476 114,492 C 122,506 140,502 144,486 C 146,472 146,454 148,440 C 154,412 161,382 167,358 C 174,332 179,302 179,280 Z" fill="url(#skinG)"/>
+<!-- soft shading -->
+<path d="M232,205 C240,226 260,226 268,205 L268,222 C258,236 242,236 232,222Z" fill="{{skinShade}}" opacity=".5"/>
+<path d="M322,282 C323,306 328,332 334,358 C340,384 347,412 352,440" fill="none" stroke="{{skinShade}}" stroke-width="2.4" stroke-linecap="round" opacity=".45"/><path d="M 178,282 C 177,306 172,332 166,358 C 160,384 153,412 148,440" fill="none" stroke="{{skinShade}}" stroke-width="2.4" stroke-linecap="round" opacity=".45"/>
+<path d="M262,486 C258,540 266,600 275,640" fill="none" stroke="{{skinShade}}" stroke-width="2.4" stroke-linecap="round" opacity=".3"/><path d="M 238,486 C 242,540 234,600 225,640" fill="none" stroke="{{skinShade}}" stroke-width="2.4" stroke-linecap="round" opacity=".3"/>
+<path d="M250,486 L250,520" stroke="{{skinShade}}" stroke-width="2" opacity=".35"/>
+<ellipse cx="250" cy="396" rx="3" ry="4.5" fill="{{skinShade}}" opacity=".45"/>
+<path d="M236,236 C246,244 252,242 252,242" fill="none" stroke="{{skinShade}}" stroke-width="2" stroke-linecap="round" opacity=".28"/><path d="M 264,236 C 254,244 248,242 248,242" fill="none" stroke="{{skinShade}}" stroke-width="2" stroke-linecap="round" opacity=".28"/>
+<!-- head -->
+<path d="M250,50 C310,50 326,100 322,142 C318,184 288,208 250,209 C212,208 182,184 178,142 C174,100 190,50 250,50Z" fill="url(#skinG)"/>
+<ellipse cx="180" cy="146" rx="9" ry="14" fill="url(#skinG)"/><ellipse cx="320" cy="146" rx="9" ry="14" fill="url(#skinG)"/>
+<!-- underwear, painted on -->
+<path d="M248,262 C282,258 314,262 330,274 L325,308 C300,318 276,320 248,316 Z" fill="{{under}}"/><path d="M 252,262 C 218,258 186,262 170,274 L 175,308 C 200,318 224,320 252,316 Z" fill="{{under}}"/>
+<path d="M248,446 C282,448 316,442 336,442 C340,456 338,468 328,478 L304,490 C284,494 266,494 248,494 Z" fill="{{under}}"/><path d="M 252,446 C 218,448 184,442 164,442 C 160,456 162,468 172,478 L 196,490 C 216,494 234,494 252,494 Z" fill="{{under}}"/>
+<path d="M248,262 C282,258 314,262 330,274" fill="none" stroke="{{underLine}}" stroke-width="2" opacity=".6"/><path d="M 252,262 C 218,258 186,262 170,274" fill="none" stroke="{{underLine}}" stroke-width="2" opacity=".6"/>
+<path d="M248,446 C282,448 316,442 336,442" fill="none" stroke="{{underLine}}" stroke-width="2" opacity=".6"/><path d="M 252,446 C 218,448 184,442 164,442" fill="none" stroke="{{underLine}}" stroke-width="2" opacity=".6"/>
+</g>

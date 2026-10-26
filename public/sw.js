@@ -6,7 +6,8 @@ const HEAVY = ['/vendor/', '/models/'];
 // The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
 const SHELL = ['/', '/styles.css', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
   '/js/app.js', '/js/aitryon.js', '/js/body.js', '/js/color.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/mannequin.js', '/js/meters.js',
-  '/js/insights.js', '/js/browsercut.js', '/js/intake.js', '/js/plan.js', '/js/planner.js', '/js/pose.js', '/js/sample.js', '/js/sharecard.js', '/js/stage3d.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/js/world.js', '/js/character.js', '/vendor/three/three.module.min.js'];
+  '/js/insights.js', '/js/doll.js', '/js/browsercut.js', '/js/intake.js', '/js/plan.js', '/js/planner.js', '/js/pose.js', '/js/sample.js', '/js/sharecard.js', '/js/stage3d.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/js/world.js', '/js/character.js', '/vendor/three/three.module.min.js',
+  '/dolls/studio/body.svg', '/dolls/studio/defs.svg', '/dolls/studio/face.svg', '/dolls/studio/hair-back-bob.svg', '/dolls/studio/hair-back-bun.svg', '/dolls/studio/hair-back-curly.svg', '/dolls/studio/hair-back-long.svg', '/dolls/studio/hair-back-pixie.svg', '/dolls/studio/hair-back-pony.svg', '/dolls/studio/hair-front-bob.svg', '/dolls/studio/hair-front-bun.svg', '/dolls/studio/hair-front-curly.svg', '/dolls/studio/hair-front-long.svg', '/dolls/studio/hair-front-pixie.svg', '/dolls/studio/hair-front-pony.svg', '/dolls/studio/pack.json', '/dolls/studio/shadow.svg'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
