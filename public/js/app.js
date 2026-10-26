@@ -18,6 +18,7 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 import { browserCut } from './browsercut.js';
 import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
+import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES } from './game.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -32,7 +33,9 @@ const S = {
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
   urls: new Map(),
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
-  scene: (() => { const v = store.get('scene', 'doll'); return ['doll', 'apt', 'mirror'].includes(v) ? v : v === 'closet' ? 'apt' : 'doll'; })(), // 'mirror' is the plain mannequin: used when the doll's art can't load or you show your own photo avatar: store.get('avatar', 'mini_female_a'), station: '', aptPos: null, cas: false, casTab: 'skin', // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
+  scene: (() => { const v = store.get('scene', 'doll'); return ['doll', 'apt', 'mirror'].includes(v) ? v : v === 'closet' ? 'apt' : 'doll'; })(), // 'mirror' is the plain mannequin: used when the doll's art can't load or you show your own photo avatar: store.get('avatar', 'mini_female_a'), station: '', aptPos: null,
+  game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
+  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'skin', // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
@@ -480,7 +483,7 @@ async function runSync() {
 
 /* ───────────────────────── backup & restore ───────────────────────── */
 const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
-const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room', 'budget'];
+const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room', 'budget', 'avatar', 'game', 'events'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
 const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
@@ -796,6 +799,63 @@ function bindJoystick() {
   j.onpointerup = end; j.onpointercancel = end;
 }
 
+
+/* ───────────────────────── the daily challenge ───────────────────────── */
+const saveGame = () => store.set('game', JSON.stringify(S.game));
+const todayBand = () => todayWeather(ctx).band || '';
+/** Start today's challenge if it's a new date (or the first run). */
+function ensureDay() {
+  const date = iso(new Date());
+  if (S.game.day?.date === date) return retheme(); // mood or forecast may have arrived since this morning
+  S.events = S.events.filter((e) => e.date >= iso(new Date(Date.now() - 7 * 864e5))); // forget old events
+  S.game = rollOver(S.game, date, () => pickTheme({ date, events: S.events, mood: S.mood, band: todayBand() }));
+  // Written without the "prefs changed" stamp: an automatic rollover must not look newer than cloud settings that the startup sync is about to pull.
+  try { localStorage.setItem('game', JSON.stringify(S.game)); localStorage.setItem('events', JSON.stringify(S.events)); } catch { /* private mode */ }
+}
+/** The theme follows its inputs (event, mood, forecast) until you've been rated. A random theme stays put unless something better turns up. */
+function retheme() {
+  const d = S.game.day; if (!d || d.stars || d.ended) return;
+  const theme = pickTheme({ date: d.date, events: S.events, mood: S.mood, band: todayBand() });
+  if (d.theme.source === 'random' && theme.source === 'random') return;
+  if (JSON.stringify(theme) === JSON.stringify(d.theme)) return;
+  S.game = { ...S.game, day: { ...d, theme } }; saveGame();
+}
+const streakNow = () => wearStreak(S.wears, iso(new Date()));
+const hasOutfit = () => Object.keys(S.outfit).some((k) => itemById(S.outfit[k]));
+
+function gameBarHTML(big) {
+  const d = S.game.day; if (!d) return '';
+  const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
+  const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. ${aptOn() ? 'Head to bed' : 'Tap End the day'} to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
+  return `<div class="gamebar ${big ? 'big' : ''}" role="region" aria-label="Today’s challenge">
+    <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
+    <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
+    <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
+      <span class="gb-meter" role="meter" aria-label="Energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.energy}"><span aria-hidden="true">⚡</span><i style="width:${d.energy}%"></i></span>
+      <span class="gb-meter mood" role="meter" aria-label="Mood" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.mood}"><span aria-hidden="true">${d.mood >= 70 ? '😄' : d.mood >= 40 ? '🙂' : '😐'}</span><i style="width:${d.mood}%"></i></span></div>
+    ${d.phase === 'done' ? '' : `<button class="primary gb-rate" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>`}${d.phase === 'evening' && !aptOn() ? `<button class="ghost gb-end" data-act="endday"><span aria-hidden="true">🌙</span> End the day (log this outfit)</button>` : ''}</div>`;
+}
+const refreshGame = () => { document.querySelectorAll('.gamebar').forEach((b) => (b.outerHTML = gameBarHTML(b.classList.contains('big')))); apt?.setGuide(guideFor({ game: S.game, hasOutfit: hasOutfit() })); };
+
+function rateNow() {
+  ensureDay();
+  const d = S.game.day, worn = outfitItems(S.outfit), rating = rateOutfit({ worn, theme: d.theme, band: todayBand(), counts: wearCounts() });
+  if (!rating) return toast('Dress the doll first');
+  const { game, paid } = applyRating(S.game, rating, { streak: streakNow() }); S.game = game; saveGame();
+  openModal();
+  paintSheet(`<div class="reveal" role="status"><div class="stars" role="img" aria-label="${rating.stars} out of 5 stars">${[1, 2, 3, 4, 5].map((n) => `<span class="star ${n <= rating.stars ? 'on' : ''}" style="--i:${n}" aria-hidden="true">★</span>`).join('')}</div>
+    <p class="score"><b>${rating.score}</b>/100 for “${esc(d.theme.title)}”</p>
+    <p class="coins-earned">${paid ? `+<b>${paid}</b> <span aria-hidden="true">🪙</span> coins` : 'No new coins: you already earned these today. Beat your best for more.'}</p>
+    <ul class="parts">${rating.parts.map((p) => `<li><span>${esc(p.label)}</span><span class="pbar" aria-hidden="true"><i style="width:${(100 * p.got) / p.max}%"></i></span><b>${p.got}/${p.max}</b><small>${esc(p.note)}</small></li>`).join('')}</ul>
+    <p class="muted">${esc(rating.tip)}</p>
+    <div class="row" style="margin-top:12px"><button class="ghost" id="rwclose">Keep dressing</button><button class="primary grow" id="rwbed">🛏️ Go to bed</button></div>
+    ${reducedMotion() ? '' : `<div class="confetti" aria-hidden="true">${Array.from({ length: rating.stars * 8 }, (_, i) => `<span style="--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.12}s;--c:${['#ff5c93', '#ffd23f', '#5ad1ff', '#9b6bff', '#2fb892'][i % 5]}"></span>`).join('')}</div>`}</div>`, 'Your look');
+  $('#rwclose').onclick = () => { closeModal(); refreshGame(); if (S.view === 'tryon') renderTryon(); };
+  $('#rwbed').onclick = () => { closeModal(); refreshGame(); if (aptOn()) apt?.walkToStation('bed'); else $('.gb-end')?.focus(); };
+  refreshGame();
+}
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 /* ───────────────────────── the 3D apartment ───────────────────────── */
 let apt = null, aptLoad = null; // the engine, loaded on demand
 const aptOn = () => S.scene === 'apt' && webglOK && store.get('flat', '') !== '1';
@@ -812,6 +872,7 @@ function renderApartment() {
     ${sceneBar()}
     <div class="room world apt">
       <div class="stage" id="stage"><p class="muted loading" role="status">Opening your apartment…</p></div>
+      ${gameBarHTML(true)}
       <progress class="aptbar" id="aptbar" max="100" value="0" aria-label="Loading the apartment"></progress>
       <p class="world-hint" id="whint" role="status">Drag the stick, or tap the floor, to walk. Step on a glowing circle to use it.</p>
       <div class="joy" id="joy" aria-hidden="true"><span class="joy-knob"></span></div>
@@ -832,7 +893,7 @@ async function mountApartment() {
     await engine.start({ el, stations: aptStations(), look: aptLook(), avatar: S.avatar, pos: S.aptPos, onNear: aptNear, onEnter: aptEnter, onProgress: (f) => { const b = $('#aptbar'); if (b) b.value = Math.round(f * 100); } });
   } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
   if (!aptOn() || !$('#stage')) return engine.stop();
-  $('#aptbar')?.remove(); engine.setLabel('Your apartment. Use the stick or the arrow keys to walk, or the buttons below to go to a station.');
+  $('#aptbar')?.remove(); refreshGame(); engine.setLabel('Your apartment. Use the stick or the arrow keys to walk, or the buttons below to go to a station.');
   S.aptSig = S.items.map((i) => i.id).join();
   if (S.station) engine.setPaused(true);
 }
@@ -846,6 +907,7 @@ function aptEnter(type) {
   openStation(type);
 }
 function updateAptUI() {
+  refreshGame();
   if (S.station) refreshStation();
   apt?.setLook(aptLook());
 }
@@ -880,18 +942,19 @@ function refreshStation(focusTitle = false) {
   } else if (S.station === 'vanity') {
     body = `<div class="st-two"><div class="st-doll">${small}</div><div class="st-main">${casHTML().replace(/<button data-act="casclose"[^>]*>.*?<\/button>/, '')}</div></div>`;
   } else if (S.station === 'bed') {
-    const stk = wearStreak(S.wears, iso(new Date())), today = S.wears.find((w) => w.date === iso(new Date()));
+    const d = S.game.day, stk = streakNow();
+    const lead = d.phase === 'done' ? 'Day done. Sweet dreams, see you tomorrow! 🌙' : !Object.keys(worn).length ? 'Dress the doll first (Wardrobe station), then come back to end the day.' : d.stars ? `You scored ${d.stars}★ today. Ready to end the day?` : 'Rate your look at the mirror first for coins, or end the day now.';
     body = `<div class="st-two"><div class="st-doll">${small}</div><div class="st-main">
-      <p class="st-lead">${today ? 'You already logged today’s outfit. Sleep tight! 🌙' : Object.keys(worn).length ? 'Wearing this today? Log it before you turn in.' : 'Dress the doll first (Wardrobe station), then come back to log it.'}</p>
-      ${stk ? `<p class="muted" role="status"><span aria-hidden="true">🔥</span> ${stk}-day outfit streak</p>` : ''}${weatherLine()}
-      <div class="row"><button class="primary grow" data-act="wearToday" ${Object.keys(worn).length ? '' : 'disabled'}><span aria-hidden="true">📅</span> I wore this today</button><button class="ghost" data-act="stgo" data-v="wardrobe">Change outfit</button></div></div></div>`;
+      <p class="st-lead">${lead}</p>
+      <p class="muted" role="status"><span aria-hidden="true">🪙</span> ${S.game.coins} coins${stk ? ` · <span aria-hidden="true">🔥</span> ${stk}-day streak` : ''} · <span aria-hidden="true">⚡</span> energy ${d.energy}</p>${weatherLine()}
+      <div class="row"><button class="primary grow" data-act="endday" ${d.phase === 'done' || !Object.keys(worn).length ? 'disabled' : ''}><span aria-hidden="true">🌙</span> End the day (log this outfit)</button><button class="ghost" data-act="stgo" data-v="mirror">Back to the mirror</button></div></div></div>`;
   }
   ui.innerHTML = `<div class="st-card" role="dialog" aria-modal="true" aria-labelledby="sttitle"><header class="st-head"><h2 id="sttitle" tabindex="-1"><span aria-hidden="true">${st[2]}</span> ${st[1]}</h2><button class="ghost st-close" data-act="stclose" aria-label="Back to the apartment">✕ Back</button></header><div class="st-body">${body}</div></div>`;
   const sb = ui.querySelector('.st-body'); if (sb) sb.scrollTop = keep;
   if (focusTitle) $('#sttitle', ui).focus(); else if (focus?.act) ui.querySelector(`[data-act="${focus.act}"]${focus.id ? `[data-id="${focus.id}"]` : focus.v ? `[data-v="${focus.v}"]` : ''}`)?.focus({ preventScroll: true });
 }
 
-function renderTryon() { if (aptOn()) return renderApartment(); leaveApt(); return renderMirror(); }
+function renderTryon() { ensureDay(); if (aptOn()) return renderApartment(); leaveApt(); return renderMirror(); }
 
 function renderMirror() {
   if (dollOn() && S.drawer === 'fit') S.drawer = 'looks'; // the doll's fit controls sit right under it instead
@@ -907,6 +970,7 @@ function renderMirror() {
   <div class="dress ${dollOn() ? 'dollmode' : ''}">
     <div class="dress-left">
       ${sceneBar()}
+      ${dollOn() ? gameBarHTML(false) : ''}
       <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''} theme-${roomKey}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
         <div class="wall" aria-hidden="true"><div class="window"></div><div class="art"></div><div class="plant">${ROOMS[roomKey][1]}</div></div>
         <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
@@ -1230,7 +1294,7 @@ document.addEventListener('click', async (e) => {
     case 'stgo': { closeStation(); if (v === 'mirror') return aptEnter('mirror'); apt?.walkToStation(v); return; }
     case 'cas': S.casTab = v; return renderTryon();
     case 'casclose': S.cas = false; return renderTryon();
-    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; return renderTryon();
+    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
     case 'eyes': S.eyes = v; store.set('eyes', v); return renderTryon();
     case 'lips': S.lips = v; store.set('lips', v); return renderTryon();
     case 'room': S.room = v; store.set('room', v); return renderTryon();
@@ -1269,7 +1333,13 @@ document.addEventListener('click', async (e) => {
       const r = styleMe(S.items, o, wearCounts(), todayWeather(ctx));
       if (!Object.keys(r).length) return toast(`Nothing tagged for ${o} yet`);
       S.outfit = Object.fromEntries(Object.entries(r).map(([s, i]) => [s, i.id]));
-      S.pop = true; return renderTryon();
+      S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 8); saveGame(); } return renderTryon();
+    }
+    case 'rate': return rateNow();
+    case 'endday': {
+      if (!hasOutfit()) return toast('Dress the doll first');
+      S.date = iso(new Date()); S.month = new Date(); if (!S.wears.some((w) => w.date === S.date)) await logWear(S.date, S.mood);
+      S.game = endDay(S.game); saveGame(); refreshGame(); return refreshStation();
     }
     case 'savelook': {
       if (!Object.keys(S.outfit).length) return toast('Dress the mannequin first');
@@ -1343,7 +1413,7 @@ async function openFromLink() {
 }
 
 // helpers handed to the Plan tab
-const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, mannequin, wearCounts, go, wearIds, openItemModal: (x, p) => openItemModal(x, p) };
+const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, mannequin, wearCounts, go, wearIds, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
 
 (async () => {
   await load();

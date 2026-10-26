@@ -47,6 +47,10 @@ Step on a glowing circle (or tap its chip under the room) and that station's scr
 - **Desk**: opens the planner.
 Furniture is KayKit "Furniture Bits" (CC0) and the avatar is Kenney's (CC0); about 1.7 MB of models in all (`public/assets/`, credits in `CREDITS.txt`), downloaded only when you open the apartment. Phones without WebGL, or with "flat" mode on, just get the 2D doll.
 
+## The daily challenge
+Each day has a theme: from an **event** you add in Plan (it becomes that day's dress code), else the **mood** you picked on Dress up, else a very cold or hot forecast, else a surprise. A banner shows the theme, your coins, streak, **energy** (changing the outfit costs a little; tired means fewer coins) and **mood** (set by your last rating). In the apartment a bouncing arrow points to where to go next: Wardrobe, then Mirror, then Bed.
+**Rate my look** scores the outfit out of 100 and says why, using only your own tags: fits the theme (occasion tags, 35), right for the weather (warmth tags vs the forecast, 20), colours work together (25), a complete outfit (10), fresh pieces you rarely wear (10). Stars are 90/75/58/40+; coins are 10 + 8 per star + 2 per streak day (up to 7), reduced when energy is low. You are only paid for improving on your best rating that day. **End the day** at the bed logs the outfit (streak) and closes the day; a new date brings a new theme. Coins, theme and history are saved on the device and included in backup and cloud sync. (What coins unlock comes next.)
+
 ## Cloud sync (optional)
 - **Wardrobe → Cloud sync**: enter your private sync key to keep pieces, photos, outfits, diary and appearance in step across devices. Newest edit wins; deletes sync too. Nothing is uploaded until a key is entered.
 - Backend is a dedicated Supabase project (`sync_records`, `sync_blobs`). There are no accounts: row-level security only allows requests whose `x-sync-key` header hashes to the stored SHA-256 (the key itself is never stored). The URL and publishable key in `public/js/sync.js` are public by design. Treat the sync key like a password; to rotate it, update the hash in `sync_config`.

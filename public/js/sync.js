@@ -4,7 +4,7 @@ import { all, put, del, tombstones, clearTombstones } from './db.js';
 
 export const CLOUD = { url: 'https://kyswqvjgbgztkqamkmac.supabase.co', key: 'sb_publishable_hBZiTFY0fCo7VodkXHDoYA_JeLZTz7E' }; // public by design
 const SYNCED = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist', 'renders'];
-const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room', 'budget'];
+const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room', 'budget', 'avatar', 'game', 'events'];
 const ls = {
   get: (k) => { try { return localStorage.getItem(k) || ''; } catch { return ''; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } },
