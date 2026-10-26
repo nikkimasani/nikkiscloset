@@ -14,7 +14,8 @@ import { webglOK } from './webgl.js';
 import { syncState, connect as syncConnect, disconnect as syncDisconnect, syncNow } from './sync.js';
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
-import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI } from './aitryon.js';
+import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI, productAI } from './aitryon.js';
+import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -140,6 +141,7 @@ function renderCloset() {
       ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
     </div>
     ${rails || emptyCloset()}
+    ${addPanel()}
     <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
       <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
       <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
@@ -176,13 +178,22 @@ function openItemModal(existing, preset = {}) {
     id: existing?.id || uid(), name: existing?.name || '', type: existing?.type || 'tops',
     occasions: [...(existing?.occasions || [])], brand: existing?.brand || '', color: existing?.color || null,
     price: existing?.price ?? '', bought: existing?.bought || '', season: existing?.season || 'all', ...(existing ? {} : { ...(preset.type && { type: preset.type }), ...(preset.name && { name: preset.name }), ...(preset.occasions && { occasions: preset.occasions }) }),
-    tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample, backCanvas: null, backBlob: existing?.backCutout || null, backUrl: '',
+    tolerance: 42, keep: false, canvas: null, source: null, cutout: existing?.cutout || null, sample: existing?.sample, backCanvas: null, backBlob: existing?.backCutout || null, backUrl: '', pending: preset.intake || null, palette: [], linkOpen: false, busy: '', colors: existing?.colors || [],
   };
-  openModal();
+  const seq0 = (openModal(), modalSeq);
   const paint = () => {
     paintSheet(`
-      <label class="f" for="file">Photo (a plain background works best)</label>
-      <input type="file" id="file" accept="image/*">
+      <div class="intake" role="group" aria-label="Where is the photo?">
+        <button type="button" class="srcbtn" id="srccam"><span aria-hidden="true">📷</span> Take photo</button>
+        <button type="button" class="srcbtn" id="srcpick"><span aria-hidden="true">🖼️</span> Choose photo</button>
+        <button type="button" class="srcbtn" id="srcpaste"><span aria-hidden="true">📋</span> Paste</button>
+        <button type="button" class="srcbtn ${d.linkOpen ? 'on' : ''}" id="srclink" aria-expanded="${d.linkOpen}"><span aria-hidden="true">🔗</span> From a link</button>
+      </div>
+      <input type="file" id="file" accept="image/*" hidden><input type="file" id="camfile" accept="image/*" capture="environment" hidden>
+      ${d.linkOpen ? `<div class="linkrow"><label class="f" for="plink2">Product page link</label>
+        <div class="row"><input type="url" id="plink2" class="grow" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://shop.com/…" value="${esc(d.link || '')}"><button type="button" class="ghost" id="linkgo">Get picture</button></div>
+        ${store.get('aipass', '') ? '' : '<label class="f" for="lpass">Passcode</label><input type="password" id="lpass" autocomplete="current-password">'}</div>` : ''}
+      <div id="intakemsg" class="muted" role="status" aria-live="polite">${esc(d.busy || (d.source ? '' : 'A plain background works best. You can also paste a picture (Ctrl/⌘+V) or share a link.'))}</div>
       <div class="preview" style="margin-top:10px">
         <figure><div class="box">${d.source ? `<img src="${d.source}" alt="Your original photo">` : '<span class="muted">Original</span>'}</div><figcaption class="muted">Your photo</figcaption></figure>
         <figure><div class="box" id="cutbox">${d.cutoutUrl || (existing && url(existing.id)) ? `<img id="cutimg" src="${d.cutoutUrl || url(existing.id)}" alt="Background-removed preview">` : '<span class="muted">Cutout</span>'}</div><figcaption class="muted">Mannequin-ready cutout</figcaption></figure>
@@ -190,7 +201,8 @@ function openItemModal(existing, preset = {}) {
       ${d.source ? `<label class="f" for="tol">Background removal strength: <span id="tolv">${d.tolerance}</span></label>
         <input type="range" id="tol" min="8" max="110" value="${d.tolerance}">
         <label class="row" style="margin-top:6px"><input type="checkbox" id="keep" ${d.keep ? 'checked' : ''}> Keep original background</label>
-      <div class="aibox"><div class="muted"><b>✨ AI helpers</b> — use a little of your fal credits</div>
+      <div class="aibox"><div class="muted"><b>✨ AI helpers</b> — cutout and details use a little of your fal credits. With your passcode saved they run on every new photo.</div>
+        <label class="row" style="margin-top:6px"><input type="checkbox" id="aiauto" ${store.get('aiauto', '1') !== '0' ? 'checked' : ''}> Run automatically on new photos</label>
         <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
         <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aicut">${d.aiCanvas ? 'Redo AI cutout' : 'Cleaner cutout'}</button>${d.aiCanvas ? '<button type="button" class="ghost" id="aiundo">Use the on-device cutout</button>' : ''}<button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
         <div id="aimsg" class="muted" role="status" aria-live="polite">${esc(d.aiMsg || '')}</div></div>` : ''}
@@ -198,7 +210,7 @@ function openItemModal(existing, preset = {}) {
         <input type="file" id="backfile" accept="image/*">
         ${d.backUrl || d.backBlob ? `<div class="row" style="margin-top:8px"><img class="backthumb" src="${d.backUrl || (existing && url(existing.id + ':back')) || ''}" alt="Back of the piece" width="56" height="56"><button type="button" class="ghost" id="backrm">Remove back photo</button></div>` : ''}</div>
       <label class="f" for="name">Name</label><input type="text" id="name" value="${esc(d.name)}" placeholder="e.g. Black satin cami">
-      <div class="row"><div class="grow"><label class="f" for="type">Type</label>
+      <div class="row"><div class="grow"><label class="f" for="type">Type${d.typeGuess ? ' <span class="muted">· guessed from the name, check it</span>' : ''}</label>
         <select id="type">${Object.entries(TYPES).map(([k, v]) => `<option value="${k}" ${k === d.type ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
         <div class="grow"><label class="f" for="brand">Brand (optional)</label><input type="text" id="brand" value="${esc(d.brand)}"></div></div>
       <div class="row"><div class="grow"><label class="f" for="price">Price paid, $ (optional)</label><input type="number" id="price" min="0" step="0.01" inputmode="decimal" value="${esc(String(d.price))}"></div>
@@ -208,10 +220,10 @@ function openItemModal(existing, preset = {}) {
       <label class="f" id="occl">Occasions</label>
       <div class="chips" id="occs" role="group" aria-labelledby="occl">${OCCASIONS.map((o) => `<button type="button" class="chip ${d.occasions.includes(o) ? 'on' : ''}" aria-pressed="${d.occasions.includes(o)}" data-o="${o}">${o}</button>`).join('')}</div>
       <label class="f" for="color">Main colour ${d.color ? `— ${esc(d.color.name)}` : ''}</label>
-      <input type="color" id="color" value="${d.color?.hex || '#888888'}" style="width:70px;height:34px;padding:0;border:0;background:none">
+      <div class="swatches" role="group" aria-label="Colours found in the photo">${d.palette.map((c) => `<button type="button" class="swatch ${d.color?.hex === c.hex ? 'on' : ''}" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${esc(colorName(c.hex))}" aria-pressed="${d.color?.hex === c.hex}"></button>`).join('')}<input type="color" id="color" value="${d.color?.hex || '#888888'}" aria-label="Pick any colour" style="width:44px;height:34px;padding:0;border:0;background:none"></div>
       <div class="row" style="margin-top:18px;justify-content:space-between">
         <span>${existing ? '<button class="ghost danger" id="rm">Delete</button>' : ''}</span>
-        <span class="row"><button class="ghost" id="cancel">Cancel</button><button class="primary" id="save">Save to closet</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
+        <span class="row"><button class="ghost" id="cancel">Cancel</button>${existing ? '' : '<button class="ghost" id="saveadd">Save &amp; add another</button>'}<button class="primary" id="save">Save to closet</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
     wire();
   };
 
@@ -219,8 +231,9 @@ function openItemModal(existing, preset = {}) {
     if (!d.base) return;
     d.canvas = d.aiCanvas || (d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance }));
     d.cutoutUrl = d.canvas.toDataURL('image/png');
-    const pal = palette(d.canvas, 1)[0];
-    if (pal) d.color = { hex: pal.hex, name: colorName(pal.hex) };
+    d.palette = palette(d.canvas, 4).filter((c) => c.share > 0.04);
+    const pal = d.palette[0];
+    if (pal && !d.colorPicked) d.color = { hex: pal.hex, name: colorName(pal.hex) };
   };
 
   function wire() {
@@ -235,17 +248,68 @@ function openItemModal(existing, preset = {}) {
     $('#price').oninput = (e) => (d.price = e.target.value);
     $('#bought').oninput = (e) => (d.bought = e.target.value);
     $('#season').onchange = (e) => (d.season = e.target.value);
-    $('#type').onchange = (e) => (d.type = e.target.value);
-    $('#color').oninput = (e) => (d.color = { hex: e.target.value, name: colorName(e.target.value) });
-    $('#file').onchange = async (e) => {
-      const f = e.target.files[0]; if (!f) return;
+    $('#type').onchange = (e) => { d.type = e.target.value; d.typeGuess = false; };
+    $('#color').oninput = (e) => { d.color = { hex: e.target.value, name: colorName(e.target.value) }; d.colorPicked = true; };
+    const ingestFile = async (f, meta = {}) => {
       try {
         const { img, url: u } = await loadImage(f);
-        d.source = u; d.base = toCanvas(img); d.photoSeq = (d.photoSeq || 0) + 1;
-        if (!d.name) { d.name = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40); d.autoName = true; }
+        d.source = u; d.base = toCanvas(img); d.photoSeq = (d.photoSeq || 0) + 1; d.colorPicked = false; d.busy = ''; d.fromShop = !!meta.title; // a shop's own title and category beat the AI's guess
+        const title = meta.title || f.name?.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40) || '';
+        if (!d.name.trim() || d.autoName) { d.name = meta.title ? tidyTitle(meta.title, meta.brand) : title; d.autoName = !!d.name; }
+        if (meta.brand && !d.brand.trim()) d.brand = meta.brand;
+        if (meta.price && d.price === '') d.price = String(meta.price);
+        const guess = guessType(`${meta.title || ''} ${title}`);
+        if (guess && !existing) { d.type = guess; d.typeGuess = true; }
         d.aiCanvas = null; d.aiMsg = '';
-        recut(); paint();
+        recut(); paint(); autoAI();
       } catch (err) { toast(err.message); }
+    };
+    const fromData = async (dataUri, meta) => ingestFile(await (await fetch(dataUri)).blob(), meta);
+    const say = (m) => { d.busy = m; const el = $('#intakemsg'); if (el) el.textContent = m; };
+    $('#file').onchange = (e) => { const f = e.target.files[0]; if (f) ingestFile(f); };
+    $('#camfile').onchange = (e) => { const f = e.target.files[0]; if (f) ingestFile(f); };
+    $('#srcpick').onclick = () => $('#file').click();
+    $('#srccam').onclick = () => $('#camfile').click();
+    $('#srclink').onclick = () => { d.linkOpen = !d.linkOpen; paint(); if (d.linkOpen) $('#plink2').focus(); };
+    const fetchLink = async (link) => {
+      const pass = store.get('aipass', '') || $('#lpass')?.value.trim();
+      if (!pass) { d.linkOpen = true; d.link = link; paint(); say('Enter your passcode to fetch links.'); $('#lpass')?.focus(); return; }
+      store.set('aipass', pass); d.link = link; say('Opening the page…'); const seq = modalSeq;
+      try {
+        const r = await productAI(link, pass);
+        if (seq !== modalSeq) return;
+        d.linkOpen = false; await fromData(r.image, { title: r.title, brand: r.brand, price: r.price });
+        toast(r.title ? `Got “${tidyTitle(r.title, r.brand)}” from ${r.host}` : `Got the picture from ${r.host}`);
+      } catch (err) { if (seq === modalSeq) say(`${err.message} You can also save the picture and use Choose photo.`); }
+    };
+    if ($('#linkgo')) { $('#linkgo').onclick = () => { const l = firstLink($('#plink2').value); if (!l) return say('Paste a link that starts with https://'); fetchLink(l); }; $('#plink2').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#linkgo').click(); } }; }
+    // Paste: ⌘/Ctrl+V anywhere in the dialog, or the button (iPhone Safari asks "Allow Paste" once per paste)
+    const takeClipboard = async (items, text) => {
+      const img = items.find((x) => x.type?.startsWith('image/'));
+      if (img) return ingestFile(img);
+      const l = firstLink(text); if (l) return fetchLink(l);
+      say('Nothing usable on the clipboard. Copy a picture or a product link first, then tap Paste.');
+    };
+    $('#srcpaste').onclick = async () => {
+      try {
+        const clip = await navigator.clipboard.read(), files = [];
+        for (const it of clip) { const t = it.types.find((x) => x.startsWith('image/')); if (t) files.push(new File([await it.getType(t)], 'pasted.png', { type: t })); }
+        let text = ''; if (!files.length) { const tt = clip.flatMap((it) => (it.types.includes('text/plain') ? [it] : []))[0]; text = tt ? await (await tt.getType('text/plain')).text() : ''; }
+        takeClipboard(files, text);
+      } catch { try { takeClipboard([], await navigator.clipboard.readText()); } catch { say('Your browser blocked reading the clipboard. Press ⌘/Ctrl+V in this window, or use Choose photo.'); } }
+    };
+    if (!d.pasteHook) {
+      d.pasteHook = (e) => {
+        if (modalSeq !== seq0 || $('#modal').hidden) return document.removeEventListener('paste', d.pasteHook);
+        if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== 'file' && !e.clipboardData?.files?.length) return; // normal typing paste
+        e.preventDefault(); takeClipboard([...(e.clipboardData?.files || [])], e.clipboardData?.getData('text') || '');
+      };
+      document.addEventListener('paste', d.pasteHook);
+    }
+    // With a saved passcode, a new photo is cut out and described by the AI on its own (the on-device cutout shows first, instantly).
+    const autoAI = () => {
+      const pass = store.get('aipass', ''); if (!pass || store.get('aiauto', '1') === '0' || !d.base) return;
+      d.autoRun?.(pass);
     };
     $('#backfile').onchange = async (e) => {
       const f = e.target.files[0]; if (!f) return;
@@ -256,10 +320,10 @@ function openItemModal(existing, preset = {}) {
       } catch (err) { toast(err.message); }
     };
     if ($('#backrm')) $('#backrm').onclick = () => { d.backCanvas = null; d.backBlob = null; d.backUrl = ''; paint(); };
+    if ($('#aiauto')) $('#aiauto').onchange = (e) => store.set('aiauto', e.target.checked ? '1' : '0');
     const mpass = () => { const v = $('#mpass').value.trim(); if (!v) { toast('Enter your passcode first'); return null; } store.set('aipass', v); return v; };
-    const aiBusy = (msg) => { const el = $('#aimsg'); if (el) el.textContent = msg; $('#aicut').disabled = $('#aitag').disabled = !!msg.endsWith('…'); };
-    if ($('#aicut')) $('#aicut').onclick = async () => {
-      const pass = mpass(); if (!pass) return;
+    const aiBusy = (msg) => { const el = $('#aimsg'); if (el) el.textContent = msg; if ($('#aicut')) $('#aicut').disabled = $('#aitag').disabled = !!msg.endsWith('…'); };
+    const runCut = async (pass) => {
       aiBusy('Cutting it out…');
       const seq = modalSeq, photo = d.photoSeq;
       try {
@@ -270,16 +334,14 @@ function openItemModal(existing, preset = {}) {
         recut(); paint();
       } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
-    if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.aiMsg = ''; recut(); paint(); };
-    if ($('#aitag')) $('#aitag').onclick = async () => {
-      const pass = mpass(); if (!pass) return;
+    const runTag = async (pass) => {
       aiBusy('Looking at it…');
       const seq = modalSeq, photo = d.photoSeq;
       try {
         const t = await tagAI(d.base, pass), bits = [];
         if (seq !== modalSeq || photo !== d.photoSeq) return;
-        if (t.name && (!d.name.trim() || d.autoName)) { d.name = t.name; d.autoName = false; bits.push(t.name); }
-        if (t.type) { d.type = t.type; bits.push(TYPES[t.type].label); }
+        if (t.name && !d.fromShop && (!d.name.trim() || d.autoName)) { d.name = t.name; d.autoName = false; bits.push(t.name); }
+        if (t.type && !(d.fromShop && d.typeGuess)) { d.type = t.type; d.typeGuess = false; bits.push(TYPES[t.type].label); }
         if (t.season) d.season = t.season;
         if (t.occasions.length) { d.occasions = t.occasions; bits.push(t.occasions.join(', ')); }
         if (t.brand && !d.brand.trim()) d.brand = t.brand;
@@ -287,6 +349,17 @@ function openItemModal(existing, preset = {}) {
         paint();
       } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
+    d.autoRun = async (pass) => { await Promise.all([runCut(pass), runTag(pass)]); };
+    if ($('#aicut')) $('#aicut').onclick = () => { const pass = mpass(); if (pass) runCut(pass); };
+    if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.aiMsg = ''; recut(); paint(); };
+    if ($('#aitag')) $('#aitag').onclick = () => { const pass = mpass(); if (pass) runTag(pass); };
+    $('.swatches').onclick = (e) => { const h = e.target.dataset?.hex; if (!h) return; d.color = { hex: h, name: colorName(h) }; d.colorPicked = true; paint(); };
+    if (d.pending) { // opened from a deep link or a shared file
+      const p = d.pending; d.pending = null;
+      if (p.file) ingestFile(p.file);
+      else if (p.mode === 'link') { d.linkOpen = true; d.link = p.url; if (p.url) fetchLink(p.url); else { paint(); $('#plink2')?.focus(); } }
+      else if (p.mode === 'paste') { say('Tap Paste to bring in what you copied.'); $('#srcpaste').focus(); }
+    }
     const tol = $('#tol');
     if (tol) {
       if (d.aiCanvas) { tol.disabled = true; $('#keep').disabled = true; }
@@ -298,14 +371,14 @@ function openItemModal(existing, preset = {}) {
       await removeItems([existing.id]);
       closeModal(); render();
     };
-    $('#save').onclick = async () => {
+    const save = async (again) => {
       if (!d.canvas && !d.cutout) return toast('Add a photo first 📸');
       if (!d.name.trim()) return toast('Give it a name');
       const cutout = d.canvas ? await canvasToBlob(d.canvas, 'image/webp', 0.92) : d.cutout; // WebP keeps the transparency at a fraction of PNG's size (browsers without WebP encoding fall back to PNG)
       const backCutout = d.backCanvas ? await canvasToBlob(d.backCanvas, 'image/webp', 0.92) : d.backBlob || undefined;
       const item = {
         ...(existing || {}), backCutout, id: d.id, name: d.name.trim(), type: d.type, occasions: d.occasions, brand: d.brand.trim(),
-        color: d.color || existing?.color, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
+        color: d.color || existing?.color, colors: d.palette.length ? d.palette.map((c) => c.hex) : existing?.colors, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
         price: parseFloat(d.price) > 0 ? Math.round(parseFloat(d.price) * 100) / 100 : undefined, bought: d.bought || undefined, season: d.season,
         createdAt: existing?.createdAt || Date.now(), updatedAt: Date.now(),
       };
@@ -314,8 +387,11 @@ function openItemModal(existing, preset = {}) {
       S.urls.delete(item.id + ':back'); if (backCutout) url(item.id + ':back', backCutout);
       url(item.id, item.cutout);
       if (preset.onSaved) await preset.onSaved(item);
-      closeModal(); toast(existing ? 'Updated ✓' : 'Added to your closet ✓'); render();
+      closeModal(); toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your closet ✓'); render();
+      if (again) openItemModal(undefined, { type: item.type });
     };
+    $('#save').onclick = () => save(false);
+    if ($('#saveadd')) $('#saveadd').onclick = () => save(true);
   }
   paint();
 }
@@ -336,6 +412,26 @@ async function removeItems(ids) {
 
 /* ───────────────────────── cloud sync ───────────────────────── */
 let syncMsg = '';
+/** Ways to get pieces in from other apps. iPhones can't use the web "share to app" feature, so this explains a Shortcut instead. */
+function addPanel() {
+  const base = location.origin;
+  return `<section class="panel" aria-label="Add from other apps"><h3>Add from other apps</h3>
+    <p class="muted">Tap <b>+ Add</b>, then <b>Paste</b> to bring in a copied picture or product link, or <b>From a link</b> to type one in.</p>
+    <details><summary>iPhone: add from the Share menu (Shortcut)</summary>
+      <p class="muted">iPhones can’t share straight into a web app, so make a one-time Shortcut. It takes about two minutes:</p>
+      <ol class="muted steps">
+        <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, and name it “Add to Closet”.</li>
+        <li>Tap the <b>ⓘ</b> button and turn on <b>Show in Share Sheet</b>. Under accepted types keep <b>Images</b>, <b>URLs</b> and <b>Text</b>.</li>
+        <li>For pictures: add <b>Copy to Clipboard</b> (input: Shortcut Input), then add <b>Open URLs</b> and enter <code>${esc(base)}/?add=paste</code>. When the closet opens, tap <b>Paste</b> and allow it.</li>
+        <li>For product pages: add <b>URL Encode</b> (input: Shortcut Input), then <b>Open URLs</b> with <code>${esc(base)}/?add=link&amp;u=</code> followed by the encoded text. The link is fetched automatically (needs your passcode saved once).</li>
+        <li>Then in Safari, Photos, Pinterest or a shop app: tap <b>Share → Add to Closet</b>.</li>
+      </ol>
+      <p class="muted">I can’t ship a ready-made Shortcut file (Apple requires them to be signed), and I haven’t been able to try this on a real iPhone, so tell me if a step differs on your iOS version.</p>
+    </details>
+    <details><summary>Android / desktop: install the app to share into it</summary>
+      <p class="muted">After you install this app (browser menu → <b>Install</b>), it appears in the Share menu for pictures and links.</p></details></section>`;
+}
+
 function syncPanel() {
   const st = syncState();
   return `<section class="panel" aria-label="Cloud sync"><h3>Cloud sync</h3>
@@ -1212,6 +1308,19 @@ document.addEventListener('paste', (e) => {
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
 
+/** /?add=paste|link|photo (from an iOS Shortcut) or /?add=shared (a file or link shared into the installed app). */
+async function openFromLink() {
+  const dl = deepLink(location.search);
+  if (!dl) return;
+  history.replaceState(null, '', location.pathname);
+  if (dl.mode === 'shared') {
+    let file = null;
+    try { const c = await caches.open('closet-share'); const r = await c.match('/shared/photo'); if (r) { file = new File([await r.blob()], 'shared.png', { type: r.headers.get('content-type') || 'image/png' }); await c.delete('/shared/photo'); } } catch { /* no cache access */ }
+    return openItemModal(undefined, { intake: file ? { file } : { mode: 'link', url: dl.url } });
+  }
+  openItemModal(undefined, { intake: dl });
+}
+
 // helpers handed to the Plan tab
 const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, mannequin, wearCounts, go, wearIds, openItemModal: (x, p) => openItemModal(x, p) };
 
@@ -1223,6 +1332,7 @@ const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, manneq
   window.__stage3d = stage3d;
   try { const m = sessionStorage.getItem('synced'); if (m) { sessionStorage.removeItem('synced'); syncMsg = m; toast(m); } } catch { /* private mode */ }
   if (syncState().on) runSync(); // pick up changes from other devices
+  openFromLink();
   try { const n = sessionStorage.getItem('restored'); if (n) { sessionStorage.removeItem('restored'); toast(`Restored ${n} piece${n === '1' ? '' : 's'} from your backup`); } } catch { /* private mode */ }
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('/sw.js').catch(() => {}); // lets it install as an app and open offline
 })();

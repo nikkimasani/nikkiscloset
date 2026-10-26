@@ -65,3 +65,5 @@ export async function callAI(path, body, passcode) {
 export const cutoutAI = async (canvas, passcode) => (await callAI('/api/cutout', { image: canvas.toDataURL('image/jpeg', 0.9) }, passcode)).image;
 export const tagAI = async (canvas, passcode) => (await callAI('/api/tag', { image: canvas.toDataURL('image/jpeg', 0.85) }, passcode)).tags;
 export const pinAI = async (url, passcode) => (await callAI('/api/pin', { url }, passcode)).image;
+/** A shop's product page -> { title, brand, price, host, image } (the server fetches it, so shops' CORS rules don't apply). */
+export const productAI = (url, passcode) => callAI('/api/product', { url }, passcode);

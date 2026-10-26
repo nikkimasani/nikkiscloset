@@ -49,6 +49,9 @@
     },
     "api/pin.js": {
       "maxDuration": 20
+    },
+    "api/product.js": {
+      "maxDuration": 25
     }
   }
 }

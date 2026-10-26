@@ -164,3 +164,52 @@ import { matchInspo } from '../public/js/stylist.js';
 test('inspo matching copes with a picture that has no usable colours', () => {
   assert.deepEqual(matchInspo(closet, [], { wanted: ['top', 'bottom'], occasion: '' }), { picks: {}, gaps: [] });
 });
+
+// ── item intake helpers and the product-page importer ──
+import { guessType, tidyTitle, firstLink, deepLink } from '../public/js/intake.js';
+import { publicUrlOk, extractProduct, handleProduct } from '../lib/ai.js';
+
+test('category guess reads the words, most specific first', () => {
+  assert.equal(guessType('Satin Cami Top'), 'tanks');
+  assert.equal(guessType('Denim Mini Skirt'), 'skirts');
+  assert.equal(guessType('sweater dress'), 'dresses');
+  assert.equal(guessType('Wide-Leg Jeans'), 'bottoms');
+  assert.equal(guessType('Cropped denim jacket'), 'outerwear');
+  assert.equal(guessType('IMG_2041'), null);
+  assert.equal(guessType('Leather Crossbody Bag'), 'bags');
+  assert.equal(guessType('Chunky White Sneakers'), 'shoes');
+});
+
+test('page titles are tidied and shared text yields its link', () => {
+  assert.equal(tidyTitle('Satin Cami Top | ZARA United States', 'Zara'), 'Satin Cami Top');
+  assert.equal(tidyTitle('Buy Linen Shirt - Nordstrom'), 'Linen Shirt');
+  assert.equal(tidyTitle('Zara Pleated Skirt', 'Zara'), 'Pleated Skirt');
+  assert.equal(firstLink('Look at this! https://shop.example.com/p/1?x=2. so cute'), 'https://shop.example.com/p/1?x=2');
+  assert.equal(firstLink('no link'), '');
+  assert.deepEqual(deepLink('?add=link&u=https%3A%2F%2Fa.com%2Fp'), { mode: 'link', url: 'https://a.com/p' });
+  assert.equal(deepLink('?add=evil'), null);
+  assert.equal(deepLink(''), null);
+});
+
+test('product importer refuses private and non-https addresses', () => {
+  for (const u of ['https://shop.example.com/p/1', 'https://www.zara.com/us/en/x.html']) assert.ok(publicUrlOk(u), u);
+  for (const u of ['http://shop.com/p', 'https://127.0.0.1/', 'https://10.0.0.5/x', 'https://[::1]/', 'https://localhost/', 'https://router.local/', 'https://a.internal/x', 'https://user:pw@shop.com/', 'https://shop.com:8443/', 'file:///etc/passwd', 'javascript:alert(1)', 'https://metadata/']) assert.ok(!publicUrlOk(u), u);
+  assert.ok(publicUrlOk('http://localhost:5198/p', ['localhost:5198']));
+});
+
+test('product page details come from JSON-LD first, then meta tags', () => {
+  const ld = '<script type="application/ld+json">{"@graph":[{"@type":"Product","name":"Linen Shirt","brand":{"@type":"Brand","name":"Everlane"},"image":["https://cdn.x.com/a.jpg"],"offers":{"@type":"Offer","price":"68.00"}}]}</script>';
+  assert.deepEqual(extractProduct(ld), { title: 'Linen Shirt', brand: 'Everlane', price: 68, image: 'https://cdn.x.com/a.jpg' });
+  const meta = '<title>Plain page</title><meta property="og:title" content="Wool &amp; Silk Scarf"><meta property="og:image" content="/img/s.png"><meta property="product:price:amount" content="1,250.50">';
+  const m = extractProduct(meta);
+  assert.equal(m.title, 'Wool & Silk Scarf'); assert.equal(m.image, '/img/s.png'); assert.equal(m.price, 1250.5); assert.equal(m.brand, '');
+  assert.equal(extractProduct('<html></html>').image, null);
+});
+
+test('product endpoint demands the passcode but not a fal key', async () => {
+  const req = (pass, url = 'https://shop.example.com/p') => new Request('http://x/api/product', { method: 'POST', headers: { 'x-app-passcode': pass ?? '' }, body: JSON.stringify({ url }) });
+  assert.equal((await handleProduct(req('x'), {})).status, 503);
+  assert.equal((await handleProduct(req('wrong'), { APP_PASSCODE: 'right' })).status, 401);
+  assert.equal((await handleProduct(req('right', 'https://127.0.0.1/x'), { APP_PASSCODE: 'right' })).status, 400);
+  assert.equal((await handleProduct(new Request('http://x', { method: 'GET' }), { APP_PASSCODE: 'right' })).status, 405);
+});
