@@ -858,7 +858,7 @@ try {
     await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForSelector('.limitnote');
     await pS.waitForFunction(() => !document.querySelector('.startertile.run'));
     const okN = await pS.locator('.startertile.ok').count();
-    ok(okN === 8 && /carry on after 00:00 UTC \(in \d+h \d+m\)/.test(await pS.locator('.limitnote').innerText()), `at the daily limit the batch pauses with ${okN} made and says when it resumes`);
+    ok(okN === 8 && /carry on after 00:00 UTC \(in (\d+h )?\d+m\)/.test(await pS.locator('.limitnote').innerText()), `at the daily limit the batch pauses with ${okN} made and says when it resumes`);
     await pS.screenshot({ path: join(out, '42-starter-limit.png') });
     await pS.click('#sbcancel');
     ok(cf.used === 10000, 'at the limit the server records the day as used up');
