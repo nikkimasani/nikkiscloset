@@ -10,7 +10,7 @@ import { webglOK } from './webgl.js';
 const SRGB = THREE.SRGBColorSpace;
 export const ROOM = { x0: -7, x1: 7, z0: -6, z1: 5.5, h: 3.4 };
 const AV_R = 0.42;      // how close the avatar's centre may get to furniture
-const CAM_R = 0.45;     // how much clearance the camera keeps from furniture and walls
+const CAM_R = 0.3;      // clearance the camera keeps from furniture and walls (less than AV_R, so the avatar itself is never inside it)
 const CELL = 0.35;      // walking-grid size for finding a way round furniture
 
 /** Where each station stands and where you stand to use it. Faces: the way the avatar looks when it arrives. */
@@ -244,17 +244,38 @@ function tick(now) {
   a.blob.position.set(a.pos.x, 0.03, a.pos.z);
   // ── camera: behind and above, pulled in before it would go into furniture or a wall ──
   a.shift += (a.shiftTo - a.shift) * Math.min(1, dt * 6);
-  const portrait = a.camera.aspect < 0.8, dist = portrait ? 6.8 : 5.6, pitch = (portrait ? 0.66 : 0.52) + 0.1 * a.shift, cp = Math.cos(pitch);
+  const portrait = a.camera.aspect < 0.8, dist = portrait ? 6.8 : 5.6, base = (portrait ? 0.66 : 0.52) + 0.1 * a.shift;
   tmpTarget.set(a.pos.x, 1.0, a.pos.z);
-  tmpDir.set(Math.sin(a.yaw) * cp, Math.sin(pitch), Math.cos(a.yaw) * cp);
-  const clear = rayHit(tmpTarget, tmpDir, dist, CAM_R), goal = Math.max(1.2, clear);
+  // behind and above; if furniture is in the way, rise higher (the room is open at the top) before getting closer
+  let pitch = base, clear = 0;
+  for (const p of [base, 0.9, 1.15, 1.4]) {
+    const cp = Math.cos(p); tmpDir.set(Math.sin(a.yaw) * cp, Math.sin(p), Math.cos(a.yaw) * cp);
+    const c = rayHit(tmpTarget, tmpDir, dist, CAM_R);
+    if (c > clear) { clear = c; pitch = p; }
+    if (c >= dist * 0.85) break;
+  }
+  { const cp = Math.cos(pitch); tmpDir.set(Math.sin(a.yaw) * cp, Math.sin(pitch), Math.cos(a.yaw) * cp); }
+  const goal = Math.max(0.9, clear);
   a.camDist += (goal - a.camDist) * (goal < a.camDist ? 1 : 1 - Math.exp(-dt * 3)); // in fast, out slowly
   tmpWant.copy(tmpDir).multiplyScalar(a.camDist).add(tmpTarget);
   a.camera.position.lerp(tmpWant, 1 - Math.exp(-dt * 10));
   tmpO.copy(a.camera.position).sub(tmpTarget); const len = tmpO.length(); tmpO.divideScalar(len || 1);
   const hit = rayHit(tmpTarget, tmpO, len, CAM_R); // damping must never carry it through something
-  if (hit < len) a.camera.position.copy(tmpO.multiplyScalar(Math.max(0.8, hit)).add(tmpTarget));
+  if (hit < len) a.camera.position.copy(tmpO.multiplyScalar(Math.max(0.5, hit)).add(tmpTarget));
   a.camera.lookAt(a.pos.x, 0.95 + 0.35 * a.shift, a.pos.z);
+  // ── the guide: a bouncing arrow over the station you should go to next, and an edge arrow when it's off screen ──
+  const gd = a.guide;
+  if (gd.st) {
+    const st = gd.st; gd.arrow.visible = true; gd.arrow.position.set(st.padX, 3.55 + Math.abs(Math.sin(a.t * 4)) * 0.3, st.padZ);
+    tmpO.set(st.padX, 2.4, st.padZ).project(a.camera);
+    const inView = tmpO.z < 1 && Math.abs(tmpO.x) < 0.88 && Math.abs(tmpO.y) < 0.88;
+    gd.el.hidden = inView;
+    if (!inView) {
+      const behind = tmpO.z > 1, x = behind ? -tmpO.x : tmpO.x, y = behind ? -tmpO.y : tmpO.y, k = 0.82 / Math.max(Math.abs(x), Math.abs(y), 1e-3);
+      const w = a.el.clientWidth, h = a.el.clientHeight;
+      gd.el.style.transform = `translate(${((x * k + 1) / 2) * w}px, ${((1 - y * k) / 2) * h}px) translate(-50%, -50%) rotate(${Math.atan2(-y, x) + Math.PI / 2}rad)`;
+    }
+  } else { gd.arrow.visible = false; gd.el.hidden = true; }
   // ── stations ──
   let near = null;
   for (const st of a.stations) {
@@ -325,6 +346,9 @@ export const apartment = {
     A.blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), new THREE.MeshBasicMaterial({ map: blobTex(), transparent: true, depthWrite: false }));
     A.blob.rotation.x = -Math.PI / 2; scene.add(A.blob);
     A.grid = gridOf();
+    const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.7, 4), new THREE.MeshBasicMaterial({ color: 0xffd23f })); arrow.rotation.x = Math.PI; arrow.visible = false; scene.add(arrow);
+    const gel = document.createElement('div'); gel.className = 'guide'; gel.hidden = true; gel.setAttribute('aria-hidden', 'true'); gel.textContent = '▲'; el.append(gel);
+    A.guide = { st: null, arrow, el: gel };
     bump();
     // input
     const cv = renderer.domElement;
@@ -346,7 +370,7 @@ export const apartment = {
     const a = A; if (!a) return;
     cancelAnimationFrame(a.raf); a.ro?.disconnect(); a.watch?.stop(); A = null;
     a.scene.traverse((o) => { o.geometry?.dispose?.(); const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach((x) => x.dispose?.()); }); // shared furniture re-uploads itself if the room is opened again
-    a.avatar?.dispose(); a.renderer.dispose(); a.renderer.forceContextLoss?.(); a.renderer.domElement.remove();
+    a.guide?.el.remove(); a.avatar?.dispose(); a.renderer.dispose(); a.renderer.forceContextLoss?.(); a.renderer.domElement.remove();
   },
 
   setMove(x, y) { if (A) A.move = { x, y }; },
@@ -357,6 +381,8 @@ export const apartment = {
   async setAvatar(id, look) { if (!A) return; const old = A.avatar, a = await loadAvatar(id, { height: 1.4 }); if (!A) return; a.setLook(look); A.scene.add(a.group); A.scene.remove(old.group); old.dispose(); A.avatar = a; },
   pop() { A?.avatar.hop(); },
   where() { return A ? [A.pos.x, A.pos.z] : null; },
+  /** Point the way to a station (or nothing). */
+  setGuide(type) { if (A?.guide) A.guide.st = A.stations.find((s) => s.type === type) || null; },
   setLabel(text) { A?.renderer.domElement.setAttribute('aria-label', text); },
   walkToStation(type) { const st = A?.stations.find((s) => s.type === type); if (st) { st.armed = true; A.path = findPath(A.pos, new THREE.Vector3(st.padX, 0, st.padZ)); } },
   /** Stand somewhere sensible when the page wants you at a station already (e.g. coming back from its screen). */

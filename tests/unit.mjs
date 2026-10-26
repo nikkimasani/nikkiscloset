@@ -272,3 +272,51 @@ test('the share-target service worker redirects to absolute URLs', () => {
   assert.ok(!/Response\.redirect\((`|')\//.test(sw), 'no relative Response.redirect');
   assert.equal(new URL('/?add=shared', 'https://x.example/share').href, 'https://x.example/?add=shared');
 });
+
+// ── the game around the closet ──
+import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial } from '../public/js/game.js';
+const piece = (id, type, o = {}) => ({ id, type, name: id, occasions: [], color: { hex: '#e8dfd0' }, season: 'all', ...o });
+
+test('the daily theme comes from an event first, then a mood, then harsh weather, then luck', () => {
+  const ev = [{ date: '2026-10-26', title: 'Sam’s birthday', occasion: 'Dinner' }];
+  assert.deepEqual([pickTheme({ date: '2026-10-26', events: ev, mood: 'Brunch', band: 'cold' }).source, pickTheme({ date: '2026-10-26', events: ev }).title], ['event', 'Sam’s birthday']);
+  assert.equal(pickTheme({ date: 'x', events: ev, mood: 'Brunch', band: 'cold' }).source, 'mood');
+  assert.equal(pickTheme({ date: 'x', band: 'cold' }).source, 'weather');
+  assert.equal(pickTheme({ date: 'x', band: 'mild', rand: () => 0 }).occasion, 'Work / Office');
+  assert.equal(pickTheme({ date: 'x', events: [{ date: 'x', title: 'Gala', occasion: 'Nonsense' }] }).occasion, '', 'unknown occasions are ignored');
+});
+
+test('the rating explains itself from your tags and is fair at the extremes', () => {
+  const theme = { occasion: 'Brunch', title: 'Brunch' };
+  const good = { top: piece('t', 'tops', { occasions: ['Brunch'] }), bottom: piece('b', 'bottoms', { occasions: ['Brunch'] }), shoes: piece('s', 'shoes', { occasions: ['Brunch'] }) };
+  const r = rateOutfit({ worn: good, theme, band: 'mild' });
+  assert.equal(r.stars, 5); assert.equal(r.parts.length, 5); assert.ok(r.parts.every((p) => p.got <= p.max && p.note));
+  assert.equal(r.parts.reduce((s, p) => s + p.max, 0), 100);
+  const bad = { top: piece('t', 'tops', { season: 'light', color: { hex: '#ff0000' } }), bottom: piece('b', 'bottoms', { season: 'light', color: { hex: '#00cc00' } }) };
+  const w = rateOutfit({ worn: bad, theme, band: 'cold' }, 0);
+  assert.ok(w.stars <= 2 && /Biggest win/.test(w.tip), `${w.stars} stars: ${w.tip}`);
+  assert.equal(rateOutfit({ worn: {}, theme }), null);
+  const wxTheme = rateOutfit({ worn: good, theme: { occasion: '', title: 'Bundle up' }, band: 'cold' });
+  assert.equal(wxTheme.parts.find((p) => p.key === 'weather').max, 55, 'a weather theme leans on the weather');
+});
+
+test('coins grow with stars and streak, shrink when tired, and are only paid once per improvement', () => {
+  assert.ok(coinsFor({ stars: 5 }) > coinsFor({ stars: 2 })); assert.ok(coinsFor({ stars: 3, streak: 5 }) > coinsFor({ stars: 3, streak: 0 }));
+  assert.ok(coinsFor({ stars: 4, energy: 10 }) < coinsFor({ stars: 4, energy: 100 }));
+  let g = rollOver(initial(), '2026-10-26', () => ({ title: 'Brunch', occasion: 'Brunch' }));
+  const three = { stars: 3, score: 60 }, five = { stars: 5, score: 95 };
+  let { game, paid } = applyRating(g, three); const first = paid; assert.ok(first > 0 && game.coins === first && game.day.phase === 'evening');
+  ({ game, paid } = applyRating(game, three)); assert.equal(paid, 0, 'rating the same again pays nothing');
+  ({ game, paid } = applyRating(game, five)); assert.equal(paid, coinsFor({ stars: 5 }) - first, 'a better look pays only the difference');
+  assert.equal(game.coins, coinsFor({ stars: 5 }));
+});
+
+test('a new date starts a new day, keeps coins, and the bed ends the day', () => {
+  let g = rollOver(initial(), '2026-10-26', () => ({ title: 'A', occasion: '' })); g = { ...g, coins: 40 };
+  assert.equal(guideFor({ game: g, hasOutfit: false }), 'wardrobe'); assert.equal(guideFor({ game: g, hasOutfit: true }), 'mirror');
+  g = spendEnergy(spendEnergy(g, 8), 4); assert.equal(g.day.energy, 88);
+  g = applyRating(g, { stars: 4, score: 80 }).game; assert.equal(guideFor({ game: g, hasOutfit: true }), 'bed');
+  g = endDay(g); assert.equal(g.day.phase, 'done'); assert.equal(guideFor({ game: g, hasOutfit: true }), null); assert.equal(g.history.length, 1);
+  const next = rollOver(g, '2026-10-27', () => ({ title: 'B', occasion: '' }));
+  assert.equal(next.coins, g.coins); assert.equal(next.day.theme.title, 'B'); assert.equal(next.day.energy, 100); assert.equal(rollOver(next, '2026-10-27', () => ({ title: 'Z' })).day.theme.title, 'B', 'same day: unchanged');
+});

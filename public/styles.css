@@ -489,3 +489,42 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .st-lead { font-size: 17px; font-weight: 700; margin: 0 0 8px; }
 .room.apt .world-hint { top: auto; bottom: 14px; left: 130px; right: 124px; text-align: left; line-height: 1.2; font-size: 12px; background: #0b1a33aa; border-radius: 14px; padding: 6px 10px; }
 @media (min-width: 920px) { .room.apt .world-hint { left: 140px; right: 90px; } }
+
+/* ── the daily challenge ── */
+.gamebar { display: grid; gap: 6px; padding: 10px 12px; border-radius: 18px; background: linear-gradient(135deg, #3a1d5c, #1a2f63); border: 1px solid #ffffff30; box-shadow: 0 6px 18px #0004; }
+.gb-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .02em; }
+.gb-stats { display: flex; gap: 12px; font-size: 14px; }
+.gb-theme { font-size: 15px; line-height: 1.25; }
+.gamebar.big .gb-theme { font-size: 17px; }
+.gb-theme b { color: #ffd1e6; }
+.gb-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.gb-meta small { opacity: .75; margin-right: auto; }
+.gb-meter { position: relative; display: inline-flex; align-items: center; gap: 4px; width: 84px; height: 16px; font-size: 11px; }
+.gb-meter::after { content: ''; position: absolute; left: 18px; right: 0; top: 4px; height: 8px; border-radius: 99px; background: #ffffff25; }
+.gb-meter i { position: absolute; left: 18px; top: 4px; height: 8px; border-radius: 99px; background: linear-gradient(90deg, #5ad1ff, #7dffb0); z-index: 1; max-width: calc(100% - 18px); }
+.gb-meter.mood i { background: linear-gradient(90deg, #ffb13b, #ff5c93); }
+.gb-rate { min-height: 44px; }
+.room.apt .gamebar { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 6; padding: 8px 10px; gap: 4px; background: linear-gradient(135deg, #3a1d5ce6, #1a2f63e6); backdrop-filter: blur(4px); }
+.room.apt .gamebar .gb-rate { display: none; }
+.room.apt .gamebar .gb-meta small { display: none; }
+.guide { position: absolute; left: 0; top: 0; z-index: 5; width: 44px; height: 44px; display: grid; place-items: center; font-size: 26px; line-height: 1; color: #ffd23f; text-shadow: 0 2px 6px #000a; pointer-events: none; }
+.guide[hidden] { display: none; }
+.reveal { position: relative; text-align: center; overflow: hidden; }
+.stars { font-size: 44px; letter-spacing: 6px; }
+.star { color: #ffffff30; display: inline-block; }
+.star.on { color: #ffd23f; text-shadow: 0 0 14px #ffd23f99; animation: starpop .5s calc(var(--i) * .18s) both cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes starpop { from { transform: scale(0) rotate(-40deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.score { font-size: 18px; margin: 4px 0; }
+.score b { font-size: 30px; }
+.coins-earned { font-size: 20px; font-weight: 800; color: #ffd23f; margin: 4px 0 10px; }
+.parts { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; text-align: left; }
+.parts li { display: grid; grid-template-columns: 1fr 60px 44px; gap: 2px 8px; align-items: center; font-size: 14px; }
+.parts small { grid-column: 1 / -1; opacity: .75; }
+.pbar { height: 8px; border-radius: 99px; background: #ffffff25; overflow: hidden; }
+.pbar i { display: block; height: 100%; background: linear-gradient(90deg, #5ad1ff, #7dffb0); }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti span { position: absolute; top: -12px; left: var(--x); width: 8px; height: 14px; background: var(--c); animation: fall 1.8s var(--d) ease-in both; }
+@keyframes fall { to { transform: translateY(420px) rotate(540deg); opacity: .9; } }
+.evlist { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.evlist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+@media (prefers-reduced-motion: reduce) { .star.on, .confetti span { animation: none; } }

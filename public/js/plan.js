@@ -36,7 +36,7 @@ export const todayWeather = (c) => { const f = c.S.forecast?.find((d) => d.date 
 /* ───────────────────────── render ───────────────────────── */
 export function renderPlan(c) {
   const { S, esc, $ } = c;
-  $('#main').innerHTML = `<h2 class="view-title sr-only">Plan</h2><div class="plan">${weatherCard(c)}${weekCard(c)}${packCard(c)}${gapsCard(c)}${wishCard(c)}</div>`;
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Plan</h2><div class="plan">${weatherCard(c)}${eventsCard(c)}${weekCard(c)}${packCard(c)}${gapsCard(c)}${wishCard(c)}</div>`;
   if (S.loc && !S.forecast && !S.weatherError && !S.forecastLoading) {
     S.forecastLoading = true;
     loadForecast(c).then(() => { S.forecastLoading = false; if (S.view === 'plan') renderPlan(c); });
@@ -115,6 +115,18 @@ function wishCard(c) {
       <button class="primary" data-act="wishadd" style="margin-top:10px">Add to wishlist</button></details></section>`;
 }
 
+/** Things you're dressing for. The day's challenge theme comes from the one on today's date. */
+function eventsCard(c) {
+  const { S, esc } = c, today = c.iso(new Date()), list = S.events.map((e, i) => ({ ...e, i })).filter((e) => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+  return `<section class="panel" aria-label="Events"><h3>📌 Events</h3>
+    <p class="muted">Add what's coming up. On the day, it becomes your dress-up challenge.</p>
+    ${list.length ? `<ul class="evlist">${list.map((e) => `<li><span>${esc(dayName(e.date, true))} · <b>${esc(e.title || e.occasion)}</b>${e.occasion && e.title ? ` <small>(${esc(e.occasion)})</small>` : ''}</span><button class="ghost danger" data-act="evdel" data-i="${e.i}" aria-label="Remove ${esc(e.title || e.occasion)}"><span aria-hidden="true">×</span></button></li>`).join('')}</ul>` : ''}
+    <div class="row"><div class="grow"><label class="f" for="evdate">Date</label><input type="date" id="evdate" value="${today}" min="${today}"></div>
+      <div class="grow"><label class="f" for="evocc">Dress code</label><select id="evocc">${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select></div></div>
+    <label class="f" for="evtitle">What is it? (optional)</label><input type="text" id="evtitle" placeholder="e.g. Sam’s birthday dinner" maxlength="40">
+    <button class="primary" data-act="evadd" style="margin-top:10px">Add event</button></section>`;
+}
+
 /* ───────────────────────── actions ───────────────────────── */
 const outfitFromIds = (c, ids) => Object.fromEntries(ids.map(c.itemById).filter(Boolean).map((i) => [slotOf(i.type), i.id]));
 
@@ -132,6 +144,12 @@ function keepPackInputs(c) {
 }
 
 export const planActs = {
+  evadd(c) {
+    const date = c.$('#evdate').value, occasion = c.$('#evocc').value, title = c.$('#evtitle').value.trim().slice(0, 40);
+    if (!date) return c.toast('Pick a date');
+    c.S.events = [...c.S.events, { date, occasion, title }]; c.store.set('events', JSON.stringify(c.S.events)); c.afterEvent?.(); renderPlan(c);
+  },
+  evdel(c, el) { c.S.events = c.S.events.filter((_, i) => i !== +el.dataset.i); c.store.set('events', JSON.stringify(c.S.events)); c.afterEvent?.(); renderPlan(c); },
   async wxcity(c) {
     const q = c.$('#locq').value.trim();
     if (!q) return c.toast('Type a city first');

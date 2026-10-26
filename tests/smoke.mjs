@@ -59,7 +59,7 @@ const ok = (c, msg) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${msg}`); if (!c) 
 
 try {
   await page.goto(`http://localhost:${PORT}/`);
-  ok(await page.locator('.empty').isVisible(), 'empty state shows');
+  await page.waitForSelector('.empty'); ok(await page.locator('.empty').isVisible(), 'empty state shows');
 
   // A fake "photo": a red dress-ish blob on a beige wall with noise-free background.
   const dataUrl = await page.evaluate(() => {
@@ -299,6 +299,32 @@ try {
     ok(bad4.length === 0, `axe (customize tab): ${bad4.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
     await p3.click('[data-act=resetlook]');
     ok((await p3.evaluate(() => localStorage.getItem('shape'))) === '', 'Reset appearance clears customizations');
+    // ── the daily challenge: theme, rating with reasons, coins, streak ──
+    ok(/Theme:/.test(await p3.locator('.gamebar .gb-theme').innerText()), 'the day starts with a themed challenge banner');
+    const coins0 = await p3.evaluate(() => window.__closet.game.coins), energy0 = await p3.evaluate(() => window.__closet.game.day.energy);
+    ok(energy0 < 100, `changing the outfit costs a little energy (${energy0}/100)`);
+    await p3.click('[data-act=rate]'); await p3.waitForSelector('.reveal .star.on');
+    const rv = await p3.evaluate(() => ({ stars: document.querySelectorAll('.reveal .star.on').length, parts: document.querySelectorAll('.reveal .parts li').length, coins: window.__closet.game.coins, notes: [...document.querySelectorAll('.reveal .parts small')].every((n) => n.textContent.length > 5) }));
+    ok(rv.stars >= 1 && rv.parts === 5 && rv.notes && rv.coins > coins0, `rating shows stars (${rv.stars}), five reasons from your tags, and pays coins (${coins0} -> ${rv.coins})`);
+    await p3.evaluate(axeSource);
+    const rr = await p3.evaluate(() => window.axe.run(document.querySelector('#modal'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    ok(rr.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (rating reveal): ${rr.violations.map((v) => v.id).join(', ') || 'no violations'}`);
+    await p3.screenshot({ path: join(out, '11-reveal.png') });
+    await p3.click('#rwclose');
+    await p3.click('[data-act=rate]'); await p3.waitForSelector('.reveal .star.on');
+    ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'rating the same look again pays nothing more');
+    await p3.click('#rwclose');
+    await p3.reload(); await p3.waitForFunction(() => window.__closet.game.coins > 0);
+    ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'coins are kept after a reload');
+  }
+  // an event on today's date becomes the day's challenge
+  {
+    const cE = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await cE.addInitScript(() => localStorage.setItem('flat', '1'));
+    const pE = await cE.newPage(); pE.on('pageerror', (e) => errors.push(e.message));
+    await pE.goto(`http://localhost:${PORT}/`); await pE.waitForFunction(() => window.__closet);
+    await pE.click('[data-view=plan]'); await pE.fill('#evtitle', 'Sam’s dinner'); await pE.selectOption('#evocc', 'Dinner'); await pE.click('[data-act=evadd]');
+    await pE.click('[data-view=tryon]'); await pE.waitForSelector('.gamebar');
+    ok(/Sam’s dinner/.test(await pE.locator('.gamebar .gb-theme').innerText()) && /from your plan/.test(await pE.locator('.gamebar').innerText()), 'an event added in Plan becomes today’s challenge');
   }
 
 
@@ -445,6 +471,7 @@ try {
 
   // ── batch A2: look card, room themes + face options, saved renders + budget ──
   {
+    await p3.click('[data-act=styleme]'); await p3.waitForFunction(() => document.querySelectorAll('#stage .gar').length >= 2);
     await p3.click('[data-act=drawer][data-v=looks]');
     const [shot] = await Promise.all([p3.waitForEvent('download'), p3.click('[data-act=sharecard]')]);
     const cardPath = join(out, 'look-card.png'); await shot.saveAs(cardPath);
@@ -631,6 +658,7 @@ try {
   else {
     await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
     const d0 = await pa.evaluate(() => window.__apt.debug());
+    ok(await pa.locator('.room.apt .gamebar .gb-theme').count() === 1, 'the apartment shows the day’s challenge banner');
     ok(JSON.stringify(d0.stations) === JSON.stringify(['wardrobe', 'vanity', 'mirror', 'bed', 'desk']) && d0.solids >= 10, `the apartment has its five stations and ${d0.solids} solid pieces of furniture`);
     await pa.screenshot({ path: join(out, '20-apartment.png') });
     await pa.locator('#stage canvas').focus();
@@ -640,7 +668,7 @@ try {
     let inside = 0, checked = 0;
     for (const [x, z] of [[-4.7, 2.4], [-3.7, 3.4], [5.3, 1.5], [4.2, 3.3], [0, -4.2], [-3, -2.8], [2.8, -2.4], [-6.3, 4.6], [6.2, -3.5], [-2.4, 0.3]]) {
       await pa.evaluate(([x, z]) => window.__apt.teleport(x, z), [x, z]);
-      for (let turn = 0; turn < 4; turn++) { await pa.evaluate(() => window.__apt.rotateCam(2)); let dbg; for (let n = 0; n < 12; n++) { await pa.waitForTimeout(350); dbg = await pa.evaluate(() => window.__apt.debug()); if (!dbg.camInsideFurniture && dbg.camDist >= 1.1) break; } checked++; if (dbg.camInsideFurniture || dbg.camDist < 1.1) { inside++; console.log('  camera problem at', x, z, JSON.stringify(dbg.cam), dbg.camDist); } }
+      for (let turn = 0; turn < 4; turn++) { await pa.evaluate(() => window.__apt.rotateCam(2)); let dbg; for (let n = 0; n < 12; n++) { await pa.waitForTimeout(350); dbg = await pa.evaluate(() => window.__apt.debug()); if (!dbg.camInsideFurniture && dbg.camDist >= 0.85) break; } checked++; if (dbg.camInsideFurniture || dbg.camDist < 0.85) { inside++; console.log('  camera problem at', x, z, JSON.stringify(dbg.cam), dbg.camDist); } }
     }
     ok(inside === 0, `the follow camera never clips into furniture (${checked} viewpoints checked)`);
     await pa.evaluate(() => window.__apt.teleport(0, 2.6));
@@ -667,8 +695,8 @@ try {
     // bed: end the day
     await pa.click('[data-act=gostation][data-v=bed]'); await pa.waitForSelector('#stationui:not([hidden])', { timeout: 120000 });
     await pa.waitForFunction(() => /Bed/.test(document.querySelector('#sttitle')?.textContent || ''));
-    await pa.click('[data-act=wearToday]'); await pa.waitForFunction(() => window.__closet.wears.length >= 1);
-    ok((await pa.evaluate(() => window.__closet.wears.length)) >= 1, 'the bed logs today’s outfit');
+    await pa.click('[data-act=endday]'); await pa.waitForFunction(() => window.__closet.wears.length >= 1 && window.__closet.game.day.ended);
+    ok(true, 'the bed logs today’s outfit and ends the day');
     await pa.click('[data-act=stclose]');
     // mirror and desk take you to the doll and the planner
     await pa.click('[data-act=gostation][data-v=mirror]'); await pa.waitForSelector('.dollmode svg.doll', { timeout: 120000 });
