@@ -61,7 +61,7 @@ export function coinsFor({ stars, streak = 0, energy = 100 }) {
 
 /* ───────── the saved state ───────── */
 export const freshDay = (date, theme) => ({ date, phase: 'challenge', theme, energy: 100, mood: 50, tries: 0, paid: 0, stars: 0, score: 0, ended: false });
-export function initial() { return { coins: 0, day: null, history: [], owned: [], placed: [], decor: 'rose' }; }
+export function initial() { return { coins: 0, day: null, history: [], owned: [], placed: [], decor: 'rose', photo: { bg: 'blush', pose: 'stand' } }; }
 
 /** Make sure the saved game is on today's date. A new date starts a new day with a new theme; coins and history carry over. */
 export function rollOver(game, date, makeTheme) {
@@ -107,6 +107,17 @@ export const CATALOG = [
   { id: 'hair:bun', kind: 'hair', name: 'Bun', emoji: '🎀', price: 40 },
   { id: 'hair:pony', kind: 'hair', name: 'Ponytail', emoji: '🐴', price: 40 },
   { id: 'hair:curly', kind: 'hair', name: 'Curly', emoji: '🌀', price: 60 },
+  { id: 'bg:blush', kind: 'bg', name: 'Blush', emoji: '🌸', price: 0 },
+  { id: 'bg:studio', kind: 'bg', name: 'Studio', emoji: '📷', price: 0 },
+  { id: 'bg:sunset', kind: 'bg', name: 'Sunset', emoji: '🌅', price: 30 },
+  { id: 'bg:garden', kind: 'bg', name: 'Garden', emoji: '🌷', price: 40 },
+  { id: 'bg:night', kind: 'bg', name: 'Night city', emoji: '🌃', price: 40 },
+  { id: 'bg:confetti', kind: 'bg', name: 'Confetti', emoji: '🎉', price: 50 },
+  { id: 'pose:stand', kind: 'pose', name: 'Stand', emoji: '🧍', price: 0 },
+  { id: 'pose:tilt', kind: 'pose', name: 'Chic tilt', emoji: '💁', price: 25 },
+  { id: 'pose:walk', kind: 'pose', name: 'Walk', emoji: '🚶', price: 25 },
+  { id: 'pose:twirl', kind: 'pose', name: 'Twirl', emoji: '💃', price: 40 },
+  { id: 'pose:pop', kind: 'pose', name: 'Pop', emoji: '✨', price: 40 },
   { id: 'furn:rug_oval_B', kind: 'furn', name: 'Round rug', emoji: '🟣', price: 30, model: 'rug_oval_B', scale: 1.2, solid: false },
   { id: 'furn:rug_rectangle_stripes_A', kind: 'furn', name: 'Striped rug', emoji: '🟦', price: 30, model: 'rug_rectangle_stripes_A', scale: 1.2, solid: false },
   { id: 'furn:cactus_medium_A', kind: 'furn', name: 'Cactus', emoji: '🌵', price: 25, model: 'cactus_medium_A', scale: 1 },
@@ -142,6 +153,11 @@ export function placePiece(game, id, x, z, ry = 0, uid = `p${Date.now().toString
 }
 export const movePiece = (game, uid, patch) => ({ ...game, placed: game.placed.map((p) => (p.uid === uid ? { ...p, ...patch, ry: patch.ry === undefined ? p.ry : ((patch.ry % 4) + 4) % 4 } : p)) });
 export const putAway = (game, uid) => ({ ...game, placed: game.placed.filter((p) => p.uid !== uid) });
+/** Choose the backdrop or pose for photo mode (only ones you own). */
+export function usePhoto(game, id) {
+  const c = catalogItem(id); if (!c || !['bg', 'pose'].includes(c.kind) || !owns(game, id)) return game;
+  return { ...game, photo: { bg: 'blush', pose: 'stand', ...game.photo, [c.kind]: id.slice(c.kind.length + 1) } };
+}
 /** A hairstyle you've been wearing before it became a paid one stays yours. */
 export function grandfather(game, hairStyle) { const id = `hair:${hairStyle}`; return catalogItem(id) && !owns(game, id) ? { ...game, owned: [...(game.owned || []), id] } : game; }
 export { slotOf };

@@ -772,6 +772,41 @@ try {
     await cb.close();
   }
 
+  // ── phase 4b-2: photo mode and the lookbook ──
+  {
+    const cp = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+    await cp.addInitScript(() => { if (!localStorage.getItem('game')) localStorage.setItem('game', JSON.stringify({ coins: 300 })); });
+    const pp = await cp.newPage(); pp.setDefaultTimeout(60000); pp.on('pageerror', (e) => errors.push(e.message)); pp.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await pp.goto(`http://localhost:${PORT}/`); await pp.waitForFunction(() => window.__closet);
+    await pp.click('[data-act=samples]'); await pp.waitForFunction(() => window.__closet.items.length === 10);
+    await pp.waitForSelector('svg.doll'); await pp.click('[data-act=styleme]'); await pp.waitForFunction(() => Object.keys(window.__closet.outfit).length > 0);
+    await pp.click('[data-act=photo]'); await pp.waitForSelector('#phcanvas');
+    const px = await pp.evaluate(() => { const c = document.querySelector('#phcanvas'), g = c.getContext('2d'), a = g.getImageData(60, 300, 1, 1).data, b = g.getImageData(c.width / 2, c.height * 0.5, 1, 1).data; return [[...a], [...b]]; });
+    ok(JSON.stringify(px[0]) !== JSON.stringify(px[1]), 'the photo preview is drawn (the backdrop and the doll differ)');
+    await pp.evaluate(axeSource);
+    const ra = await pp.evaluate(() => window.axe.run(document.querySelector('#modal'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    ok(ra.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (photo mode): ${ra.violations.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await pp.screenshot({ path: join(out, '40-photo.png') });
+    await pp.click('[data-act=phbg][data-v=sunset]'); await pp.waitForSelector('#modal .shoplist');
+    ok(await pp.evaluate(() => window.__closet.game.photo.bg === 'blush'), 'a backdrop you haven’t bought opens the shop');
+    await pp.click('[data-act=shopbuy][data-v="bg:sunset"]'); await pp.click('[data-act=shopuse][data-v="bg:sunset"]'); await pp.click('#shopclose');
+    await pp.waitForSelector('#phcanvas');
+    ok(await pp.evaluate(() => window.__closet.game.photo.bg === 'sunset' && window.__closet.game.coins === 270), 'after buying, the shop returns to the photo with the backdrop chosen');
+    await pp.click('[data-act=phpose][data-v=stand]');
+    await pp.screenshot({ path: join(out, '41-photo-sunset.png') });
+    await pp.click('[data-act=phtake]'); await pp.waitForFunction(() => window.__closet.wears.some((w) => w.photo && w.photo.size > 2000));
+    ok(true, 'Save to my lookbook attaches a photo to today’s diary entry');
+    await pp.click('#phclose'); await pp.click('[data-view=planner]'); await pp.waitForSelector('.lookbook .lb');
+    ok(await pp.locator('.lookbook .lb').count() === 1, 'the Diary’s lookbook shows the photo');
+    await pp.screenshot({ path: join(out, '42-lookbook.png') });
+    await pp.reload(); await pp.waitForFunction(() => window.__closet); await pp.click('[data-view=planner]'); await pp.waitForSelector('.lookbook .lb');
+    ok(await pp.locator('.lookbook .lb').count() === 1, 'the lookbook photo is kept after a reload');
+    await pp.click('.lookbook .lb'); await pp.waitForSelector('.lbbig'); await pp.click('[data-act=lbdel]');
+    await pp.waitForFunction(() => !window.__closet.wears.some((w) => w.photo) && !document.querySelector('.lookbook .lb')); // state changes first, the Diary redraws a moment later
+    ok(true, 'a photo can be removed from the lookbook');
+    await cp.close();
+  }
+
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
     await p2.evaluate(axeSource);
