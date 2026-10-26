@@ -22,6 +22,14 @@ export function loadPack(id = DEFAULT_PACK) {
 }
 export const getPack = (id = DEFAULT_PACK) => packs.get(id)?.pack || null;
 
+/** The hairstyle to draw: { front, back, m } (picture URLs and an optional colour matrix), or null for the base picture's own slicked-back hair. */
+export function hairOf(pack, style, color) {
+  const h = pack?.hair, st = h?.styles.find((s) => s.id === style);
+  if (!st || st.id === 'none') return null;
+  const v = pack.version ? `?v=${pack.version}` : '', f = (n) => `${pack.base}hair/${n}.png${v}`;
+  return { front: f(st.id), back: st.back ? f(st.id + '-back') : '', m: h.colors.find((c) => c.id === color)?.m || null };
+}
+
 /* ── body points -> a box for each kind of clothing ── */
 const pairOf = (P, k) => (k === 'neck' || k === 'hairline' || k === 'crotch' ? [P[k], P[k]] : [P[k + 'L'], P[k + 'R']]);
 /** The distance between a body part's left and right point. */
@@ -90,7 +98,7 @@ let uidN = 0;
  * @param {{pack:object, items:Record<string,object>, urls:Map<string,string>, meta?:Map<string,object>, selected?:string, cls?:string, label?:string, debug?:boolean}} o
  *   items: slot -> item. meta: id -> { iw, ih, bx, by, bw, bh } for the dashed selection box.
  */
-export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes = null, base = '', selected = '', cls = '', label = '', debug = false }) {
+export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
   const tucked = !!(top && bottom && isTuckable(top, pack) && fitOf(top, pack).tuck);
@@ -110,7 +118,8 @@ export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes 
   };
   const clothes = order.map(garment).join('');
   const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
-  const parts = { body, clothes, hair: '', acc: garment('acc') };
+  const hb = pack.hair?.box, hairPic = (href) => (href && hb ? `<image class="hairpic" href="${href}" x="${hb[0]}" y="${hb[1]}" width="${hb[2]}" height="${hb[3]}"${hair.m ? ` filter="url(#hairtint-${n})"` : ''}/>` : '');
+  const parts = { hairBack: hair ? hairPic(hair.back) : '', body, clothes, hair: hair ? hairPic(hair.front) : '', acc: garment('acc') };
   const [x, y, w, h] = pack.view;
   const names = Object.values(items).map((i) => i.name).filter(Boolean);
   const desc = label || (names.length ? `Model wearing ${names.join(', ')}` : 'Model with no clothes selected');
@@ -122,7 +131,7 @@ export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes 
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}<clipPath id="tuckclip-${n}"><rect x="0" y="0" width="${pack.size[0]}" height="${pack.waistY + 12}"/></clipPath></defs>
+    <defs>${fx}${hair?.m ? `<filter id="hairtint-${n}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/></filter>` : ''}<clipPath id="tuckclip-${n}"><rect x="0" y="0" width="${pack.size[0]}" height="${pack.waistY + 12}"/></clipPath></defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 

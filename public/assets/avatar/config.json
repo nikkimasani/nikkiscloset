@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "id": "base",
   "name": "Base model",
   "about": "base.png is shown exactly as it is, at its own proportions. Nothing here draws the body. The numbers below are only coordinates laid over the picture, in the picture's own pixels (896 x 1776), so clothes know where to go. Turn on the debug overlay (Customize > Anchors) to see them on the picture, then edit them here. The armpit, crotch, waistband and arm points are where a garment's matching landmarks (neckline, armpits, crotch, hems, sleeve ends) are warped to; the body's outline for the 'widen to the body' pass is read from base.png's own transparency.",
@@ -9,14 +9,15 @@
   ],
   "view": [
     0,
-    0,
+    -110,
     896,
-    1776
+    1886
   ],
   "layers": {
     "body": "base.png"
   },
   "stack": [
+    "hairBack",
     "body",
     "clothes",
     "hair",
@@ -373,5 +374,166 @@
       ]
     ]
   },
-  "versionAbout": "Raise 'version' whenever base.png is replaced, so phones fetch the new picture instead of a cached copy."
+  "versionAbout": "Raise 'version' whenever base.png is replaced, so phones fetch the new picture instead of a cached copy.",
+  "hair": {
+    "about": "Nikki's own hairstyle pictures, each lined up on the head and saved on one canvas: x 0, y -110 (room above the head for a bun or ponytail), 896 x 1886. A style's 'back' picture (a ponytail's tail) is drawn behind the body.",
+    "box": [
+      0,
+      -110,
+      896,
+      1886
+    ],
+    "styles": [
+      {
+        "id": "none",
+        "name": "Slicked back"
+      },
+      {
+        "id": "waves",
+        "name": "Long waves"
+      },
+      {
+        "id": "layered",
+        "name": "Long layers"
+      },
+      {
+        "id": "sleek",
+        "name": "Sleek side part"
+      },
+      {
+        "id": "bob",
+        "name": "Bob"
+      },
+      {
+        "id": "curly",
+        "name": "Curls"
+      },
+      {
+        "id": "ponytail",
+        "name": "High ponytail",
+        "back": true
+      },
+      {
+        "id": "bun",
+        "name": "Top bun"
+      }
+    ],
+    "colors": [
+      {
+        "id": "natural",
+        "name": "As drawn",
+        "sw": "#4a3426"
+      },
+      {
+        "id": "black",
+        "name": "Soft black",
+        "sw": "#1d1714",
+        "m": [
+          0.55,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.55,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.55,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "chestnut",
+        "name": "Chestnut",
+        "sw": "#6b3f24",
+        "m": [
+          1.25,
+          0,
+          0,
+          0,
+          0.04,
+          0,
+          1.0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.8,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "auburn",
+        "name": "Auburn",
+        "sw": "#8a3b1f",
+        "m": [
+          1.55,
+          0,
+          0,
+          0,
+          0.08,
+          0,
+          0.9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "honey",
+        "name": "Honey",
+        "sw": "#a8743f",
+        "m": [
+          1.6,
+          0,
+          0,
+          0,
+          0.18,
+          0,
+          1.45,
+          0,
+          0,
+          0.12,
+          0,
+          0,
+          1.1,
+          0,
+          0.05
+        ]
+      },
+      {
+        "id": "blonde",
+        "name": "Blonde",
+        "sw": "#cfa86e",
+        "m": [
+          1.8,
+          0,
+          0,
+          0,
+          0.32,
+          0,
+          1.7,
+          0,
+          0,
+          0.27,
+          0,
+          0,
+          1.4,
+          0,
+          0.15
+        ]
+      }
+    ]
+  }
 }

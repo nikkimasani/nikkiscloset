@@ -276,7 +276,15 @@ try {
     await p3.screenshot({ path: join(out, '10-doll.png') });
     // the base picture is fixed art: the doll's customizer only offers the room and the anchor points
     await p3.click('[data-act=drawer][data-v=look]');
-    ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["anchors"]', 'Customize on the doll offers only the anchor points (no dead face, hair, body or room options)');
+    ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["hair","anchors"]', 'Customize on the doll offers your hairstyles and the anchor points (no dead face, body or room options)');
+    ok(await p3.locator('.hairchip').count() === 8 && await p3.locator('#stage .hairpic').count() === 0, 'eight hairstyle choices; the base picture\'s own hair until you pick one');
+    await p3.click('.hairchip[data-v=ponytail]'); await p3.click('.hairsw[data-v=auburn]');
+    ok(await p3.locator('#stage .hairpic').count() === 2 && await p3.locator('#stage feColorMatrix').count() === 1, 'a ponytail is drawn in front and its tail behind the body, tinted auburn');
+    ok(await p3.evaluate(() => Promise.all([...document.querySelectorAll('#stage .hairpic')].map((i) => fetch(i.getAttribute('href')).then((r) => r.ok)))).then((r) => r.every(Boolean)), 'the hair pictures load');
+    await p3.screenshot({ path: join(out, '10a-hair.png') });
+    ok(await p3.evaluate(() => JSON.stringify(Object.keys(localStorage).filter((k) => /hair(style|color)$/.test(k)).map((k) => localStorage[k]).sort())) === '["auburn","ponytail"]', 'the hairstyle and colour are remembered');
+    await p3.click('.hairchip[data-v=none]');
+    await p3.click('.cas-tabs [data-v=anchors]');
     await p3.click('.anchors summary');
     ok(await p3.locator('.ptlist li').count() >= 15, 'the anchor points are listed with their coordinates');
     ok(await p3.locator('#stage .pointsdbg').count() === 0, 'the debug overlay is off by default');

@@ -228,7 +228,7 @@ test('base.png is shown unchanged: the picture is an <image> at its own size and
   assert.equal(png.readUInt32BE(16), config.size[0]); assert.equal(png.readUInt32BE(20), config.size[1]); // the config's size is the picture's real size
   const svg = dollSVG({ pack, items: {}, urls });
   assert.match(svg, /<image class="basepic" href="\/assets\/avatar\/base\.png" x="0" y="0" width="896" height="1776"\/>/);
-  assert.match(svg, /viewBox="0 0 896 1776"/);
+  assert.match(svg, /viewBox="0 -110 896 1886"/); // (room above the head for a bun or a ponytail)
   assert.ok(!/<(path|circle|ellipse|polygon)\b/.test(svg), 'no code-drawn shapes');
 });
 
@@ -438,4 +438,21 @@ test('only a phone screenshot is cropped to its product photo; a set photographe
   assert.deepEqual([shot[0][1], shot[2][1]], [30, 140], 'status bar, text and buttons left out');
   const set = productBox(img(100, 280, [[10, 120], [150, 270]]));
   assert.deepEqual(set, [[0, 0], [100, 0], [100, 280], [0, 280]], 'two pieces with a gap: nothing cut away');
+});
+
+/* ── hairstyles: Nikki's own pictures, laid over the head ── */
+test('every hairstyle in the config has its picture on the hair canvas, and a ponytail\'s tail goes behind the body', async () => {
+  const { hairOf } = await import('../public/js/doll.js');
+  for (const st of config.hair.styles.filter((s) => s.id !== 'none')) {
+    for (const f of [st.id, ...(st.back ? [st.id + '-back'] : [])]) {
+      const png = readFileSync(new URL(`../public/assets/avatar/hair/${f}.png`, import.meta.url));
+      assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], config.hair.box.slice(2), `${f}.png is on the ${config.hair.box.slice(2).join(' x ')} canvas`);
+    }
+  }
+  assert.equal(hairOf(pack, 'none', 'natural'), null, 'no picture for the base picture\'s own hair');
+  const h = hairOf(pack, 'ponytail', 'auburn'), svg = dollSVG({ pack, items: {}, urls, hair: h });
+  const back = svg.indexOf('hair/ponytail-back.png'), body = svg.indexOf('class="basepic"'), front = svg.indexOf('hair/ponytail.png');
+  assert.ok(back > 0 && back < body && body < front, 'tail behind the body, the rest in front');
+  assert.match(svg, /<feColorMatrix type="matrix"/, 'colour applied as a filter, the picture itself is untouched');
+  assert.ok(!/feColorMatrix/.test(dollSVG({ pack, items: {}, urls, hair: hairOf(pack, 'bob', 'natural') })), 'as drawn: no filter');
 });

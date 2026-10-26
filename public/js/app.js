@@ -14,7 +14,7 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 import { fitItem, fitSignature, baseUnder } from './fitting.js';
 import { openCutEditor, MODES } from './editor.js';
 import { groupOf } from './landmarks.js';
-import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
+import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, usePhoto } from './game.js';
 import { BACKGROUNDS, POSES, composePhoto, photoBlob } from './photo.js';
@@ -34,7 +34,7 @@ const S = {
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
-  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'anchors', dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
+  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
@@ -147,7 +147,9 @@ function queueFit(item) {
 const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
-function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
+/** Your chosen hairstyle and colour, ready for dollSVG. */
+const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor);
+function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
 /* ───────────────────────── router ───────────────────────── */
@@ -530,7 +532,7 @@ async function runSync() {
 
 /* ───────────────────────── backup & restore ───────────────────────── */
 const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
-const PREFS = ['budget', 'game', 'events'];
+const PREFS = ['budget', 'game', 'events', 'hairstyle', 'haircolor'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
 const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
@@ -670,7 +672,7 @@ function stageHTML() {
   }
   if (dollFailed) return '<p class="muted dollhint" role="alert">The model picture couldn’t load. Check your connection and reload.</p>';
   if (!dollPack) return '<p class="muted dollhint" role="status">Getting the model ready…</p>';
-  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
+  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
 }
 function mountStage() { if (S.scene === 'closet' && S.view === 'tryon') return wicRefresh(); const el = $('#stage'); if (el) el.innerHTML = stageHTML(); }
 const refreshStage = mountStage;
@@ -683,16 +685,17 @@ function metersHTML(worn) {
   return `<div class="meters" role="group" aria-label="Outfit meters">${bar('Mood fit', S.mood ? m?.fit : null)}${bar('Colours', m?.harmony)}${bar('Fresh', m?.fresh)}</div>`;
 }
 
-const CAS_TABS = [['anchors', 'Anchors', '📍']];
+const CAS_TABS = [['hair', 'Hair', '💇'], ['anchors', 'Anchors', '📍']];
 /** The "create-a-sim" style picker: docked inside the model's box, one category at a time, options in a single scrolling strip. */
 function casHTML() {
   const close = '<button class="cas-x" data-act="casclose" aria-label="Close customizer"><span aria-hidden="true">✕</span></button>';
   if (usingPhoto()) return `<div class="cas" role="region" aria-label="Customize your model"><p class="muted">You’re showing your own photo. Switch back to the model under <b>Me</b> to customize it.</p>${close}</div>`;
-  // The base picture is fixed art: its anchor points are the only thing to set here (hair and make-up wait for their art).
-  const tabs = ['anchors'];
+  // The base picture is fixed art: hair is your own hairstyle pictures laid over it; the anchor points are coordinates over it.
+  const tabs = dollPack?.hair ? ['hair', 'anchors'] : ['anchors'];
   if (!tabs.includes(S.casTab)) S.casTab = tabs[0];
   const pts = dollPack?.points || {};
   const panes = {
+    hair: hairPickerHTML(),
     anchors: `<div class="anchors"><button class="chip ${S.dbgPts ? 'on' : ''}" aria-pressed="${!!S.dbgPts}" data-act="dbgpts"><span aria-hidden="true">📍</span> Show the points on the model</button>
       <p class="muted">Clothes snap to these points: shoulders and hips set the size, the waist, neck and feet set the position. They are coordinates over the picture, kept in <code>assets/avatar/config.json</code>.</p>
       <details><summary>All ${Object.keys(pts).length} points and their coordinates</summary><ul class="ptlist">${Object.entries(pts).map(([k, [x, y]]) => `<li><span>${k}</span> <b>${x}, ${y}</b></li>`).join('')}</ul></details></div>`,
@@ -700,6 +703,14 @@ function casHTML() {
   return `<div class="cas" role="region" aria-label="Customize your model">
     <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => tabs.includes(k)).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}${close}</div>
     <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div></div>`;
+}
+
+/** Hairstyle and hair colour chips (the customizer and the vanity use the same ones). */
+function hairPickerHTML() {
+  const h = dollPack?.hair; if (!h) return '';
+  const v = dollPack.version ? `?v=${dollPack.version}` : '';
+  return `<div class="hairpick"><div class="opt-row" role="group" aria-label="Hairstyle">${h.styles.map((s) => `<button class="hairchip ${S.hairStyle === s.id ? 'on' : ''}" aria-pressed="${S.hairStyle === s.id}" data-act="hairstyle" data-v="${s.id}">${s.id === 'none' ? '<span class="th none" aria-hidden="true">✕</span>' : `<span class="th"><img src="${dollPack.base}hair/${s.id}.png${v}" alt="" draggable="false"></span>`}<small>${s.name}</small></button>`).join('')}</div>
+    <div class="opt-row swatches" role="group" aria-label="Hair colour">${h.colors.map((c) => `<button class="hairsw ${S.hairColor === c.id ? 'on' : ''}" aria-pressed="${S.hairColor === c.id}" data-act="haircolor" data-v="${c.id}" style="--sw:${c.sw}" ${S.hairStyle === 'none' ? 'disabled' : ''}><i aria-hidden="true"></i><small>${c.name}</small></button>`).join('')}</div></div>`;
 }
 
 function weatherLine() {
@@ -878,14 +889,14 @@ function wicPanel(sec, W, H, x) {
     inner = layoutSection(sec, list.map((i) => ({ id: i.id, ar: itemRatio(i) }))).map((p) => { const it = itemById(p.id);
       return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
   } else if (sec.k === 'mirror') {
-    const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
+    const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
     inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to dress up">${fig}</button>`;
   }
   const n = list.length;
   const label = sec.k === 'overview' ? '' : `<div class="wic-label"><b>${sec.emoji} ${sec.label}</b>${sec.types ? ` · ${n} ${n === 1 ? 'piece' : 'pieces'}` : ''}</div>`;
   const note = sec.types && !n ? `<div class="wic-empty"><p>No ${sec.label.toLowerCase()} here yet.</p><button class="wic-btn" data-act="add" data-v="${sec.types[0]}">+ Add pieces</button></div>`
     : sec.k === 'mirror' ? '<div class="wic-empty low"><button class="wic-btn" data-act="wicmirror">🪞 Dress up in the mirror</button></div>'
-    : sec.k === 'vanity' ? '<div class="wic-empty low"><p>Hair and make-up will live here once your hairstyle pictures are added.</p></div>' : '';
+    : sec.k === 'vanity' ? `<div class="wic-empty low wic-vanity">${hairPickerHTML()}<button class="wic-btn" data-act="wichair">🪞 Try hair in the mirror</button></div>` : '';
   return `<section class="wic-panel" data-k="${sec.k}" style="left:${x}px;width:${b.pw}px" aria-label="${sec.label}">
     <div class="wic-art" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;background-image:url(/assets/closet/${sec.bg}.jpg)">${inner}</div>${label}${note}</section>`;
 }
@@ -1143,7 +1154,8 @@ async function dollCanvas() {
   const fits = new Map();
   for (const it of Object.values(items)) { urls.set(it.id, await blobToData(it.cutout)); if (S.fitBlobs.has(it.id)) fits.set(it.id, await blobToData(S.fitBlobs.get(it.id))); }
   const bodyFile = dollPack.layers.body, baseData = await blobToData(await (await fetch(baseFor(items) || dollPack.files[bodyFile])).blob()); // an SVG drawn as an image can't fetch files either
-  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits });
+  let hair = myHair(); if (hair) hair = { ...hair, front: await blobToData(await (await fetch(hair.front)).blob()), back: hair.back && await blobToData(await (await fetch(hair.back)).blob()) };
+  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits, hair });
   const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   try { await img.decode(); } catch { return null; }
   const [, , w, h] = dollPack.view, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
@@ -1303,6 +1315,8 @@ document.addEventListener('click', async (e) => {
     case 'wictip': store.set('wictip', '1'); return $('.wic-tip')?.remove();
     case 'cas': S.casTab = v; return renderTryon();
     case 'casclose': S.cas = false; return renderTryon();
+    case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
+    case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
     case 'dbgpts': S.dbgPts = !S.dbgPts; store.set('dbgpts', S.dbgPts ? '1' : ''); if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
     case 'export': return exportBackup();

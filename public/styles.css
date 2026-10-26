@@ -669,3 +669,18 @@ body.wic-on { overflow: hidden; }
 .wic-strip button.on { background: #f6dde5; color: #3b2730; box-shadow: inset 0 0 0 2px #b5517a; }
 .wic-card img { display: block; width: 100%; max-height: 46vh; object-fit: contain; border-radius: 14px; background: var(--check); }
 .wic-card .chips { margin-top: 10px; }
+
+/* hairstyle and hair colour picker (customizer and vanity) */
+.hairpick { display: grid; gap: 6px; min-width: 0; flex: 1 1 auto; }
+.hairpick .opt-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.hairchip, .hairsw { flex: 0 0 auto; display: grid; justify-items: center; gap: 2px; min-width: 68px; min-height: 44px; padding: 3px; border: 2px solid transparent; border-radius: 14px; background: none; font: inherit; color: inherit; cursor: pointer; }
+.hairchip.on, .hairsw.on { border-color: #c2185b; background: #fff0f5; }
+.hairchip small, .hairsw small { font-size: 11px; font-weight: 700; line-height: 1.1; max-width: 72px; text-align: center; }
+.hairchip .th { position: relative; display: block; width: 60px; height: 60px; overflow: hidden; border-radius: 12px; background: #f3e3da; }
+.hairchip .th img { position: absolute; width: 140px; max-width: none; left: -40px; top: -2px; }
+.hairchip .th.none { display: grid; place-items: center; font-size: 22px; color: #8a6b78; }
+.hairsw { min-width: 58px; }
+.hairsw i { display: block; width: 30px; height: 30px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #0002; }
+.hairsw:disabled { opacity: .4; cursor: default; }
+.wic-vanity { width: min(92%, 360px); }
+.wic-vanity .hairpick { margin-bottom: 8px; text-align: left; }
