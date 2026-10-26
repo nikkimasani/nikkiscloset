@@ -12,14 +12,14 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 
 ## What it does
 - **Dress Up (home)** – a game-style dressing room: your model stands in a room, a floating mood gem and three meters (mood fit, colours, freshness) react to the outfit, a wardrobe tray at the bottom lets you tap pieces on, and quick buttons (Style me, Undress, Save, Wear today) sit beside the model. Pick a mood (occasion) to tune Style me and the meters.
-- **3D model** – the mannequin is a real 3D figure (Three.js, bundled) built from your proportions. Drag it or use ◀ Front ▶ to turn it. Each garment photo is inflated into a rounded 3D volume that follows its own outline (slim sleeves and pant legs, fuller torsos and skirts), lit and shaded, so you can see it from every angle. Falls back to the flat 2D mannequin if the device has no WebGL (or by choice under Dress Up → Me).
-- **Customize your model** – Dress Up → 🎨 Customize: 10 skin tones + any colour, 12 hair colours + any colour, 6 hair styles (long, bob, pixie, bun, ponytail, curly), 8 body types (petite → plus size) and sliders for shoulders, hips, torso, legs and build. Saved on the device; works on the 3D and flat models.
+- **Dress up doll** – an illustrated 2D paper doll wears your real photo cutouts, stacked in the right order (see "The 2D doll" below). The plain 2D mannequin (shaped from your proportions or your own photo) is still used for "My photo" and for the photoreal AI try-on.
+- **Customize** – Dress Up → 🎨 Customize: 10 skin tones + any colour, 12 hair colours + any colour, 6 hair styles, eyes and lips. Saved on the device and shared by the doll and the apartment avatar. (Body-type presets and sliders only shape the plain mannequin.)
 - **Plan tab** – set your city (free Open-Meteo forecast, no account): *Style me* then dresses for the weather (coats when cold or rainy, light pieces when hot). **Plan my week** drafts an outfit per day (re-roll, try on, or log it). **Pack for a trip** builds a mix-and-match capsule for N days and weather. **Wardrobe gaps** shows which occasions you can't yet dress for, and a **wishlist** collects what to buy (also fed from Inspo "you're missing…" results).
 - **Cost per wear & insights** – add a price (and warmth) to a piece; cards show $/wear, and the Diary shows your best-value buys, what's worth wearing more, declutter candidates, and your outfit streak.
 - **Look cards** – Dress Up → Looks → *Share this look as a picture* makes a 1080×1350 image (model facing front + the pieces). Opens the phone share sheet, or downloads.
 - **Rooms & face** – Customize: seasonal rooms (auto by month, or pick pastel/studio/night/spring/autumn/winter), eye and lip colours, and an outfit-streak badge in the room.
 - **Saved renders + budget** – a photoreal render you've paid for is saved and re-shown free (until you change the photo or a piece); set a monthly budget and the app refuses renders that would go over it.
-- **Fast start** – the 3D engine only downloads when a 3D model is first shown; new photos are stored as WebP.
+- **Fast start** – the 3D code and models only download when you open the apartment; new photos are stored as WebP.
 - **Wardrobe** – every piece shown on a hanger, on a shelf rail per category (tops, tank tops, bodysuits, bottoms, skirts, dresses, outerwear, shoes, bags, accessories). Filter by type, occasion (Work, Date Night, GNO, Casual, Brunch, Dinner…) or search.
 - **Add piece** – upload a photo; the background is removed in your browser (adjustable strength), cropped, colour-detected, and tagged with a type and occasions.
 - **Try On** – tap pieces to dress your model; dresses replace top+bottom automatically. Fine-tune each piece with size/position sliders.
@@ -27,7 +27,7 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **OOTD Log** – calendar of what you wore each day, with per-item wear counts and "never worn" reminders.
 - **Inspo** – drop in a Pinterest screenshot/image (drag, upload, or paste). It extracts the palette, rebuilds the closest outfit from your closet with colour-match %, and tells you what you're missing ("look for a sage-green top").
 
-- **Back photo (optional)** on any piece: shows on the back of the 3D garment instead of a darkened copy of the front.
+- **Back photo (optional)** on any piece: kept with the piece for a future back view.
 
 ## Adding pieces
 **+ Add piece** opens one dialog: **Take photo**, **Choose photo**, **Paste** (a copied picture or product link; ⌘/Ctrl+V works too) or **From a link**. The on-device cutout shows instantly; with your passcode saved, the server cutout and auto-fill then run on their own (switch off in the dialog). An optional **Cut out on this device** button runs an AI model in the browser instead (about 45 MB the first time, from staticimgly.com; it lives in `public/lab/` with its own security policy; the library is AGPL-3.0, see `public/vendor/imgly/LICENSE.md`). `/api/product` reads a shop page's title, brand, price and picture on the server (https only, public hosts only, passcode required).
@@ -92,7 +92,7 @@ Keyboard-operable throughout (including the body-point editor), labelled control
 - All data (photos included) lives in your browser's IndexedDB — nothing is uploaded unless you turn on cloud sync. Clearing site data erases it; export/backup is a good next step.
 - Cutout works best on a plain, contrasting background (bed sheet, wall). Busy backgrounds need a higher strength or a cleaner photo.
 - Pinterest has no open API, so inspo is image-based (upload/paste); pin links are saved for reference.
-- The 3D view inflates flat garment photos into volumes; it has depth and lighting but **no cloth simulation** (no folds or drape; sleeves don't bend with the arms), the back of a garment mirrors its front, and outlines can look slightly rough up close. Shoes and bags are the roughest pieces. Your own photo ("My photo") stays 2D.
+- The apartment avatar is a ready-made character: it wears its own outfit, not your photos (clothes are tried on the 2D doll), and its look is limited to skin and hair colour plus twelve characters. Real device performance is untested; there is a Low-quality fallback that turns off the mirror's live reflection on weak phones.
 - Try-on in photo mode is **fitted 2D layering**, not cloth simulation: a flat photo of a garment can't drape, fold, or follow a bent arm. Fit is as good as your body points and the garment photo. For photoreal drape, add a generative try-on model behind a serverless function (see below).
 - Pose detection needs a clear, front-facing, full-body photo; if it can't find you, you place the points by hand.
 
