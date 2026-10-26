@@ -2,6 +2,7 @@
 // a mirror to try things on at, and glowing pads on the floor that mark where to stand.
 // Everything is built from rounded shapes, toon shading and canvas textures, so there is nothing to download.
 import * as THREE from '../vendor/three/three.module.min.js';
+import { Mirror } from './mirror.js';
 
 const SRGB = THREE.SRGBColorSpace;
 
@@ -116,19 +117,6 @@ function mirror(U, st) {
   const p = pad(U, new THREE.Color(st.color)); p.position.set(0, 0, 0.62 * U); g.add(p);
   g.userData = { type: st.type, pad: p };
   return g;
-}
-
-/** A soft pink studio "sky" with bright window panels, used only for reflections on glossy things. */
-export function roomEnvironment(renderer) {
-  const sc = new THREE.Scene();
-  const sky = canvasTexture(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#ffe3f0'); gr.addColorStop(0.5, '#ffffff'); gr.addColorStop(1, '#f2b8d2'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
-  sc.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide })));
-  for (const [x, y, z, w, h] of [[0, 4, -8, 6, 3], [-8, 3, 0, 5, 3], [8, 3, 2, 5, 3], [0, 8, 0, 6, 6]]) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 4.6, 4.8), side: THREE.DoubleSide }));
-    m.position.set(x, y, z); m.lookAt(0, 0, 0); sc.add(m);
-  }
-  const pm = new THREE.PMREMGenerator(renderer), rt = pm.fromScene(sc, 0.04); pm.dispose();
-  return rt;
 }
 
 /** The window wall behind the camera, with curtains, a sofa and poufs, so every angle has something to look at. */
@@ -258,7 +246,7 @@ export function buildWorld(U, stations, theme = {}, renderer = null) {
 
   return {
     group, stations: built, starTex,
-    bounds: { x: 2.55 * U, zMin: -2.6 * U, zMax: 2.55 * U }, env: renderer ? roomEnvironment(renderer) : null,
+    bounds: { x: 2.55 * U, zMin: -2.6 * U, zMax: 2.55 * U },
     update(t) { // pads breathe, bulbs twinkle, sparkles drift
       for (const s of built) { const k = 1 + Math.sin(t * 3) * 0.05; s.pad.scale.set(k, 1, k); }
       bulbs.forEach((b, i) => { b.scale.setScalar(1 + Math.sin(t * 3 + i) * 0.12); });
@@ -268,7 +256,6 @@ export function buildWorld(U, stations, theme = {}, renderer = null) {
     },
     dispose() {
       group.traverse((o) => { o.geometry?.dispose(); const m = o.material; if (m) { m.map?.dispose(); m.dispose(); } });
-      this.env?.dispose();
     },
   };
 }
