@@ -99,7 +99,7 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
   const { pts: p } = body, m = measures(body), { sw, T, L, headH } = m, bf = body.build || 1;
   const gy = Math.max(p.anL[1], p.anR[1]) + 0.04 * L, cx = m.sm[0];
   const V = (x, y, z = 0) => new THREE.Vector3(x - cx, gy - y, z);
-  const skinM = new THREE.MeshStandardMaterial({ color: skin, roughness: .75, metalness: 0 });
+  const skinM = new THREE.MeshStandardMaterial({ color: skin, roughness: .75, metalness: 0, side: THREE.DoubleSide });
   const hairM = new THREE.MeshStandardMaterial({ color: hair, roughness: .6 });
   const g = new THREE.Group();
 
@@ -153,8 +153,10 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
     foot.scale.set(0.85, 0.5, 2.1); foot.position.set(an.x, an.y - 0.02 * L, 0.1 * sw); g.add(foot);
   }
 
+  const skinMeshes = []; // what clothes are fitted around (not hair or the head)
+  g.traverse((o) => { if (o.isMesh && o.material === skinM && o !== head && o !== neck) skinMeshes.push(o); });
   const top = gy - p.headTop[1], halfW = Math.max(sw * 1.6, Math.abs(p.wrR[0] - cx) + sw * 0.7);
-  return { group: g, ctx: { cx, gy, H: top * 1.08, halfW, m, body } };
+  return { group: g, ctx: { cx, gy, H: top * 1.08, halfW, m, body, skinMeshes } };
 }
 
 /* ───────── garments ───────── */
@@ -165,9 +167,9 @@ function maskGrid(e) {
   const nx = Math.max(8, Math.round(iw >= ih ? G : (G * iw) / ih)), ny = Math.max(8, Math.round(ih >= iw ? G : (G * ih) / iw));
   const c = document.createElement('canvas'); c.width = nx; c.height = ny;
   const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(e.tex.image, 0, 0, nx, ny);
-  // any visible pixel counts as garment, so the mesh always covers the cutout (the texture's alpha makes the crisp outline)
+  // cells that are mostly garment; the texture's alpha makes the crisp outline, and a solid colour edge stays inside it
   const px = x.getImageData(0, 0, nx, ny).data, inside = new Uint8Array(nx * ny), dist = new Float32Array(nx * ny);
-  for (let i = 0; i < nx * ny; i++) { inside[i] = px[i * 4 + 3] > 8 ? 1 : 0; dist[i] = inside[i] ? 1e9 : 0; }
+  for (let i = 0; i < nx * ny; i++) { inside[i] = px[i * 4 + 3] > 96 ? 1 : 0; dist[i] = inside[i] ? 1e9 : 0; }
   const at = (xx, yy) => (xx < 0 || yy < 0 || xx >= nx || yy >= ny ? 0 : dist[yy * nx + xx]); // outside the picture counts as outside the garment
   for (let yy = 0; yy < ny; yy++) for (let xx = 0; xx < nx; xx++) { const i = yy * nx + xx; if (dist[i]) dist[i] = Math.min(dist[i], at(xx - 1, yy) + 1, at(xx, yy - 1) + 1, at(xx - 1, yy - 1) + 1.414, at(xx + 1, yy - 1) + 1.414); }
   for (let yy = ny - 1; yy >= 0; yy--) for (let xx = nx - 1; xx >= 0; xx--) { const i = yy * nx + xx; if (dist[i]) dist[i] = Math.min(dist[i], at(xx + 1, yy) + 1, at(xx, yy + 1) + 1, at(xx + 1, yy + 1) + 1.414, at(xx - 1, yy + 1) + 1.414); }
@@ -179,16 +181,35 @@ function maskGrid(e) {
  * sleeves and pant legs are slim, big panels are full) and rolls off smoothly at the outline. Returns a front and a back surface.
  * rect = {cx, top, w, h} in world units; hMax = half-thickness; zc = depth of the centre plane.
  */
-function inflate(grid, rect, hMax, zc, flipBack = false) {
-  const { nx, ny, dist, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, cell = (cw + ch) / 2;
-  // 0.04 of the thickness is kept at the very edge (fabric has some), so front and back never z-fight
-  const height = new Float32Array(nx * ny); // full thickness is reached a bit before the middle, so slim parts (legs, sleeves) still get filled out
-  for (let i = 0; i < nx * ny; i++) if (inside[i]) { const t = Math.min(1, (dist[i] * cell) / (0.8 * hMax)); height[i] = hMax * (0.04 + 0.96 * Math.sqrt(1 - (1 - t) * (1 - t))); }
+function inflate(grid, rect, hMax, zc, flipBack = false, fit = null) {
+  const { nx, ny, dist, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, cell = (cw + ch) / 2, N = nx * ny;
+  // Fallback shape (loose fabric, bags, accessories): thickness grows with distance from the edge, rolling off at the outline.
+  const height = new Float32Array(N);
+  for (let i = 0; i < N; i++) if (inside[i]) { const t = Math.min(1, (dist[i] * cell) / (0.8 * hMax)); height[i] = hMax * (0.04 + 0.96 * Math.sqrt(1 - (1 - t) * (1 - t))); }
+  // Depth of the front and back surfaces. Where the garment sits on the body they hug it (body surface + a little ease), so skin
+  // can't poke through; elsewhere they fall back to the inflated shape and everything is smoothed so there are no steps.
+  const zf = new Float32Array(N), zb = new Float32Array(N);
+  const ease = 0.16 * hMax;
+  for (let i = 0; i < N; i++) {
+    if (!inside[i]) continue;
+    const h = fit?.hit[i];
+    zf[i] = h ? fit.zf[i] + ease : zc + height[i] * 0.6; zb[i] = h ? fit.zb[i] - ease : zc - height[i] * 0.6;
+  }
+  if (fit) for (let pass = 0; pass < 6; pass++) for (const arr of [zf, zb]) {
+    const src = arr.slice();
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const k = j * nx + i; if (!inside[k]) continue;
+      let sum = 0, n = 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= nx || y >= ny) continue; const q = y * nx + x; if (inside[q]) { sum += src[q]; n++; } }
+      arr[k] = sum / n;
+    }
+  }
+  for (let i = 0; i < N; i++) if (inside[i] && fit?.hit[i]) { zf[i] = Math.max(zf[i], fit.zf[i] + ease); zb[i] = Math.min(zb[i], fit.zb[i] - ease); }
   const build = (sign) => {
-    const pos = new Float32Array(nx * ny * 3), uv = new Float32Array(nx * ny * 2), idx = [];
+    const pos = new Float32Array(N * 3), uv = new Float32Array(N * 2), idx = [];
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
       const k = j * nx + i;
-      pos.set([rect.cx - rect.w / 2 + (i + 0.5) * cw, rect.top - (j + 0.5) * ch, zc + sign * height[k]], k * 3);
+      pos.set([rect.cx - rect.w / 2 + (i + 0.5) * cw, rect.top - (j + 0.5) * ch, sign > 0 ? zf[k] : zb[k]], k * 3);
       uv.set([sign < 0 && flipBack ? 1 - (i + 0.5) / nx : (i + 0.5) / nx, 1 - (j + 0.5) / ny], k * 2);
     }
     for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
@@ -203,10 +224,10 @@ function inflate(grid, rect, hMax, zc, flipBack = false) {
   };
   // side walls along the outline (and around holes) so a turned garment is a closed volume, not two floating sheets
   const wall = (() => {
-    const pos = new Float32Array(nx * ny * 6), uv = new Float32Array(nx * ny * 4), idx = [], N = nx * ny;
+    const pos = new Float32Array(N * 6), uv = new Float32Array(N * 4), idx = [];
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
       const k = j * nx + i, x = rect.cx - rect.w / 2 + (i + 0.5) * cw, y = rect.top - (j + 0.5) * ch, u = (i + 0.5) / nx, v = 1 - (j + 0.5) / ny;
-      pos.set([x, y, zc + height[k]], k * 3); pos.set([x, y, zc - height[k]], (N + k) * 3);
+      pos.set([x, y, zf[k]], k * 3); pos.set([x, y, zb[k]], (N + k) * 3);
       uv.set([u, v], k * 2); uv.set([u, v], (N + k) * 2);
     }
     const at = (i, j) => (i < 0 || j < 0 || i >= nx || j >= ny ? false : inside[j * nx + i]);
@@ -257,6 +278,25 @@ function backTexture(front, backUrl, hex) {
   return e;
 }
 
+/** Shoot rays front-to-back through the body at every garment cell: where they hit, the garment can wrap the body. */
+function bodyFit(grid, rect) {
+  const { nx, ny, inside } = grid, cw = rect.w / nx, ch = rect.h / ny, N = nx * ny;
+  const hit = new Uint8Array(N), zf = new Float32Array(N), zb = new Float32Array(N);
+  const turned = S.figure.rotation.y; S.figure.rotation.y = 0; S.figure.updateMatrixWorld(true); // probe the body facing front
+  const rc = new THREE.Raycaster(), from = new THREE.Vector3(), dir = new THREE.Vector3(0, 0, -1), far = S.ctx.H * 4;
+  rc.far = far * 2;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const k = j * nx + i; if (!inside[k]) continue;
+    rc.set(from.set(rect.cx - rect.w / 2 + (i + 0.5) * cw, rect.top - (j + 0.5) * ch, far), dir);
+    const h = rc.intersectObjects(S.ctx.skinMeshes, false);
+    if (h.length) { hit[k] = 1; zf[k] = far - h[0].distance; zb[k] = far - h[h.length - 1].distance; }
+  }
+  S.figure.rotation.y = turned; S.figure.updateMatrixWorld(true);
+  return { hit, zf, zb };
+}
+
+const FITS = new Set(['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses', 'bottoms', 'skirts', 'shoes']);
+
 function buildGarments() {
   if (!S?.ctx || !S.outfit) return;
   S.shells.forEach((g) => { S.figure.remove(g); g.traverse((o) => { o.geometry?.dispose(); o.material?.dispose(); }); });
@@ -277,11 +317,12 @@ function buildGarments() {
     const zc = it.type === 'bags' ? 0.2 * m.sw : it.type === 'accessories' ? m.headH * 0.42 : it.type === 'shoes' ? 0.15 * m.sw : 0;
     const backUrl = S.outfit.urls.get(it.id + ':back'), be = backUrl ? backTexture(e, backUrl, it.color?.hex) : null;
     const backTex = be?.ready ? be.tex : null;
-    const [front, back, wall] = inflate(maskGrid(e), { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H }, (HMAX[it.type] || 0.24) * sw, zc, !!backTex);
+    const grid = maskGrid(e), rect = { cx: gcx - cx, top: gy - (gcy - H / 2), w: W, h: H };
+    const [front, back, wall] = inflate(grid, rect, (HMAX[it.type] || 0.24) * sw, zc, !!backTex, FITS.has(it.type) ? bodyFit(grid, rect) : null);
     const group = new THREE.Group();
     group.add(new THREE.Mesh(front, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
     group.add(new THREE.Mesh(back, new THREE.MeshLambertMaterial({ map: backTex || e.tex, alphaTest: 0.5, alphaToCoverage: true, color: backTex ? 0xffffff : 0xd9d9d9 }))); // no back photo: the front photo, a little darker
-    group.add(new THREE.Mesh(wall, new THREE.MeshLambertMaterial({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, color: 0xe6e6e6 })));
+    group.add(new THREE.Mesh(wall, new THREE.MeshLambertMaterial({ color: new THREE.Color(it.color?.hex || '#888888').multiplyScalar(0.8), side: THREE.DoubleSide }))); // solid fabric edge: always visible, never clipped by the photo's soft outline
     if (box.rot) group.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
     group.userData.slot = it.type;
     S.figure.add(group); S.shells.push(group);
