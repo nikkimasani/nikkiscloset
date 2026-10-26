@@ -456,3 +456,45 @@ test('every hairstyle in the config has its picture on the hair canvas, and a po
   assert.match(svg, /<feColorMatrix type="matrix"/, 'colour applied as a filter, the picture itself is untouched');
   assert.ok(!/feColorMatrix/.test(dollSVG({ pack, items: {}, urls, hair: hairOf(pack, 'bob', 'natural') })), 'as drawn: no filter');
 });
+
+/* ── starter closet ── */
+test('the starter list: 20 pieces in each of 7 batches, valid types and occasions, one shared image spec', async () => {
+  const { ITEMS, BATCHES, promptFor, sizeFor } = await import('../public/starter/items.js');
+  const { TYPES: T, OCCASIONS: O } = await import('../public/js/data.js');
+  assert.equal(ITEMS.length, 140); assert.equal(new Set(ITEMS.map((i) => i.id)).size, 140, 'unique ids');
+  for (const [b] of BATCHES) assert.equal(ITEMS.filter((i) => i.batch === b).length, 20, b);
+  for (const i of ITEMS) { assert.ok(T[i.type], i.id); assert.ok(i.occasions.length && i.occasions.every((o) => O.includes(o)), i.id); assert.ok(['light', 'all', 'warm'].includes(i.season)); }
+  const top = ITEMS.find((i) => i.batch === 'tops'), shoe = ITEMS.find((i) => i.batch === 'shoes');
+  assert.match(promptFor(top), /ghost-mannequin/i); assert.match(promptFor(top), /no visible mannequin or dress form, no hanger/); assert.match(promptFor(top), /pure white/);
+  assert.deepEqual(sizeFor(top), { width: 1024, height: 1365 }); assert.deepEqual(sizeFor(shoe), { width: 1024, height: 1024 });
+  for (const i of ITEMS) assert.match(promptFor(i), /no text, no logos/i);
+});
+test('/api/starter only makes pieces on the list, on Cloudflare (fal only as a fallback), and reports the daily limit', async () => {
+  const { handleStarter, isDailyLimit, NEURONS_EACH, nextResetUTC } = await import('../lib/ai.js');
+  const env = { CF_ACCOUNT_ID: 'a', CF_API_TOKEN: 't', APP_PASSCODE: 'pw' };
+  const call = (body, pass = 'pw', e = env) => handleStarter(new Request('http://x/api/starter', { method: 'POST', headers: { 'x-app-passcode': pass, 'content-type': 'application/json' }, body: JSON.stringify(body) }), e);
+  assert.equal((await call({ id: 'a cat in a hat' })).status, 400);
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'nope')).status, 401);
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw' })).status, 503, 'says what to set when no engine is configured');
+  assert.equal(NEURONS_EACH, 57.6, '4 tiles x 4.8 + 4 steps x 9.6');
+  assert.ok(isDailyLimit(429, '') && isDailyLimit(400, '4006: you have used up your daily free allocation of 10,000 neurons') && !isDailyLimit(500, 'internal error'));
+  assert.equal(new Date(nextResetUTC(Date.UTC(2026, 9, 26, 17, 5))).toISOString(), '2026-10-27T00:00:00.000Z');
+});
+test('Style me can use starter pieces but prefers your own', async () => {
+  const { styleMe } = await import('../public/js/stylist.js');
+  const mine = { id: 'm', type: 'tops', occasions: ['Brunch'] }, st = { id: 's', type: 'tops', occasions: ['Brunch'], source: 'starter' }, b = { id: 'b', type: 'bottoms', occasions: ['Brunch'] };
+  let own = 0; for (let k = 0; k < 400; k++) if (styleMe([mine, st, b], 'Brunch').top?.id === 'm') own++;
+  assert.ok(own > 280 && own < 400, `own picked ${own}/400`);
+  assert.equal(styleMe([st, b], 'Brunch').top.id, 's', 'a starter piece fills the gap when you have nothing');
+});
+test('accessories and bags snap to their body points: earrings split onto both ears, a watch on the wrist', () => {
+  const earrings = mkItem('e', 'accessories', { acc: 'earrings' }), meta = new Map([['e', { iw: 200, ih: 100 }], ['w', { iw: 100, ih: 100 }]]);
+  const svg = dollSVG({ pack, items: { acc: earrings }, urls: new Map([['e', 'blob:e']]), meta });
+  const pics = [...svg.matchAll(/<svg x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)" height="([\d.]+)" viewBox="([\d.]+) 0/g)].map((m) => m.slice(1).map(Number));
+  const r = config.accRules.earrings, [eL, eR] = r.at.map((k) => config.points[k]);
+  assert.equal(pics.length, 2, 'one half of the picture on each ear');
+  assert.ok(Math.abs(pics[0][0] + r.anchor[0] * r.w - eL[0]) < 0.2 && Math.abs(pics[1][0] + r.anchor[0] * r.w - eR[0]) < 0.2, 'centred on the ear points');
+  assert.deepEqual([pics[0][4], pics[1][4]], [0, 100], 'left half, right half');
+  for (const k of ['head', 'eyes', 'earL', 'earR', 'necklace', 'handL', 'handR', 'belt']) assert.ok(config.points[k], `${k} point`);
+  for (const [k, rule] of Object.entries(config.accRules)) for (const p of [].concat(rule.at)) assert.ok(config.points[p], `${k} -> ${p}`);
+});

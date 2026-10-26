@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleTryOn } from './lib/tryon.js';
-import { handlePin, handleTag, handleSegment, handleProduct } from './lib/ai.js';
+import { handlePin, handleTag, handleSegment, handleProduct, handleStarter } from './lib/ai.js';
 
-const API = { '/api/tryon': handleTryOn, '/api/tag': handleTag, '/api/segment': handleSegment, '/api/pin': handlePin, '/api/product': handleProduct };
+const API = { '/api/tryon': handleTryOn, '/api/tag': handleTag, '/api/segment': handleSegment, '/api/pin': handlePin, '/api/product': handleProduct, '/api/starter': handleStarter };
 
 const root = fileURLToPath(new URL('./public/', import.meta.url));
 const port = process.env.PORT || 5173;

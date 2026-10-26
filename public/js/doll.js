@@ -107,6 +107,8 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     const it = items[slot]; if (!it) return '';
     const a = pack.anchors[it.type]; if (!a) return '';
     const f = fitOf(it, pack), href = urls.get(it.id) || '', box = contentBox(a, meta?.get(it.id)), fitted = fits?.get(it.id);
+    const ar = it.acc && pack.accRules?.[it.acc];
+    if (ar && !fitted) return accPiece(it, ar, f, selected === it.id); // a bag or accessory snaps to its body point (accRules in config.json)
     if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
       const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
       const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}"><image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
@@ -115,6 +117,13 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${garmentTransform(a, f)}">
       <image href="${href}" width="${a.w}" height="${a.h}" preserveAspectRatio="${a.align} meet" filter="url(#gfx-${n})"/>${selected === it.id ? `<rect class="selbox" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="6" fill="none"/>` : ''}</g>`;
     return slot === 'top' && tucked ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
+  };
+  const accPiece = (it, r, f, sel) => {
+    const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean), pair = pts.length === 2;
+    const cw = pair ? iw / 2 : iw, w = r.w ?? (r.h * cw) / ih, h = r.h ?? (r.w * ih) / cw, href = urls.get(it.id) || '';
+    const pic = pts.map(([px, py], k) => `<svg x="${num(px - r.anchor[0] * w)}" y="${num(py - r.anchor[1] * h)}" width="${num(w)}" height="${num(h)}" viewBox="${pair ? num(k * cw) : 0} 0 ${num(cw)} ${ih}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`).join('');
+    const [cx, cy] = pts[0];
+    return `<g class="gar acc${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slotFor(it)}" filter="url(#gfx-${n})" transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g>`;
   };
   const clothes = order.map(garment).join('');
   const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';

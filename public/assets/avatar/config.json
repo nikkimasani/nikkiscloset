@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "id": "base",
   "name": "Base model",
   "about": "base.png is shown exactly as it is, at its own proportions. Nothing here draws the body. The numbers below are only coordinates laid over the picture, in the picture's own pixels (896 x 1776), so clothes know where to go. Turn on the debug overlay (Customize > Anchors) to see them on the picture, then edit them here. The armpit, crotch, waistband and arm points are where a garment's matching landmarks (neckline, armpits, crotch, hems, sleeve ends) are warped to; the body's outline for the 'widen to the body' pass is read from base.png's own transparency.",
@@ -122,6 +122,38 @@
     ],
     "waistbandR": [
       597,
+      700
+    ],
+    "head": [
+      448,
+      52
+    ],
+    "eyes": [
+      448,
+      153
+    ],
+    "earL": [
+      369,
+      200
+    ],
+    "earR": [
+      527,
+      200
+    ],
+    "necklace": [
+      448,
+      332
+    ],
+    "handL": [
+      166,
+      940
+    ],
+    "handR": [
+      728,
+      940
+    ],
+    "belt": [
+      446,
       700
     ]
   },
@@ -535,5 +567,131 @@
         ]
       }
     ]
+  },
+  "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules.",
+  "accRules": {
+    "earrings": {
+      "at": [
+        "earL",
+        "earR"
+      ],
+      "w": 30,
+      "anchor": [
+        0.5,
+        0.04
+      ]
+    },
+    "necklace": {
+      "at": "necklace",
+      "w": 150,
+      "anchor": [
+        0.5,
+        0.08
+      ]
+    },
+    "watch": {
+      "at": "wristL",
+      "w": 46,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "bracelet": {
+      "at": "wristR",
+      "w": 44,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "rings": {
+      "at": "handR",
+      "w": 44,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "anklet": {
+      "at": "ankleR",
+      "w": 58,
+      "anchor": [
+        0.5,
+        0.4
+      ]
+    },
+    "sunglasses": {
+      "at": "eyes",
+      "w": 172,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "hat": {
+      "at": "head",
+      "w": 230,
+      "anchor": [
+        0.5,
+        0.72
+      ]
+    },
+    "headband": {
+      "at": "head",
+      "w": 160,
+      "anchor": [
+        0.5,
+        0.35
+      ]
+    },
+    "clip": {
+      "at": "head",
+      "w": 80,
+      "anchor": [
+        0.5,
+        0.6
+      ]
+    },
+    "belt": {
+      "at": "belt",
+      "w": 337,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "scarf": {
+      "at": "necklace",
+      "w": 150,
+      "anchor": [
+        0.5,
+        0.15
+      ]
+    },
+    "handbag": {
+      "at": "handR",
+      "h": 230,
+      "anchor": [
+        0.5,
+        0.06
+      ]
+    },
+    "clutch": {
+      "at": "handR",
+      "w": 150,
+      "anchor": [
+        0.5,
+        0.45
+      ]
+    },
+    "shoulderbag": {
+      "at": "shoulderR",
+      "h": 560,
+      "anchor": [
+        0.5,
+        0.0
+      ]
+    }
   }
 }

@@ -14,6 +14,8 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 import { fitItem, fitSignature, baseUnder } from './fitting.js';
 import { openCutEditor, MODES } from './editor.js';
 import { groupOf } from './landmarks.js';
+import * as starter from './starter.js';
+import { BATCHES as STARTER_BATCHES, ITEMS as STARTER_ITEMS, seedFor } from '../starter/items.js';
 import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, usePhoto } from './game.js';
@@ -35,7 +37,7 @@ const S = {
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
   events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
-  filter: { type: 'all', occ: 'all', q: '' },
+  filter: { type: 'all', occ: 'all', q: '', src: 'all' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
   month: new Date(), date: iso(new Date()),
@@ -80,6 +82,7 @@ async function load() {
   [S.items, S.outfits, S.wears, S.inspos, profiles, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist'].map(all));
   S.profile = profiles[0] || null;
   if (S.profile?.photo) url('profile', S.profile.photo);
+  if (store.get('hidestarter', '') === '1') S.items = S.items.filter((i) => !starter.isStarter(i)); // (still in the database, backups and sync)
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
@@ -171,10 +174,10 @@ function render() {
 
 /* ───────────────────────── closet ───────────────────────── */
 function renderCloset() {
-  const { type, occ, q } = S.filter;
+  const { type, occ, q, src } = S.filter;
   const counts = Object.fromEntries(Object.keys(TYPES).map((t) => [t, S.items.filter((i) => i.type === t).length]));
   const shown = S.items.filter((i) =>
-    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) &&
+    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) && (src === 'all' || (src === 'starter') === starter.isStarter(i)) &&
     (!q || (i.name + ' ' + (i.brand || '') + ' ' + (i.color?.name || '')).toLowerCase().includes(q.toLowerCase())));
 
   const rails = Object.keys(TYPES).map((t) => {
@@ -191,12 +194,14 @@ function renderCloset() {
       <select id="occ" aria-label="Filter by occasion" style="width:auto"><option value="all">All occasions</option>${OCCASIONS.map((o) => `<option ${o === occ ? 'selected' : ''}>${o}</option>`).join('')}</select>
       <span class="muted">${S.items.length} pieces</span>
     </div>
+    ${S.items.some(starter.isStarter) ? `<div class="chips srcchips" style="margin-top:12px" role="group" aria-label="Whose pieces">${[['all', 'All'], ['mine', 'Mine'], ['starter', 'Starter']].map(([k, l]) => `<button class="chip ${src === k ? 'on' : ''}" aria-pressed="${src === k}" data-act="fsrc" data-v="${k}">${l} · ${S.items.filter((i) => k === 'all' || (k === 'starter') === starter.isStarter(i)).length}</button>`).join('')}</div>` : ''}
     <div class="chips" style="margin-top:12px" role="group" aria-label="Filter by type">
       <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
       ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
     </div>
     ${rails || emptyCloset()}
     ${addPanel()}
+    ${starterPanel()}
     <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
       <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
       <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
@@ -218,7 +223,7 @@ function emptyCloset() {
 
 function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
-  return `<article class="piece">${hanger}
+  return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''}">${hanger}${starter.isStarter(i) ? '<span class="starterbadge">Starter</span>' : ''}
     <button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>
     <button class="img" data-act="tryit" data-id="${i.id}" aria-label="Try on ${esc(i.name)}"><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
@@ -284,7 +289,7 @@ function openItemModal(existing, preset = {}) {
       <label class="f" for="color">Main colour ${d.color ? `— ${esc(d.color.name)}` : ''}</label>
       <div class="cswatches" role="group" aria-label="Colours found in the photo">${d.palette.map((c) => `<button type="button" class="cswatch ${d.color?.hex === c.hex ? 'on' : ''}" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${esc(colorName(c.hex))}" aria-pressed="${d.color?.hex === c.hex}"></button>`).join('')}<input type="color" id="color" value="${d.color?.hex || '#888888'}" aria-label="Pick any colour" style="width:44px;height:34px;padding:0;border:0;background:none"></div>
       <div class="row" style="margin-top:18px;justify-content:space-between">
-        <span>${existing ? '<button class="ghost danger" id="rm">Delete</button>' : ''}</span>
+        <span class="row">${existing ? `<button class="ghost danger" id="rm">${starter.isStarter(existing) ? 'Remove' : 'Delete'}</button>` : ''}${starter.isStarter(existing) ? '<button class="ghost" id="ownit">✓ I own this</button>' : ''}</span>
         <span class="row"><button class="ghost" id="cancel">Cancel</button>${existing ? '' : '<button class="ghost" id="saveadd">Save &amp; add another</button>'}<button class="primary" id="save">Save to closet</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
     wire();
   };
@@ -439,6 +444,10 @@ function openItemModal(existing, preset = {}) {
       if (r) await adopt(r, false);
     });
     $('.cswatches').onclick = (e) => { const h = e.target.dataset?.hex; if (!h) return; d.color = { hex: h, name: colorName(h) }; d.colorPicked = true; paint(); };
+    if ($('#ownit')) $('#ownit').onclick = async () => { // a starter piece becomes yours: same picture and tags, no longer marked Starter
+      const it = { ...existing, source: 'own', updatedAt: Date.now() }; await put('items', it); S.items = S.items.map((i) => (i.id === it.id ? it : i));
+      closeModal(); render(); toast(`“${it.name}” is yours now ✓`);
+    };
     if ($('#rm')) $('#rm').onclick = async () => {
       if (!confirm(`Delete “${existing.name}” from your closet?`)) return;
       await removeItems([existing.id]);
@@ -489,6 +498,81 @@ async function removeItems(ids) {
 /* ───────────────────────── cloud sync ───────────────────────── */
 let syncMsg = '';
 /** Ways to get pieces in from other apps. iPhones can't use the web "share to app" feature, so this explains a Shortcut instead. */
+/** Closet > Starter closet: generate the starter pieces one batch (category) at a time on Cloudflare's free tier, with the neuron budget shown. */
+function starterPanel() {
+  const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
+  const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
+    <p class="muted">Product photos made from your style profile (chic neutral casual + polished workwear), so outfits work before your own clothes are in. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it. Style me prefers your own pieces when they fit.</p>
+    <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
+    <div class="starterbatches">${STARTER_BATCHES.map(([k, l, e]) => { const left = starter.missingIn(k, S.items).length, n = STARTER_ITEMS.filter((i) => i.batch === k).length;
+      return `<button class="ghost" data-act="starterbatch" data-v="${k}" ${left && !hidden ? '' : 'disabled'}><span aria-hidden="true">${e}</span> ${l} <small>${left ? `${left} to make · ~${fmt(left * each)} neurons` : `all ${n} in`}</small></button>`; }).join('')}</div>
+    ${(() => { const st = S.items.filter(starter.isStarter), r = st.filter((i) => i.ready).length; return `<p class="starterready" role="status"><b>${r} of ${STARTER_ITEMS.length} ready</b> · ${st.length - r} need review · ${STARTER_ITEMS.length - st.length} not made yet</p>`; })()}
+    <label class="check"><input type="checkbox" data-act="hidestarter" ${hidden ? 'checked' : ''}> Hide all starter pieces${all || hidden ? '' : ' (none yet)'}</label></section>`;
+}
+
+/** Does a starter piece go on the mannequin? Clothing must warp onto the body; shoes need the feet box, bags and accessories a body point. */
+async function starterFits(it, done) {
+  const pack = dollPack || await loadPack(); if (!pack) return { ok: false };
+  if (groupOf(it.type)) { const r = await fitItem({ id: it.id, type: it.type, name: it.name, cutout: done.cutout }, pack).catch(() => null); if (r) URL.revokeObjectURL(r.url); return { ok: !!r, marks: r?.marks }; }
+  return { ok: it.type === 'shoes' ? !!pack.anchors?.shoes : !!(it.acc && pack.accRules?.[it.acc]) };
+}
+
+/** One batch: make the pieces still missing (reusing pictures saved earlier), check each one (remade automatically up to twice if it fails)
+ *  and try it on the mannequin, then show them in a review grid (tap one to make it again) and add them only when approved.
+ *  At the daily limit it pauses, keeps what's made, and carries on after 00:00 UTC. Each tile only ever shows its own picture. */
+async function openStarterBatch(batch) {
+  const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim();
+  if (!pass) return; store.set('aipass', pass);
+  const list = starter.missingIn(batch, S.items), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = [];
+  const tiles = new Map(list.map((it) => [it.id, { it, state: 'wait', url: '', done: null, original: null, err: '', fresh: false, attempt: 0 }]));
+  openModal(); const seq = modalSeq, closed = () => modalSeq !== seq; let resetAt = 0, timer = 0; // (Esc or Cancel closes it; what's made is kept)
+  const left = (ms) => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`; };
+  const note = (t, e) => { const line = { piece: t.it.id, ...e }; log.push(line); console.info('[starter]', line); };
+  const tile = (t) => {
+    const busy = t.state === 'run' || (t.state === 'wait' && !resetAt), r = t.done?.ready;
+    const pic = t.url ? `<img src="${t.url}" alt="">` : `<span class="spin" aria-hidden="true">${t.state === 'err' ? '⚠️' : t.state === 'wait' && resetAt ? '🌙' : '⏳'}</span>`;
+    const tag = t.state === 'ok' ? (r ? '<b class="ok">✓ Ready</b>' : `<b class="rev">Needs review</b><em>${esc(t.done.why.join('; '))}</em>`) : t.state === 'err' ? `<b class="rev">Failed · Retry</b><em>${esc(t.err)}</em>` : t.state === 'run' && t.attempt ? `<em>remaking (try ${t.attempt + 1})</em>` : '';
+    return `<button class="startertile ${t.state} ${t.state === 'ok' ? (r ? 'ready' : 'review') : ''}" data-id="${t.it.id}" ${busy ? 'disabled' : ''} aria-label="${esc(t.it.name)}${t.state === 'ok' ? (r ? ', ready' : ', needs review') + ', tap to make it again' : t.state === 'err' ? ', failed, tap to retry' : ', in progress'}">${pic}<small>${esc(t.it.name)}</small>${tag}</button>`;
+  };
+  const paint = () => {
+    if (closed()) return clearTimeout(timer);
+    const T = [...tiles.values()], made = T.filter((t) => t.state === 'ok'), ready = made.filter((t) => t.done.ready).length, busy = T.some((t) => t.state === 'run' || (t.state === 'wait' && !resetAt));
+    const status = resetAt ? `<p class="limitnote" role="status">⏸ Today’s free Cloudflare allowance is used up. ${made.length} of ${tiles.size} made and saved; the rest carry on after 00:00 UTC (in ${left(resetAt - Date.now())}). You can approve these now or leave this open.</p>` : '';
+    paintSheet(`${status}<p class="muted">${busy ? `Making ${label.toLowerCase()}… ` : ''}<b>${ready} ready</b>, ${made.length - ready} need review, ${T.length - made.length} to go. Each is checked (white background, whole item in frame, nothing else in the picture) and tried on the mannequin. Tap a picture to make it again. Nothing is added until you approve. <span class="nowrap">Neurons used today: ${Math.round(starter.usedToday()).toLocaleString('en-US')} of ${starter.DAILY_FREE.toLocaleString('en-US')}.</span></p>
+      <div class="startergrid">${T.map(tile).join('')}</div>
+      <details class="starterlog"><summary>Log (${log.length})</summary><ol>${log.map((l) => `<li><code>${esc(l.piece)}</code> try ${l.attempt + 1} · seed ${l.seed} · ${l.from === 'saved' ? 'saved picture reused' : `HTTP ${l.status}${l.bytes ? ` · ${Math.round(l.bytes / 1024)} KB` : ''}${l.ms ? ` · ${(l.ms / 1000).toFixed(1)}s` : ''}`}${l.key ? ` · saved as <code>${esc(l.key)}</code>` : ''} · ${l.error ? `error: ${esc(l.error)}` : l.check ? (l.check.ok ? 'check passed' : 'check failed: ' + esc(l.check.reasons.join('; '))) : ''}${l.fits === undefined ? '' : l.fits ? ' · fits' : ' · does not fit'}${l.prompt ? `<br><small>${esc(l.prompt)}</small>` : ''}</li>`).join('')}</ol></details>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="ghost" id="sbcancel">${made.length ? 'Later' : 'Cancel'}</button><button class="primary" id="sbok" ${made.length && !T.some((t) => t.state === 'run') ? '' : 'disabled'}>Approve · add ${made.length} to my closet</button></div>`, `Starter ${label.toLowerCase()}`);
+    $('#sbcancel').onclick = () => closeModal();
+    $('#sbok').onclick = async () => {
+      const add = [...tiles.values()].filter((t) => t.state === 'ok'); closeModal(); clearTimeout(timer);
+      for (const t of add) { const item = { ...starter.toItem(t.it, t.done, t.original), ...(t.done.marks && { marks: t.done.marks }) }; await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); starter.dropDraft(t.it.id); }
+      S.filter.src = 'starter'; render(); toast(`Added ${add.length} starter ${label.toLowerCase()} ✓`);
+    };
+    $('#modal').querySelectorAll('.startertile').forEach((b) => (b.onclick = () => { const t = tiles.get(b.dataset.id); if (t.state === 'wait' || t.state === 'run') return; if (t.state === 'ok') t.attempt++; t.state = 'wait'; t.fresh = true; queue.push(t); pump(); paint(); }));
+  };
+  const make = async (t) => { // one piece: its own picture, checked, remade at most twice automatically, then tried on the mannequin
+    for (let auto = 0; ; auto++) {
+      let blob = !t.fresh && await starter.draftOf(t.it.id), info;
+      if (blob) info = { attempt: t.attempt, seed: seedFor(t.it, t.attempt), from: 'saved', key: `/starter-draft/${t.it.id}` };
+      else ({ blob, info } = await starter.generate(t.it, pass, { attempt: t.attempt }).catch((e) => { if (!(e instanceof starter.DailyLimit)) note(t, { ...(e.info || { attempt: t.attempt }), error: e.message }); throw e; }));
+      const done = await starter.process(blob, t.it);
+      if (!done.check.ok && auto < 2) { note(t, { ...info, check: done.check }); t.attempt++; t.fresh = true; paint(); continue; }
+      const fit = done.check.ok ? await starterFits(t.it, done) : { ok: false };
+      done.ready = done.check.ok && fit.ok; done.marks = fit.marks; done.why = [...done.check.reasons, ...(done.check.ok && !fit.ok ? ['does not fit the mannequin'] : [])];
+      note(t, { ...info, check: done.check, fits: done.check.ok ? fit.ok : undefined });
+      return { blob, done };
+    }
+  };
+  const queue = [...tiles.values()]; let running = 0;
+  const pause = (at) => { resetAt = at; clearTimeout(timer); timer = setTimeout(() => { resetAt = 0; pump(); paint(); }, Math.max(1000, at - Date.now() + 60000)); }; // a minute after the reset
+  const pump = () => { while (running < 3 && queue.length && !closed() && !resetAt) { const t = queue.shift(); running++; t.state = 'run'; t.err = '';
+    make(t).then(({ blob, done }) => { t.original = blob; t.done = done; if (t.url) URL.revokeObjectURL(t.url); t.url = URL.createObjectURL(done.cutout); t.state = 'ok'; t.fresh = false; })
+      .catch((e) => { if (e instanceof starter.DailyLimit) { t.state = 'wait'; queue.unshift(t); pause(e.resetAt); return; } if (t.url) { URL.revokeObjectURL(t.url); t.url = ''; } t.done = null; t.state = 'err'; t.err = e.message; if (/passcode/i.test(e.message)) store.set('aipass', ''); })
+      .finally(() => { running--; pump(); paint(); }); } };
+  pump(); paint();
+}
+
 function addPanel() {
   const base = location.origin;
   return `<section class="panel" aria-label="Add from other apps"><h3>Add from other apps</h3>
@@ -887,7 +971,7 @@ function wicPanel(sec, W, H, x) {
       return `<button class="wic-hot" style="left:${pct(hx, iw)};top:${pct(hy, ih)}" data-act="wicgo" data-v="${k}"><span aria-hidden="true">${t.emoji}</span> ${t.label}${t.types ? ` <small>${n}</small>` : ''}</button>`; }).join('');
   } else if (sec.types) {
     inner = layoutSection(sec, list.map((i) => ({ id: i.id, ar: itemRatio(i) }))).map((p) => { const it = itemById(p.id);
-      return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
+      return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
   } else if (sec.k === 'mirror') {
     const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
     inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to dress up">${fig}</button>`;
@@ -997,7 +1081,7 @@ function renderMirror() {
     <div class="dress-right">
       <section class="tray" aria-label="Wardrobe">
         <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
-        ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
+        ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''} ${starter.isStarter(i) ? 'is-starter' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
       </section>
       <section class="drawer" aria-label="Outfit options">
         <div class="seg" role="group" aria-label="Options">${DRAWERS.filter(([k]) => !(dollOn() && k === 'fit')).map(([k, l]) => `<button class="${S.drawer === k ? 'on' : ''}" aria-pressed="${S.drawer === k}" data-act="drawer" data-v="${k}">${l}</button>`).join('')}</div>
@@ -1300,6 +1384,9 @@ document.addEventListener('click', async (e) => {
     case 'add': return openItemModal(undefined, TYPES[v] ? { type: v } : {});
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
+    case 'fsrc': S.filter.src = v; return renderCloset();
+    case 'starterbatch': return openStarterBatch(v);
+    case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
     case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'doll'; return go('tryon'); }
     case 'dnudge': case 'dsize': case 'drot': if (e.detail === 0) doFitAction(act, v); return; // a mouse/touch press is handled on pointerdown (so holding repeats); this is the keyboard
     case 'dfit': S.fitOpen = !S.fitOpen; if (S.fitOpen && !selectedItem()) S.adjust = Object.values(S.outfit)[0] || null; $('#stage').innerHTML = stageHTML(); refreshDollFit(); return;

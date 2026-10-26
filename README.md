@@ -115,3 +115,18 @@ Keyboard-operable throughout, labelled controls, `aria-pressed` state on filters
 
 ## Ideas for next
 Backup/restore, accounts + sync, a serverless generative virtual-try-on endpoint (Vercel/Cloudflare function + a try-on model API) for photoreal drape, better garment segmentation, weather-aware suggestions.
+
+## Starter closet
+
+A set of 140 generated product photos (7 categories × 20) so the app is useful before your own clothes are in. The list, tags and the
+shared prompt (fixed style suffix, a stable seed per category) are in `public/starter/items.js`; add a row there to add a piece.
+
+- **Engine:** Cloudflare Workers AI, `@cf/black-forest-labs/flux-1-schnell` at 4 steps, through `/api/starter`. Set `CF_ACCOUNT_ID`
+  and `CF_API_TOKEN` (a token with Workers AI permission) in Vercel. fal (`FAL_KEY`) is only an optional fallback.
+- **Free tier:** about 57.6 neurons a picture (4 tiles × 4.8 + 4 steps × 9.6), so a batch of 20 is about 1,150 and all 140 about 8,060
+  of the free 10,000 a day. The app counts neurons per UTC day; at the limit it pauses, keeps every picture made, and carries on after 00:00 UTC.
+- **In the app:** Wardrobe → Starter closet → pick a category. Each picture is checked (white background, whole item in frame, no extra
+  shapes or skin) and remade automatically up to twice, then tried on the mannequin; a review grid shows Ready / Needs review, with a log.
+  Nothing is added until you approve. Starter pieces carry a badge, can be kept (**I own this**) or removed, filtered (All / Mine / Starter)
+  or hidden, and Style me prefers your own pieces.
+- **Script:** `node scripts/starter.mjs --batch tops --dry` shows the prompts and the neuron estimate; see the top of the script for running it.

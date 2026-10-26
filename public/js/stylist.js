@@ -16,7 +16,8 @@ function rank(items, slot, pal, occasion, wearCounts) {
       const color = colorScore(item, pal);
       const occ = occasion && item.occasions?.includes(occasion) ? 12 : 0;
       const fresh = Math.max(0, 5 - (wearCounts[item.id] || 0)); // gentle nudge toward under-worn pieces
-      return { item, color, score: color + occ + fresh };
+      const own = item.source === 'starter' ? 0 : 10; // your own piece wins a close call against a starter one
+      return { item, color, score: color + occ + fresh + own };
     })
     .sort((a, b) => b.score - a.score);
 }
@@ -53,12 +54,14 @@ export function suitsWeather(item, band) {
  * "Style me": a random, balanced outfit for an occasion that favours pieces you rarely wear.
  * @param {{band?:string, rain?:number, avoid?:Set<string>}} weather band picks suitable layers; avoid = ids to steer away from (e.g. already used this week)
  */
+/** Starter pieces can be picked, but your own are about five times as likely when both fit. */
+export const STARTER_WEIGHT = 0.2;
 export function styleMe(items, occasion, wearCounts = {}, weather = {}) {
   const { band, rain = 0, avoid = new Set() } = weather;
   const pool = (slot) => items.filter((i) => slotOf(i.type) === slot && (!occasion || i.occasions?.includes(occasion)));
   const pick = (arr) => {
     if (!arr.length) return null;
-    const w = arr.map((i) => (1 / (1 + (wearCounts[i.id] || 0))) * (suitsWeather(i, band) ? 3 : 1) * (avoid.has(i.id) ? 0.15 : 1));
+    const w = arr.map((i) => (1 / (1 + (wearCounts[i.id] || 0))) * (suitsWeather(i, band) ? 3 : 1) * (avoid.has(i.id) ? 0.15 : 1) * (i.source === 'starter' ? STARTER_WEIGHT : 1));
     let r = Math.random() * w.reduce((a, b) => a + b, 0);
     return arr[w.findIndex((x) => (r -= x) < 0)] || arr[0];
   };

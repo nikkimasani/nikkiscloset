@@ -11,10 +11,15 @@ const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-co
 
 const PORT = 5199, FAL = 5198;
 // Mock of fal's queue API so the whole AI try-on path runs offline (field names per fal's public docs).
-const falCalls = [], aiCalls = [];
+const { readFileSync } = await import('node:fs');
+const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], limitAt: Infinity, sent: {}, tries: {} };
+// The fake Cloudflare answers each piece with its own picture (one of seven real cutouts on white, by its place in the list), so the
+// review grid can be checked tile by tile. Two pieces come back bad at first: one passes on its 3rd try, one never does.
+const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/items.js');
+const WHITE = ['dress', 'blazer', 'snake', 'flare', 'banana', 'tie', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
+const BAD = { 'starter-cream-crochet-cami': 2, 'starter-navy-halter-top': 99 };
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
-const { readFileSync } = await import('node:fs');
 const polls = {};
 const mock = createServer((req, res) => {
   const base = `http://localhost:${FAL}`, send = (o, c = 200) => { res.writeHead(c, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
@@ -32,6 +37,19 @@ const mock = createServer((req, res) => {
       else send({ output: 'Here you go: {"name":"Satin cami","type":"tanks","season":"light","occasions":["GNO","Date Night"],"brand":""}' });
     });
   }
+  else if (req.method === 'POST' && req.url === '/fal-ai/flux-pro/v1.1') {
+    let b = ''; req.on('data', (d) => (b += d)).on('end', () => { const body = JSON.parse(b); starterCalls.push(body); send({ images: [{ url: `${base}/media/starter.png` }], seed: body.seed }); });
+  }
+  else if (req.method === 'POST' && req.url === '/client/v4/accounts/acct1/ai/run/@cf/black-forest-labs/flux-1-schnell') {
+    let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
+      const body = JSON.parse(b); cf.calls.push({ auth: req.headers.authorization, ...body });
+      if (cf.calls.length > cf.limitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
+      const it = SITEMS.find((i) => sPrompt(i) === body.prompt), n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1);
+      const pic = n <= (BAD[it.id] || 0) ? readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)) : WHITE[SITEMS.filter((i) => i.batch === it.batch).indexOf(it) % WHITE.length];
+      cf.sent[it.id] = pic.length; send({ success: true, result: { image: pic.toString('base64') } });
+    });
+  }
+  else if (req.url === '/media/starter.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(WHITE[0]); }
   else if (req.url === '/pin/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><meta property="og:image" content="${base}/media/pin.png"></head></html>`); }
   else if (req.url === '/shop/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><title>x</title><meta property="og:title" content="Satin Cami Top | ZARA United States"><script type="application/ld+json">{"@type":"Product","name":"Satin Cami Top | ZARA","brand":{"name":"Zara"},"image":"${base}/media/shop.jpg","offers":{"price":"29.90"}}</script></head></html>`); }
   else if (req.url === '/media/shop.jpg') { res.writeHead(200, { 'content-type': 'image/jpeg' }); res.end(readFileSync(join(out, 'photo.jpg'))); }
@@ -41,7 +59,7 @@ const mock = createServer((req, res) => {
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else send({ detail: 'nope' }, 404);
 }).listen(FAL);
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}` }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: 'acct1', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -781,6 +799,62 @@ try {
     const hd = await pe.evaluate(async () => { const r = await fetch('/lab/segment-worker.js'); return r.headers.get('content-security-policy'); });
     ok(/unsafe-eval/.test(hd) && /connect-src 'self' blob: data:;/.test(hd) && !/https:/.test(hd), 'the tap-select worker has its own policy and can reach no network');
     await cE.close();
+  }
+
+  // the starter closet: a batch is generated (mock Cloudflare), reviewed, approved, then marked, filtered, owned and hidden
+  {
+    const pS = await mk(); await pS.evaluate(() => localStorage.setItem('aipass', 'letmein'));
+    await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
+    ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
+    await pS.click('[data-act=starterbatch][data-v=tops]');
+    await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
+    ok(cf.calls.length === 24 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /ghost-mannequin/i.test(c.prompt) && /pure white/.test(c.prompt) && /No person, no model, no visible mannequin or dress form, no hanger, no text/.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) with the fixed style suffix; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures)`);
+    const tops = SITEMS.filter((i) => i.batch === 'tops');
+    ok(tops.every((it, k) => cf.calls.find((c) => c.prompt === sPrompt(it)).seed === 110000 + k), 'each piece starts from a stable seed for its category (tops 110000 + its place)');
+    ok(cf.tries['starter-cream-crochet-cami'] === 3 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a picture that fails the check (not a white background) is remade automatically and passes on its 3rd try');
+    ok(cf.tries['starter-navy-halter-top'] === 3 && /background is not plain white/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes a failing picture is shown as Needs review, with the reason');
+    ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
+    ok(/Neurons used today: 1,382 of 10,000/.test(await pS.locator('.sheet').innerText()), 'neurons used today are tracked');
+    const srcs = await pS.locator('.startertile img').evaluateAll((im) => im.map((i) => i.src));
+    ok(srcs.length === 20 && new Set(srcs).size === 20, 'twenty tiles, twenty different pictures');
+    const nReady = await pS.locator('.startertile.ready').count();
+    ok(nReady >= 15 && /\d+ ready/.test(await pS.locator('.sheet .muted').first().innerText()), `${nReady} of 20 pass the check and fit the mannequin`);
+    await pS.click('.starterlog summary');
+    const logText = await pS.locator('.starterlog').innerText();
+    ok((logText.match(/HTTP 200/g) || []).length === 24 && /saved as \/starter-draft\/starter-black-strapless-tube-top/.test(logText) && /Ghost-mannequin/.test(logText), 'the log lists every call: prompt, HTTP status, size and where it was saved');
+    writeFileSync(join(out, '40-starter-log.txt'), logText);
+    await pS.screenshot({ path: join(out, '40-starter-review.png') });
+    await pS.click('.startertile >> nth=3'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20);
+    ok(cf.calls.length === 25 && cf.calls[24].seed !== cf.calls[3].seed, 'tapping a picture makes it again, with the next seed');
+    await pS.click('#sbok'); await pS.waitForFunction(() => window.__closet.items.length === 20);
+    const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => ({ s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready }))));
+    ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id) && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions and source Starter');
+    ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare sent for it (no mix-ups between pieces)');
+    ok(its.find((i) => i.id === 'starter-navy-halter-top').ready === false && its.filter((i) => i.ready).length === nReady, 'only checked pieces that fit are marked ready');
+    ok(new RegExp(`${nReady} of 140 ready · ${20 - nReady} need review · 120 not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
+    ok(await pS.locator('.piece .starterbadge').count() === 20, 'each one carries a Starter badge');
+    ok(await pS.locator('[data-act=starterbatch][data-v=tops]').isDisabled(), 'the tops batch is done (only missing pieces are made)');
+    await pS.screenshot({ path: join(out, '41-starter-closet.png') });
+    // the daily limit: Cloudflare stops after 8 more; progress is kept and the rest carry on after the reset
+    cf.limitAt = cf.calls.length + 8;
+    await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForSelector('.limitnote');
+    await pS.waitForFunction(() => !document.querySelector('.startertile.run'));
+    const okN = await pS.locator('.startertile.ok').count();
+    ok(okN === 8 && /carry on after 00:00 UTC \(in \d+h \d+m\)/.test(await pS.locator('.limitnote').innerText()), `at the daily limit the batch pauses with ${okN} made and says when it resumes`);
+    await pS.screenshot({ path: join(out, '42-starter-limit.png') });
+    await pS.click('#sbcancel');
+    cf.limitAt = Infinity; const before = cf.calls.length; await pS.evaluate(() => localStorage.removeItem('starter_neurons')); // a new day
+    await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 60000 });
+    ok(cf.calls.length - before === 12, `after the reset only the missing 12 are made; the 8 saved earlier are reused (made ${cf.calls.length - before})`);
+    await pS.click('#sbcancel');
+    await pS.click('.piece.is-starter .edit >> nth=0'); await pS.click('#ownit');
+    await pS.click('[data-act=fsrc][data-v=mine]'); ok(await pS.locator('.piece').count() === 1, 'I own this makes it yours: the Mine filter shows it');
+    await pS.click('[data-act=fsrc][data-v=starter]'); ok(await pS.locator('.piece').count() === 19, 'the Starter filter shows the rest');
+    await pS.click('.piece.is-starter .edit >> nth=0'); await pS.click('#rm'); await pS.waitForFunction(() => window.__closet.items.length === 19);
+    ok(true, 'Remove takes a starter piece out');
+    await pS.click('[data-act=hidestarter]'); await pS.waitForFunction(() => window.__closet && window.__closet.items.length === 1);
+    ok(await pS.evaluate(() => window.__closet.items.every((i) => i.source !== 'starter')), 'hiding starter pieces leaves only yours everywhere');
+    await pS.context().close();
   }
 
   // accessibility: axe on each view + dialog

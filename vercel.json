@@ -69,6 +69,9 @@
     },
     "api/product.js": {
       "maxDuration": 25
+    },
+    "api/starter.js": {
+      "maxDuration": 60
     }
   }
 }

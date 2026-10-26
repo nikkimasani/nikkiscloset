@@ -684,3 +684,30 @@ body.wic-on { overflow: hidden; }
 .hairsw:disabled { opacity: .4; cursor: default; }
 .wic-vanity { width: min(92%, 360px); }
 .wic-vanity .hairpick { margin-bottom: 8px; text-align: left; }
+
+/* starter closet */
+.starterbadge { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 2px 7px; border-radius: 999px; background: #3b2a22e6; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .02em; pointer-events: none; }
+.starterbadge.inline { position: static; display: inline-block; vertical-align: 1px; }
+.piece.is-starter { position: relative; }
+.wic-item.is-starter::after, .pick.is-starter::after { content: 'Starter'; position: absolute; top: 2px; left: 2px; padding: 1px 5px; border-radius: 999px; background: #3b2a22d9; color: #fff; font-size: 9px; font-weight: 800; pointer-events: none; }
+.pick.is-starter { position: relative; }
+.starterbatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
+.starterbatches button { min-height: 44px; display: grid; justify-items: start; text-align: left; }
+.starterbatches small { font-size: 11px; opacity: .75; }
+.startergrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: 62vh; overflow-y: auto; }
+.startertile { color: #3b2a22; position: relative; display: grid; grid-template-rows: 110px auto; gap: 4px; padding: 6px; border: 1px solid #0001; border-radius: 14px; background: #fff; font: inherit; cursor: pointer; min-height: 44px; }
+.startertile img { width: 100%; height: 110px; object-fit: contain; }
+.startertile .spin { display: grid; place-items: center; height: 110px; font-size: 24px; }
+.startertile.run .spin { animation: pulse 1s ease-in-out infinite alternate; }
+.startertile small { font-size: 11px; font-weight: 700; line-height: 1.15; }
+.startertile em { font-size: 10px; color: #b4233c; font-style: normal; }
+.startertile.err { border-color: #b4233c66; }
+@keyframes pulse { to { opacity: .35; } }
+label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
+.limitnote { margin: 0 0 8px; padding: 10px 12px; border-radius: 12px; background: #fff3d6; color: #5c4210; font-size: 14px; }
+.startertile.wait .spin { opacity: .6; }
+.nowrap { white-space: nowrap; }
+.startertile b { font-size: 11px; } .startertile b.ok { color: #1f7a3a; } .startertile b.rev { color: #a1461a; }
+.startertile.review { border-color: #e0a06a; } .startertile.ready { border-color: #7cc49155; }
+.starterlog { margin-top: 10px; font-size: 12px; } .starterlog ol { max-height: 30vh; overflow: auto; padding-left: 20px; } .starterlog small { color: #8b7a82; word-break: break-word; }
+.starterready { margin: 8px 0; }
