@@ -5,7 +5,7 @@
 import * as THREE from '../vendor/three/three.module.min.js';
 import { measures, place } from './body.js';
 import { webglOK } from './webgl.js';
-import { buildWorld } from './world.js';
+import { buildWorld, toonGradient } from './world.js';
 
 const webgl = webglOK;
 
@@ -20,20 +20,22 @@ function ensure() {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
   renderer.setClearColor(0x000000, 0);
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(26, 1, 1, 10000);
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xe3d6ff, 2.1));
+  const hemi = new THREE.HemisphereLight(0xffffff, 0xe3d6ff, 2.1); scene.add(hemi);
   const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(180, 420, 520); scene.add(key);
   const rim = new THREE.DirectionalLight(0xbfe4ff, .7); rim.position.set(-300, 200, -300); scene.add(rim);
+  const lights = { hemi, key, rim, base: [2.1, 1.5, 0.7] };
   const figure = new THREE.Group(); scene.add(figure);
-  S = { sw: { legA: { value: 0 }, legB: { value: 0 }, armA: { value: 0 }, armB: { value: 0 } }, renderer, scene, camera, figure, shadow: null, rot: 0, target: 0, drag: null, raf: 0, bodyKey: '', ctx: null, outfit: null, textures: new Map(), shells: [], el: null, ro: null };
+  S = { lights, sw: { legA: { value: 0 }, legB: { value: 0 }, armA: { value: 0 }, armB: { value: 0 } }, renderer, scene, camera, figure, shadow: null, rot: 0, target: 0, drag: null, raf: 0, bodyKey: '', ctx: null, outfit: null, textures: new Map(), shells: [], el: null, ro: null };
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); failed = true; });
   const cv = renderer.domElement;
   cv.style.touchAction = 'pan-y';
   cv.addEventListener('pointerdown', (e) => { S.drag = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 }; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', (e) => {
     if (!S.drag) return;
-    if (S.world) { S.drag.moved += Math.abs(e.clientX - S.drag.x) + Math.abs(e.clientY - S.drag.y); S.world.yaw -= (e.clientX - S.drag.x) * 0.008; S.drag.x = e.clientX; S.drag.y = e.clientY; return; } // drag to look around
+    if (S.world) { S.drag.moved += Math.abs(e.clientX - S.drag.x) + Math.abs(e.clientY - S.drag.y); S.world.yaw = Math.max(-1.1, Math.min(1.1, S.world.yaw - (e.clientX - S.drag.x) * 0.008)); S.drag.x = e.clientX; S.drag.y = e.clientY; return; } // drag to look around
     S.target += (e.clientX - S.drag.x) * 0.012; S.rot = S.target; S.drag.x = e.clientX; request();
   });
   const end = (e) => { const d = S.drag; S.drag = null; if (S.world && d && e.type === 'pointerup' && d.moved < 10 && performance.now() - d.t < 450) tapWorld(e); };
@@ -104,8 +106,8 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
   const { pts: p } = body, m = measures(body), { sw, T, L, headH } = m, bf = body.build || 1;
   const gy = Math.max(p.anL[1], p.anR[1]) + 0.04 * L, cx = m.sm[0];
   const V = (x, y, z = 0) => new THREE.Vector3(x - cx, gy - y, z);
-  const skinM = new THREE.MeshStandardMaterial({ color: skin, roughness: .75, metalness: 0, side: THREE.DoubleSide });
-  const hairM = new THREE.MeshStandardMaterial({ color: hair, roughness: .6 });
+  const skinM = new THREE.MeshToonMaterial({ color: skin, gradientMap: toonGradient(), side: THREE.DoubleSide });
+  const hairM = new THREE.MeshToonMaterial({ color: hair, gradientMap: toonGradient() });
   const g = new THREE.Group();
 
   // torso: shoulders -> chest -> waist -> hips -> crotch (elliptical sections)
@@ -117,7 +119,7 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
   ]), skinM));
 
   // plain basics under everything, so the model is never bare (clothes sit over these)
-  const baseM = new THREE.MeshStandardMaterial({ color: 0xf6f1f7, roughness: 0.9, side: THREE.DoubleSide });
+  const baseM = new THREE.MeshToonMaterial({ color: 0xf6f1f7, gradientMap: toonGradient(), side: THREE.DoubleSide });
   const basic = (y, a, d, h, rTop, rBot) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, h, 28, 1, true), baseM); o.scale.set(a * bf * 1.03, 1, d * bf * 1.03); o.position.set(0, gy - y, 0); g.add(o); };
   basic(shY + 0.22 * T, 0.45 * sw, 0.19 * sw, 0.1 * T, 0.97, 1);
   basic(hipY + 0.07 * T, 0.46 * sw, 0.2 * sw, 0.15 * T, 0.88, 0.97);
@@ -140,11 +142,22 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
   if (style === 'bun') sph(headH * 0.2, 1, 1, 1, hc.x, hc.y + headH * 0.58, -headH * 0.1);
   if (style === 'pony') { const t = tube(headH * 0.12, headH * 0.04, headH * 1.1, hc.x, hc.y - headH * 0.35, -headH * 0.55, 1); t.rotation.x = -0.25; }
   if (style === 'curly') for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; sph(headH * 0.2, 1, 1, 1, hc.x + Math.cos(a) * headH * 0.4, hc.y + Math.sin(a) * headH * 0.42 + headH * 0.05, -headH * 0.12); }
-  const white = new THREE.MeshBasicMaterial({ color: 0xffffff }), pupil = new THREE.MeshBasicMaterial({ color: face.eyes || '#2b1d17' });
+  const white = new THREE.MeshBasicMaterial({ color: 0xffffff }), iris = new THREE.MeshBasicMaterial({ color: face.eyes || '#2b1d17' }), ink = new THREE.MeshBasicMaterial({ color: 0x20141a });
+  const blushM = new THREE.MeshBasicMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.38, depthWrite: false }), browM = new THREE.MeshToonMaterial({ color: new THREE.Color(hair).multiplyScalar(0.75), gradientMap: toonGradient() });
+  const eyes = [];
   for (const sd of [-1, 1]) {
-    const w = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.05, 14, 10), white); w.scale.set(1.25, 0.85, 0.5); w.position.set(hc.x + sd * headH * 0.15, hc.y - headH * 0.08, headH * 0.4); g.add(w);
-    const e = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.028, 12, 8), pupil); e.position.set(hc.x + sd * headH * 0.15, hc.y - headH * 0.08, headH * 0.43); g.add(e);
+    const eye = new THREE.Group(); eye.position.set(hc.x + sd * headH * 0.16, hc.y - headH * 0.07, headH * 0.385);
+    const w = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.075, 20, 14), white); w.scale.set(1, 1.18, 0.4); eye.add(w);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.05, 20, 14), iris); ir.scale.set(1, 1.15, 0.4); ir.position.set(0, -0.006 * headH, headH * 0.02); eye.add(ir);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.026, 14, 10), ink); pu.scale.set(1, 1.15, 0.4); pu.position.set(0, -0.006 * headH, headH * 0.035); eye.add(pu);
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.016, 10, 8), white); hl.position.set(headH * 0.018, headH * 0.03, headH * 0.045); eye.add(hl);
+    const lash = new THREE.Mesh(new THREE.TorusGeometry(headH * 0.07, headH * 0.008, 6, 20, Math.PI), ink); lash.position.set(0, headH * 0.012, headH * 0.012); lash.scale.set(1, 0.9, 0.5); eye.add(lash);
+    g.add(eye); eyes.push(eye);
+    const brow = new THREE.Mesh(new THREE.CapsuleGeometry(headH * 0.008, headH * 0.1, 4, 8), browM); brow.rotation.z = Math.PI / 2 + sd * 0.14;
+    brow.position.set(hc.x + sd * headH * 0.165, hc.y + headH * 0.06, headH * 0.4); g.add(brow);
+    const blush = new THREE.Mesh(new THREE.CircleGeometry(headH * 0.06, 20), blushM); blush.scale.set(1.3, 0.8, 1); blush.position.set(hc.x + sd * headH * 0.25, hc.y - headH * 0.17, headH * 0.34); blush.rotation.y = sd * 0.5; g.add(blush);
   }
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.022, 10, 8), skinM); nose.scale.set(1, 0.9, 0.9); nose.position.set(hc.x, hc.y - headH * 0.15, headH * 0.425); g.add(nose);
   const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: face.lips || '#c4505f' }));
   mouth.scale.set(2.2, .7, .6); mouth.position.set(hc.x, hc.y - headH * 0.27, headH * 0.42); g.add(mouth);
 
@@ -171,10 +184,16 @@ function buildBody(body, skin, hair, style = 'long', face = {}) {
     g.add(piv); rig.legs.push({ piv, x: hp.x, y: hp.y });
   }
   rig.legs.sort((p1, p2) => p1.x - p2.x); rig.arms.sort((p1, p2) => p1.x - p2.x); // [0] is the one at smaller x
+  rig.eyes = eyes;
   // numbers the clothes' vertex shader needs to swing with the limbs
   rig.hip = new THREE.Vector4(rig.legs[0].x, (rig.legs[0].y + rig.legs[1].y) / 2, rig.legs[1].x, 0.35 * T);
   rig.sh = new THREE.Vector4(rig.arms[0].x, (rig.arms[0].y + rig.arms[1].y) / 2, rig.arms[1].x, 0.42 * sw * bf);
 
+  // a dark outline around the skin (inverted hull) and soft shadows: the "game character" look
+  const outlineM = new THREE.MeshBasicMaterial({ color: 0x6a3d57, side: THREE.BackSide }), thick = 0.02 * sw;
+  outlineM.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${thick.toFixed(3)};`); };
+  const outlined = []; g.traverse((o) => { if (o.isMesh) { o.castShadow = true; if (o.material === skinM) outlined.push(o); } });
+  outlined.forEach((o) => { const ol = new THREE.Mesh(o.geometry, outlineM); ol.userData.outline = true; o.add(ol); });
   const skinMeshes = []; // what clothes are fitted around (not hair or the head)
   g.traverse((o) => { if (o.isMesh && o.material === skinM && o !== head && o !== neck) skinMeshes.push(o); });
   const top = gy - p.headTop[1], halfW = Math.max(sw * 1.6, Math.abs(p.wrR[0] - cx) + sw * 0.7);
@@ -419,12 +438,17 @@ function worldTick(now) {
   const [la, lb] = S.ctx.rig.legs, [aa, ab] = S.ctx.rig.arms;
   la.piv.rotation.x = a; lb.piv.rotation.x = -a; aa.piv.rotation.x = -a * 0.7; ab.piv.rotation.x = a * 0.7;
   S.sw.legA.value = a; S.sw.legB.value = -a; S.sw.armA.value = -a * 0.7; S.sw.armB.value = a * 0.7;
+  // little signs of life: breathing and blinking
+  const blink = (w.t % 3.4) > 3.27 ? Math.abs(Math.sin(((w.t % 3.4) - 3.27) / 0.13 * Math.PI)) : 0;
+  for (const eye of S.ctx.rig.eyes) eye.scale.y = 1 - 0.92 * blink;
   const f = S.figure;
+  f.scale.y = 1 + Math.sin(w.t * 2.1) * 0.004;
   f.position.set(w.pos.x, Math.abs(Math.sin(w.phase)) * 0.018 * U * amt, w.pos.z);
   f.rotation.y = w.face; f.rotation.x = 0.07 * amt; f.rotation.z = Math.sin(w.phase) * 0.03 * amt;
   // follow camera
   w.shift += (w.shiftTo - w.shift) * Math.min(1, dt * 6); // lift the avatar up the screen while a rail is open below
   const d = (2.15 + 1.4 * w.shift) * U, camWant = new THREE.Vector3(w.pos.x + sy * d, (0.78 + 0.12 * w.shift) * U, w.pos.z + cy * d);
+  camWant.x = Math.max(-2.45 * U, Math.min(2.45 * U, camWant.x)); camWant.z = Math.max(-2.3 * U, Math.min(3.3 * U, camWant.z)); // never poke the camera through the walls or racks
   S.camera.position.lerp(camWant, 1 - Math.exp(-dt * 7));
   S.camera.lookAt(w.pos.x, (0.5 - 0.65 * w.shift) * U, w.pos.z); // with a rail open, pull back so the avatar sits in the visible top half
   if (S.shadow) S.shadow.position.set(w.pos.x, 0.5, w.pos.z);
@@ -507,6 +531,11 @@ export const stage3d = {
     const old = keep && s.world ? { pos: s.world.pos.clone(), face: s.world.face, yaw: s.world.yaw } : null;
     this.exitWorld();
     const U = s.ctx.H, room = buildWorld(U, stations, theme), cv = s.renderer.domElement;
+    const sun = new THREE.DirectionalLight(0xfff0e0, 1.6); sun.position.set(-1.6 * U, 3.8 * U, 2.6 * U); sun.target.position.set(0, 0, -0.3 * U);
+    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.003 * U;
+    Object.assign(sun.shadow.camera, { left: -3.6 * U, right: 3.6 * U, top: 3.6 * U, bottom: -3.6 * U, near: 0.5 * U, far: 10 * U }); sun.shadow.camera.updateProjectionMatrix();
+    s.scene.add(sun, sun.target); room.sun = sun;
+    s.lights.hemi.intensity = 1.35; s.lights.key.intensity = 0.35; s.lights.rim.intensity = 0.25; // the room's own sun does the work; keep colours rich, not washed out
     s.scene.add(room.group); s.scene.background = new THREE.Color(0xffe3ee); s.scene.fog = new THREE.Fog(0xffe3ee, 8 * U, 15 * U);
     s.camera.fov = 42; s.camera.updateProjectionMatrix();
     const start = new THREE.Vector3(0, 0, 1.7 * U);
@@ -525,9 +554,10 @@ export const stage3d = {
     const cv = S.renderer.domElement;
     cv.removeEventListener('keydown', w.down); cv.removeEventListener('keyup', w.up); cv.removeEventListener('blur', w.clear);
     cv.style.touchAction = 'pan-y'; cv.removeAttribute('tabindex');
-    S.scene.remove(w.room.group); w.room.dispose();
+    S.scene.remove(w.room.group, w.room.sun, w.room.sun.target); w.room.sun.dispose?.(); w.room.dispose();
+    [S.lights.hemi.intensity, S.lights.key.intensity, S.lights.rim.intensity] = S.lights.base;
     S.scene.background = null; S.scene.fog = null; S.camera.fov = 26; S.camera.updateProjectionMatrix();
-    S.world = null; S.figure.position.set(0, 0, 0); S.figure.rotation.set(0, 0, 0); S.figure.rotation.order = 'XYZ'; S.rot = S.target = 0;
+    S.world = null; S.figure.position.set(0, 0, 0); S.figure.rotation.set(0, 0, 0); S.figure.rotation.order = 'XYZ'; S.figure.scale.set(1, 1, 1); S.rot = S.target = 0;
     for (const l of [...(S.ctx?.rig.legs || []), ...(S.ctx?.rig.arms || [])]) l.piv.rotation.x = 0;
     for (const u of Object.values(S.sw)) u.value = 0;
     S.shadow?.position.set(0, 0.5, 0);

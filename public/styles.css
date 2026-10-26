@@ -377,3 +377,6 @@ main { overflow-x: clip; }
 .world-rail .tray-empty { padding: 14px 6px; }
 .world-jump { padding-top: 12px; }
 html:has(.room.world) { scroll-padding-top: 70px; }
+
+.world-hint { top: auto; bottom: 22px; left: 130px; right: 12px; text-align: left; line-height: 1.25; }
+.room.railopen .world-hint { display: none; }
