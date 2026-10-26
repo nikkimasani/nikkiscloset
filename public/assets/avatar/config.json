@@ -1,0 +1,46 @@
+{
+  "id": "base",
+  "name": "Base model",
+  "about": "base.png is shown exactly as it is, at its own proportions. Nothing here draws the body. The numbers below are only coordinates laid over the picture, in the picture's own pixels (896 x 1776), so clothes know where to go. Turn on the debug overlay (Customize > Anchors) to see them on the picture, then edit them here.",
+  "size": [896, 1776],
+  "view": [0, 0, 896, 1776],
+  "layers": { "body": "base.png" },
+  "stack": ["body", "clothes", "hair", "acc"],
+
+  "points": {
+    "neck": [448, 340],
+    "hairline": [448, 132],
+    "shoulderL": [258, 390],
+    "shoulderR": [650, 390],
+    "bustL": [298, 545],
+    "bustR": [604, 545],
+    "waistL": [320, 650],
+    "waistR": [578, 650],
+    "hipL": [210, 930],
+    "hipR": [667, 930],
+    "kneeL": [339, 1205],
+    "kneeR": [579, 1205],
+    "ankleL": [325, 1560],
+    "ankleR": [650, 1560],
+    "footL": [311, 1722],
+    "footR": [670, 1722]
+  },
+
+  "rulesAbout": "Each kind of clothing gets a box worked out from the points. w = [which body width, how many times it]: shoulder, bust, waist, hip or foot (the distance between the left and right point). y0 / y1 = [which level, offset in pixels] for the top and bottom edge: neck, shoulder, bust, waist, hip, knee, ankle, foot. cx = where it is centred: a pair (shoulder, bust, waist, hip, knee, ankle, foot) or [point, offset]. A cutout is scaled to fit inside its box, so a wide shirt is sized by the shoulders, trousers by the hips, and a long coat never runs past the bottom edge of its box.",
+  "rules": {
+    "tops":        { "w": ["shoulder", 1.3],  "y0": ["neck", -8],   "y1": ["hip", -30],  "cx": "shoulder", "align": "xMidYMin" },
+    "tanks":       { "w": ["bust", 1.2],      "y0": ["neck", -24],  "y1": ["hip", -30],  "cx": "shoulder", "align": "xMidYMin" },
+    "bodysuits":   { "w": ["bust", 1.25],     "y0": ["neck", -24],  "y1": ["hip", 40],   "cx": "shoulder", "align": "xMidYMin" },
+    "bottoms":     { "w": ["hip", 1.12],      "y0": ["waist", -16], "y1": ["ankle", 70], "cx": "hip",      "align": "xMidYMin" },
+    "skirts":      { "w": ["hip", 1.15],      "y0": ["waist", -16], "y1": ["ankle", 0],  "cx": "hip",      "align": "xMidYMin" },
+    "dresses":     { "w": ["hip", 1.18],      "y0": ["neck", -16],  "y1": ["ankle", 40], "cx": "hip",      "align": "xMidYMin" },
+    "outerwear":   { "w": ["shoulder", 1.6],  "y0": ["neck", -18],  "y1": ["knee", 120], "cx": "shoulder", "align": "xMidYMin" },
+    "shoes":       { "w": ["foot", 1.35],     "y0": ["foot", -230], "y1": ["foot", 10],  "cx": "foot",     "align": "xMidYMax" },
+    "bags":        { "w": ["hip", 0.5],       "y0": ["hip", -150],  "y1": ["knee", -20], "cx": ["hipR", 80], "align": "xMidYMin" },
+    "accessories": { "w": ["shoulder", 0.8],  "y0": ["neck", -70],   "y1": ["bust", -20], "cx": "shoulder", "align": "xMidYMid" }
+  },
+
+  "tuckable": ["tops", "tanks", "bodysuits"],
+  "clothesOrder": ["shoes", "bottom", "dress", "top", "outer", "bag"],
+  "tuckedOrder": ["shoes", "top", "bottom", "dress", "outer", "bag"]
+}

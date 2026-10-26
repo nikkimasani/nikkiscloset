@@ -1,3 +1,0 @@
-<linearGradient id="skinG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{skinLight}}"/><stop offset=".45" stop-color="{{skin}}"/><stop offset="1" stop-color="{{skinShade}}"/></linearGradient>
-<linearGradient id="hairG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{{hairLight}}"/><stop offset=".5" stop-color="{{hair}}"/><stop offset="1" stop-color="{{hairShade}}"/></linearGradient>
-<radialGradient id="eyeG" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="{{eyesLight}}"/><stop offset="1" stop-color="{{eyes}}"/></radialGradient>
