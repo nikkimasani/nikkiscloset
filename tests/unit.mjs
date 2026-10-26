@@ -476,6 +476,7 @@ test('/api/starter only makes pieces on the list, on Cloudflare (fal only as a f
   assert.equal((await call({ id: 'a cat in a hat' })).status, 400);
   assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'nope')).status, 401);
   assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw' })).status, 503, 'says what to set when no engine is configured');
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw', FAL_KEY: 'f' })).status, 503, 'no silent switch to fal (paid) when Cloudflare is not set up');
   assert.equal(NEURONS_EACH, 57.6, '4 tiles x 4.8 + 4 steps x 9.6');
   assert.ok(isDailyLimit(429, '') && isDailyLimit(400, '4006: you have used up your daily free allocation of 10,000 neurons') && !isDailyLimit(500, 'internal error'));
   assert.equal(new Date(nextResetUTC(Date.UTC(2026, 9, 26, 17, 5))).toISOString(), '2026-10-27T00:00:00.000Z');
