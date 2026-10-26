@@ -274,7 +274,7 @@ test('the share-target service worker redirects to absolute URLs', () => {
 });
 
 // ── the game around the closet ──
-import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial } from '../public/js/game.js';
+import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather } from '../public/js/game.js';
 const piece = (id, type, o = {}) => ({ id, type, name: id, occasions: [], color: { hex: '#e8dfd0' }, season: 'all', ...o });
 
 test('the daily theme comes from an event first, then a mood, then harsh weather, then luck', () => {
@@ -319,4 +319,35 @@ test('a new date starts a new day, keeps coins, and the bed ends the day', () =>
   g = endDay(g); assert.equal(g.day.phase, 'done'); assert.equal(guideFor({ game: g, hasOutfit: true }), null); assert.equal(g.history.length, 1);
   const next = rollOver(g, '2026-10-27', () => ({ title: 'B', occasion: '' }));
   assert.equal(next.coins, g.coins); assert.equal(next.day.theme.title, 'B'); assert.equal(next.day.energy, 100); assert.equal(rollOver(next, '2026-10-27', () => ({ title: 'Z' })).day.theme.title, 'B', 'same day: unchanged');
+});
+
+test('the shop: free things are yours, paid things need coins, furniture can be bought again', () => {
+  let g = { ...initial(), coins: 100 };
+  assert.ok(owns(g, 'hair:long') && owns(g, 'room:rose') && !owns(g, 'hair:bun'), 'free styles are yours from the start');
+  assert.equal(buy({ ...g, coins: 10 }, 'hair:bun').ok, false, 'too poor');
+  let r = buy(g, 'hair:bun'); assert.ok(r.ok && r.game.coins === 60 && owns(r.game, 'hair:bun')); g = r.game;
+  assert.equal(buy(g, 'hair:bun').ok, false, 'a hairstyle is bought once');
+  g = buy(g, 'furn:chair_stool').game; g = buy(g, 'furn:chair_stool').game; assert.equal(furnitureStock(g, 'furn:chair_stool'), 2);
+  assert.equal(buy(g, 'nope').ok, false);
+  assert.ok(CATALOG.every((c) => c.kind !== 'furn' || (c.model && c.price > 0)), 'every piece of furniture names its model');
+  assert.equal(new Set(CATALOG.map((c) => c.id)).size, CATALOG.length, 'ids are unique');
+});
+
+test('build mode state: place, move, turn and put away; the stock follows', () => {
+  let g = buy({ ...initial(), coins: 200 }, 'furn:cactus_small_A').game;
+  assert.equal(placePiece(initial(), 'furn:cactus_small_A', 0, 0).uid, '', 'cannot place what you do not own');
+  let p = placePiece(g, 'furn:cactus_small_A', 1.234, -2, 5, 'u1'); g = p.game;
+  assert.equal(g.placed[0].x, 1.23); assert.equal(g.placed[0].ry, 1, 'turns wrap to quarter-turns'); assert.equal(furnitureStock(g, 'furn:cactus_small_A'), 0);
+  assert.equal(placePiece(g, 'furn:cactus_small_A', 0, 0).uid, '', 'out of stock once it is placed');
+  g = movePiece(g, 'u1', { x: 2, ry: -1 }); assert.equal(g.placed[0].x, 2); assert.equal(g.placed[0].ry, 3);
+  g = putAway(g, 'u1'); assert.equal(g.placed.length, 0); assert.equal(furnitureStock(g, 'furn:cactus_small_A'), 1, 'back in storage');
+});
+
+test('rooms and old hairstyles', () => {
+  let g = { ...initial(), coins: 100 };
+  assert.equal(useRoom(g, 'room:sage').decor, 'rose', 'you cannot use a room you have not bought');
+  g = buy(g, 'room:sage').game; assert.equal(useRoom(g, 'room:sage').decor, 'sage');
+  assert.ok(owns(grandfather(initial(), 'curly'), 'hair:curly'), 'a style you already wore stays yours');
+  assert.equal(grandfather(initial(), 'long').owned.length, 0);
+  assert.ok(catalogItem('room:dusk'));
 });

@@ -62,20 +62,28 @@ let A = null; // the running apartment (null when not on screen)
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 /* ───────── building the room ───────── */
-function buildRoom(look) {
-  const g = new THREE.Group(), { x0, x1, z0, z1, h } = ROOM, W = x1 - x0, D = z1 - z0;
-  const floorTex = canvasTex(256, 256, (c, w, hh) => { // warm planks
-    const tones = ['#eab7bf', '#e6aeb8', '#efc0c6', '#e3a9b4'];
-    for (let i = 0; i < 8; i++) { c.fillStyle = tones[i % 4]; c.fillRect(0, (i * hh) / 8, w, hh / 8); c.fillStyle = '#b3586b55'; c.fillRect(0, (i * hh) / 8, w, 2); for (let k = 0; k < 6; k++) { c.fillStyle = '#ffffff1c'; c.fillRect(Math.random() * w, (i * hh) / 8 + 4, 20 + Math.random() * 50, 1.5); } }
-  }, [W / 3, D / 3]);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.75, envMapIntensity: 0.3 }));
+/** The colours of each room (the ids match the shop's room:… items). */
+const THEMES = {
+  rose: { floor: ['#eab7bf', '#e6aeb8', '#efc0c6', '#e3a9b4'], plank: '#b3586b55', wall: ['#ffe6ef', '#ffd3e3'], trim: 0xd2557f, bg: 0xffd9e8 },
+  sage: { floor: ['#d3dcc2', '#c9d4b6', '#d9e2cb', '#c1ceae'], plank: '#5f7a4a55', wall: ['#eef6e8', '#d9ebd0'], trim: 0x5f8a5a, bg: 0xdcefd6 },
+  lilac: { floor: ['#d9cbe8', '#d1c1e2', '#e0d4ee', '#cbb9dd'], plank: '#6a4a9a55', wall: ['#f3ecfb', '#e3d6f4'], trim: 0x8f62c9, bg: 0xe8dcf7 },
+  dusk: { floor: ['#6b5a8e', '#645386', '#725f96', '#5d4d80'], plank: '#1c143055', wall: ['#4a3d6e', '#41355f'], trim: 0xffb36b, bg: 0x2f2549 },
+};
+const themeOf = (id) => THEMES[id] || THEMES.rose;
+const floorTexFor = (t) => canvasTex(256, 256, (c, w, hh) => { // planks
+  for (let i = 0; i < 8; i++) { c.fillStyle = t.floor[i % 4]; c.fillRect(0, (i * hh) / 8, w, hh / 8); c.fillStyle = t.plank; c.fillRect(0, (i * hh) / 8, w, 2); for (let k = 0; k < 6; k++) { c.fillStyle = '#ffffff1c'; c.fillRect(Math.random() * w, (i * hh) / 8 + 4, 20 + Math.random() * 50, 1.5); } }
+}, [(ROOM.x1 - ROOM.x0) / 3, (ROOM.z1 - ROOM.z0) / 3]);
+const wallTexFor = (t) => canvasTex(128, 128, (c, w, hh) => { c.fillStyle = t.wall[0]; c.fillRect(0, 0, w, hh); c.fillStyle = t.wall[1]; for (let i = 0; i < 4; i++) c.fillRect((i * w) / 4, 0, w / 8, hh); }, [(ROOM.x1 - ROOM.x0) / 2, 1]);
+
+function buildRoom(themeId = 'rose') {
+  const th = themeOf(themeId), g = new THREE.Group(), { x0, x1, z0, z1, h } = ROOM, W = x1 - x0, D = z1 - z0;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(W, D), new THREE.MeshStandardMaterial({ map: floorTexFor(th), roughness: 0.75, envMapIntensity: 0.3 }));
   floor.rotation.x = -Math.PI / 2; floor.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); floor.receiveShadow = true; g.add(floor);
 
-  const wallTex = canvasTex(128, 128, (c, w, hh) => { c.fillStyle = '#ffe6ef'; c.fillRect(0, 0, w, hh); c.fillStyle = '#ffd3e3'; for (let i = 0; i < 4; i++) c.fillRect((i * w) / 4, 0, w / 8, hh); }, [W / 2, 1]);
-  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.95 });
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTexFor(th), roughness: 0.95 });
   const back = new THREE.Mesh(new THREE.PlaneGeometry(W, h), wallMat); back.position.set(0, h / 2, z0); back.receiveShadow = true; g.add(back);
   for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.PlaneGeometry(D, h), wallMat); w.rotation.y = -sx * Math.PI / 2; w.position.set(sx > 0 ? x1 : x0, h / 2, (z0 + z1) / 2); w.receiveShadow = true; g.add(w); }
-  const trim = new THREE.MeshStandardMaterial({ color: 0xd2557f, roughness: 0.6 }), crown = new THREE.MeshStandardMaterial({ color: 0xfff7fa, roughness: 0.7 });
+  const trim = new THREE.MeshStandardMaterial({ color: th.trim, roughness: 0.6 }), crown = new THREE.MeshStandardMaterial({ color: 0xfff7fa, roughness: 0.7 });
   const bar = (w, hh, d, mat, x, y, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, hh, d), mat); m.position.set(x, y, z); m.receiveShadow = true; g.add(m); };
   bar(W, 0.3, 0.12, trim, 0, 0.15, z0 + 0.06); bar(0.12, 0.3, D, trim, x0 + 0.06, 0.15, (z0 + z1) / 2); bar(0.12, 0.3, D, trim, x1 - 0.06, 0.15, (z0 + z1) / 2); // darker skirting boards
   bar(W, 0.18, 0.14, crown, 0, h - 0.09, z0 + 0.07); bar(0.14, 0.18, D, crown, x0 + 0.07, h - 0.09, (z0 + z1) / 2); bar(0.14, 0.18, D, crown, x1 - 0.07, h - 0.09, (z0 + z1) / 2);
@@ -87,6 +95,7 @@ function buildRoom(look) {
   // neon sign above the bed, over the back wall
   const neon = canvasTex(512, 128, (c, w, hh) => { c.shadowColor = '#ff3d9a'; c.shadowBlur = 24; c.fillStyle = '#ffe1ee'; c.font = '800 70px "Brush Script MT","Segoe Script",cursive,system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText("Nikki's Closet", w / 2, hh / 2); c.fillText("Nikki's Closet", w / 2, hh / 2); });
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.65), new THREE.MeshBasicMaterial({ map: neon, transparent: true, depthWrite: false })); sg.position.set(5.3, 2.6, z0 + 0.03); g.add(sg);
+  g.userData.mats = { floor: floor.material, wall: wallMat, trim };
   return g;
 }
 
@@ -290,12 +299,28 @@ function tick(now) {
 }
 
 /* ───────── public API ───────── */
+
+/** Put one piece of furniture in `parent`; solid ones also go in `solids` (tagged with `tag`), with a soft dark patch under them. */
+async function addProp(parent, solids, name, x, z, ry, sc, ex, tag) {
+  const g = (await model(name)).scene.clone(true); g.scale.setScalar(sc); g.rotation.y = ry; g.position.set(x, ex.y || 0, z);
+  g.traverse((m) => { if (m.isMesh) { m.castShadow = ex.solid !== false; m.receiveShadow = true; m.material = m.material.clone(); m.material.envMapIntensity = 0.5; if (name.startsWith('rug')) { m.material.map = null; m.material.color.set(0xf4a3c1); } } });
+  parent.add(g); if (tag) g.userData.uid = tag;
+  if (ex.solid !== false) {
+    const n = solids.length; solidsFrom(g, solids); if (tag && solids.length > n) solids[n].extra = tag;
+    if (!ex.y) {
+      const b = new THREE.Box3().setFromObject(g), blob = new THREE.Mesh(new THREE.PlaneGeometry((b.max.x - b.min.x) * 1.3, (b.max.z - b.min.z) * 1.3), new THREE.MeshBasicMaterial({ map: blobTex(), transparent: true, depthWrite: false, opacity: 0.8 }));
+      blob.rotation.x = -Math.PI / 2; blob.position.set((b.min.x + b.max.x) / 2, 0.012, (b.min.z + b.max.z) / 2); parent.add(blob);
+    }
+  }
+  return g;
+}
+
 export const apartment = {
   get usable() { return webglOK; },
   get running() { return !!A; },
 
   /** Build the room and start walking. Resolves when everything has loaded. */
-  async start({ el, stations = [], look = {}, avatar, pos, onNear, onEnter, onProgress = () => {} }) {
+  async start({ el, stations = [], look = {}, avatar, pos, decor = 'rose', onNear, onEnter, onProgress = () => {} }) {
     this.stop();
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     configureRenderer(renderer); renderer.domElement.setAttribute('role', 'img'); renderer.domElement.style.touchAction = 'none'; renderer.domElement.tabIndex = 0;
@@ -309,21 +334,12 @@ export const apartment = {
     Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 9, bottom: -9, near: 1, far: 30 }); sun.shadow.camera.updateProjectionMatrix();
     scene.add(sun, sun.target);
     const me = A = { renderer, scene, camera, el, stations: [], solids: [], keys: new Set(), key: { dir: 0 }, move: { x: 0, y: 0 }, pos: pos ? new THREE.Vector3(pos[0], 0, pos[1]) : new THREE.Vector3(0, 0, 2.6), face: Math.PI, yaw: 0, yawGoal: 0, speed: 0, dirx: 0, dirz: -1, path: null, shift: 0, shiftTo: 0, camDist: 6, t: 0, last: performance.now(), lookedAt: 0, near: null, dwell: 0, paused: false, onNear, onEnter, raf: 0, grid: null, };
-    const room = buildRoom(); scene.add(room);
+    const room = buildRoom(decor); scene.add(room); A.room = room; scene.background.set(themeOf(decor).bg); scene.fog.color.set(themeOf(decor).bg);
     const gone = () => A !== me; // another start() or stop() happened while we were loading
     // furniture
     const total = PROPS.length + 2; let done = 0; const bump = () => onProgress(++done / total);
     await Promise.all(PROPS.map(async ([name, x, z, ry, sc, ex]) => {
-      try {
-        const g = (await model(name)).scene.clone(true); g.scale.setScalar(sc); g.rotation.y = ry; g.position.set(x, ex.y || 0, z);
-        g.traverse((m) => { if (m.isMesh) { m.castShadow = ex.solid !== false; m.receiveShadow = true; m.material = m.material.clone(); m.material.envMapIntensity = 0.5; if (name.startsWith('rug')) { m.material.map = null; m.material.color.set(0xf4a3c1); } } });
-        scene.add(g);
-        if (ex.solid !== false) solidsFrom(g, A.solids);
-        if (ex.solid !== false && !ex.y) { // a soft dark patch under it so it sits on the floor
-          const b = new THREE.Box3().setFromObject(g), blob = new THREE.Mesh(new THREE.PlaneGeometry((b.max.x - b.min.x) * 1.3, (b.max.z - b.min.z) * 1.3), new THREE.MeshBasicMaterial({ map: blobTex(), transparent: true, depthWrite: false, opacity: 0.8 }));
-          blob.rotation.x = -Math.PI / 2; blob.position.set((b.min.x + b.max.x) / 2, 0.012, (b.min.z + b.max.z) / 2); scene.add(blob);
-        }
-      } catch { /* a missing prop just leaves a gap */ }
+      try { await addProp(scene, A.solids, name, x, z, ry, sc, ex); } catch { /* a missing prop just leaves a gap */ }
       bump();
     }));
     if (gone()) return this;
@@ -387,10 +403,68 @@ export const apartment = {
   walkToStation(type) { const st = A?.stations.find((s) => s.type === type); if (st) { st.armed = true; A.path = findPath(A.pos, new THREE.Vector3(st.padX, 0, st.padZ)); } },
   /** Stand somewhere sensible when the page wants you at a station already (e.g. coming back from its screen). */
   rearm() { A?.stations.forEach((s) => (s.armed = Math.hypot(s.padX - A.pos.x, s.padZ - A.pos.z) > 1.9)); },
+  /** Repaint the room in another colour scheme. */
+  setTheme(id) {
+    const a = A, m = a?.room?.userData.mats; if (!m) return;
+    const th = themeOf(id);
+    m.floor.map?.dispose(); m.floor.map = floorTexFor(th); m.floor.needsUpdate = true;
+    m.wall.map?.dispose(); m.wall.map = wallTexFor(th); m.wall.needsUpdate = true;
+    m.trim.color.set(th.trim); a.scene.background.set(th.bg); a.scene.fog.color.set(th.bg);
+  },
+  /** Show the furniture you've placed: [{uid, model, scale, solid, x, z, ry (quarter turns)}]. `selected` gets a ring round it. */
+  async setExtras(list, selected = '') {
+    const a = A; if (!a) return;
+    const seq = (a.extraSeq = (a.extraSeq || 0) + 1), grp = new THREE.Group(), solids = [];
+    await Promise.all(list.map(async (p) => { try { await addProp(grp, solids, p.model, p.x, p.z, (p.ry * Math.PI) / 2, p.scale, { solid: p.solid }, p.uid); } catch { /* a missing model leaves a gap */ } }));
+    if (A !== a || a.extraSeq !== seq) return; // a newer call (or a new room) took over while the models loaded
+    if (a.extras) { a.extras.removeFromParent(); a.extras.traverse((o) => { const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach((x) => x.dispose?.()); }); } // the geometry is shared with the model cache, so it stays
+    a.solids = a.solids.filter((x) => !x.extra).concat(solids);
+    a.extras = grp; a.scene.add(grp);
+    const sel = list.find((p) => p.uid === selected);
+    if (sel) {
+      const box = solids.find((x) => x.extra === selected), r = box ? Math.max(box.x1 - box.x0, box.z1 - box.z0) / 2 + 0.15 : 0.9;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.07, 40), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.95, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.position.set(box ? (box.x0 + box.x1) / 2 : sel.x, 0.035, box ? (box.z0 + box.z1) / 2 : sel.z); grp.add(ring);
+    }
+    a.grid = gridOf();
+  },
+  /** Can this piece go there? Not through a wall, not on another piece, not on a station, and never so that a station can't be reached. */
+  async canPlace(p, selfUid = '') {
+    const a = A; if (!a) return { ok: false, why: 'The room isn’t open.' };
+    const b0 = new THREE.Box3().setFromObject((await model(p.model)).scene), th = (p.ry * Math.PI) / 2, c = Math.cos(th), sn = Math.sin(th);
+    let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for (const [cx, cz] of [[b0.min.x, b0.min.z], [b0.max.x, b0.min.z], [b0.min.x, b0.max.z], [b0.max.x, b0.max.z]]) {
+      const lx = cx * p.scale, lz = cz * p.scale, rx = p.x + lx * c + lz * sn, rz = p.z - lx * sn + lz * c;
+      x0 = Math.min(x0, rx); x1 = Math.max(x1, rx); z0 = Math.min(z0, rz); z1 = Math.max(z1, rz);
+    }
+    if (x0 < ROOM.x0 + 0.15 || x1 > ROOM.x1 - 0.15 || z0 < ROOM.z0 + 0.15 || z1 > ROOM.z1 - 0.15) return { ok: false, why: 'That’s outside the room.' };
+    if (p.solid === false) return { ok: true, why: '' }; // rugs go anywhere
+    for (const st of a.stations) { const dx = Math.max(x0 - st.padX, 0, st.padX - x1), dz = Math.max(z0 - st.padZ, 0, st.padZ - z1); if (Math.hypot(dx, dz) < 1.0) return { ok: false, why: 'That’s in front of a station.' }; }
+    if (a.solids.some((s) => s.extra !== selfUid && s.y0 < 1.6 && x0 < s.x1 + 0.05 && x1 > s.x0 - 0.05 && z0 < s.z1 + 0.05 && z1 > s.z0 - 0.05)) return { ok: false, why: 'Something is already there.' };
+    // which stations can the avatar still reach? Only a piece that cuts off one that was reachable is refused.
+    const reach = () => {
+      const { nx, nz, blocked: bl } = gridOf(), at = (x, z) => [Math.max(0, Math.min(nx - 1, Math.floor((x - ROOM.x0) / CELL))), Math.max(0, Math.min(nz - 1, Math.floor((z - ROOM.z0) / CELL)))];
+      const seen = new Uint8Array(nx * nz), [si, sj] = at(a.pos.x, a.pos.z), stack = [sj * nx + si]; seen[stack[0]] = 1;
+      while (stack.length) { const cur = stack.pop(), ci = cur % nx, cj = (cur / nx) | 0; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const i = ci + di, j = cj + dj; if (i < 0 || j < 0 || i >= nx || j >= nz || seen[j * nx + i] || bl[j * nx + i]) continue; seen[j * nx + i] = 1; stack.push(j * nx + i); } }
+      // a pad that sits in a tight spot counts as reached when a free cell next to it is
+      return a.stations.map((st) => { const [i, j] = at(st.padX, st.padZ); for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ii = i + di, jj = j + dj; if (ii >= 0 && jj >= 0 && ii < nx && jj < nz && seen[jj * nx + ii]) return true; } return false; });
+    };
+    const kept = a.solids; let blocked = false;
+    try {
+      a.solids = kept.filter((s) => s.extra !== selfUid); const before = reach();
+      a.solids = [...a.solids, { x0, x1, z0, z1, y0: 0, y1: 1.2 }]; const after = reach();
+      blocked = before.some((ok, k) => ok && !after[k]);
+    } finally { a.solids = kept; }
+    return blocked ? { ok: false, why: 'That would block the way to a station.' } : { ok: true, why: '' };
+  },
+  /** Build mode: taps go to fn(x, z, uidOfPieceHit) instead of walking. Pass null to walk again. */
+  setFloorTap(fn) { if (A) A.floorTap = fn; },
+  /** Which way is "up the screen" and "right" on the floor, so arrow buttons feel natural whatever way the camera faces. */
+  camDir() { if (!A) return null; const f = new THREE.Vector3(); A.camera.getWorldDirection(f); f.y = 0; f.normalize(); return { forward: [f.x, f.z], right: [-f.z, f.x] }; },
   debug() {
     if (!A) return null;
     const cp = A.camera.position, inside = A.solids.some((s) => cp.x > s.x0 && cp.x < s.x1 && cp.z > s.z0 && cp.z < s.z1 && cp.y > s.y0 && cp.y < s.y1);
-    return { ready: !!A.ready, pos: [A.pos.x, A.pos.z], cam: [cp.x, cp.y, cp.z], camInsideFurniture: inside, camDist: A.camDist, near: A.near?.type || null, speed: A.speed, solids: A.solids.length, stations: A.stations.map((s) => s.type), yaw: A.yaw, pathLen: A.path?.length || 0, canvas: [A.renderer.domElement.width, A.renderer.domElement.height], tris: A.renderer.info.render.triangles, calls: A.renderer.info.render.calls };
+    return { ready: !!A.ready, pos: [A.pos.x, A.pos.z], cam: [cp.x, cp.y, cp.z], camInsideFurniture: inside, camDist: A.camDist, near: A.near?.type || null, speed: A.speed, solids: A.solids.length, extras: A.extras?.children.filter((o) => o.userData.uid).length || 0, stations: A.stations.map((s) => s.type), yaw: A.yaw, pathLen: A.path?.length || 0, canvas: [A.renderer.domElement.width, A.renderer.domElement.height], tris: A.renderer.info.render.triangles, calls: A.renderer.info.render.calls };
   },
   /** Test hook: put the avatar somewhere. */
   teleport(x, z) { if (A) { A.pos.set(x, 0, z); pushOut(A.pos, AV_R); A.path = null; apartment.rearm(); } },
@@ -406,6 +480,12 @@ function resize() {
 function tap(e) {
   const a = A, r = a.renderer.domElement.getBoundingClientRect(), rc = new THREE.Raycaster();
   rc.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -(((e.clientY - r.top) / r.height) * 2 - 1)), a.camera);
+  if (a.floorTap) { // build mode
+    const hit = a.extras ? rc.intersectObject(a.extras, true)[0] : null; let o = hit?.object, uid = '';
+    while (o && !uid) { uid = o.userData.uid || ''; o = o.parent; }
+    const q = new THREE.Vector3(); rc.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), q) ? a.floorTap(q.x, q.z, uid) : a.floorTap(NaN, NaN, uid);
+    return;
+  }
   const icons = rc.intersectObjects(a.stations.map((s) => s.marker.userData.icon), false)[0];
   if (icons) { const st = a.stations.find((s) => s.marker.userData.icon === icons.object); apartment.walkToStation(st.type); return; }
   const p = new THREE.Vector3();

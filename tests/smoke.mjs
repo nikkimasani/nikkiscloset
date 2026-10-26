@@ -286,11 +286,13 @@ try {
     await p3.screenshot({ path: join(out, '10-doll.png') });
     // customization
     await p3.click('[data-act=drawer][data-v=look]');
-    await p3.click('[data-act=cas][data-v=style]'); await p3.click('[data-act=hairstyle][data-v=pony]');
+    await p3.click('[data-act=cas][data-v=style]'); await p3.click('[data-act=hairstyle][data-v=pony]'); await p3.waitForSelector('#modal .shoplist');
+    ok(await p3.evaluate(() => localStorage.getItem('hairstyle') !== 'pony'), 'a hairstyle you haven’t bought opens the shop instead of changing');
+    await p3.click('#shopclose'); await p3.click('[data-act=hairstyle][data-v=bob]');
     await p3.click('[data-act=cas][data-v=hair]'); await p3.click('[data-act=hair][data-v="#e8639a"]');
     await p3.click('[data-act=cas][data-v=skin]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
     const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin') }));
-    ok(saved.style === 'pony' && saved.hair === '#e8639a' && saved.skin === '#8a5636', 'appearance choices are saved on the device');
+    ok(saved.style === 'bob' && saved.hair === '#e8639a' && saved.skin === '#8a5636', 'appearance choices are saved on the device');
     const svgHtml = await p3.locator('#stage svg.doll').innerHTML();
     ok(svgHtml.includes('#8a5636') && svgHtml.includes('#e8639a'), 'skin and hair colours reach the doll');
     await p3.evaluate(axeSource);
@@ -719,6 +721,55 @@ try {
     await pa.click('[data-act=scene][data-v=apt]'); await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
     await pa.click('[data-act=gostation][data-v=desk]'); await pa.waitForSelector('[data-view=plan].on', { timeout: 120000 });
     ok(true, 'the desk opens the planner');
+  }
+
+  // ── phase 4b: the shop and build mode ──
+  {
+    const cb = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+    await cb.addInitScript(() => { localStorage.setItem('scene', 'apt'); if (!localStorage.getItem('game')) localStorage.setItem('game', JSON.stringify({ coins: 500 })); });
+    const pb = await cb.newPage(); pb.setDefaultTimeout(120000); pb.on('pageerror', (e) => errors.push(e.message)); pb.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await pb.goto(`http://localhost:${PORT}/`); await pb.waitForFunction(() => window.__closet);
+    if (!(await pb.evaluate(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } }))) console.log('SKIP  shop/build tests (no WebGL in this browser)');
+    else {
+      await pb.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
+      await pb.click('.gamebar [data-act=shop]'); await pb.waitForSelector('#modal .shoplist');
+      await pb.evaluate(axeSource);
+      const sa = await pb.evaluate(() => window.axe.run(document.querySelector('#modal'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+      ok(sa.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (shop): ${sa.violations.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+      await pb.screenshot({ path: join(out, '30-shop.png') });
+      await pb.click('[data-act=shopbuy][data-v="furn:cactus_small_A"]');
+      ok(await pb.evaluate(() => window.__closet.game.coins === 480 && window.__closet.game.owned.includes('furn:cactus_small_A')), 'buying furniture spends coins and puts it in storage');
+      await pb.click('[data-act=shoptab][data-v=room]'); await pb.click('[data-act=shopbuy][data-v="room:sage"]'); await pb.click('[data-act=shopuse][data-v="room:sage"]');
+      ok(await pb.evaluate(() => window.__closet.game.decor === 'sage' && window.__closet.game.coins === 400), 'a bought room can be used (the walls and floor change)');
+      await pb.click('[data-act=shoptab][data-v=hair]');
+      await pb.click('[data-act=shopbuy][data-v="hair:bun"]'); await pb.click('[data-act=shopuse][data-v="hair:bun"]');
+      ok(await pb.evaluate(() => localStorage.getItem('hairstyle') === 'bun' && window.__closet.game.coins === 360), 'a bought hairstyle can be worn');
+      await pb.click('#shopclose');
+      // build mode
+      await pb.click('[data-act=build]'); await pb.waitForSelector('#buildbar:not([hidden]) [data-act=bplace]');
+      const e0 = await pb.evaluate(() => window.__apt.debug().extras);
+      await pb.click('#buildbar [data-act=bplace]'); await pb.waitForFunction((n) => window.__apt.debug().extras === n + 1, e0);
+      const pl = await pb.evaluate(() => window.__closet.game.placed[0]);
+      ok(!!pl && (await pb.evaluate(() => window.__apt.debug().extras)) === e0 + 1, 'placing a piece puts it in the room');
+      await pb.screenshot({ path: join(out, '31-build.png') });
+      await pb.click('#buildbar [data-act=bnudge][data-v=up]'); await pb.waitForFunction((p) => { const q = window.__closet.game.placed[0]; return q.x !== p.x || q.z !== p.z; }, pl);
+      ok(true, 'the arrows move the selected piece');
+      await pb.click('#buildbar [data-act=bturn]'); await pb.waitForFunction(() => window.__closet.game.placed[0].ry === 1);
+      ok(true, 'Turn rotates it a quarter turn');
+      ok(!(await pb.evaluate(() => window.__apt.canPlace({ model: 'cactus_small_A', scale: 1, solid: true, x: -3.0, z: -3.3, ry: 0 }))).ok, 'a piece can’t be put on a station’s circle');
+      ok(!(await pb.evaluate(() => window.__apt.canPlace({ model: 'cactus_small_A', scale: 1, solid: true, x: 30, z: 0, ry: 0 }))).ok, 'a piece can’t go outside the room');
+      await pb.evaluate(axeSource);
+      const sb = await pb.evaluate(() => window.axe.run(document.querySelector('#buildbar'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+      ok(sb.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (build bar): ${sb.violations.map((v) => v.id).join(', ') || 'no violations'}`);
+      await pb.click('#buildbar [data-act=bdone]'); await pb.reload();
+      await pb.waitForFunction(() => window.__apt?.debug()?.ready && window.__apt.debug().extras >= 1, null, { timeout: 180000 });
+      ok(await pb.evaluate(() => window.__closet.game.placed.length === 1 && window.__closet.game.decor === 'sage'), 'placed furniture and the room colour are kept after a reload');
+      await pb.screenshot({ path: join(out, '32-room-sage.png') });
+      await pb.click('[data-act=build]'); await pb.waitForSelector('#buildbar:not([hidden])');
+      const sel = await pb.evaluate(() => { const g = window.__closet.game.placed[0]; return g.uid; });
+      ok(!!sel, 'the saved piece is still there to pick up');
+    }
+    await cb.close();
   }
 
   // accessibility: axe on each view + dialog
