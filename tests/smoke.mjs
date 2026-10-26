@@ -802,8 +802,8 @@ try {
     await pp.reload(); await pp.waitForFunction(() => window.__closet); await pp.click('[data-view=planner]'); await pp.waitForSelector('.lookbook .lb');
     ok(await pp.locator('.lookbook .lb').count() === 1, 'the lookbook photo is kept after a reload');
     await pp.click('.lookbook .lb'); await pp.waitForSelector('.lbbig'); await pp.click('[data-act=lbdel]');
-    await pp.waitForFunction(() => !window.__closet.wears.some((w) => w.photo));
-    ok(await pp.locator('.lookbook .lb').count() === 0, 'a photo can be removed from the lookbook');
+    await pp.waitForFunction(() => !window.__closet.wears.some((w) => w.photo) && !document.querySelector('.lookbook .lb')); // state changes first, the Diary redraws a moment later
+    ok(true, 'a photo can be removed from the lookbook');
     await cp.close();
   }
 
