@@ -2,7 +2,7 @@
 // cutout's silhouette, then you can drag them. They are stored as fractions (0..1) of the cutout so they survive any resize.
 
 /** Whether a piece has sleeves, going by its category and name ("Sleeveless blouse", "Satin cami"...). undefined when the name doesn't say. */
-export const sleevesFromName = (type, name = '') => (type === 'tanks' || type === 'bodysuits' || /\b(sleeveless|tank|cami(sole)?|strapless|halter|tube|vest|gilet|bandeau|bustier|corset)\b/i.test(name) ? false : /\b(long|short|3\/4|puff|cap) ?-?sleeve/i.test(name) ? true : undefined);
+export const sleevesFromName = (type, name = '') => (/\b(long|short|3\/4|puff|cap) ?-?sleeve/i.test(name) && !/sleeveless/i.test(name) ? true : type === 'tanks' || type === 'bodysuits' || /\b(sleeveless|tank|cami(sole)?|strapless|halter|tube|vest|gilet|bandeau|bustier|corset)\b/i.test(name) ? false : /\b(long|short|3\/4|puff|cap) ?-?sleeve/i.test(name) ? true : undefined);
 
 /** Which landmark set a category uses. */
 export const groupOf = (type) => (type === 'dresses' ? 'dress' : type === 'bottoms' || type === 'skirts' ? 'bottom' : ['tops', 'tanks', 'bodysuits', 'outerwear'].includes(type) ? 'top' : null);

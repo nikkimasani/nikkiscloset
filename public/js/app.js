@@ -89,7 +89,28 @@ async function load() {
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
-  Promise.all(S.items.map(analyseItem)).then(() => { if (S.view === 'tryon' && dollPack) mountStage(); }); // the dashed selection box and tap-to-select need each cutout's real bounds
+  Promise.all(S.items.map(analyseItem)).then(() => { if (S.view === 'tryon' && dollPack) mountStage(); });
+  recheckStarters(); // the dashed selection box and tap-to-select need each cutout's real bounds
+}
+
+/** Starter pieces approved by an older, looser check are checked again with today's (dress-form scraps, wrong colour) and get their
+ *  sleeves from the list. A piece that now fails is cleaned; if it still fails it leaves the closet and the model (its batch remakes it). */
+async function recheckStarters() {
+  const old = S.items.filter((i) => starter.isStarter(i) && (i.checkVersion || 1) < starter.CHECK_VERSION && i.original); if (!old.length) return;
+  let dropped = 0;
+  for (const item of old) {
+    const it = STARTER_ITEMS.find((x) => x.id === item.starterId); if (!it) continue;
+    try {
+      let done = await starter.process(item.original, it); if (!done.check.ok) done = await starter.processCleaned(item.original, it, done.check);
+      const sl = starter.sleevesOf(it), sleeves = sl !== undefined && groupOf(it.type) ? sl : item.sleeves;
+      if (done.check.ok) Object.assign(item, { cutout: done.cutout, color: done.color, colors: done.colors, sleeves, marks: undefined, checkVersion: starter.CHECK_VERSION }); // landmarks found again, with the sleeves
+      else { Object.assign(item, { ready: false, review: done.check.reasons, checkVersion: starter.CHECK_VERSION }); dropped++; }
+      await put('items', item);
+      if (!item.ready) { S.items = S.items.filter((i) => i.id !== item.id); for (const k of Object.keys(S.outfit)) if (S.outfit[k] === item.id) delete S.outfit[k]; S.starterReview = [...(S.starterReview || []), item]; }
+      else { S.urls.delete(item.id); url(item.id, item.cutout); S.meta.delete(item.id); S.fitSig.delete(item.id); await analyseItem(item); }
+    } catch { /* leave it as it was */ }
+  }
+  render(); if (dropped) toast(`${dropped} starter piece${dropped === 1 ? '' : 's'} didn’t pass the new check and went back for remaking`);
 }
 
 /** Look at a cutout once: its size, where the visible part is, and a small see-through map so a tap picks the piece you actually touched. */

@@ -807,7 +807,7 @@ try {
 
   // the starter closet: a batch is generated (mock Cloudflare), reviewed, approved, then marked, filtered, owned and hidden
   {
-    const pS = await mk(); await pS.evaluate(() => localStorage.setItem('aipass', 'letmein'));
+    const pS = await mk(); await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
     ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
@@ -861,6 +861,21 @@ try {
     await pS.click('[data-act=hidestarter]'); await pS.waitForFunction(() => window.__closet && window.__closet.items.length === 1);
     ok(await pS.evaluate(() => window.__closet.items.every((i) => i.source !== 'starter')), 'hiding starter pieces leaves only yours everywhere');
     await pS.context().close();
+  }
+
+  // a starter piece approved by the older check is checked again on load: one with dress-form scraps or the wrong colour leaves the closet
+  {
+    const pR = await mk();
+    await pR.evaluate(async ([bad, good]) => {
+      const { put } = await import('/js/db.js'), blob = (b64) => fetch('data:image/png;base64,' + b64).then((r) => r.blob());
+      const mkIt = async (id, sid, name, b64) => ({ id, starterId: sid, source: 'starter', ready: true, name, type: 'tops', occasions: ['Brunch'], season: 'all', cutout: await blob(b64), original: await blob(b64), createdAt: 1, updatedAt: 1 });
+      await put('items', await mkIt('old1', 'starter-navy-halter-top', 'Navy halter top', bad));
+      await put('items', await mkIt('old2', 'starter-black-fitted-tee', 'Black fitted tee', good));
+    }, [readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)).toString('base64'), readFileSync(new URL('./fixtures/white/dress.png', import.meta.url)).toString('base64')]);
+    await pR.reload(); await pR.waitForFunction(() => window.__closet && (window.__closet.starterReview || []).length >= 1, null, { timeout: 30000 });
+    const st = await pR.evaluate(() => ({ items: window.__closet.items.map((i) => i.name), review: window.__closet.starterReview.map((i) => i.name) }));
+    ok(st.review.includes('Navy halter top') && !st.items.includes('Navy halter top'), `an older starter piece that fails today's check is taken off the closet and the model (${JSON.stringify(st)})`);
+    await pR.context().close();
   }
 
   // accessibility: axe on each view + dialog

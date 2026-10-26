@@ -4,7 +4,7 @@
 // the piece is fitted, like any other. Nothing is saved until you approve the batch.
 import { ITEMS, seedFor } from '../starter/items.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
-import { palette, colorName } from './color.js';
+import { palette, colorName, hexDist } from './color.js';
 import { uid } from './db.js';
 
 /** Cloudflare Workers AI, FLUX.1 schnell at 4 steps: 4 tiles x 4.8 + 4 steps x 9.6 neurons a picture; 10,000 free a day (resets 00:00 UTC). */
@@ -86,6 +86,22 @@ function analyse(img) {
 
 /** Look at a picture (a generated photo or a cleaned cutout): { ok, reasons[] }. Pixel checks only: white border, margin on every side,
  *  one main shape, no skin, no dress-form body, neck stand or pole. */
+/** Roughly what each colour on the list looks like (for the colour check). Prints, metals and clear pieces aren't checked. */
+const SWATCH = { black: '#1c1c1c', white: '#f2f2ee', cream: '#efe6d2', ivory: '#f1ead9', beige: '#d9c3a3', camel: '#b98a55', brown: '#6e4a2e', 'chocolate brown': '#4a2f1f',
+  navy: '#1f2a44', olive: '#6b6b3a', oatmeal: '#d8ccb4', 'butter yellow': '#f1dfa0', champagne: '#e7d3b0', grey: '#8f8f8f', red: '#b3242c', 'emerald green': '#1f6b4a',
+  taupe: '#9b8b7a', tan: '#c19a6b', cognac: '#8e4b22', nude: '#d9b39a', 'light denim': '#9db4cf', 'medium denim': '#5f7ea3', 'dark denim': '#2c3d5a', straw: '#d8c08a' };
+const UNCHECKED = /leopard|plaid|print|tortoise|gold|clear|metallic|stripe/i;
+/** Is one of the picture's main colours close to one the piece should be? */
+function colourMatches(d, w, h, fg, it) {
+  const want = it.colors.map((c) => SWATCH[c.trim()]).filter(Boolean); if (!want.length || UNCHECKED.test(`${it.name} ${it.detail}`)) return true;
+  try { if (localStorage.getItem('starter_test_pictures') === '1') return true; } catch { /* private mode */ } // (the tests' stand-in pictures are other colours)
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'), id = g.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) if (fg[i]) { id.data.set([d[i * 4], d[i * 4 + 1], d[i * 4 + 2], 255], i * 4); }
+  g.putImageData(id, 0, 0);
+  const main = palette(c, 4).filter((p) => p.share > 0.15);
+  return main.some((p) => want.some((h2) => hexDist(p.hex, h2) < 38));
+}
+
 export function checkPicture(img, it) {
   const { w, h, d, fg } = analyse(img), reasons = [];
   let ring = 0, ringWhite = 0, skin = 0, form = 0, n = 0, x0 = w, y0 = h, x1 = -1, y1 = -1;
@@ -115,6 +131,7 @@ export function checkPicture(img, it) {
   let light = 0; for (let i = 0; i < w * h; i++) if (fg[i] && isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) light++;
   const lightPiece = LIGHT.test(colours) || light / Math.max(1, n) > 0.65; // the piece itself is white, cream or grey: a form can't be told apart by colour
   if (n && !lightPiece) { const fm = formMask(d, w, h, (i) => fg[i], n); for (let i = 0; i < w * h; i++) form += fm[i]; if (form / n > 0.03) reasons.push('a white or grey body shape (a dress form?)'); }
+  if (n > 200 && !colourMatches(d, w, h, fg, it)) reasons.push(`colour doesn’t look ${it.colors.join(' / ')}`);
   // a neck stand on top or a pole underneath: the clothing's outline narrows to one thin, centred strip at its top or bottom
   if (n > 200 && !['shoes', 'bags', 'accessories'].includes(it.type)) {
     const bw = x1 - x0 + 1, cx = (x0 + x1) / 2, thin = (yy, f) => { const r = runs(fg, w, yy); return r.length === 1 && r[0][1] - r[0][0] + 1 < bw * f && Math.abs((r[0][0] + r[0][1]) / 2 - cx) < bw * 0.1; };
@@ -175,7 +192,13 @@ async function finish(cut, check) {
 }
 
 /** A closet item for an approved starter piece. */
+/** Whether a starter piece has sleeves, from its name and description (a flat lay's sleeves lie close to the body, so guessing from the shape fails). */
+export const sleevesOf = (it) => (/sleeveless|strapless|tube|cami|tank|halter|corset|vest|one-shoulder|thin straps/i.test(`${it.name} ${it.detail}`) ? false
+  : /sleeve|sweater|turtleneck|button-down|blouse|tee|t-shirt|cardigan|blazer|coat|jacket|duster|puffer|shirt/i.test(`${it.name} ${it.detail}`) ? true : undefined);
+/** Starter pieces checked by an older version are checked again (the check keeps getting stricter). */
+export const CHECK_VERSION = 2;
 export const toItem = (it, done, original) => ({
+  checkVersion: CHECK_VERSION, ...(sleevesOf(it) !== undefined && ['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses'].includes(it.type) && { sleeves: sleevesOf(it) }),
   id: uid(), starterId: it.id, source: 'starter', ready: !!done.ready, review: done.ready ? undefined : done.why, ...(it.acc && { acc: it.acc }), name: it.name, type: it.type, occasions: [...it.occasions], season: it.season, brand: '',
   color: done.color, colors: done.colors, tags: { colors: it.colors }, cutout: done.cutout, original, adj: { scale: 1, dx: 0, dy: 0 },
   createdAt: Date.now(), updatedAt: Date.now(),
