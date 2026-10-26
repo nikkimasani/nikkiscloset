@@ -6,7 +6,7 @@ const HEAVY = ['/vendor/', '/assets/'];
 // The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
 const SHELL = ['/', '/styles.css', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
   '/js/app.js', '/js/aitryon.js', '/js/color.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/meters.js',
-  '/js/insights.js', '/js/game.js', '/js/gfx.js', '/js/mirror.js', '/js/apartment.js', '/js/avatar.js', '/js/doll.js', '/js/browsercut.js', '/js/intake.js', '/js/plan.js', '/js/planner.js', '/js/photo.js', '/js/sample.js', '/js/sharecard.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/vendor/three/three.module.min.js', '/vendor/three/GLTFLoader.js', '/vendor/three/BufferGeometryUtils.js', '/vendor/three/SkeletonUtils.js', '/vendor/three/meshopt_decoder.module.js',];
+  '/js/insights.js', '/js/game.js', '/js/gfx.js', '/js/mirror.js', '/js/apartment.js', '/js/avatar.js', '/js/doll.js', '/js/warp.js', '/js/bodymap.js', '/js/landmarks.js', '/js/garment.js', '/js/fitting.js', '/js/segment.js', '/js/cutmask.js', '/js/editor.js', '/js/browsercut.js', '/js/intake.js', '/js/plan.js', '/js/planner.js', '/js/photo.js', '/js/sharecard.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/vendor/three/three.module.min.js', '/vendor/three/GLTFLoader.js', '/vendor/three/BufferGeometryUtils.js', '/vendor/three/SkeletonUtils.js', '/vendor/three/meshopt_decoder.module.js',];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

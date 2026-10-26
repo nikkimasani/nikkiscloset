@@ -379,3 +379,40 @@ test('photo mode: every backdrop and pose for sale has a drawing, and you can on
   g = buy(g, 'bg:sunset').game; assert.equal(usePhoto(g, 'bg:sunset').photo.bg, 'sunset'); assert.equal(usePhoto(g, 'bg:studio').photo.bg, 'studio', 'free ones are always yours');
   assert.equal(usePhoto({ ...g, photo: undefined }, 'pose:stand').photo.bg, 'blush', 'an old save without photo settings still works');
 });
+
+/* ── garment fitting ── */
+import { tps, affineFit, rowRuns } from '../public/js/warp.js';
+import { homography } from '../public/js/editor.js';
+import { suggest, namesFor, groupOf } from '../public/js/landmarks.js';
+import { alongPath, pathLength } from '../public/js/bodymap.js';
+
+test('thin-plate spline passes through every control point', () => {
+  const src = [[0, 0], [100, 0], [100, 200], [0, 200], [50, 100]], dst = [[10, 5], [120, 0], [95, 210], [-5, 190], [60, 90]], f = tps(src, dst);
+  src.forEach((p, i) => { const [x, y] = f(...p); assert.ok(Math.hypot(x - dst[i][0], y - dst[i][1]) < 1e-6); });
+  const a = affineFit(src.slice(0, 4), src.slice(0, 4).map(([x, y]) => [x * 2 + 3, y * 2 - 1])); assert.deepEqual(a(10, 10).map(Math.round), [23, 19]);
+});
+test('straightening maps the four corners of the product to a rectangle', () => {
+  const q = [[100, 50], [400, 80], [380, 600], [90, 560]], f = homography(q, 300, 500);
+  [[0, 0], [300, 0], [300, 500], [0, 500]].forEach((c, i) => { const [x, y] = f(...q[i]); assert.ok(Math.hypot(x - c[0], y - c[1]) < 1e-6); });
+});
+test('row runs find the pieces of a row, bridging 1px gaps', () => {
+  const w = 20, d = new Uint8ClampedArray(w * 4); [2, 3, 4, 6, 7, 15, 16, 17, 18].forEach((x) => (d[x * 4 + 3] = 255));
+  assert.deepEqual(rowRuns(d, w, 0, { gap: 1, min: 2 }), [[2, 8], [15, 19]]);
+});
+test('landmarks: each category has its own set, and a silhouette gives plausible ones', () => {
+  assert.deepEqual(namesFor('bottoms'), ['waistL', 'waistR', 'crotch', 'hemLo', 'hemLi', 'hemRi', 'hemRo']);
+  assert.ok(namesFor('dresses').includes('waistL') && namesFor('tops').includes('armpitL') && !namesFor('shoes').length);
+  // a plain pair of trousers: waistband on top, two legs below a crotch
+  const w = 100, h = 200, a = new Uint8Array(w * h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) a[y * w + x] = y < 60 ? (x >= 20 && x < 80 ? 1 : 0) : ((x >= 20 && x < 48) || (x >= 52 && x < 80) ? 1 : 0);
+  const m = suggest('bottoms', { w, h, a }); assert.ok(m.crotch[1] > 0.25 && m.crotch[1] < 0.4 && Math.abs(m.crotch[0] - 0.5) < 0.05, `crotch ${m.crotch}`);
+  assert.ok(m.hemLo[0] < m.hemLi[0] && m.hemLi[0] < m.hemRi[0] && m.hemRi[0] < m.hemRo[0] && m.hemLo[1] > 0.95);
+  assert.equal(groupOf('shoes'), null);
+});
+test('sleeves follow the arm line', () => {
+  const arm = [[0, 0], [0, 100], [0, 300]]; assert.deepEqual(alongPath(arm, 0.5).map(Math.round), [0, 150]); assert.equal(pathLength(arm), 300);
+});
+test('the base picture config has the armpit, crotch and arm points the fit needs', async () => {
+  const c = JSON.parse((await import('node:fs')).readFileSync(new URL('../public/assets/avatar/config.json', import.meta.url), 'utf8'));
+  for (const k of ['armpitL', 'armpitR', 'crotch', 'waistbandL', 'waistbandR', 'wristL', 'wristR']) assert.ok(Array.isArray(c.points[k]), k);
+  assert.ok(c.arms.L.length >= 3 && c.arms.R.length >= 3); assert.deepEqual(c.clothesOrder, ['shoes', 'bottom', 'top', 'dress', 'outer', 'bag']);
+});

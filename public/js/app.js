@@ -4,7 +4,6 @@ import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAI
 import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName } from './color.js';
 import { matchInspo, styleMe } from './stylist.js';
-import { SAMPLES, sampleBlob } from './sample.js';
 import { outfitMeters } from './meters.js';
 import { closetInsights, streak as wearStreak } from './insights.js';
 import { webglOK } from './webgl.js';
@@ -13,6 +12,9 @@ import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from '.
 import { BANDS, toF, weatherEmoji } from './weather.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI, productAI } from './aitryon.js';
 import { browserCut } from './browsercut.js';
+import { fitItem, fitSignature } from './fitting.js';
+import { openCutEditor } from './editor.js';
+import { groupOf } from './landmarks.js';
 import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, usePhoto } from './game.js';
@@ -29,7 +31,7 @@ const S = {
   items: [], outfits: [], wears: [], inspos: [], profile: null, plans: [], wishlist: [],
   loc: (() => { try { return JSON.parse(store.get('loc', 'null')); } catch { return null; } })(), forecast: null, weatherError: '',
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
-  urls: new Map(),
+  urls: new Map(), fits: new Map(), fitBoxes: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitSig: new Map(), fitPending: new Set(),
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
   scene: (() => { const v = store.get('scene', 'doll'); return v === 'apt' || v === 'closet' ? 'apt' : 'doll'; })(), // 'doll' = Dress up (the base picture); 'apt' = the 3D apartment
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
@@ -103,13 +105,40 @@ async function analyseItem(item) {
 function outfitItems(src) {
   const ids = Array.isArray(src) ? src : Object.values(src);
   const out = {};
-  ids.map(itemById).filter(Boolean).forEach((i) => (out[slotOf(i.type)] = i));
+  ids.map(itemById).filter(Boolean).forEach((i) => { out[slotOf(i.type)] = i; queueFit(i); });
   return out;
+}
+
+/** A quarter-size see-through map of a fitted picture, so a tap picks the piece you touched. */
+async function maskFromBlob(blob) {
+  const { img, url: u } = await loadImage(blob); URL.revokeObjectURL(u);
+  const w = Math.round(img.naturalWidth / 4), h = Math.round(img.naturalHeight / 4), c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h); const d = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h);
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 40) { data[y * w + x] = 1; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const k = img.naturalWidth / w;
+  return { w, h, data, box: x1 < 0 ? null : { x: x0 * k, y: y0 * k, w: (x1 - x0 + 1) * k, h: (y1 - y0 + 1) * k } };
+}
+
+/** Fit a worn piece to the body in the background (landmarks are suggested the first time and kept on the piece); the figure redraws when it's ready. */
+function queueFit(item) {
+  if (!dollPack || !groupOf(item.type) || !item.cutout) return;
+  const sig = fitSignature(item, dollPack), key = item.id + sig;
+  if (S.fitSig.get(item.id) === sig || S.fitPending.has(key)) return;
+  S.fitPending.add(key);
+  fitItem(item, dollPack).then(async (r) => {
+    S.fitPending.delete(key);
+    if (!r) return;
+    const old = S.fits.get(item.id); if (old) URL.revokeObjectURL(old);
+    const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
+    if (!item.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
+    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
+  }).catch(() => S.fitPending.delete(key));
 }
 const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
-function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, meta: S.meta, cls }) : ''; }
+function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, fits: S.fits, fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
 /* ───────────────────────── router ───────────────────────── */
@@ -159,7 +188,7 @@ function renderCloset() {
     <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
       <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
       <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
-      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove sample pieces</button>' : ''}</div>
+      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
       <input type="file" id="restore" accept=".json,application/json" hidden></section>
     ${syncPanel()}`;
   const qEl = $('#q');
@@ -172,8 +201,7 @@ function emptyCloset() {
   return `<div class="empty"><h2 class="view-title">Your closet is empty ✨</h2>
     <p class="muted">Snap a photo of each piece (flat on a bed or hanging on a plain wall works best) and add it.</p>
     <div class="row" style="justify-content:center;margin-top:14px">
-      <button class="primary" data-act="add">+ Add your first piece</button>
-      <button class="ghost" data-act="samples">Load a sample closet to explore</button></div></div>`;
+      <button class="primary" data-act="add">+ Add your first piece</button></div></div>`;
 }
 
 function pieceCard(i) {
@@ -215,6 +243,9 @@ function openItemModal(existing, preset = {}) {
       ${d.source ? `<label class="f" for="tol">Background removal strength: <span id="tolv">${d.tolerance}</span></label>
         <input type="range" id="tol" min="8" max="110" value="${d.tolerance}">
         <label class="row" style="margin-top:6px"><input type="checkbox" id="keep" ${d.keep ? 'checked' : ''}> Keep original background</label>
+      <div class="tapbox"><button type="button" class="primary" id="tapcut"${d.source ? '' : ' disabled'}>✂️ Tap to select &amp; fit${d.tapCanvas ? ' again' : ''}</button>
+        ${existing?.cutout && groupOf(d.type) ? '<button type="button" class="ghost" id="editmarks">📍 Edit landmarks</button>' : ''}
+        <p class="muted">${d.tapCanvas ? 'Your tapped selection is used. ' : ''}Pick how the photo was taken, straighten it, tap the garment (and what to leave out), then check where its neckline, shoulders and hems land on the model.${d.original ? '' : ' Your original photo is kept with the piece.'}</p></div>
       <div class="aibox"><div class="muted"><b>✨ AI helpers</b> — cutout and details use a little of your fal credits. With your passcode saved they run on every new photo.</div>
         <label class="row" style="margin-top:6px"><input type="checkbox" id="aiauto" ${store.get('aiauto', '1') !== '0' ? 'checked' : ''}> Run automatically on new photos</label>
         <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
@@ -247,7 +278,7 @@ function openItemModal(existing, preset = {}) {
 
   const recut = () => {
     if (!d.base) return;
-    d.canvas = d.aiCanvas || (d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance }));
+    d.canvas = d.tapCanvas || d.aiCanvas || (d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance }));
     d.cutoutUrl = d.canvas.toDataURL('image/png');
     d.palette = palette(d.canvas, 4).filter((c) => c.share > 0.04);
     const pal = d.palette[0];
@@ -367,6 +398,19 @@ function openItemModal(existing, preset = {}) {
         paint();
       } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
+    const adopt = async (r, withCut) => {
+      d.type = r.type; d.marks = r.marks; d.sleeves = r.sleeves; d.capture = r.capture; d.marksSet = true;
+      if (withCut) { const img = new Image(); img.src = URL.createObjectURL(r.cutout); await img.decode(); const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); URL.revokeObjectURL(img.src); d.tapCanvas = c; d.aiCanvas = null; d.original = r.original; d.cutoutUrl = c.toDataURL('image/png'); d.canvas = c; }
+      paint();
+    };
+    if ($('#tapcut')) $('#tapcut').onclick = async () => {
+      const r = await openCutEditor({ blob: await (await fetch(d.source)).blob(), type: d.type, capture: d.capture, sleeves: d.sleeves });
+      if (r) await adopt(r, true);
+    };
+    if ($('#editmarks')) $('#editmarks').onclick = async () => {
+      const r = await openCutEditor({ start: 'marks', cutout: d.canvas ? await canvasToBlob(d.canvas, 'image/png') : existing.cutout, type: d.type, marks: d.marksSet ? d.marks : existing.marks, sleeves: d.marksSet ? d.sleeves : existing.sleeves, capture: d.capture || existing.capture });
+      if (r) await adopt(r, false);
+    };
     if ($('#devcut')) $('#devcut').onclick = async () => {
       const seq = modalSeq, photo = d.photoSeq, bar = $('#devbar'), msg = $('#devmsg');
       d.devBusy = true; $('#devcut').disabled = true; bar.hidden = false; bar.removeAttribute('value'); msg.textContent = 'Starting…';
@@ -415,6 +459,8 @@ function openItemModal(existing, preset = {}) {
         color: d.color || existing?.color, colors: d.palette.length ? d.palette.map((c) => c.hex) : existing?.colors, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
         price: parseFloat(d.price) > 0 ? Math.round(parseFloat(d.price) * 100) / 100 : undefined, bought: d.bought || undefined, season: d.season,
         createdAt: existing?.createdAt || Date.now(), updatedAt: Date.now(),
+        marks: d.marksSet ? d.marks || undefined : existing && existing.type === d.type ? existing.marks : undefined, // landmarks are suggested again if the category changed
+        sleeves: d.marksSet ? d.sleeves : existing?.sleeves, capture: d.capture || existing?.capture, original: d.original || existing?.original,
       };
       await put('items', item);
       if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
@@ -516,18 +562,6 @@ async function importBackup(file) {
     try { sessionStorage.setItem('restored', String(n)); } catch { /* private mode */ }
     location.reload(); // rebuild all state from what's now stored
   } catch (e) { toast(e.message || 'Could not read that file'); }
-}
-
-async function loadSamples() {
-  for (const s of SAMPLES) {
-    const cutout = await sampleBlob(s);
-    const item = {
-      id: uid(), name: s.name, type: s.type, occasions: s.occasions, brand: '', sample: true, season: s.season || 'all',
-      color: { hex: s.hex, name: colorName(s.hex) }, cutout, adj: { scale: 1, dx: 0, dy: 0 }, createdAt: Date.now(),
-    };
-    await put('items', item); S.items.push(item); url(item.id, cutout); await analyseItem(item);
-  }
-  toast('Sample closet loaded — swap in your real pieces anytime'); render();
 }
 
 /* ───────────────────────── my photo (for the photoreal try-on) ───────────────────────── */
@@ -641,7 +675,7 @@ function stageHTML() {
   }
   if (dollFailed) return '<p class="muted dollhint" role="alert">The model picture couldn’t load. Check your connection and reload.</p>';
   if (!dollPack) return '<p class="muted dollhint" role="status">Getting the model ready…</p>';
-  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
+  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, fits: S.fits, fitBoxes: S.fitBoxes, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
 }
 function mountStage() { const el = $('#stage'); if (el && !aptOn()) el.innerHTML = stageHTML(); }
 const refreshStage = mountStage;
@@ -673,7 +707,7 @@ function casHTML() {
     room: [['auto', 'Follow the season'], ...Object.entries(ROOMS).map(([k, [l, e]]) => [k, `${e} ${l}`])].map(([k, l]) => chip('room', k, l, S.room === k)).join(''),
     anchors: `<div class="anchors"><button class="chip ${S.dbgPts ? 'on' : ''}" aria-pressed="${!!S.dbgPts}" data-act="dbgpts"><span aria-hidden="true">📍</span> Show the points on the model</button>
       <p class="muted">Clothes snap to these points: shoulders and hips set the size, the waist, neck and feet set the position. They are coordinates over the picture, kept in <code>assets/avatar/config.json</code>.</p>
-      <ul class="ptlist">${Object.entries(pts).map(([k, [x, y]]) => `<li><span>${k}</span> <b>${x}, ${y}</b></li>`).join('')}</ul></div>`,
+      <details><summary>All ${Object.keys(pts).length} points and their coordinates</summary><ul class="ptlist">${Object.entries(pts).map(([k, [x, y]]) => `<li><span>${k}</span> <b>${x}, ${y}</b></li>`).join('')}</ul></details></div>`,
   };
   return `<div class="cas" role="region" aria-label="Customize your model">
     <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => tabs.includes(k)).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}
@@ -988,7 +1022,7 @@ function refreshStation(focusTitle = false) {
   const ui = $('#stationui'), st = STATIONS.find((x) => x[0] === S.station); if (!ui || !st) return;
   const keep = ui.querySelector('.st-body')?.scrollTop || 0, focus = document.activeElement?.dataset;
   const worn = outfitItems(S.outfit);
-  const small = dollPack ? dollSVG({ pack: dollPack, items: worn, urls: S.urls, meta: S.meta, cls: 'mini' }) : '';
+  const small = dollPack ? dollSVG({ pack: dollPack, items: worn, urls: S.urls, fits: S.fits, fitBoxes: S.fitBoxes, meta: S.meta, cls: 'mini' }) : '';
   let body = '';
   if (S.station === 'wardrobe') {
     if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type;
@@ -1108,8 +1142,7 @@ function dollFitHTML(worn, fit) {
   if (!dollPack) return '<div id="dollfit"></div>';
   if (!Object.keys(worn).length) return '<p class="muted dollhint" id="dollfit">Pick something from the wardrobe below to dress the doll.</p>';
   return `<div class="dollfit" id="dollfit" role="group" aria-label="Pieces on the doll">
-    <div class="chips dfpieces">${SLOTS.filter((x) => worn[x]).map((x) => `<button class="chip ${fit?.id === worn[x].id && S.fitOpen ? 'on' : ''}" aria-pressed="${fit?.id === worn[x].id && S.fitOpen}" data-act="fit" data-id="${worn[x].id}">${SLOT_LABEL[x]}: ${esc(worn[x].name)}</button>`).join('')}</div>
-    ${Object.values(worn).some((i) => i.sample) ? '<p class="muted dollhint">Pieces marked as samples are simple drawings. Your own photo cutouts (+ Add piece) are shown as the real thing.</p>' : ''}</div>`;
+    <div class="chips dfpieces">${SLOTS.filter((x) => worn[x]).map((x) => `<button class="chip ${fit?.id === worn[x].id && S.fitOpen ? 'on' : ''}" aria-pressed="${fit?.id === worn[x].id && S.fitOpen}" data-act="fit" data-id="${worn[x].id}">${SLOT_LABEL[x]}: ${esc(worn[x].name)}</button>`).join('')}</div></div>`;
 }
 function refreshDollFit() {
   const worn = outfitItems(S.outfit), fit = selectedItem(), bar = $('#dollbar'), chips = $('#dollfit');
@@ -1124,7 +1157,12 @@ function garmentAt(stage, x, y) {
   const svg = stage.querySelector('svg.doll'); if (!svg || !dollPack) return null;
   for (const g of [...svg.querySelectorAll('.gar')].reverse()) { // topmost first
     const it = itemById(g.dataset.id), a = it && dollPack.anchors[it.type], m = g.getScreenCTM(); if (!a || !m) continue;
-    const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const p = pt.matrixTransform(m.inverse()), meta = S.meta.get(it.id);
+    const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const p = pt.matrixTransform(m.inverse()), meta = S.meta.get(it.id), fm = S.fitMask.get(it.id);
+    if (fm && g.querySelector('image')?.getAttribute('width') == dollPack.size[0]) { // a fitted piece: look at its picture on the body
+      const cx = Math.floor(p.x / dollPack.size[0] * fm.w), cy = Math.floor(p.y / dollPack.size[1] * fm.h);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Y = cy + dy; if (X >= 0 && Y >= 0 && X < fm.w && Y < fm.h && fm.data[Y * fm.w + X]) return g; }
+      continue;
+    }
     if (!meta?.mask) { if (p.x >= 0 && p.x <= a.w && p.y >= 0 && p.y <= a.h) return g; continue; } // not analysed yet: the whole box is the best guess
     const r = imageRect(a, meta), u = (p.x - r.x) / r.w, v = (p.y - r.y) / r.h; if (u < 0 || u > 1 || v < 0 || v > 1) continue;
     const N = meta.N, cx = Math.min(N - 1, Math.floor(u * N)), cy = Math.min(N - 1, Math.floor(v * N));
@@ -1208,9 +1246,10 @@ async function logWear(date, occasion = '', note = '') {
 async function dollCanvas() {
   if (!dollOn() || !dollPack) return null;
   const items = outfitItems(S.outfit), urls = new Map();
-  for (const it of Object.values(items)) urls.set(it.id, await blobToData(it.cutout));
+  const fits = new Map();
+  for (const it of Object.values(items)) { urls.set(it.id, await blobToData(it.cutout)); if (S.fitBlobs.has(it.id)) fits.set(it.id, await blobToData(S.fitBlobs.get(it.id))); }
   const bodyFile = dollPack.layers.body, baseData = await blobToData(await (await fetch(dollPack.files[bodyFile])).blob()); // an SVG drawn as an image can't fetch files either
-  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls });
+  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits });
   const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   try { await img.decode(); } catch { return null; }
   const [, , w, h] = dollPack.view, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
@@ -1353,7 +1392,6 @@ document.addEventListener('click', async (e) => {
   if (el.tagName !== 'INPUT') e.preventDefault(); // let checkboxes toggle
   switch (act) {
     case 'add': return openItemModal();
-    case 'samples': return loadSamples();
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
     case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'doll'; return go('tryon'); }

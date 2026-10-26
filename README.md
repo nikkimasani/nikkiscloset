@@ -2,6 +2,13 @@
 
 A digital closet built from the clothes you actually own. Photograph each piece, and the app turns it into a model-ready cutout you can browse, try on, plan, and log.
 
+
+### Cutting out and fitting a piece
+
+**+ Add piece → ✂️ Tap to select & fit** opens the editor: how the photo was taken (Flat lay / Hanger / Worn, each with a short tip), crop + straighten (four draggable corners, perspective-corrected) + automatic white balance, then tap-to-select: tap the garment (➕) and what to leave out (➖); the outline updates live, and a brush erases or restores. Selection is GrabCut (OpenCV) running in a Web Worker (`public/lab/segment-worker.js`, vendored `public/vendor/opencv/`, Apache-2.0) under its own security policy (it needs eval, and can reach no network). Nothing is uploaded.
+
+Each piece then gets **landmarks** (neckline, shoulders, armpits, hems, sleeve ends; waistband, crotch and four leg hems for trousers; waist for dresses), suggested from its silhouette and draggable, with a live preview on the model. They are stored on the piece (`marks`, as fractions of the cutout). `config.json` holds the matching body points (armpits, crotch, waistband, arm lines) and the body outline is read from `base.png`'s own transparency. `garment.js` warps the landmarks onto those points with a thin-plate-spline mesh, then widens each row below the waist to the body outline plus ~5% ease (skirts and dresses hang straight from the hip; each trouser leg is fitted on its own), with a 1px feathered edge and a soft shadow. Layer order: base → bottoms → tops (tucked/untucked) → dresses → outerwear → hair → accessories. Shoes, bags and accessories are snapped, not warped.
+
 ## Run it
 ```bash
 npm start        # http://localhost:5173  (no dependencies, no build step)

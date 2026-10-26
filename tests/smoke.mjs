@@ -51,6 +51,27 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 let failed = 0;
+// A closet to test with: your own photo cutouts (tests/fixtures are real garment cutouts), put straight into the browser's database.
+const FIX = [['White tee', 'tops', 'snake'], ['Silk blouse', 'tops', 'tie'], ['Black tank', 'tanks', 'bodysuit'], ['Blue jeans', 'bottoms', 'banana'], ['Black trousers', 'bottoms', 'flare'], ['Satin midi skirt', 'skirts', 'dress:skirt'],
+  ['Emerald wrap dress', 'dresses', 'dress'], ['Camel blazer', 'outerwear', 'blazer'], ['Nude heels', 'shoes', 'flare:shoe'], ['Black mini bag', 'bags', 'blazer:bag']];
+const FIXOCC = {"White tee": ["Casual Outing", "Brunch", "Travel"], "Silk blouse": ["Work / Office", "Dinner", "Date Night"], "Black tank": ["GNO", "Date Night", "Casual Outing"], "Blue jeans": ["Casual Outing", "Brunch", "GNO"], "Black trousers": ["Work / Office", "Dinner"], "Satin midi skirt": ["Date Night", "Dinner", "Brunch"], "Emerald wrap dress": ["Date Night", "Formal / Event", "Dinner"], "Camel blazer": ["Work / Office", "Dinner"], "Nude heels": ["Work / Office", "Date Night", "GNO", "Dinner"], "Black mini bag": ["Date Night", "GNO", "Dinner"]};
+const FIXB64 = Object.fromEntries(['dress', 'blazer', 'snake', 'flare', 'banana', 'tie', 'bodysuit'].map((n) => [n, readFileSync(new URL(`./fixtures/${n}.png`, import.meta.url)).toString('base64')]));
+async function loadFixtures(page) {
+  const view = await page.evaluate(() => window.__closet?.view);
+  await page.evaluate(async ({ FIX, FIXB64, FIXOCC }) => {
+    const { put, uid } = await import('/js/db.js');
+    const img = (b64) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = 'data:image/png;base64,' + b64; });
+    for (const [name, type, src] of FIX) {
+      const [file, part] = src.split(':'), im = await img(FIXB64[file]);
+      const c = document.createElement('canvas'), sy = part === 'skirt' ? 0.45 : part === 'shoe' ? 0.9 : part === 'bag' ? 0.35 : 0, hy = part === 'skirt' ? 0.55 : part === 'shoe' ? 0.1 : part === 'bag' ? 0.3 : 1;
+      c.width = im.width; c.height = Math.max(8, Math.round(im.height * hy)); c.getContext('2d').drawImage(im, 0, im.height * sy, im.width, im.height * hy, 0, 0, c.width, c.height);
+      const cutout = await new Promise((r) => c.toBlob(r, 'image/png'));
+      await put('items', { id: uid(), name, type, occasions: FIXOCC[name], brand: '', sample: true, season: ['Black tank', 'Satin midi skirt'].includes(name) ? 'light' : name === 'Camel blazer' ? 'warm' : 'all', color: { hex: '#888888', name: 'grey' }, cutout, adj: { scale: 1, dx: 0, dy: 0 }, createdAt: Date.now() + Math.random() });
+    }
+  }, { FIX, FIXB64, FIXOCC });
+  await page.reload(); await page.waitForFunction(() => window.__closet?.items.length === 10);
+  if (view && view !== 'tryon') await page.click(`[data-view=${view}]`);
+}
 const ok = (c, msg) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${msg}`); if (!c) failed++; };
 
 try {
@@ -141,7 +162,7 @@ try {
   await ctx.addInitScript(() => localStorage.setItem('flat', '1'));
   const p2 = await ctx.newPage(); p2.on('pageerror', (e) => errors.push(e.message));
   await p2.goto(`http://localhost:${PORT}/`);
-  await p2.click('.empty [data-act=samples]');
+  await loadFixtures(p2);
   await p2.waitForFunction(() => window.__closet?.items.length === 10);
   await p2.click('[data-view=closet]');
   await p2.waitForSelector('.piece');
@@ -224,7 +245,7 @@ try {
   await p3.goto(`http://localhost:${PORT}/`);
   await p3.waitForFunction(() => window.__closet);
   {
-    await p3.click('[data-act=samples]'); await p3.waitForFunction(() => window.__closet.items.length === 10);
+    await loadFixtures(p3); await p3.waitForFunction(() => window.__closet.items.length === 10);
     await p3.click('[data-act=styleme]');
     await p3.waitForFunction(() => document.querySelectorAll('#stage .gar').length >= 2);
     ok(await p3.locator('#stage svg.doll').count() === 1 && await p3.locator('#stage canvas').count() === 0, 'Style me dresses the 2D doll');
@@ -241,7 +262,7 @@ try {
     ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["anchors","room"]', 'Customize on the doll offers only Anchors and Room (no dead face, hair or body options)');
     ok(await p3.locator('.ptlist li').count() >= 15, 'the anchor points are listed with their coordinates');
     ok(await p3.locator('#stage .pointsdbg').count() === 0, 'the debug overlay is off by default');
-    await p3.click('.cas [data-act=dbgpts]');
+    await p3.locator('.cas [data-act=dbgpts]').evaluate((e) => e.click());
     ok(await p3.locator('.cas').count() === 0 && await p3.locator('.dbgchip').count() === 1, 'turning the points on closes the panel so they can be seen, with a chip to hide them');
     ok(await p3.locator('#stage .pointsdbg circle').count() >= 15 && await p3.locator('#stage .pointsdbg rect').count() >= 2, 'the debug overlay draws every point and the box of each piece worn');
     await p3.screenshot({ path: join(out, '10b-anchors.png') });
@@ -279,7 +300,7 @@ try {
     await p3.click('[data-act=rate]'); await p3.waitForSelector('.reveal .star.on');
     ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'rating the same look again pays nothing more');
     await p3.click('#rwclose');
-    await p3.reload(); await p3.waitForFunction(() => window.__closet.game.coins > 0);
+    await p3.reload(); await p3.waitForFunction(() => window.__closet?.game.coins > 0);
     ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'coins are kept after a reload');
     // without the 3D apartment (flat mode / no WebGL) the day can still be closed from the banner
     await p3.waitForSelector('.gamebar .gb-end');
@@ -312,7 +333,7 @@ try {
   const mk = async () => { const c = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, acceptDownloads: true }); await c.addInitScript(() => localStorage.setItem('flat', '1')); const pg = await c.newPage(); pg.on('pageerror', (e) => errors.push(e.message)); pg.on('dialog', (d) => d.accept()); await pg.goto(`http://localhost:${PORT}/`); await pg.waitForFunction(() => window.__closet); return pg; };
   const p4 = await mk();
   ok(!(await p4.evaluate(() => performance.getEntriesByType('resource').some((e) => e.name.includes('three.module')))), 'flat mode never downloads the 3D engine');
-  await p4.click('[data-act=samples]'); await p4.waitForFunction(() => window.__closet.items.length === 10);
+  await loadFixtures(p4); await p4.waitForFunction(() => window.__closet.items.length === 10);
   await p4.click('[data-view=closet]'); await p4.evaluate(() => window.scrollTo(0, 900)); await p4.click('[data-view=tryon]');
   ok(await p4.evaluate(() => Math.round(scrollY)) === 0, 'opening a screen starts at the top (scroll is not carried over)');
   await p4.click('[data-view=closet]');
@@ -383,7 +404,7 @@ try {
   const days7 = Array.from({ length: 7 }, (_, n) => { const d = new Date(); d.setDate(d.getDate() + n); return isoLocal(d); });
   await p8.route('https://geocoding-api.open-meteo.com/**', (r) => r.fulfill({ json: { results: [{ name: 'Houston', admin1: 'Texas', latitude: 29.76, longitude: -95.37 }] } }));
   await p8.route('https://api.open-meteo.com/**', (r) => r.fulfill({ json: { daily: { time: days7, temperature_2m_max: [5, 12, 20, 26, 31, 18, 9], temperature_2m_min: [1, 6, 13, 19, 24, 12, 3], precipitation_probability_max: [80, 0, 10, 0, 0, 60, 0], weathercode: [61, 0, 1, 0, 0, 63, 3] } } }));
-  await p8.click('[data-act=samples]'); await p8.waitForFunction(() => window.__closet.items.length === 10);
+  await loadFixtures(p8); await p8.waitForFunction(() => window.__closet.items.length === 10);
   await p8.click('[data-view=plan]'); await p8.fill('#locq', 'Houston'); await p8.click('[data-act=wxcity]');
   await p8.waitForSelector('.wx-day');
   ok((await p8.locator('.wx-day').count()) === 7, 'weather: 7-day forecast loads (and the strict security policy allows the weather service)');
@@ -430,7 +451,7 @@ try {
   ok(badp.length === 0, `axe (Plan tab): ${badp.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
   await p8.screenshot({ path: join(out, '11-plan.png'), fullPage: true });
   // price -> cost per wear -> insights + streak (fresh closet, so no earlier wears interfere)
-  const p9 = await mk(); await p9.click('[data-act=samples]'); await p9.waitForFunction(() => window.__closet.items.length === 10);
+  const p9 = await mk(); await loadFixtures(p9); await p9.waitForFunction(() => window.__closet.items.length === 10);
   await p9.click('[data-view=closet]'); await p9.locator('.piece:has-text("White tee") .edit').click();
   await p9.fill('#price', '50'); await p9.selectOption('#season', 'light'); await p9.click('#save');
   await p9.waitForSelector('.piece:has-text("White tee") .price');
@@ -453,7 +474,7 @@ try {
     ok(png.subarray(1, 4).toString() === 'PNG' && dims.w === 1080 && dims.h === 1350, `look card is a 1080x1350 PNG (${(png.length / 1024).toFixed(0)} KB)`);
   }
   const p10 = await mk();
-  await p10.click('[data-act=samples]'); await p10.waitForFunction(() => window.__closet.items.length === 10);
+  await loadFixtures(p10); await p10.waitForFunction(() => window.__closet.items.length === 10);
   await p10.click('[data-act=drawer][data-v=look]');
   await p10.click('[data-act=cas][data-v=room]'); await p10.click('[data-act=room][data-v=night]');
   const look = await p10.evaluate(() => ({ cls: document.querySelector('.room').className, room: localStorage.getItem('room') }));
@@ -534,7 +555,7 @@ try {
   const pdl = await cdl.newPage(); pdl.on('pageerror', (e) => errors.push(e.message)); pdl.on('dialog', (d) => d.accept());
   await pdl.goto(`http://localhost:${PORT}/`); await pdl.waitForSelector('svg.doll');
   ok((await pdl.locator('.dollmode').count()) === 1 && (await pdl.getAttribute('svg.doll', 'data-pack')) === 'base', 'Dress up opens on the base picture by default');
-  await pdl.click('[data-act=samples]'); await pdl.waitForFunction(() => window.__closet.items.length === 10);
+  await loadFixtures(pdl); await pdl.waitForFunction(() => window.__closet.items.length === 10);
   const wearOne = async (tab, name) => { await pdl.click(`[data-act=tab][data-v=${tab}]`); await pdl.click(`.pick:has-text("${name}")`); };
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); await wearOne('outerwear', 'Camel blazer'); await wearOne('shoes', 'Nude heels');
   const slots = () => pdl.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
@@ -553,7 +574,8 @@ try {
   const f1 = await saved(); ok(f1.dx > 0 && f1.scale > 1 && f1.rot > 0, `size, turn and position are all kept (${JSON.stringify(f1)})`);
   // drag the piece on the doll
   const box = await pdl.locator('#stage svg.doll').boundingBox(), dx0 = f1.dx;
-  await pdl.mouse.move(box.x + box.width / 2, box.y + box.height * 0.28); await pdl.mouse.down(); await pdl.mouse.move(box.x + box.width / 2 + 40, box.y + box.height * 0.28 + 20, { steps: 4 }); await pdl.mouse.up();
+  const bx = box.x + box.width * 0.36, by = box.y + box.height * 0.3; // on the jacket's own panel (its front is open)
+  await pdl.mouse.move(bx, by); await pdl.mouse.down(); await pdl.mouse.move(bx + 40, by + 20, { steps: 4 }); await pdl.mouse.up();
   const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.base || {});
   ok(f2.dx > 10 && f2.dy > 5 && (await saved()).dx === dx0, `touching a piece selects it and dragging moves just that piece (jacket moved ${Math.round(f2.dx)}, ${Math.round(f2.dy)}; tee stayed)`);
   await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
@@ -569,11 +591,12 @@ try {
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); // (the outfit isn't kept across a reload)
   await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
   ok(/White tee/.test(await bar()) && /Top/.test(await bar()), 'the fit panel says which piece: "Top: White tee"');
-  ok((await pdl.locator('#dollbar .dbthumb').getAttribute('src')) === (await pdl.evaluate(() => document.querySelector('#stage .gar[data-slot=top] image').getAttribute('href'))), 'and shows that piece’s own picture');
+  ok((await pdl.locator('#dollbar .dbthumb').getAttribute('src')) === (await pdl.evaluate(() => window.__closet.urls.get(window.__closet.items.find((i) => i.name === 'White tee').id))), 'and shows that piece’s own picture');
   const sel = await pdl.evaluate(() => { const g = document.querySelector('#stage .gar.sel'), a = g.querySelector('image').getBoundingClientRect(), b = g.querySelector('.selbox').getBoundingClientRect(); return { sel: g.dataset.slot, inside: b.left >= a.left - 1 && b.right <= a.right + 1 && b.top >= a.top - 1 && b.bottom <= a.bottom + 1 }; });
   ok(sel.sel === 'top' && sel.inside, 'the dashed box belongs to the selected piece and sits inside its picture');
+  await pdl.waitForFunction(() => window.__closet.fitPending.size === 0); await pdl.waitForTimeout(300);
   const box2 = await pdl.locator('#stage svg.doll').boundingBox();
-  await pdl.mouse.click(box2.x + box2.width * 0.5, box2.y + box2.height * 0.64); // knee height: only the jeans are there
+  await pdl.mouse.click(box2.x + box2.width * 0.36, box2.y + box2.height * 0.68); // the left leg at knee height: only the jeans are there
   ok(/Blue jeans/.test(await bar()), 'tapping the legs selects the jeans, and the label follows ("Bottom: Blue jeans")');
   await pdl.mouse.click(box2.x + box2.width * 0.02, box2.y + box2.height * 0.5); // empty background, far from every piece
   ok(/Blue jeans/.test(await bar()), 'tapping empty space does not switch to a piece that merely has a box there');
@@ -601,7 +624,7 @@ try {
   };
   const devA = await mk(), devB = await mk();
   for (const d of [devA, devB]) await d.context().route('https://kyswqvjgbgztkqamkmac.supabase.co/**', cloudRoute);
-  await devA.click('[data-view=closet]'); await devA.click('[data-act=samples]'); await devA.waitForFunction(() => window.__closet.items.length === 10);
+  await devA.click('[data-view=closet]'); await loadFixtures(devA); await devA.waitForFunction(() => window.__closet.items.length === 10);
   await devA.fill('#synckey', 'wrong-key'); await devA.click('[data-act=syncconnect]');
   await devA.waitForFunction(() => /rejected/.test(document.querySelector('#syncmsg')?.textContent || ''));
   ok(cloud.records.size === 0, 'a wrong sync key is refused and nothing is uploaded');
@@ -622,7 +645,7 @@ try {
   ok(true, 'a delete on one device removes the piece on the other');
 
   // front + back photos: the back photo is kept with the piece
-  const pB = await mk(); await pB.click('[data-view=closet]'); await pB.click('[data-act=samples]'); await pB.waitForFunction(() => window.__closet.items.length === 10);
+  const pB = await mk(); await pB.click('[data-view=closet]'); await loadFixtures(pB); await pB.waitForFunction(() => window.__closet.items.length === 10);
   await pB.locator('.piece:has-text("White tee") .edit').click();
   const backPhoto = join(out, 'back.jpg'); writeFileSync(backPhoto, Buffer.from((await pB.evaluate(() => { const c = document.createElement('canvas'); c.width = 600; c.height = 800; const x = c.getContext('2d'); x.fillStyle = '#e8dfd0'; x.fillRect(0, 0, 600, 800); x.fillStyle = '#2a4d9b'; x.beginPath(); x.moveTo(220, 100); x.lineTo(380, 100); x.lineTo(470, 700); x.lineTo(130, 700); x.fill(); return c.toDataURL('image/jpeg', 0.9); })).split(',')[1], 'base64'));
   await pB.setInputFiles('#backfile', backPhoto); await pB.waitForSelector('.backthumb');
@@ -635,7 +658,7 @@ try {
   // ── phase 3: the 3D apartment ──
   const ca = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await ca.addInitScript(() => localStorage.setItem('scene', 'apt'));
   const pa = await ca.newPage(); pa.setDefaultTimeout(120000); pa.on('pageerror', (e) => errors.push(e.message)); pa.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await pa.goto(`http://localhost:${PORT}/`); await pa.waitForFunction(() => window.__closet);
+  await pa.goto(`http://localhost:${PORT}/`); await pa.waitForFunction(() => window.__closet); await loadFixtures(pa);
   if (!(await pa.evaluate(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } }))) console.log('SKIP  apartment tests (no WebGL in this browser)');
   else {
     await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
@@ -658,7 +681,7 @@ try {
     await pa.click('[data-act=gostation][data-v=wardrobe]');
     await pa.waitForSelector('#stationui:not([hidden]) #sttitle', { timeout: 120000 });
     ok(/Wardrobe/.test(await pa.locator('#sttitle').innerText()), 'walking up to the wardrobe opens its screen');
-    await pa.click('[data-act=samples]'); await pa.waitForFunction(() => window.__closet.items.length === 10); await pa.waitForSelector('.st-grid .pick');
+    await pa.waitForSelector('.st-grid .pick');
     await pa.click('.st-grid .pick >> nth=0');
     ok((await pa.locator('#stationui .st-doll .gar').count()) === 1 && await pa.evaluate(() => Object.keys(window.__closet.outfit).length === 1), 'picking a piece dresses the doll');
     await pa.evaluate(axeSource);
@@ -740,7 +763,7 @@ try {
     await cp.addInitScript(() => { if (!localStorage.getItem('game')) localStorage.setItem('game', JSON.stringify({ coins: 300 })); });
     const pp = await cp.newPage(); pp.setDefaultTimeout(60000); pp.on('pageerror', (e) => errors.push(e.message)); pp.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await pp.goto(`http://localhost:${PORT}/`); await pp.waitForFunction(() => window.__closet);
-    await pp.click('[data-act=samples]'); await pp.waitForFunction(() => window.__closet.items.length === 10);
+    await loadFixtures(pp); await pp.waitForFunction(() => window.__closet.items.length === 10);
     await pp.waitForSelector('svg.doll'); await pp.click('[data-act=styleme]'); await pp.waitForFunction(() => Object.keys(window.__closet.outfit).length > 0);
     await pp.click('[data-act=photo]'); await pp.waitForSelector('#phcanvas');
     const px = await pp.evaluate(() => { const c = document.querySelector('#phcanvas'), g = c.getContext('2d'), a = g.getImageData(60, 300, 1, 1).data, b = g.getImageData(c.width / 2, c.height * 0.5, 1, 1).data; return [[...a], [...b]]; });
@@ -767,6 +790,42 @@ try {
     await pp.waitForFunction(() => !window.__closet.wears.some((w) => w.photo) && !document.querySelector('.lookbook .lb')); // state changes first, the Diary redraws a moment later
     ok(true, 'a photo can be removed from the lookbook');
     await cp.close();
+  }
+
+  // ── cut-out editor: how it was taken, straighten, tap to select, landmarks, then worn on the model ──
+  {
+    const cE = await _newContext({ viewport: { width: 430, height: 900 } }); await cE.addInitScript(() => localStorage.setItem('flat', '1'));
+    const pe = await cE.newPage(); pe.setDefaultTimeout(120000); pe.on('pageerror', (e) => errors.push(e.message)); pe.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await pe.goto(`http://localhost:${PORT}/`); await pe.waitForSelector('svg.doll');
+    await pe.click('header [data-act=add]'); await pe.setInputFiles('#file', new URL('./fixtures/photo_dress.jpg', import.meta.url).pathname);
+    await pe.waitForSelector('#tapcut:not([disabled])'); await pe.click('#tapcut');
+    await pe.waitForSelector('.cuted .modes');
+    ok(await pe.locator('.modecard').count() === 3 && /Flat lay/.test(await pe.locator('.modecard.on').innerText()) && /Recommended/.test(await pe.locator('.modecard.on').innerText()), 'the editor offers Flat lay (recommended), Hanger and Worn, each with a tip');
+    await pe.click('[data-mode=worn]'); ok(/arms, hands, face and phone/.test(await pe.locator('.tipbox').innerText()), 'the Worn tip says to mark arms, hands and the phone as not garment');
+    await pe.click('[data-mode=flat]'); await pe.click('#cutnext'); await pe.waitForSelector('#autoq'); await pe.click('#autoq'); ok(await pe.locator('#wb').isChecked(), 'white balance and straighten are offered before cutting out');
+    await pe.click('#cutnext'); await pe.waitForSelector('[data-tool=pos]');
+    const cb = await pe.locator('#cvs').boundingBox(), tap = async (u, v) => { await pe.mouse.click(cb.x + u * cb.width, cb.y + v * cb.height); await pe.waitForTimeout(350); };
+    await tap(0.5, 0.35); await tap(0.5, 0.62); await tap(0.3, 0.5); await pe.click('[data-tool=neg]'); await tap(0.52, 0.06);
+    await pe.waitForFunction(() => document.querySelector('#selmsg')?.textContent === '' && document.querySelector('#cvs'), null, { timeout: 120000 });
+    await pe.waitForTimeout(600);
+    ok(await pe.locator('#cutnext').innerText() !== '', 'tapping the garment and the dress form gives a live selection');
+    await pe.click('[data-tool=erase]'); await pe.mouse.move(cb.x + cb.width * 0.5, cb.y + cb.height * 0.97); await pe.mouse.down(); await pe.mouse.move(cb.x + cb.width * 0.6, cb.y + cb.height * 0.97, { steps: 4 }); await pe.mouse.up();
+    ok(true, 'the brush erases and restores');
+    await pe.click('#cutnext'); await pe.waitForSelector('#prev');
+    ok(await pe.locator('.marksplit').count() === 1, 'landmarks are suggested and a live fit preview shows the piece on the model');
+    const dotsBefore = await pe.evaluate(() => 1); await pe.click('#cutdone');
+    await pe.waitForSelector('#tapcut:has-text("again")'); await pe.fill('#name', 'Striped test dress'); await pe.waitForTimeout(200);
+    await pe.click('#save');
+    await pe.waitForFunction(() => window.__closet.items.some((i) => i.name === 'Striped test dress'));
+    const it = await pe.evaluate(() => { const i = window.__closet.items.find((x) => x.name === 'Striped test dress'); return { type: i.type, marks: Object.keys(i.marks || {}), cap: i.capture, orig: !!i.original }; });
+    ok(it.marks.length >= 9 && it.cap === 'flat' && it.orig, `the piece is saved with its landmarks (${it.marks.length}), how it was taken, and your original photo`);
+    await pe.click('[data-view=tryon]'); await pe.click(`[data-act=tab][data-v=${it.type}]`); await pe.click('.pick:has-text("Striped test dress")');
+    await pe.waitForFunction(() => window.__closet.fitPending.size === 0 && document.querySelector('#stage .gar image[width="896"]'));
+    ok(true, 'worn on the model, the cutout is warped to the body (not scaled as a rectangle)');
+    await pe.screenshot({ path: join(out, '60-fitted.png') });
+    const hd = await pe.evaluate(async () => { const r = await fetch('/lab/segment-worker.js'); return r.headers.get('content-security-policy'); });
+    ok(/unsafe-eval/.test(hd) && /connect-src 'self' blob: data:;/.test(hd) && !/https:/.test(hd), 'the tap-select worker has its own policy and can reach no network');
+    await cE.close();
   }
 
   // accessibility: axe on each view + dialog

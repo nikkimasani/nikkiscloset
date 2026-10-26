@@ -2,6 +2,7 @@
 // config.json next to it holds coordinates laid over that picture (shoulders, waist, hips, feet...) and the rules that turn them into a
 // box for each kind of clothing. Layer order: base picture -> clothing -> hair -> accessories.
 import { slotOf } from './data.js';
+import { pivotOf } from './garment.js';
 
 export const DEFAULT_PACK = 'base';
 const packs = new Map();
@@ -22,7 +23,7 @@ export function loadPack(id = DEFAULT_PACK) {
 export const getPack = (id = DEFAULT_PACK) => packs.get(id)?.pack || null;
 
 /* ── body points -> a box for each kind of clothing ── */
-const pairOf = (P, k) => (k === 'neck' || k === 'hairline' ? [P[k], P[k]] : [P[k + 'L'], P[k + 'R']]);
+const pairOf = (P, k) => (k === 'neck' || k === 'hairline' || k === 'crotch' ? [P[k], P[k]] : [P[k + 'L'], P[k + 'R']]);
 /** The distance between a body part's left and right point. */
 export const bodyWidth = (P, k) => { const [a, b] = pairOf(P, k); return Math.abs(b[0] - a[0]); };
 /** The height of a level on the body (the average of its left and right points). */
@@ -56,12 +57,12 @@ export function contentBox(a, m) {
   const r = imageRect(a, m);
   return { x: num(r.x + m.bx * r.w), y: num(r.y + m.by * r.h), w: num(m.bw * r.w), h: num(m.bh * r.h) };
 }
-const POINT_COLOR = { neck: '#ff3d8b', hairline: '#a855f7', shoulder: '#ff9f1c', bust: '#e11d48', waist: '#16a34a', hip: '#2563eb', knee: '#7c3aed', ankle: '#0891b2', foot: '#ca8a04' };
+const POINT_COLOR = { neck: '#ff3d8b', hairline: '#a855f7', shoulder: '#ff9f1c', bust: '#e11d48', waist: '#16a34a', hip: '#2563eb', armpit: '#db2777', elbow: '#0d9488', wrist: '#65a30d', crotch: '#dc2626', waistband: '#15803d', knee: '#7c3aed', ankle: '#0891b2', foot: '#ca8a04' };
 /** The debug picture: every body point, the width lines they give, and the box of each piece being worn. */
 export function pointsOverlay(pack, items = {}) {
   const P = pack.points; if (!P) return '';
   const vw = pack.view[2], r = vw / 150, fs = vw / 38, sw = vw / 450;
-  const lines = ['shoulder', 'bust', 'waist', 'hip', 'knee', 'ankle', 'foot'].map((k) => { const [a, b] = pairOf(P, k); return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${POINT_COLOR[k]}" stroke-width="${sw}" stroke-dasharray="${sw * 3} ${sw * 2}"/>`; }).join('');
+  const lines = ['shoulder', 'armpit', 'bust', 'waist', 'waistband', 'hip', 'knee', 'ankle', 'foot'].map((k) => { const [a, b] = pairOf(P, k); return `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${POINT_COLOR[k]}" stroke-width="${sw}" stroke-dasharray="${sw * 3} ${sw * 2}"/>`; }).join('');
   const dots = Object.entries(P).map(([name, [x, y]]) => {
     const k = name.replace(/[LR]$/, ''), side = /R$/.test(name) ? 1 : /L$/.test(name) ? -1 : 0, c = POINT_COLOR[k] || '#000';
     const tx = x + (side ? side * (r + sw * 2) : r * 2), anchor = side < 0 ? 'end' : 'start';
@@ -89,7 +90,7 @@ let uidN = 0;
  * @param {{pack:object, items:Record<string,object>, urls:Map<string,string>, meta?:Map<string,object>, selected?:string, cls?:string, label?:string, debug?:boolean}} o
  *   items: slot -> item. meta: id -> { iw, ih, bx, by, bw, bh } for the dashed selection box.
  */
-export function dollSVG({ pack, items, urls, meta = null, selected = '', cls = '', label = '', debug = false }) {
+export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes = null, selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
   const tucked = !!(top && bottom && isTuckable(top, pack) && fitOf(top, pack).tuck);
@@ -97,7 +98,12 @@ export function dollSVG({ pack, items, urls, meta = null, selected = '', cls = '
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';
     const a = pack.anchors[it.type]; if (!a) return '';
-    const f = fitOf(it, pack), href = urls.get(it.id) || '', box = contentBox(a, meta?.get(it.id));
+    const f = fitOf(it, pack), href = urls.get(it.id) || '', box = contentBox(a, meta?.get(it.id)), fitted = fits?.get(it.id);
+    if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
+      const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
+      const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}"><image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
+      return slot === 'top' && tucked ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
+    }
     const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${garmentTransform(a, f)}">
       <image href="${href}" width="${a.w}" height="${a.h}" preserveAspectRatio="${a.align} meet" filter="url(#gfx-${n})"/>${selected === it.id ? `<rect class="selbox" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="6" fill="none"/>` : ''}</g>`;
     return slot === 'top' && tucked ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
