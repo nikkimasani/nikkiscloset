@@ -118,7 +118,7 @@ test('wearing a dress removes top and bottom, and tapping again takes it off', (
 test('wear counts', () => assert.deepEqual(wearCountMap([{ itemIds: ['a', 'b'] }, { itemIds: ['a'] }]), { a: 2, b: 1 }));
 
 // ── AI helper endpoints (pure parts) ──
-import { parseTags, extractOgImage, pinUrlOk, handleCutout, handleTag, handlePin } from '../lib/ai.js';
+import { parseTags, extractOgImage, pinUrlOk, handleSegment, handleTag, handlePin, samPrompts } from '../lib/ai.js';
 
 test('auto-tag parser keeps only values the app accepts', () => {
   const t = parseTags('Sure! ```json\n{"name":"Satin <b>cami</b>","type":"tanks","season":"light","occasions":["GNO","Bogus","Date Night"],"brand":"Zara"}\n```');
@@ -143,13 +143,20 @@ test('og:image extraction handles attribute order and entities', () => {
 
 test('AI endpoints fail closed and demand the passcode', async () => {
   const req = (pass) => new Request('http://x/api/tag', { method: 'POST', headers: { 'x-app-passcode': pass ?? '' }, body: '{}' });
-  for (const h of [handleCutout, handleTag, handlePin]) {
+  for (const h of [handleSegment, handleTag, handlePin]) {
     assert.equal((await h(req('x'), {})).status, 503, 'unconfigured');
     assert.equal((await h(req('wrong'), { FAL_KEY: 'k', APP_PASSCODE: 'right' })).status, 401, 'wrong passcode');
     assert.equal((await h(new Request('http://x', { method: 'GET' }), { FAL_KEY: 'k', APP_PASSCODE: 'right' })).status, 405);
   }
-  const bad = await handleCutout(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'http://evil/x.png' }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
+  const bad = await handleSegment(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'http://evil/x.png', w: 10, h: 10, pos: [[0.5, 0.5]] }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
   assert.equal(bad.status, 400, 'URLs are not accepted as images');
+  const none = await handleSegment(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'data:image/png;base64,AAAA', w: 10, h: 10, pos: [], neg: [[0.1, 0.1]] }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
+  assert.equal(none.status, 400, 'at least one keep tap');
+});
+
+test('SAM 2 taps become pixel point prompts (1 = keep, 0 = remove); junk is dropped', () => {
+  assert.deepEqual(samPrompts([[0.5, 0.5], [2, 0], ['x', 1]], [[0, 1]], 101, 201), [{ x: 50, y: 100, label: 1 }, { x: 0, y: 200, label: 0 }]);
+  assert.equal(samPrompts(Array(30).fill([0.1, 0.1]), [], 10, 10).length, 12, 'capped');
 });
 
 import { matchInspo } from '../public/js/stylist.js';
@@ -290,7 +297,7 @@ test('the share-target service worker redirects to absolute URLs', () => {
 });
 
 // ── the game around the closet ──
-import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather, usePhoto } from '../public/js/game.js';
+import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, initial, CATALOG, catalogItem, owns, buy, usePhoto } from '../public/js/game.js';
 import { BACKGROUNDS, POSES } from '../public/js/photo.js';
 const piece = (id, type, o = {}) => ({ id, type, name: id, occasions: [], color: { hex: '#e8dfd0' }, season: 'all', ...o });
 
@@ -328,45 +335,25 @@ test('coins grow with stars and streak, shrink when tired, and are only paid onc
   assert.equal(game.coins, coinsFor({ stars: 5 }));
 });
 
-test('a new date starts a new day, keeps coins, and the bed ends the day', () => {
+test('a new date starts a new day, keeps coins, and ending the day closes it', () => {
   let g = rollOver(initial(), '2026-10-26', () => ({ title: 'A', occasion: '' })); g = { ...g, coins: 40 };
-  assert.equal(guideFor({ game: g, hasOutfit: false }), 'wardrobe'); assert.equal(guideFor({ game: g, hasOutfit: true }), 'mirror');
   g = spendEnergy(spendEnergy(g, 8), 4); assert.equal(g.day.energy, 88);
-  g = applyRating(g, { stars: 4, score: 80 }).game; assert.equal(guideFor({ game: g, hasOutfit: true }), 'bed');
-  g = endDay(g); assert.equal(g.day.phase, 'done'); assert.equal(guideFor({ game: g, hasOutfit: true }), null); assert.equal(g.history.length, 1);
+  g = applyRating(g, { stars: 4, score: 80 }).game; assert.equal(g.day.phase, 'evening');
+  g = endDay(g); assert.equal(g.day.phase, 'done'); assert.equal(g.history.length, 1);
   const next = rollOver(g, '2026-10-27', () => ({ title: 'B', occasion: '' }));
   assert.equal(next.coins, g.coins); assert.equal(next.day.theme.title, 'B'); assert.equal(next.day.energy, 100); assert.equal(rollOver(next, '2026-10-27', () => ({ title: 'Z' })).day.theme.title, 'B', 'same day: unchanged');
 });
 
-test('the shop: free things are yours, paid things need coins, furniture can be bought again', () => {
+test('the shop: free things are yours, paid things need coins and are bought once', () => {
   let g = { ...initial(), coins: 100 };
-  assert.ok(owns(g, 'hair:long') && owns(g, 'room:rose') && !owns(g, 'hair:bun'), 'free styles are yours from the start');
-  assert.equal(buy({ ...g, coins: 10 }, 'hair:bun').ok, false, 'too poor');
-  let r = buy(g, 'hair:bun'); assert.ok(r.ok && r.game.coins === 60 && owns(r.game, 'hair:bun')); g = r.game;
-  assert.equal(buy(g, 'hair:bun').ok, false, 'a hairstyle is bought once');
-  g = buy(g, 'furn:chair_stool').game; g = buy(g, 'furn:chair_stool').game; assert.equal(furnitureStock(g, 'furn:chair_stool'), 2);
+  assert.ok(owns(g, 'bg:blush') && owns(g, 'pose:stand') && !owns(g, 'bg:sunset'), 'free ones are yours from the start');
+  assert.equal(buy({ ...g, coins: 10 }, 'bg:sunset').ok, false, 'too poor');
+  const r = buy(g, 'bg:sunset'); assert.ok(r.ok && r.game.coins === 70 && owns(r.game, 'bg:sunset')); g = r.game;
+  assert.equal(buy(g, 'bg:sunset').ok, false, 'bought once');
   assert.equal(buy(g, 'nope').ok, false);
-  assert.ok(CATALOG.every((c) => c.kind !== 'furn' || (c.model && c.price > 0)), 'every piece of furniture names its model');
+  assert.ok(CATALOG.every((c) => ['bg', 'pose'].includes(c.kind)), 'only photo-mode things are sold (no furniture: the apartment is gone)');
   assert.equal(new Set(CATALOG.map((c) => c.id)).size, CATALOG.length, 'ids are unique');
-});
-
-test('build mode state: place, move, turn and put away; the stock follows', () => {
-  let g = buy({ ...initial(), coins: 200 }, 'furn:cactus_small_A').game;
-  assert.equal(placePiece(initial(), 'furn:cactus_small_A', 0, 0).uid, '', 'cannot place what you do not own');
-  let p = placePiece(g, 'furn:cactus_small_A', 1.234, -2, 5, 'u1'); g = p.game;
-  assert.equal(g.placed[0].x, 1.23); assert.equal(g.placed[0].ry, 1, 'turns wrap to quarter-turns'); assert.equal(furnitureStock(g, 'furn:cactus_small_A'), 0);
-  assert.equal(placePiece(g, 'furn:cactus_small_A', 0, 0).uid, '', 'out of stock once it is placed');
-  g = movePiece(g, 'u1', { x: 2, ry: -1 }); assert.equal(g.placed[0].x, 2); assert.equal(g.placed[0].ry, 3);
-  g = putAway(g, 'u1'); assert.equal(g.placed.length, 0); assert.equal(furnitureStock(g, 'furn:cactus_small_A'), 1, 'back in storage');
-});
-
-test('rooms and old hairstyles', () => {
-  let g = { ...initial(), coins: 100 };
-  assert.equal(useRoom(g, 'room:sage').decor, 'rose', 'you cannot use a room you have not bought');
-  g = buy(g, 'room:sage').game; assert.equal(useRoom(g, 'room:sage').decor, 'sage');
-  assert.ok(owns(grandfather(initial(), 'curly'), 'hair:curly'), 'a style you already wore stays yours');
-  assert.equal(grandfather(initial(), 'long').owned.length, 0);
-  assert.ok(catalogItem('room:dusk'));
+  assert.ok(catalogItem('pose:twirl'));
 });
 
 test('photo mode: every backdrop and pose for sale has a drawing, and you can only use what you own', () => {
@@ -415,4 +402,21 @@ test('the base picture config has the armpit, crotch and arm points the fit need
   const c = JSON.parse((await import('node:fs')).readFileSync(new URL('../public/assets/avatar/config.json', import.meta.url), 'utf8'));
   for (const k of ['armpitL', 'armpitR', 'crotch', 'waistbandL', 'waistbandR', 'wristL', 'wristR']) assert.ok(Array.isArray(c.points[k]), k);
   assert.ok(c.arms.L.length >= 3 && c.arms.R.length >= 3); assert.deepEqual(c.clothesOrder, ['shoes', 'bottom', 'top', 'dress', 'outer', 'bag']);
+});
+
+/* ── the walk-in closet ── */
+import { SECTIONS, layoutSection, artBox, trackLayout, targetFor, sectionAt } from '../public/js/closet.js';
+test('closet: every section has a place along the walls, and the strip order matches', () => {
+  assert.deepEqual(SECTIONS.map((s) => s.k), ['overview', 'tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'bags', 'jewelry', 'vanity', 'mirror']);
+  const { at, total } = trackLayout(390, 700);
+  assert.ok(at.overview.w > 390 && at.tops.w === 390 && Math.abs(total - (at.mirror.x + 390)) < 1e-6);
+  for (const s of SECTIONS) assert.equal(sectionAt(targetFor(s.k, 390, 700), 390, 700), s.k === 'overview' ? 'overview' : s.k, s.k);
+  const b = artBox(SECTIONS.find((s) => s.k === 'jewelry'), 390, 700); assert.ok(b.w > 390 * 1.6 && b.x <= 0 && b.x >= 390 - b.w, 'jewelry is the vanity picture zoomed into the island');
+});
+test('closet: pieces hang on the rails and sit on the shelves without spilling out', () => {
+  const rail = SECTIONS.find((s) => s.k === 'dresses'), items = Array.from({ length: 9 }, (_, i) => ({ id: 'd' + i, ar: 0.6 }));
+  const L = layoutSection(rail, items); assert.equal(L.length, 9);
+  for (const p of L) { assert.ok(p.x >= 100 && p.x + p.w <= 845 && p.y > 250 && p.y + p.h < 1300, JSON.stringify(p)); assert.ok(Math.abs(p.hanger[0] - (p.x + p.w / 2)) < 1e-6); }
+  const shoes = layoutSection(SECTIONS.find((s) => s.k === 'shoes'), [{ id: 's', ar: 2 }])[0]; assert.ok(shoes.w <= 0.86 * 210 + 1e-6 && shoes.y + shoes.h <= 457);
+  assert.deepEqual(layoutSection(SECTIONS.find((s) => s.k === 'vanity'), [{ id: 'x', ar: 1 }]), [], 'nothing is placed where nothing belongs');
 });

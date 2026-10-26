@@ -28,24 +28,7 @@
       ]
     },
     {
-      "source": "/lab/cutout(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://staticimgly.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob: data: https://staticimgly.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
-        }
-      ]
-    },
-    {
-      "source": "/lab/(segment.*)",
+      "source": "/lab/(.*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
@@ -75,7 +58,7 @@
     "api/tryon.js": {
       "maxDuration": 30
     },
-    "api/cutout.js": {
+    "api/segment.js": {
       "maxDuration": 30
     },
     "api/tag.js": {

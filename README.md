@@ -20,15 +20,14 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 ## What it does
 - **Dress Up (home)** – a game-style dressing room: your model stands in a room, a floating mood gem and three meters (mood fit, colours, freshness) react to the outfit, a wardrobe tray at the bottom lets you tap pieces on, and quick buttons (Style me, Undress, Save, Wear today) sit beside the model. Pick a mood (occasion) to tune Style me and the meters.
 - **Dress up** – your base model picture (`public/assets/avatar/base.png`, shown exactly as it is) wears your real photo cutouts, stacked in the right order (see "The base model" below).
-- **Customize** – on Dress up: the room, and **Anchors** (a debug overlay showing the points your clothes snap to). The base picture is fixed art, so there are no face, hair or body sliders on it. In the apartment: avatar, skin tone and hair colour for the 3D character.
+- **Customize** – on Dress up: **Anchors** (a debug overlay showing the points your clothes snap to). The base picture is fixed art, so there are no face, hair or body sliders on it. The mannequin stands in front of the closet's three-way mirror (`public/assets/closet/mirror.jpg`).
 - **Plan tab** – set your city (free Open-Meteo forecast, no account): *Style me* then dresses for the weather (coats when cold or rainy, light pieces when hot). **Plan my week** drafts an outfit per day (re-roll, try on, or log it). **Pack for a trip** builds a mix-and-match capsule for N days and weather. **Wardrobe gaps** shows which occasions you can't yet dress for, and a **wishlist** collects what to buy (also fed from Inspo "you're missing…" results).
 - **Cost per wear & insights** – add a price (and warmth) to a piece; cards show $/wear, and the Diary shows your best-value buys, what's worth wearing more, declutter candidates, and your outfit streak.
 - **Look cards** – Dress Up → Looks → *Share this look as a picture* makes a 1080×1350 image (model facing front + the pieces). Opens the phone share sheet, or downloads.
-- **Rooms & face** – Customize: seasonal rooms (auto by month, or pick pastel/studio/night/spring/autumn/winter), eye and lip colours, and an outfit-streak badge in the room.
 - **Saved renders + budget** – a photoreal render you've paid for is saved and re-shown free (until you change the photo or a piece); set a monthly budget and the app refuses renders that would go over it.
-- **Fast start** – the 3D code and models only download when you open the apartment; new photos are stored as WebP.
+- **Fast start** – the selection engine (OpenCV, ~10 MB) only downloads the first time you tap to select offline; new photos are stored as WebP.
 - **Wardrobe** – every piece shown on a hanger, on a shelf rail per category (tops, tank tops, bodysuits, bottoms, skirts, dresses, outerwear, shoes, bags, accessories). Filter by type, occasion (Work, Date Night, GNO, Casual, Brunch, Dinner…) or search.
-- **Add piece** – upload a photo; the background is removed in your browser (adjustable strength), cropped, colour-detected, and tagged with a type and occasions.
+- **Add piece** – one step per screen: photo → crop → tap to select → touch up → fit (see "Adding pieces").
 - **Try On** – tap pieces to dress your model; dresses replace top+bottom automatically. Fine-tune each piece with size/position sliders.
 - **My photo** – optional, for the photoreal try-on only: add a full-body photo under Me, and the AI render appears on it. (The old body-shape builder and pose detection were removed.)
 - **OOTD Log** – calendar of what you wore each day, with per-item wear counts and "never worn" reminders.
@@ -37,7 +36,12 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 - **Back photo (optional)** on any piece: kept with the piece for a future back view.
 
 ## Adding pieces
-**+ Add piece** opens one dialog: **Take photo**, **Choose photo**, **Paste** (a copied picture or product link; ⌘/Ctrl+V works too) or **From a link**. The on-device cutout shows instantly; with your passcode saved, the server cutout and auto-fill then run on their own (switch off in the dialog). An optional **Cut out on this device** button runs an AI model in the browser instead (about 45 MB the first time, from staticimgly.com; it lives in `public/lab/` with its own security policy; the library is AGPL-3.0, see `public/vendor/imgly/LICENSE.md`). `/api/product` reads a shop page's title, brand, price and picture on the server (https only, public hosts only, passcode required).
+**+ Add piece**, one step per screen (big buttons, nothing scrolls sideways):
+1. **Photo**: how it was taken (Flat lay recommended, Hanger, Worn) with a short tip, then **Take photo**, **Choose photo**, **Paste** (⌘/Ctrl+V works too) or **From a link** (`/api/product` reads a shop page's title, brand, price and picture on the server; https only, public hosts only, passcode required).
+2. **Crop** first: a shop screenshot is noticed and cropped to its product photo (the status bar, the app's buttons and the text under the photo are left out); drag the four corners to adjust. Corners on the item's own corners straighten a photo taken at an angle; white balance evens out the colour cast.
+3. **Select**: the whole cropped picture fits the screen. Toggle **➕ Keep** (green dots) / **➖ Remove** (red dots), **Undo**, **Clear**, pinch to zoom; the outline updates live. A red dot is placed for you on a dress form when one is found. **SAM 2 on fal** does the selecting when your passcode is saved (`/api/segment`, model `fal-ai/sam2/image`, override with `FAL_SEGMENT_MODEL`); otherwise, or if it fails, **GrabCut** runs on the phone (`public/lab/segment-worker.js` with vendored OpenCV, Apache-2.0, its own security policy because OpenCV needs eval; it can reach no network). The details screen says which engine was used.
+4. **Touch up** (optional): 🧽 Erase / 🖌️ Restore brush.
+5. **Fit**: the landmarks (below), then name, type, occasions and the rest. Your cropped original is kept with the piece; **Redo the selection** and **Fit landmarks** are on the piece's edit screen.
 From other apps: Android/desktop installs get a Share-menu entry (PWA share target). iPhones use a Shortcut that opens `/?add=paste` or `/?add=link&u=…` (steps are in the Wardrobe tab).
 
 ## The base model (Dress up)
@@ -49,22 +53,15 @@ From other apps: Android/desktop installs get a Share-menu entry (PWA share targ
 
 To use a different base picture: replace `base.png` (front-facing, arms slightly away from the body, transparent background, same file size or the same proportions), then move the points in `config.json` to match.
 
-## My apartment (3D)
-**Dress up → My apartment** is a little 3D studio you walk around as a rigged low-poly avatar (Kenney "Mini Characters", twelve to choose from at the Vanity). Walk with the on-screen stick, WASD/arrow keys, or tap the floor (it finds its way round furniture); drag to look around, or use the ⟲ ⟳ buttons. The camera follows from behind and above and stops short of furniture and walls, so it never ends up inside anything.
-Step on a glowing circle (or tap its chip under the room) and that station's screen opens full-screen:
-- **Wardrobe**: browse your real pieces by type and put them on the doll.
-- **Vanity**: avatar, skin, hair, eyes, lips.
-- **Mirror**: opens the 2D dress-up doll.
-- **Bed**: log today's outfit and see your streak.
-- **Desk**: opens the planner.
-Furniture is KayKit "Furniture Bits" (CC0) and the avatar is Kenney's (CC0); about 1.7 MB of models in all (`public/assets/`, credits in `CREDITS.txt`), downloaded only when you open the apartment. Phones without WebGL, or with "flat" mode on, just get the 2D doll.
+## The walk-in closet
+**Dress up → Walk-in closet** is a full-screen luxury closet made of five photographed backgrounds (`public/assets/closet/`: overview panorama, rails, shoe and bag wall, vanity and jewelry island, mirror). Your real cutouts hang on the rails (Tops, Bottoms, Dresses, Coats) and stand on the lit shelves (Shoes, Bags) and the jewelry trays, each section with a count; an empty one offers **+ Add pieces**. There is no character: swipe left/right to move along the walls (one section per swipe), tap a label on the overview or the section strip at the bottom to glide there, pinch to look a little closer; the arrow keys work too. Tap a piece for its card (photo, tags, **Add to outfit**). The **Mirror** opens Dress up, where your mannequin stands in front of the three-way mirror: the mannequin is the only picture of you in the app. A thin top bar has back, coins and the Shop; today's challenge is a small pill (tap for details). Layout and positions are in `public/js/closet.js`.
 
 ## The daily challenge
-Each day has a theme: from an **event** you add in Plan (it becomes that day's dress code), else the **mood** you picked on Dress up, else a very cold or hot forecast, else a surprise. A banner shows the theme, your coins, streak, **energy** (changing the outfit costs a little; tired means fewer coins) and **mood** (set by your last rating). In the apartment a bouncing arrow points to where to go next: Wardrobe, then Mirror, then Bed.
-**Rate my look** scores the outfit out of 100 and says why, using only your own tags: fits the theme (occasion tags, 35), right for the weather (warmth tags vs the forecast, 20), colours work together (25), a complete outfit (10), fresh pieces you rarely wear (10). Stars are 90/75/58/40+; coins are 10 + 8 per star + 2 per streak day (up to 7), reduced when energy is low. You are only paid for improving on your best rating that day. **End the day** at the bed logs the outfit (streak) and closes the day; a new date brings a new theme. Coins, theme and history are saved on the device and included in backup and cloud sync. (What coins unlock comes next.)
+Each day has a theme: from an **event** you add in Plan (it becomes that day's dress code), else the **mood** you picked on Dress up, else a very cold or hot forecast, else a surprise. A banner shows the theme, your coins, streak, **energy** (changing the outfit costs a little; tired means fewer coins) and **mood** (set by your last rating).
+**Rate my look** scores the outfit out of 100 and says why, using only your own tags: fits the theme (occasion tags, 35), right for the weather (warmth tags vs the forecast, 20), colours work together (25), a complete outfit (10), fresh pieces you rarely wear (10). Stars are 90/75/58/40+; coins are 10 + 8 per star + 2 per streak day (up to 7), reduced when energy is low. You are only paid for improving on your best rating that day. **End the day** on the banner logs the outfit (streak) and closes the day; a new date brings a new theme. Coins, theme and history are saved on the device and included in backup and cloud sync. (What coins unlock comes next.)
 
-## The shop and build mode
-Coins from the daily challenge buy things in the **🛍️ Shop** (button on the game banner): furniture (rugs, plants, lamps, chairs, tables, a bookcase, a cabinet, an armchair), room colours (Rose is free; Sage, Lilac and Dusk are bought), and hairstyles (Long, Bob and Pixie are free; Bun, Ponytail and Curly are bought, and a style you were already wearing stays yours). Furniture goes into storage; open **🔨 Build** in your apartment to place it. Tap a piece to pick it up, tap the floor (or use the arrows) to move it, **Turn** rotates a quarter turn, **Put away** returns it to storage. A piece can't go through a wall, on top of other furniture, on a station's circle, or where it would cut you off from a station. What you own and where it stands is saved with the game (and backs up and syncs). The catalogue and prices are in `public/js/game.js` (`CATALOG`); add a model name from `public/assets/furniture` to offer more.
+## The shop
+Coins from the daily challenge buy backdrops and poses for 📸 Photo mode in the **🛍️ Shop**. The catalogue and prices are in `public/js/game.js` (`CATALOG`).
 
 ## Photo mode and the lookbook
 On the Dress up screen, **📸 Photo** shows the doll in front of a backdrop (Blush and Studio are free; Sunset, Garden, Night city and Confetti are bought in the shop) in a pose (Stand is free; Chic tilt, Walk, Twirl and Pop are bought), captioned with today's challenge and your stars. **Save to my lookbook** attaches the picture to today's Diary entry (creating the entry if you haven't logged one, so it counts toward your streak). The Diary has a **Lookbook** grid of all your photos; open one to share it or remove it. Photos are stored with the Diary entry, so they back up and sync with it. The poses are simple 2D tilts, leans and flips of the doll, not new drawings. Backdrops and poses live in `public/js/photo.js` (add one there and an entry in `CATALOG` to sell it).
@@ -102,7 +99,7 @@ The fal request/response fields were written from fal's public docs and tested a
 
 ## AI helpers (fal.ai, same key + passcode)
 Besides photoreal try-on, three more passcode-protected endpoints use your fal credits (all fail closed without `FAL_KEY` + `APP_PASSCODE`):
-- **Cleaner cutout** (`/api/cutout`) – Add piece → *AI helpers* → *Cleaner cutout* removes busy backgrounds the on-device tool can't. Model: `fal-ai/imageutils/rembg` (override with `FAL_CUTOUT_MODEL`).
+- **Tap-to-select** (`/api/segment`) – SAM 2 point prompts (➕ = label 1, ➖ = label 0) from the Select step; the mask comes back and is applied on the phone.
 - **Auto-fill details** (`/api/tag`) – reads the photo and fills in name, type, warmth and occasions for you to check. Model: `fal-ai/any-llm/vision` (`FAL_VISION_MODEL`, `FAL_VISION_LLM`).
 - **Pinterest import** (`/api/pin`) – paste a pin link on the Inspo tab; the server fetches the picture (Pinterest hosts only, redirects re-checked). If Pinterest blocks it, upload the picture instead.
 As with try-on, the fal request/response fields come from fal's public docs and are tested against a mock, not the live API; fal's own error text is shown if a field name is off.
@@ -112,9 +109,8 @@ Keyboard-operable throughout, labelled controls, `aria-pressed` state on filters
 
 ## Notes & limits
 - All data (photos included) lives in your browser's IndexedDB — nothing is uploaded unless you turn on cloud sync. Clearing site data erases it; export/backup is a good next step.
-- Cutout works best on a plain, contrasting background (bed sheet, wall). Busy backgrounds need a higher strength or a cleaner photo.
+- Selection works best on a plain, contrasting background (bed sheet, wall). The offline engine (GrabCut) needs more ➖ taps on busy photos than SAM 2 does.
 - Pinterest has no open API, so inspo is image-based (upload/paste); pin links are saved for reference.
-- The apartment avatar is a ready-made character: it wears its own outfit, not your photos (clothes are tried on the 2D doll), and its look is limited to skin and hair colour plus twelve characters. Real device performance is untested; there is a Low-quality fallback that turns off the mirror's live reflection on weak phones.
 - The photoreal try-on is an AI render of your pieces on your photo (it uses your fal.ai credits); the quick model preview is fitted 2D layering, not cloth simulation: a flat photo of a garment can't drape or fold.
 
 ## Ideas for next

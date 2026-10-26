@@ -3,7 +3,7 @@
 // security policy (OpenCV needs eval; this file can't reach the network). Messages in: load {blob}, cut {pos, neg, rect}. Out: ready, loaded {w, h}, mask {w, h, data}, error.
 const post = (m, t) => postMessage(m, t);
 const MAX = 640;
-let busy = false, queued = null, cv = null, loading = null, src = null, W = 0, H = 0, rgba = null;
+let busy = false, latest = null, cv = null, loading = null, src = null, W = 0, H = 0, rgba = null;
 
 // (A promise is never resolved with cv itself: its `then` hands itself back forever.)
 const loadCV = () => {
@@ -59,12 +59,19 @@ addEventListener('message', async (e) => {
       const a = cv.matFromImageData(rgba); src = new cv.Mat(); cv.cvtColor(a, src, cv.COLOR_RGBA2RGB); a.delete();
       return post({ type: 'loaded', w: W, h: H, id: m.id });
     }
-    if (m?.type === 'cut' && src) { // taps arrive faster than the outline is found: only the newest request is worked on
-      if (busy) { if (queued) post({ type: 'mask', w: 0, h: 0, data: null, id: queued.id }); queued = m; return; }
-      busy = true; let job = m;
-      while (job) { const data = await cut(job); post({ type: 'mask', w: W, h: H, data, id: job.id }, [data.buffer]); job = queued; queued = null; }
+    if (m?.type === 'cut' && src) { // taps arrive faster than the outline is found: only the newest request is worked on, the others answer empty
+      if (latest) post({ type: 'mask', w: 0, h: 0, data: null, id: latest.id });
+      latest = m; if (busy) return;
+      busy = true;
+      while (latest) {
+        await new Promise((r) => setTimeout(r, 0)); // let any newer tap arrive first
+        const job = latest; latest = null;
+        const data = await cut(job);
+        if (latest) { post({ type: 'mask', w: 0, h: 0, data: null, id: job.id }); continue; }
+        post({ type: 'mask', w: W, h: H, data, id: job.id }, [data.buffer]);
+      }
       busy = false;
     }
-  } catch (err) { busy = false; queued = null; post({ type: 'error', message: String(err?.message || err).slice(0, 200), id: m?.id }); }
+  } catch (err) { busy = false; latest = null; post({ type: 'error', message: String(err?.message || err).slice(0, 200), id: m?.id }); }
 });
 post({ type: 'ready' });

@@ -64,7 +64,7 @@ export function warpMesh(src, f, outW, outH, { cols = 40, rows = 56 } = {}) {
     const A = ((X1 - X0) * (y2 - y0) - (X2 - X0) * (y1 - y0)) / den, C = ((X2 - X0) * (x1 - x0) - (X1 - X0) * (x2 - x0)) / den;
     const B = ((Y1 - Y0) * (y2 - y0) - (Y2 - Y0) * (y1 - y0)) / den, D = ((Y2 - Y0) * (x1 - x0) - (Y1 - Y0) * (x2 - x0)) / den;
     const E = X0 - A * x0 - C * y0, F = Y0 - B * x0 - D * y0;
-    const cx = (X0 + X1 + X2) / 3, cy = (Y0 + Y1 + Y2) / 3, grow = (X, Y) => { const dx = X - cx, dy = Y - cy, d = Math.hypot(dx, dy) || 1; return [X + dx / d * 0.7, Y + dy / d * 0.7]; };
+    const cx = (X0 + X1 + X2) / 3, cy = (Y0 + Y1 + Y2) / 3, grow = (X, Y) => { const dx = X - cx, dy = Y - cy, d = Math.hypot(dx, dy) || 1; return [X + dx / d * 1.4, Y + dy / d * 1.4]; };
     const p0 = grow(X0, Y0), p1 = grow(X1, Y1), p2 = grow(X2, Y2);
     g.save(); g.beginPath(); g.moveTo(...p0); g.lineTo(...p1); g.lineTo(...p2); g.closePath(); g.clip();
     g.setTransform(A, B, C, D, E, F); g.drawImage(src, 0, 0); g.restore();

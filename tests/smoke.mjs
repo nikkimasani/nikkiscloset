@@ -25,16 +25,17 @@ const mock = createServer((req, res) => {
     });
   } else if (req.url.endsWith('/status')) { polls[req.url] = (polls[req.url] || 0) + 1; send({ status: polls[req.url] < 2 ? 'IN_PROGRESS' : 'COMPLETED' }); }
   else if (req.url.startsWith('/fal-ai/fashn/requests/')) send({ images: [{ url: `${base}/media/out.png`, content_type: 'image/png' }] });
-  else if (req.method === 'POST' && (req.url === '/fal-ai/imageutils/rembg' || req.url === '/fal-ai/any-llm/vision')) {
+  else if (req.method === 'POST' && (req.url === '/fal-ai/sam2/image' || req.url === '/fal-ai/any-llm/vision')) {
     let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
       const body = JSON.parse(b); aiCalls.push({ path: req.url, auth: req.headers.authorization, hasImage: !!(body.image_url || body.image_urls?.[0])?.startsWith?.('data:image') || !!body.image_urls?.[0]?.startsWith('data:image') });
-      if (req.url.includes('rembg')) send({ image: { url: `${base}/media/cut.png` } });
+      if (req.url.includes('sam2')) send(body.prompts?.some((q) => q.label === 1) && body.apply_mask === false ? { image: { url: `${base}/media/mask.png` } } : { detail: 'bad prompts' }, body.prompts ? 200 : 422);
       else send({ output: 'Here you go: {"name":"Satin cami","type":"tanks","season":"light","occasions":["GNO","Date Night"],"brand":""}' });
     });
   }
   else if (req.url === '/pin/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><meta property="og:image" content="${base}/media/pin.png"></head></html>`); }
   else if (req.url === '/shop/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><title>x</title><meta property="og:title" content="Satin Cami Top | ZARA United States"><script type="application/ld+json">{"@type":"Product","name":"Satin Cami Top | ZARA","brand":{"name":"Zara"},"image":"${base}/media/shop.jpg","offers":{"price":"29.90"}}</script></head></html>`); }
   else if (req.url === '/media/shop.jpg') { res.writeHead(200, { 'content-type': 'image/jpeg' }); res.end(readFileSync(join(out, 'photo.jpg'))); }
+  else if (req.url === '/media/mask.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(readFileSync(join(out, 'mask.png'))); }
   else if (req.url === '/media/cut.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(readFileSync(join(out, 'photo.jpg'))); } // a real picture, so colour suggestions have something to work with
   else if (req.url === '/media/pin.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
@@ -72,6 +73,18 @@ async function loadFixtures(page) {
   await page.reload(); await page.waitForFunction(() => window.__closet?.items.length === 10);
   if (view && view !== 'tryon') await page.click(`[data-view=${view}]`);
 }
+/** Go through the cut-out editor (crop, tap to select, touch up, fit) with taps on the middle of the picture; ends back in the add dialog. */
+async function throughEditor(page, taps = [[0.5, 0.45], [0.5, 0.65]], neg = []) {
+  await page.waitForSelector('.cuted #autoq'); await page.click('.cuted #cutnext');
+  await page.waitForSelector('.cuted [data-tool=pos]');
+  const cb = await page.locator('.cuted #cvs').boundingBox(), tap = async ([u, v]) => { await page.mouse.click(cb.x + u * cb.width, cb.y + v * cb.height); await page.waitForTimeout(150); };
+  for (const t of taps) await tap(t);
+  if (neg.length) { await page.click('.cuted [data-tool=neg]'); for (const t of neg) await tap(t); }
+  await page.waitForFunction(() => /Selected/.test(document.querySelector('#selmsg')?.textContent || ''), null, { timeout: 120000 });
+  await page.click('.cuted #cutnext'); await page.waitForSelector('.cuted #brush'); await page.click('.cuted #cutnext');
+  if (await page.locator('.cuted #cutdone').count() || await page.waitForSelector('.cuted #cutdone, #cutimg').then((e) => e.evaluate((x) => x.id === 'cutdone'))) await page.click('.cuted #cutdone');
+  await page.waitForSelector('#cutimg');
+}
 const ok = (c, msg) => { console.log(`${c ? 'PASS' : 'FAIL'}  ${msg}`); if (!c) failed++; };
 
 try {
@@ -86,19 +99,23 @@ try {
     return c.toDataURL('image/jpeg', 0.9);
   });
   const photo = join(out, 'photo.jpg');
+  const maskUrl = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = 300; c.height = 400; const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, 300, 400); x.fillStyle = '#fff'; x.fillRect(80, 60, 140, 280); return c.toDataURL('image/png'); });
+  (await import('node:fs')).writeFileSync(join(out, 'mask.png'), Buffer.from(maskUrl.split(',')[1], 'base64')); // what the stand-in SAM 2 answers
   const { writeFileSync } = await import('node:fs');
   writeFileSync(photo, Buffer.from(dataUrl.split(',')[1], 'base64'));
 
   await page.click('header [data-act=add]');
+  ok(await page.locator('.modechips [data-mode]').count() === 3 && /Recommended/.test(await page.locator('.modechips .on').innerText()), 'step 1: how it was taken (Flat lay recommended) and where the photo comes from');
+  ok(await page.locator('#tol').count() === 0, 'no background-removal strength slider any more');
   await page.setInputFiles('#file', photo);
-  await page.waitForSelector('#cutimg');
+  await throughEditor(page);
   const cut = await page.evaluate(async () => {
     const img = document.querySelector('#cutimg'); await img.decode();
     const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
     const x = c.getContext('2d'); x.drawImage(img, 0, 0);
     return { w: c.width, h: c.height, corner: x.getImageData(1, 1, 1, 1).data[3], mid: x.getImageData(c.width >> 1, c.height >> 1, 1, 1).data[3] };
   });
-  ok(cut.corner === 0 && cut.mid === 255, `background removed (corner alpha ${cut.corner}, centre alpha ${cut.mid})`);
+  ok(cut.corner === 0 && cut.mid === 255, `the tapped selection is cut out (corner alpha ${cut.corner}, centre alpha ${cut.mid})`);
   ok(cut.w < 600 && cut.h < 800, `cropped to garment (${cut.w}x${cut.h})`);
   await page.screenshot({ path: join(out, '1-add-modal.png') });
   await page.selectOption('#type', 'dresses');
@@ -259,7 +276,8 @@ try {
     await p3.screenshot({ path: join(out, '10-doll.png') });
     // the base picture is fixed art: the doll's customizer only offers the room and the anchor points
     await p3.click('[data-act=drawer][data-v=look]');
-    ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["anchors","room"]', 'Customize on the doll offers only Anchors and Room (no dead face, hair or body options)');
+    ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["anchors"]', 'Customize on the doll offers only the anchor points (no dead face, hair, body or room options)');
+    await p3.click('.anchors summary');
     ok(await p3.locator('.ptlist li').count() >= 15, 'the anchor points are listed with their coordinates');
     ok(await p3.locator('#stage .pointsdbg').count() === 0, 'the debug overlay is off by default');
     await p3.locator('.cas [data-act=dbgpts]').evaluate((e) => e.click());
@@ -277,14 +295,13 @@ try {
     if (snap.bottom) ok(Math.abs((snap.bottom.x0 + snap.bottom.x1) / 2 - (cfg.hipL[0] + cfg.hipR[0]) / 2) < 25, 'the bottom is centred on the hips');
     await p3.click('.dbgchip');
     ok(await p3.locator('#stage .pointsdbg').count() === 0, 'the chip turns the overlay off again');
-    await p3.click('[data-act=drawer][data-v=look]'); await p3.click('[data-act=cas][data-v=room]'); await p3.click('[data-act=room][data-v=night]');
-    ok(await p3.evaluate(() => localStorage.getItem('room') === 'night') && await p3.evaluate(() => document.querySelector('.room').className.includes('theme-night')), 'the room choice works and is saved');
+    await p3.click('[data-act=drawer][data-v=look]');
+    ok(/mirror\.jpg/.test(await p3.evaluate(() => getComputedStyle(document.querySelector('.room.dollroom')).backgroundImage)), 'the mannequin stands in front of the closet mirror');
     await p3.evaluate(axeSource);
     const r4 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
     const bad4 = r4.violations.filter((v) => v.impact !== 'minor');
     ok(bad4.length === 0, `axe (customize tab): ${bad4.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
-    await p3.click('[data-act=resetlook]');
-    ok((await p3.evaluate(() => localStorage.getItem('room'))) === '', 'Reset appearance clears the room choice');
+    await p3.click('[data-act=casclose]');
     // ── the daily challenge: theme, rating with reasons, coins, streak ──
     ok(/Theme:/.test(await p3.locator('.gamebar .gb-theme').innerText()), 'the day starts with a themed challenge banner');
     const coins0 = await p3.evaluate(() => window.__closet.game.coins), energy0 = await p3.evaluate(() => window.__closet.game.day.energy);
@@ -302,12 +319,12 @@ try {
     await p3.click('#rwclose');
     await p3.reload(); await p3.waitForFunction(() => window.__closet?.game.coins > 0);
     ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'coins are kept after a reload');
-    // without the 3D apartment (flat mode / no WebGL) the day can still be closed from the banner
+    // the day is closed from the banner
     await p3.waitForSelector('.gamebar .gb-end');
     await p3.click('[data-act=styleme]'); await p3.waitForFunction(() => document.querySelector('.gamebar [data-act=rate]:not([disabled])'));
     await p3.click('.gamebar .gb-end');
     await p3.waitForFunction(() => window.__closet.game.day.phase === 'done');
-    ok(true, 'the day can be ended from the 2D banner (no apartment needed)');
+    ok(true, 'the day can be ended from the banner');
     // picking a mood re-themes a day that hasn't been rated yet
   }
   {
@@ -386,17 +403,6 @@ try {
   await p6.waitForSelector('#main .view-title', { state: 'attached', timeout: 15000 });
   ok(await p6.locator('nav#nav').isVisible() && (await p6.title()) === "Nikki's Closet", 'first visit is enough: the app reopens with no network');
   await p6.context().setOffline(false);
-  await p6.click('[data-view=tryon]'); await p6.click('[data-act=drawer][data-v=look]'); await p6.click('[data-act=cas][data-v=room]'); await p6.click('[data-act=room][data-v=night]'); await p6.click('[data-act=resetlook]');
-  await p6.reload(); await p6.waitForFunction(() => window.__closet);
-  const dflt = await p6.evaluate(() => ({ skin: window.__closet.skin, hair: window.__closet.hair, room: window.__closet.room }));
-  ok(/^#[0-9a-f]{6}$/i.test(dflt.skin) && /^#[0-9a-f]{6}$/i.test(dflt.hair) && dflt.room === 'auto', 'Reset appearance survives a reload (defaults, not blanks)');
-  await p6.click('[data-view=closet]');
-  const [dl2] = await Promise.all([p6.waitForEvent('download'), p6.click('[data-act=export]')]);
-  const bak2 = join(out, 'backup-default.json'); await dl2.saveAs(bak2);
-  const p7 = await mk(); await p7.click('[data-view=closet]'); await p7.setInputFiles('#restore', bak2); await p7.waitForSelector('#toast.show'); await p7.waitForFunction(() => window.__closet && window.__closet.skin);
-  const rest = await p7.evaluate(() => ({ skin: window.__closet.skin, room: window.__closet.room }));
-  ok(/^#[0-9a-f]{6}$/i.test(rest.skin) && rest.room === 'auto', 'restoring a default-appearance backup keeps the defaults');
-
 
   // ── batch A: price/cost-per-wear, weather, week plan, packing, gaps, wishlist, insights, streak ──
   const p8 = await mk();
@@ -443,7 +449,7 @@ try {
   ok(wl.length === 2 && wl[1].link === '', 'wishlist: add from a gap and by hand; unsafe links are dropped');
   await p8.locator('[data-act=wishgot]').first().click();
   await p8.waitForSelector('[role=dialog]');
-  ok(await p8.locator('[role=dialog]').isVisible() && (await p8.inputValue('#type')) !== '', '“Got it” opens Add piece with the type filled in');
+  ok(await p8.locator('[role=dialog]').isVisible() && /Adding:/.test(await p8.locator('#addingtype').innerText()), '“Got it” opens Add piece with the type filled in');
   await p8.keyboard.press('Escape');
   await p8.evaluate(axeSource);
   const rp = await p8.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
@@ -473,33 +479,20 @@ try {
     const png = fsx.readFileSync(cardPath), dims = { w: png.readUInt32BE(16), h: png.readUInt32BE(20) };
     ok(png.subarray(1, 4).toString() === 'PNG' && dims.w === 1080 && dims.h === 1350, `look card is a 1080x1350 PNG (${(png.length / 1024).toFixed(0)} KB)`);
   }
-  const p10 = await mk();
-  await loadFixtures(p10); await p10.waitForFunction(() => window.__closet.items.length === 10);
-  await p10.click('[data-act=drawer][data-v=look]');
-  await p10.click('[data-act=cas][data-v=room]'); await p10.click('[data-act=room][data-v=night]');
-  const look = await p10.evaluate(() => ({ cls: document.querySelector('.room').className, room: localStorage.getItem('room') }));
-  ok(look.cls.includes('theme-night') && look.room === 'night', 'room theme applies and is saved');
-  await p10.click('[data-act=resetlook]');
-  ok((await p10.evaluate(() => document.querySelector('.room').className)).match(/theme-(spring|pastel|autumn|winter)/) && (await p10.evaluate(() => localStorage.getItem('room'))) === '', 'Reset appearance returns the room to the seasonal default');
 
-
-  // ── batch B: AI helpers (cutout, auto-fill, Pinterest import) ──
+  // ── batch B: AI helpers (auto-fill, Pinterest import) ──
   const p11 = await mk();
-  await p11.click('header [data-act=add]'); await p11.setInputFiles('#file', join(out, 'photo.jpg')); await p11.waitForSelector('#cutimg');
+  await p11.click('header [data-act=add]'); await p11.setInputFiles('#file', join(out, 'photo.jpg')); await throughEditor(p11);
   await p11.fill('#mpass', 'wrong'); await p11.click('#aitag');
   await p11.waitForFunction(() => /Wrong passcode/.test(document.querySelector('#aimsg').textContent));
   ok(aiCalls.length === 0, 'a wrong passcode never reaches fal');
   await p11.fill('#mpass', 'letmein'); await p11.click('#aitag');
   await p11.waitForFunction(() => /Filled in/.test(document.querySelector('#aimsg').textContent));
-  ok((await p11.inputValue('#name')) === 'Satin cami' && (await p11.inputValue('#type')) === 'tanks' && (await p11.inputValue('#season')) === 'light', 'Auto-fill sets name, type and warmth from the photo');
+  ok((await p11.inputValue('#name')) === 'Satin cami' && (await p11.inputValue('#season')) === 'light', 'Auto-fill sets name and warmth from the photo');
   ok((await p11.locator('#occs [aria-pressed=true]').allInnerTexts()).sort().join() === 'Date Night,GNO', 'Auto-fill ticks the suggested occasions');
-  await p11.click('#aicut'); await p11.waitForSelector('#aiundo');
-  ok(aiCalls.length === 2 && aiCalls.every((c) => c.auth === 'Key test-key' && c.hasImage), 'both helpers called fal with the server-side key and an image');
-  ok(await p11.locator('#tol').isDisabled(), 'on-device sliders switch off while the AI cutout is used');
-  await p11.click('#aiundo');
-  ok(!(await p11.locator('#aiundo').count()) && !(await p11.locator('#tol').isDisabled()), 'can go back to the on-device cutout');
+  ok(aiCalls.length === 1 && aiCalls.every((c) => c.auth === 'Key test-key' && c.hasImage), 'auto-fill called fal with the server-side key and an image');
   await p11.click('#save'); await p11.waitForFunction(() => window.__closet.items.length === 1);
-  ok((await p11.evaluate(() => window.__closet.items[0].type)) === 'tanks', 'the auto-filled piece is saved');
+  ok(true, 'the auto-filled piece is saved');
   await p11.click('[data-view=inspo]'); await p11.locator('summary:has-text("Fetch the picture")').click();
   await p11.fill('#plink', 'https://evil.example.com/pin/1'); await p11.fill('#ipass', 'letmein'); await p11.click('[data-act=pinfetch]');
   await p11.waitForFunction(() => /Pinterest link/.test(document.querySelector('#pinmsg').textContent));
@@ -517,36 +510,39 @@ try {
   const pI = await mk();
   await pI.click('header [data-act=add]');
   await pI.click('#srclink'); await pI.fill('#plink2', 'http://localhost:5198/shop/1'); await pI.fill('#lpass', 'letmein'); await pI.click('#linkgo');
-  await pI.waitForSelector('#cutimg');
+  await pI.waitForSelector('.cuted'); ok(true, 'a product link goes straight to cropping');
+  await throughEditor(pI);
   ok((await pI.inputValue('#name')) === 'Satin Cami Top' && (await pI.inputValue('#brand')) === 'Zara' && (await pI.inputValue('#price')) === '29.9', 'a product link fills in the name, brand and price');
-  ok((await pI.inputValue('#type')) === 'tanks' && /guessed/.test(await pI.locator('label[for=type]').innerText()), 'the category is guessed from the title and flagged as a guess');
   ok((await pI.locator('.cswatch').count()) > 0 && (await pI.locator('#cutimg').count()) === 1, 'colours are suggested from the cutout');
   await pI.click('#saveadd'); await pI.waitForFunction(() => window.__closet.items.length === 1);
   await pI.waitForSelector('#srcpick');
-  ok((await pI.inputValue('#name')) === '' && (await pI.evaluate(() => window.__closet.items[0].colors.length)) > 0, 'Save & add another keeps the first piece and opens a blank form');
+  ok((await pI.locator('#name').count()) === 0 && (await pI.evaluate(() => window.__closet.items[0].colors.length)) > 0, 'Save & add another keeps the first piece and starts again at step 1');
   const calls0 = aiCalls.length;
   await pI.evaluate(() => localStorage.setItem('aipass', 'letmein'));
   await pI.click('#cancel'); await pI.click('header [data-act=add]'); await pI.setInputFiles('#file', join(out, 'photo.jpg'));
-  await pI.waitForSelector('#aiundo'); await pI.waitForFunction(() => /Filled in/.test(document.querySelector('#aimsg').textContent));
-  ok(aiCalls.length - calls0 === 2 && (await pI.inputValue('#name')) === 'Satin cami', 'with a saved passcode the AI cuts out and describes a new photo by itself');
+  await throughEditor(pI);
+  const samCalls = aiCalls.slice(calls0).filter((c) => c.path.includes('sam2'));
+  ok(samCalls.length >= 1 && samCalls.every((c) => c.auth === 'Key test-key' && c.hasImage), `with the passcode saved, SAM 2 on fal does the tap-to-select (${samCalls.length} calls)`);
+  ok(/SAM 2/.test(await pI.locator('.cutprev').innerText()), 'the piece says which engine selected it');
+  await pI.waitForFunction(() => /Filled in/.test(document.querySelector('#aimsg').textContent));
+  ok((await pI.inputValue('#name')) === 'Satin cami', 'and the AI describes the new piece by itself');
   await pI.click('#cancel'); await pI.click('header [data-act=add]');
+  await pI.evaluate(() => localStorage.removeItem('aipass'));
   await pI.evaluate(async () => {
     const c = document.createElement('canvas'); c.width = 80; c.height = 100; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 80, 100); x.fillStyle = '#2a8c8c'; x.fillRect(20, 10, 40, 80);
     const b = await new Promise((r) => c.toBlob(r, 'image/png')), dt = new DataTransfer(); dt.items.add(new File([b], 'p.png', { type: 'image/png' }));
     document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
   });
-  await pI.waitForSelector('#cutimg'); ok((await pI.locator('.cswatch').count()) > 0, 'pasting a picture (⌘/Ctrl+V) brings it into the add dialog');
+  await throughEditor(pI); ok((await pI.locator('.cswatch').count()) > 0, 'pasting a picture (⌘/Ctrl+V) brings it into the add flow');
   await pI.click('#cancel');
+  await pI.evaluate(() => localStorage.setItem('aipass', 'letmein'));
   await pI.goto(`http://localhost:${PORT}/?add=link&u=${encodeURIComponent('http://localhost:5198/shop/1')}`);
-  await pI.waitForFunction(() => document.querySelector('#name')?.value === 'Satin Cami Top');
-  ok((await pI.evaluate(() => location.search)) === '', 'a Shortcut link (?add=link&u=…) opens the dialog, fetches the product and tidies the address bar');
-  await pI.evaluate(async () => { const c = document.createElement('canvas'); c.width = 60; c.height = 60; c.getContext('2d').fillRect(10, 10, 40, 40); const b = await new Promise((r) => c.toBlob(r, 'image/png')); await (await caches.open('closet-share')).put('/shared/photo', new Response(b, { headers: { 'content-type': 'image/png' } })); });
-  await pI.goto(`http://localhost:${PORT}/?add=shared`); await pI.waitForSelector('#cutimg');
-  ok(true, 'a picture shared into the installed app opens the add dialog');
-  const lab = await pI.evaluate(async () => (await import('/js/browsercut.js')).labProbe());
-  ok(lab === true, 'the hidden on-device cutout page starts and its model library loads under its own security policy');
-  const hdr = await pI.evaluate(async () => { const r = await fetch('/lab/cutout.html'), m = await fetch('/'); return [r.headers.get('content-security-policy'), m.headers.get('content-security-policy')]; });
-  ok(/staticimgly\.com/.test(hdr[0]) && /frame-ancestors 'self'/.test(hdr[0]) && !/staticimgly/.test(hdr[1]) && /frame-ancestors 'none'/.test(hdr[1]), 'only the lab page may reach the model host; the main app policy is unchanged');
+  await throughEditor(pI);
+  ok((await pI.inputValue('#name')) === 'Satin Cami Top' && (await pI.evaluate(() => location.search)) === '', 'a Shortcut link (?add=link&u=…) opens the flow, fetches the product and tidies the address bar');
+  await pI.evaluate(async () => { localStorage.removeItem('aipass'); const c = document.createElement('canvas'); c.width = 60; c.height = 60; c.getContext('2d').fillRect(10, 10, 40, 40); const b = await new Promise((r) => c.toBlob(r, 'image/png')); await (await caches.open('closet-share')).put('/shared/photo', new Response(b, { headers: { 'content-type': 'image/png' } })); });
+  await pI.goto(`http://localhost:${PORT}/?add=shared`); await pI.waitForSelector('.cuted #autoq');
+  ok(true, 'a picture shared into the installed app opens the add flow');
+  await pI.click('.cuted #cutback');
   await pI.goto(`http://localhost:${PORT}/?add=paste`); await pI.waitForSelector('#srcpaste:focus');
   ok(/Tap Paste/.test(await pI.locator('#intakemsg').innerText()), '?add=paste opens the dialog ready for the Paste button');
 
@@ -655,106 +651,46 @@ try {
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
   ok(true, 'the back photo can be removed');
 
-  // ── phase 3: the 3D apartment ──
-  const ca = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await ca.addInitScript(() => localStorage.setItem('scene', 'apt'));
-  const pa = await ca.newPage(); pa.setDefaultTimeout(120000); pa.on('pageerror', (e) => errors.push(e.message)); pa.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-  await pa.goto(`http://localhost:${PORT}/`); await pa.waitForFunction(() => window.__closet); await loadFixtures(pa);
-  if (!(await pa.evaluate(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } }))) console.log('SKIP  apartment tests (no WebGL in this browser)');
-  else {
-    await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
-    const d0 = await pa.evaluate(() => window.__apt.debug());
-    ok(await pa.locator('.room.apt .gamebar .gb-theme').count() === 1, 'the apartment shows the day’s challenge banner');
-    ok(JSON.stringify(d0.stations) === JSON.stringify(['wardrobe', 'vanity', 'mirror', 'bed', 'desk']) && d0.solids >= 10, `the apartment has its five stations and ${d0.solids} solid pieces of furniture`);
-    await pa.screenshot({ path: join(out, '20-apartment.png') });
-    await pa.locator('#stage canvas').focus();
-    await pa.keyboard.down('ArrowUp'); await pa.waitForTimeout(1200); await pa.keyboard.up('ArrowUp');
-    ok((await pa.evaluate(() => window.__apt.debug().pos[1])) < d0.pos[1] - 0.3, 'the arrow keys walk the avatar forward');
-    // the camera must never end up inside furniture, wherever you stand and however you turn
-    let inside = 0, checked = 0;
-    for (const [x, z] of [[-4.7, 2.4], [-3.7, 3.4], [5.3, 1.5], [4.2, 3.3], [0, -4.2], [-3, -2.8], [2.8, -2.4], [-6.3, 4.6], [6.2, -3.5], [-2.4, 0.3]]) {
-      await pa.evaluate(([x, z]) => window.__apt.teleport(x, z), [x, z]);
-      for (let turn = 0; turn < 4; turn++) { await pa.evaluate(() => window.__apt.rotateCam(2)); let dbg; for (let n = 0; n < 12; n++) { await pa.waitForTimeout(350); dbg = await pa.evaluate(() => window.__apt.debug()); if (!dbg.camInsideFurniture && dbg.camDist >= 0.85) break; } checked++; if (dbg.camInsideFurniture || dbg.camDist < 0.85) { inside++; console.log('  camera problem at', x, z, JSON.stringify(dbg.cam), dbg.camDist); } }
-    }
-    ok(inside === 0, `the follow camera never clips into furniture (${checked} viewpoints checked)`);
-    await pa.evaluate(() => window.__apt.teleport(0, 2.6));
-    // walk to the wardrobe: its full-screen screen opens by itself
-    await pa.click('[data-act=gostation][data-v=wardrobe]');
-    await pa.waitForSelector('#stationui:not([hidden]) #sttitle', { timeout: 120000 });
-    ok(/Wardrobe/.test(await pa.locator('#sttitle').innerText()), 'walking up to the wardrobe opens its screen');
-    await pa.waitForSelector('.st-grid .pick');
-    await pa.click('.st-grid .pick >> nth=0');
-    ok((await pa.locator('#stationui .st-doll .gar').count()) === 1 && await pa.evaluate(() => Object.keys(window.__closet.outfit).length === 1), 'picking a piece dresses the doll');
-    await pa.evaluate(axeSource);
-    const ra = await pa.evaluate(() => window.axe.run(document.querySelector('#stationui'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
-    const bada = ra.violations.filter((v) => v.impact !== 'minor');
-    ok(bada.length === 0, `axe (wardrobe screen): ${bada.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
-    await pa.screenshot({ path: join(out, '21-wardrobe.png') });
-    await pa.keyboard.press('Escape');
-    ok(await pa.locator('#stationui').isHidden() && await pa.evaluate(() => !document.querySelector('main').inert), 'Esc closes the screen and gives the apartment back');
-    // vanity: look and avatar
-    await pa.click('[data-act=gostation][data-v=vanity]'); await pa.waitForSelector('#stationui:not([hidden]) .cas', { timeout: 120000 });
-    await pa.click('[data-act=cas][data-v=avatar]'); await pa.click('[data-act=avatar][data-v=mini_male_b]');
-    await pa.click('[data-act=cas][data-v=hair]'); await pa.click('[data-act=hair][data-v="#7c4dff"]');
-    ok((await pa.evaluate(() => [localStorage.getItem('avatar'), localStorage.getItem('hair')])).join() === 'mini_male_b,#7c4dff', 'the vanity changes the avatar and its hair colour');
-    await pa.click('[data-act=stclose]');
-    // bed: end the day
-    await pa.click('[data-act=gostation][data-v=bed]'); await pa.waitForSelector('#stationui:not([hidden])', { timeout: 120000 });
-    await pa.waitForFunction(() => /Bed/.test(document.querySelector('#sttitle')?.textContent || ''));
-    await pa.click('[data-act=endday]'); await pa.waitForFunction(() => window.__closet.wears.length >= 1 && window.__closet.game.day.ended);
-    ok(true, 'the bed logs today’s outfit and ends the day');
-    await pa.click('[data-act=stclose]');
-    // mirror and desk take you to the doll and the planner
-    await pa.click('[data-act=gostation][data-v=mirror]'); await pa.waitForSelector('.dollmode svg.doll', { timeout: 120000 });
-    ok(await pa.evaluate(() => !window.__apt?.running), 'the mirror takes you to the doll (and the apartment stops running)');
-    await pa.click('[data-act=scene][data-v=apt]'); await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
-    await pa.click('[data-act=gostation][data-v=desk]'); await pa.waitForSelector('[data-view=plan].on', { timeout: 120000 });
-    ok(true, 'the desk opens the planner');
-  }
-
-  // ── phase 4b: the shop and build mode ──
+  // ── the walk-in closet: no character, swipe / tap to move, your pieces on the rails and shelves ──
   {
-    const cb = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
-    await cb.addInitScript(() => { localStorage.setItem('scene', 'apt'); if (!localStorage.getItem('game')) localStorage.setItem('game', JSON.stringify({ coins: 500 })); });
-    const pb = await cb.newPage(); pb.setDefaultTimeout(120000); pb.on('pageerror', (e) => errors.push(e.message)); pb.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-    await pb.goto(`http://localhost:${PORT}/`); await pb.waitForFunction(() => window.__closet);
-    if (!(await pb.evaluate(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } }))) console.log('SKIP  shop/build tests (no WebGL in this browser)');
-    else {
-      await pb.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
-      await pb.click('.gamebar [data-act=shop]'); await pb.waitForSelector('#modal .shoplist');
-      await pb.evaluate(axeSource);
-      const sa = await pb.evaluate(() => window.axe.run(document.querySelector('#modal'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
-      ok(sa.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (shop): ${sa.violations.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
-      await pb.screenshot({ path: join(out, '30-shop.png') });
-      await pb.click('[data-act=shopbuy][data-v="furn:cactus_small_A"]');
-      ok(await pb.evaluate(() => window.__closet.game.coins === 480 && window.__closet.game.owned.includes('furn:cactus_small_A')), 'buying furniture spends coins and puts it in storage');
-      await pb.click('[data-act=shoptab][data-v=room]'); await pb.click('[data-act=shopbuy][data-v="room:sage"]'); await pb.click('[data-act=shopuse][data-v="room:sage"]');
-      ok(await pb.evaluate(() => window.__closet.game.decor === 'sage' && window.__closet.game.coins === 400), 'a bought room can be used (the walls and floor change)');
-      await pb.click('#shopclose');
-      // build mode
-      await pb.click('[data-act=build]'); await pb.waitForSelector('#buildbar:not([hidden]) [data-act=bplace]');
-      const e0 = await pb.evaluate(() => window.__apt.debug().extras);
-      await pb.click('#buildbar [data-act=bplace]'); await pb.waitForFunction((n) => window.__apt.debug().extras === n + 1, e0);
-      const pl = await pb.evaluate(() => window.__closet.game.placed[0]);
-      ok(!!pl && (await pb.evaluate(() => window.__apt.debug().extras)) === e0 + 1, 'placing a piece puts it in the room');
-      await pb.screenshot({ path: join(out, '31-build.png') });
-      await pb.click('#buildbar [data-act=bnudge][data-v=up]'); await pb.waitForFunction((p) => { const q = window.__closet.game.placed[0]; return q.x !== p.x || q.z !== p.z; }, pl);
-      ok(true, 'the arrows move the selected piece');
-      await pb.click('#buildbar [data-act=bturn]'); await pb.waitForFunction(() => window.__closet.game.placed[0].ry === 1);
-      ok(true, 'Turn rotates it a quarter turn');
-      ok(!(await pb.evaluate(() => window.__apt.canPlace({ model: 'cactus_small_A', scale: 1, solid: true, x: -3.0, z: -3.3, ry: 0 }))).ok, 'a piece can’t be put on a station’s circle');
-      ok(!(await pb.evaluate(() => window.__apt.canPlace({ model: 'cactus_small_A', scale: 1, solid: true, x: 30, z: 0, ry: 0 }))).ok, 'a piece can’t go outside the room');
-      await pb.evaluate(axeSource);
-      const sb = await pb.evaluate(() => window.axe.run(document.querySelector('#buildbar'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
-      ok(sb.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (build bar): ${sb.violations.map((v) => v.id).join(', ') || 'no violations'}`);
-      await pb.click('#buildbar [data-act=bdone]'); await pb.reload();
-      await pb.waitForFunction(() => window.__apt?.debug()?.ready && window.__apt.debug().extras >= 1, null, { timeout: 180000 });
-      ok(await pb.evaluate(() => window.__closet.game.placed.length === 1 && window.__closet.game.decor === 'sage'), 'placed furniture and the room colour are kept after a reload');
-      await pb.screenshot({ path: join(out, '32-room-sage.png') });
-      await pb.click('[data-act=build]'); await pb.waitForSelector('#buildbar:not([hidden])');
-      const sel = await pb.evaluate(() => { const g = window.__closet.game.placed[0]; return g.uid; });
-      ok(!!sel, 'the saved piece is still there to pick up');
-    }
-    await cb.close();
+    const cw = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); await cw.addInitScript(() => localStorage.setItem('flat', '1'));
+    const pw = await cw.newPage(); pw.setDefaultTimeout(60000); pw.on('pageerror', (e) => errors.push(e.message)); pw.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await pw.goto(`http://localhost:${PORT}/`); await pw.waitForFunction(() => window.__closet); await loadFixtures(pw);
+    ok(await pw.evaluate(() => !('__apt' in window) && !document.querySelector('#joy, .camrot, .world-jump')), 'the 3D apartment, the walking avatar, the stick and the rotate buttons are gone');
+    await pw.click('[data-act=scene][data-v=closet]'); await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
+    ok(await pw.evaluate(() => getComputedStyle(document.querySelector('header.top')).display === 'none' && getComputedStyle(document.querySelector('#nav')).display === 'none'), 'the closet fills the screen: no app header or tabs, just a thin bar');
+    ok(await pw.locator('.wic-top [data-act=wicmirror]').count() === 1 && /\d/.test(await pw.locator('.wic-coins').innerText()) && await pw.locator('.wic-top [data-act=shop]').count() === 1, 'the top bar has back, coins and Shop');
+    const geo = await pw.evaluate(() => { const v = document.querySelector('.wic-view').getBoundingClientRect(), st = document.querySelector('.wic-strip').getBoundingClientRect(), parts = [...document.querySelectorAll('.wic-top, .wic-pillbox, .wic-tip')].map((e) => e.getBoundingClientRect()); return { over: parts.some((r) => r.bottom > st.top), share: parts.reduce((a, r) => a + r.width * r.height, 0) / (v.width * v.height), sw: document.documentElement.scrollWidth }; });
+    ok(!geo.over && geo.share < 0.15 && geo.sw === 390, `nothing covers the strip, the chrome covers ${(geo.share * 100).toFixed(1)}% of the scene, no sideways page scroll`);
+    ok(JSON.stringify(await pw.locator('.wic-strip button').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["overview","tops","bottoms","dresses","outerwear","shoes","bags","jewelry","vanity","mirror"]', 'the strip lists every section');
+    await pw.screenshot({ path: join(out, '20-closet-overview.png') });
+    const nTops = await pw.locator('.wic-panel[data-k=tops] .wic-item').count(), nDress = await pw.locator('.wic-panel[data-k=dresses] .wic-item').count();
+    ok(nTops === 3 && nDress === 1 && await pw.locator('.wic-panel[data-k=shoes] .wic-item').count() === 1 && await pw.locator('.wic-panel[data-k=bags] .wic-item').count() === 1, `your real cutouts hang on the rails and sit on the shelves (tops ${nTops}, dresses ${nDress})`);
+    ok(/3 pieces/.test(await pw.locator('.wic-panel[data-k=tops] .wic-label').innerText()) && /Add pieces/.test(await pw.locator('.wic-panel[data-k=jewelry] .wic-empty').innerText()), 'each section has a count; an empty one offers Add pieces');
+    await pw.click('.wic-strip [data-v=dresses]'); await pw.waitForTimeout(800);
+    ok(await pw.evaluate(() => window.__closet.wicAt === 'dresses') && await pw.locator('.wic-strip [data-v=dresses].on').count() === 1, 'tapping a section glides there and the strip follows');
+    await pw.screenshot({ path: join(out, '21-closet-dresses.png') });
+    const box = await pw.locator('.wic-view').boundingBox();
+    await pw.mouse.move(box.x + 330, box.y + 400); await pw.mouse.down(); await pw.mouse.move(box.x + 80, box.y + 400, { steps: 8 }); await pw.mouse.up(); await pw.waitForTimeout(900);
+    ok(await pw.evaluate(() => window.__closet.wicAt === 'outerwear'), 'a swipe moves one section along the wall');
+    await pw.keyboard.press('Escape'); await pw.focus('.wic-view'); await pw.keyboard.press('ArrowRight'); await pw.waitForTimeout(900);
+    ok(await pw.evaluate(() => window.__closet.wicAt === 'shoes'), 'the arrow keys move along the walls too');
+    await pw.screenshot({ path: join(out, '22-closet-shoes.png') });
+    await pw.click('.wic-strip [data-v=dresses]'); await pw.waitForTimeout(800);
+    await pw.click('.wic-panel[data-k=dresses] .wic-item'); await pw.waitForSelector('.wic-card');
+    ok(/Dinner/.test(await pw.locator('.wic-card').innerText()), 'tapping a piece opens its card with its tags');
+    await pw.evaluate(axeSource);
+    const rc = await pw.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    ok(rc.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (walk-in closet + card): ${rc.violations.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await pw.click('#wcadd');
+    ok(await pw.evaluate(() => Object.keys(window.__closet.outfit).includes('dress')), 'Add to outfit dresses the mannequin');
+    await pw.click('.wic-pill'); ok(await pw.locator('.wic-pillcard').count() === 1, 'the challenge pill opens'); await pw.click('.wic-pill');
+    await pw.click('.wic-strip [data-v=mirror]'); await pw.waitForTimeout(800);
+    ok(await pw.locator('.wic-panel[data-k=mirror] svg.doll').count() === 1, 'the mirror shows your mannequin');
+    await pw.click('.wic-empty [data-act=wicmirror]'); await pw.waitForSelector('.dollmode svg.doll');
+    ok(await pw.evaluate(() => getComputedStyle(document.querySelector('header.top')).display !== 'none'), 'the Mirror opens dress-up with your mannequin (the app header is back)');
+    await pw.screenshot({ path: join(out, '23-mirror-dressup.png') });
+    await cw.close();
   }
 
   // ── phase 4b-2: photo mode and the lookbook ──
@@ -792,29 +728,40 @@ try {
     await cp.close();
   }
 
-  // ── cut-out editor: how it was taken, straighten, tap to select, landmarks, then worn on the model ──
+  // ── adding a piece, one step per screen: photo → crop → select → touch up → fit, then worn on the model ──
   {
-    const cE = await _newContext({ viewport: { width: 430, height: 900 } }); await cE.addInitScript(() => localStorage.setItem('flat', '1'));
+    const cE = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }); await cE.addInitScript(() => localStorage.setItem('flat', '1'));
     const pe = await cE.newPage(); pe.setDefaultTimeout(120000); pe.on('pageerror', (e) => errors.push(e.message)); pe.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await pe.goto(`http://localhost:${PORT}/`); await pe.waitForSelector('svg.doll');
-    await pe.click('header [data-act=add]'); await pe.setInputFiles('#file', new URL('./fixtures/photo_dress.jpg', import.meta.url).pathname);
-    await pe.waitForSelector('#tapcut:not([disabled])'); await pe.click('#tapcut');
-    await pe.waitForSelector('.cuted .modes');
-    ok(await pe.locator('.modecard').count() === 3 && /Flat lay/.test(await pe.locator('.modecard.on').innerText()) && /Recommended/.test(await pe.locator('.modecard.on').innerText()), 'the editor offers Flat lay (recommended), Hanger and Worn, each with a tip');
-    await pe.click('[data-mode=worn]'); ok(/arms, hands, face and phone/.test(await pe.locator('.tipbox').innerText()), 'the Worn tip says to mark arms, hands and the phone as not garment');
-    await pe.click('[data-mode=flat]'); await pe.click('#cutnext'); await pe.waitForSelector('#autoq'); await pe.click('#autoq'); ok(await pe.locator('#wb').isChecked(), 'white balance and straighten are offered before cutting out');
+    await pe.click('header [data-act=add]'); await pe.click('[data-mode=worn]');
+    ok(/arms, hands, face and phone/.test(await pe.locator('.tipbox').innerText()), 'the Worn tip says to mark arms, hands and the phone as not garment');
+    await pe.click('[data-mode=flat]');
+    await pe.setInputFiles('#file', new URL('./fixtures/shot_dress.png', import.meta.url).pathname);
+    await pe.waitForSelector('.cuted #autoq');
+    ok(/Screenshot found/.test(await pe.locator('.cuthint').innerText()), 'a shop screenshot is noticed and cropped to its product photo (status bar, buttons and text left out)');
+    const q = await pe.evaluate(() => 1); ok(await pe.locator('#wb').isChecked(), 'white balance and straighten come with the crop');
+    const fits = async () => pe.evaluate(() => { const c = document.querySelector('.cuted #cvs').getBoundingClientRect(), f = document.querySelector('.cutfoot').getBoundingClientRect(); return c.top >= 0 && c.bottom <= f.top + 1 && c.left >= 0 && c.right <= innerWidth && document.documentElement.scrollWidth === innerWidth; });
+    ok(await fits(), 'crop: the whole picture fits on screen, nothing to scroll sideways');
+    await pe.screenshot({ path: join(out, '50-crop.png') });
     await pe.click('#cutnext'); await pe.waitForSelector('[data-tool=pos]');
-    const cb = await pe.locator('#cvs').boundingBox(), tap = async (u, v) => { await pe.mouse.click(cb.x + u * cb.width, cb.y + v * cb.height); await pe.waitForTimeout(350); };
-    await tap(0.5, 0.35); await tap(0.5, 0.62); await tap(0.3, 0.5); await pe.click('[data-tool=neg]'); await tap(0.52, 0.06);
-    await pe.waitForFunction(() => document.querySelector('#selmsg')?.textContent === '' && document.querySelector('#cvs'), null, { timeout: 120000 });
-    await pe.waitForTimeout(600);
-    ok(await pe.locator('#cutnext').innerText() !== '', 'tapping the garment and the dress form gives a live selection');
-    await pe.click('[data-tool=erase]'); await pe.mouse.move(cb.x + cb.width * 0.5, cb.y + cb.height * 0.97); await pe.mouse.down(); await pe.mouse.move(cb.x + cb.width * 0.6, cb.y + cb.height * 0.97, { steps: 4 }); await pe.mouse.up();
-    ok(true, 'the brush erases and restores');
-    await pe.click('#cutnext'); await pe.waitForSelector('#prev');
-    ok(await pe.locator('.marksplit').count() === 1, 'landmarks are suggested and a live fit preview shows the piece on the model');
-    const dotsBefore = await pe.evaluate(() => 1); await pe.click('#cutdone');
-    await pe.waitForSelector('#tapcut:has-text("again")'); await pe.fill('#name', 'Striped test dress'); await pe.waitForTimeout(200);
+    ok(await fits(), 'select: the whole cropped picture fits on screen');
+    ok(/dress form/.test(await pe.locator('.cuthint').innerText()), 'a red ➖ dot is placed on the dress form for you');
+    const small = await pe.evaluate(() => [...document.querySelectorAll('.cuted button')].filter((b) => b.getBoundingClientRect().height < 44 || b.getBoundingClientRect().width < 44).map((b) => b.textContent.trim()));
+    ok(small.length === 0, `every button is at least 44px (${small.join(', ') || 'all are'})`);
+    const cb = await pe.locator('#cvs').boundingBox(), tap = async (u, v) => { await pe.mouse.click(cb.x + u * cb.width, cb.y + v * cb.height); await pe.waitForTimeout(250); };
+    await tap(0.5, 0.35); await tap(0.5, 0.62); await tap(0.3, 0.5);
+    await pe.click('[data-tool=neg]'); await tap(0.25, 0.97); await pe.click('#undo');
+    await pe.waitForFunction(() => /Selected/.test(document.querySelector('#selmsg')?.textContent || ''), null, { timeout: 120000 });
+    ok(await pe.evaluate(() => document.querySelector('[data-tool=neg]').getAttribute('aria-checked') === 'true'), 'Keep / Remove is a clear toggle; Undo takes back the last dot');
+    await pe.screenshot({ path: join(out, '51-select.png') });
+    await pe.click('#cutnext'); await pe.waitForSelector('#brush');
+    await pe.mouse.move(cb.x + cb.width * 0.5, cb.y + cb.height * 0.97); await pe.mouse.down(); await pe.mouse.move(cb.x + cb.width * 0.6, cb.y + cb.height * 0.97, { steps: 4 }); await pe.mouse.up();
+    ok(true, 'touch up: the brush erases (optional)');
+    await pe.screenshot({ path: join(out, '52-touchup.png') });
+    await pe.click('#cutnext'); await pe.waitForSelector('#prev'); await pe.waitForTimeout(800);
+    ok(await pe.locator('.marksplit').count() === 1, 'fit: landmarks are suggested, with a live preview on the model');
+    await pe.screenshot({ path: join(out, '53-fit.png') });
+    await pe.click('#cutdone'); await pe.waitForSelector('#cutimg'); await pe.fill('#name', 'Striped test dress'); await pe.waitForTimeout(200);
     await pe.click('#save');
     await pe.waitForFunction(() => window.__closet.items.some((i) => i.name === 'Striped test dress'));
     const it = await pe.evaluate(() => { const i = window.__closet.items.find((x) => x.name === 'Striped test dress'); return { type: i.type, marks: Object.keys(i.marks || {}), cap: i.capture, orig: !!i.original }; });

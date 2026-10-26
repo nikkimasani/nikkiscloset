@@ -17,11 +17,25 @@ export function makeBody(img, pack) {
   const runs = (y) => {
     const rs = row(y);
     if (y < crotchY) { const t = rs.find((r) => r[0] <= cx && cx < r[1]); return t ? [t] : []; }
-    return rs.filter((r) => { const o = Math.min(r[1], cx + band) - Math.max(r[0], cx - band); return o > 0.7 * (r[1] - r[0]); });
+    const legs = rs.filter((r) => { const o = Math.min(r[1], cx + band) - Math.max(r[0], cx - band); return o > 0.7 * (r[1] - r[0]); });
+    // at most one run per leg (toes and the gaps between them would otherwise count as more legs)
+    const merge = (a) => (a.length ? [[Math.min(...a.map((r) => r[0])), Math.max(...a.map((r) => r[1]))]] : []);
+    return [...merge(legs.filter((r) => (r[0] + r[1]) / 2 < cx)), ...merge(legs.filter((r) => (r[0] + r[1]) / 2 >= cx))];
   };
   const outlineAt = (y) => { const rs = runs(y); return rs.length ? { l: rs[0][0], r: rs[rs.length - 1][1] } : null; };
   const legCentres = (y) => runs(y).map((r) => (r[0] + r[1]) / 2);
-  return { cx, crotchY, runs, outlineAt, legCentres };
+  // the hem of the base's shorts, column by column: the sharpest colour change down each leg in the band config.json names
+  const band2 = pack.shorts || { from: 940, to: 1070 }, shortsHem = new Array(w).fill(null);
+  for (let x = 0; x < w; x++) {
+    let best = 0, by = null;
+    for (let y = band2.from; y < Math.min(h - 1, band2.to); y++) {
+      if (y < crotchY || !runs(y).some((r) => r[0] <= x && x < r[1])) continue;
+      const o = (y * w + x) * 4, o2 = o + w * 4, d = Math.abs(data[o] - data[o2]) + Math.abs(data[o + 1] - data[o2 + 1]) + Math.abs(data[o + 2] - data[o2 + 2]);
+      if (d > best) { best = d; by = y; }
+    }
+    if (best > 40) shortsHem[x] = by;
+  }
+  return { cx, crotchY, runs, outlineAt, legCentres, shortsHem, img };
 }
 
 /** A point `t` (0..1) of the way along an arm's centre line (a list of [x, y]). */

@@ -90,7 +90,7 @@ let uidN = 0;
  * @param {{pack:object, items:Record<string,object>, urls:Map<string,string>, meta?:Map<string,object>, selected?:string, cls?:string, label?:string, debug?:boolean}} o
  *   items: slot -> item. meta: id -> { iw, ih, bx, by, bw, bh } for the dashed selection box.
  */
-export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes = null, selected = '', cls = '', label = '', debug = false }) {
+export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
   const tucked = !!(top && bottom && isTuckable(top, pack) && fitOf(top, pack).tuck);
@@ -109,7 +109,7 @@ export function dollSVG({ pack, items, urls, meta = null, fits = null, fitBoxes 
     return slot === 'top' && tucked ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
   };
   const clothes = order.map(garment).join('');
-  const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
+  const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
   const parts = { body, clothes, hair: '', acc: garment('acc') };
   const [x, y, w, h] = pack.view;
   const names = Object.values(items).map((i) => i.name).filter(Boolean);

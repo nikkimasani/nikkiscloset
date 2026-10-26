@@ -61,7 +61,7 @@ export function coinsFor({ stars, streak = 0, energy = 100 }) {
 
 /* ───────── the saved state ───────── */
 export const freshDay = (date, theme) => ({ date, phase: 'challenge', theme, energy: 100, mood: 50, tries: 0, paid: 0, stars: 0, score: 0, ended: false });
-export function initial() { return { coins: 0, day: null, history: [], owned: [], placed: [], decor: 'rose', photo: { bg: 'blush', pose: 'stand' } }; }
+export function initial() { return { coins: 0, day: null, history: [], owned: [], photo: { bg: 'blush', pose: 'stand' } }; }
 
 /** Make sure the saved game is on today's date. A new date starts a new day with a new theme; coins and history carry over. */
 export function rollOver(game, date, makeTheme) {
@@ -79,34 +79,15 @@ export function applyRating(game, rating, { streak = 0 } = {}) {
 /** Changing the outfit costs a little energy; Style me costs more. */
 export const spendEnergy = (game, n) => (game.day ? { ...game, day: { ...game.day, energy: Math.max(0, game.day.energy - n), tries: game.day.tries + 1 } } : game);
 
-/** Going to bed: the day is done; one more streak day is logged by the caller. */
+/** Ending the day: it is done; one more streak day is logged by the caller. */
 export function endDay(game) {
   const d = game.day;
   return { ...game, day: { ...d, ended: true, phase: 'done' }, history: [...game.history.filter((h) => h.date !== d.date), { date: d.date, theme: d.theme.title, stars: d.stars }].slice(-60) };
 }
 
-/** Where the guide arrow should point. */
-export function guideFor({ game, hasOutfit }) {
-  const d = game.day; if (!d) return null;
-  if (d.phase === 'done') return null;
-  if (d.phase === 'evening') return 'bed';
-  return hasOutfit ? 'mirror' : 'wardrobe';
-}
-
 /* ───────── the shop: what coins unlock ───────── */
-/** kind: 'furn' (buy as many as you like, then place them in build mode), 'hair' (a hairstyle), 'room' (the apartment's colours). price 0 = free from the start.
- *  model/scale/solid describe how a piece of furniture sits in the apartment; the art lives in public/assets/furniture. */
+/** What coins unlock for 📸 Photo mode: kind 'bg' (a backdrop) or 'pose'. price 0 = free from the start. */
 export const CATALOG = [
-  { id: 'room:rose', kind: 'room', name: 'Rose', emoji: '🌸', price: 0 },
-  { id: 'room:sage', kind: 'room', name: 'Sage', emoji: '🌿', price: 80 },
-  { id: 'room:lilac', kind: 'room', name: 'Lilac', emoji: '🪻', price: 80 },
-  { id: 'room:dusk', kind: 'room', name: 'Dusk', emoji: '🌆', price: 120 },
-  { id: 'hair:long', kind: 'hair', name: 'Long', emoji: '💁‍♀️', price: 0 },
-  { id: 'hair:bob', kind: 'hair', name: 'Bob', emoji: '👩', price: 0 },
-  { id: 'hair:pixie', kind: 'hair', name: 'Pixie', emoji: '✂️', price: 0 },
-  { id: 'hair:bun', kind: 'hair', name: 'Bun', emoji: '🎀', price: 40 },
-  { id: 'hair:pony', kind: 'hair', name: 'Ponytail', emoji: '🐴', price: 40 },
-  { id: 'hair:curly', kind: 'hair', name: 'Curly', emoji: '🌀', price: 60 },
   { id: 'bg:blush', kind: 'bg', name: 'Blush', emoji: '🌸', price: 0 },
   { id: 'bg:studio', kind: 'bg', name: 'Studio', emoji: '📷', price: 0 },
   { id: 'bg:sunset', kind: 'bg', name: 'Sunset', emoji: '🌅', price: 30 },
@@ -118,46 +99,22 @@ export const CATALOG = [
   { id: 'pose:walk', kind: 'pose', name: 'Walk', emoji: '🚶', price: 25 },
   { id: 'pose:twirl', kind: 'pose', name: 'Twirl', emoji: '💃', price: 40 },
   { id: 'pose:pop', kind: 'pose', name: 'Pop', emoji: '✨', price: 40 },
-  { id: 'furn:rug_oval_B', kind: 'furn', name: 'Round rug', emoji: '🟣', price: 30, model: 'rug_oval_B', scale: 1.2, solid: false },
-  { id: 'furn:rug_rectangle_stripes_A', kind: 'furn', name: 'Striped rug', emoji: '🟦', price: 30, model: 'rug_rectangle_stripes_A', scale: 1.2, solid: false },
-  { id: 'furn:cactus_medium_A', kind: 'furn', name: 'Cactus', emoji: '🌵', price: 25, model: 'cactus_medium_A', scale: 1 },
-  { id: 'furn:cactus_small_A', kind: 'furn', name: 'Little cactus', emoji: '🪴', price: 20, model: 'cactus_small_A', scale: 1 },
-  { id: 'furn:lamp_standing', kind: 'furn', name: 'Floor lamp', emoji: '💡', price: 35, model: 'lamp_standing', scale: 0.9 },
-  { id: 'furn:chair_B', kind: 'furn', name: 'Chair', emoji: '🪑', price: 40, model: 'chair_B', scale: 0.95 },
-  { id: 'furn:chair_stool', kind: 'furn', name: 'Stool', emoji: '🪑', price: 25, model: 'chair_stool', scale: 0.9 },
-  { id: 'furn:table_small', kind: 'furn', name: 'Side table', emoji: '🟫', price: 45, model: 'table_small', scale: 1 },
-  { id: 'furn:table_medium_long', kind: 'furn', name: 'Long table', emoji: '🍽️', price: 70, model: 'table_medium_long', scale: 0.9 },
-  { id: 'furn:cabinet_small_decorated', kind: 'furn', name: 'Cabinet', emoji: '🗄️', price: 60, model: 'cabinet_small_decorated', scale: 1 },
-  { id: 'furn:shelf_A_big', kind: 'furn', name: 'Bookcase', emoji: '📚', price: 90, model: 'shelf_A_big', scale: 1 },
-  { id: 'furn:armchair_pillows', kind: 'furn', name: 'Armchair', emoji: '🛋️', price: 85, model: 'armchair_pillows', scale: 0.8 },
 ];
 export const catalogItem = (id) => CATALOG.find((c) => c.id === id) || null;
-const count = (list, id) => list.reduce((n, x) => n + ((typeof x === 'string' ? x : x.id) === id ? 1 : 0), 0);
-/** Free things are always yours; furniture counts how many you have bought. */
+/** Free things are always yours. */
 export function owns(game, id) {
   const c = catalogItem(id); if (!c) return false;
   return c.price === 0 || (game.owned || []).includes(id);
 }
-export const furnitureStock = (game, id) => count(game.owned || [], id) - count(game.placed || [], id);
 export function buy(game, id) {
   const c = catalogItem(id); if (!c) return { game, ok: false, reason: 'No such thing in the shop.' };
-  if (c.kind !== 'furn' && owns(game, id)) return { game, ok: false, reason: 'You already have this.' };
+  if (owns(game, id)) return { game, ok: false, reason: 'You already have this.' };
   if (game.coins < c.price) return { game, ok: false, reason: `You need ${c.price - game.coins} more coins.` };
   return { game: { ...game, coins: game.coins - c.price, owned: [...(game.owned || []), id] }, ok: true, reason: '' };
 }
-export function useRoom(game, id) { return owns(game, id) && catalogItem(id)?.kind === 'room' ? { ...game, decor: id.slice(5) } : game; }
-/** Put a piece you own in the room (at x,z, turned ry quarter-turns). Returns the new game and the piece's uid. */
-export function placePiece(game, id, x, z, ry = 0, uid = `p${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`) {
-  if (furnitureStock(game, id) <= 0) return { game, uid: '' };
-  return { game: { ...game, placed: [...(game.placed || []), { uid, id, x: +x.toFixed(2), z: +z.toFixed(2), ry: ((ry % 4) + 4) % 4 }] }, uid };
-}
-export const movePiece = (game, uid, patch) => ({ ...game, placed: game.placed.map((p) => (p.uid === uid ? { ...p, ...patch, ry: patch.ry === undefined ? p.ry : ((patch.ry % 4) + 4) % 4 } : p)) });
-export const putAway = (game, uid) => ({ ...game, placed: game.placed.filter((p) => p.uid !== uid) });
 /** Choose the backdrop or pose for photo mode (only ones you own). */
 export function usePhoto(game, id) {
   const c = catalogItem(id); if (!c || !['bg', 'pose'].includes(c.kind) || !owns(game, id)) return game;
   return { ...game, photo: { bg: 'blush', pose: 'stand', ...game.photo, [c.kind]: id.slice(c.kind.length + 1) } };
 }
-/** A hairstyle you've been wearing before it became a paid one stays yours. */
-export function grandfather(game, hairStyle) { const id = `hair:${hairStyle}`; return catalogItem(id) && !owns(game, id) ? { ...game, owned: [...(game.owned || []), id] } : game; }
 export { slotOf };

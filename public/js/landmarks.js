@@ -1,6 +1,9 @@
 // Landmarks on a garment cutout (neckline, shoulders, armpits, hems, sleeve ends, waistband, crotch...): where each one sits is suggested from the
 // cutout's silhouette, then you can drag them. They are stored as fractions (0..1) of the cutout so they survive any resize.
 
+/** Whether a piece has sleeves, going by its category and name ("Sleeveless blouse", "Satin cami"...). undefined when the name doesn't say. */
+export const sleevesFromName = (type, name = '') => (type === 'tanks' || type === 'bodysuits' || /\b(sleeveless|tank|cami(sole)?|strapless|halter|tube|vest|gilet|bandeau|bustier|corset)\b/i.test(name) ? false : /\b(long|short|3\/4|puff|cap) ?-?sleeve/i.test(name) ? true : undefined);
+
 /** Which landmark set a category uses. */
 export const groupOf = (type) => (type === 'dresses' ? 'dress' : type === 'bottoms' || type === 'skirts' ? 'bottom' : ['tops', 'tanks', 'bodysuits', 'outerwear'].includes(type) ? 'top' : null);
 /** Pieces that are fitted with the mesh warp (shoes, bags and accessories just sit on their anchor). */
@@ -59,9 +62,11 @@ export function suggest(type, m, opt = {}) {
     const rs = runsAt(cy + 3, 0).filter((r) => r[1] - r[0] > W * 0.06), midGap = rs.length >= 2 ? (rs[0][1] + rs[1][0]) / 2 : midX;
     put('crotch', midGap, cy);
     // each leg's lowest row gives its hem corners
-    const lowest = (lo, hi) => { let ly = -1; for (let y = y1; y >= y0; y--) { for (let x = lo; x <= hi; x++) if (at(x, y)) { ly = y; break; } if (ly >= 0) break; } return ly; };
+    const lowest = (lo, hi) => { // the lowest row that still carries at least half the leg's width (stray threads hang lower)
+      const cnt = (y) => { let n = 0; for (let x = lo; x <= hi; x++) if (at(x, y)) n++; return n; }, ref = cnt(y0 + Math.round(H * 0.8));
+      for (let y = y1; y >= y0; y--) if (cnt(y) >= Math.max(1, ref * 0.5)) return y; return y1; };
     const gx = Math.round(midGap), ly = lowest(x0, gx - 1), ry = lowest(gx + 1, x1);
-    const legEdge = (y, lo, hi) => { y = Math.max(y0, y - 2); let l = -1, r = -1; for (let x = lo; x <= hi; x++) if (at(x, y)) { if (l < 0) l = x; r = x; } return l < 0 ? [lo, hi] : [l, r]; };
+    const legEdge = (y, lo, hi) => { let l = -1, r = -1; for (let yy = Math.max(y0, y - Math.round(H * 0.03)); yy <= y; yy++) for (let x = lo; x <= hi; x++) if (at(x, yy)) { if (l < 0 || x < l) l = x; if (x > r) r = x; } return l < 0 ? [lo, hi] : [l, r]; }; // the band just above the hem: its very last row may be a single thread
     const le = legEdge(ly, x0, gx - 1), re = legEdge(ry, gx + 1, x1);
     put('hemLo', le[0], ly); put('hemLi', le[1], ly); put('hemRi', re[0], ry); put('hemRo', re[1], ry);
     return out;

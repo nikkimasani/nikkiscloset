@@ -418,8 +418,7 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .cswatch { width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
 .cswatch.on { outline: 3px solid var(--accent); outline-offset: 2px; }
 .scenebar { flex-wrap: wrap; }
-.room.dollroom { border: 0; border-radius: 30px; background: radial-gradient(120% 80% at 50% 0%, #fff7fb 0%, #ffe3ef 55%, #ffd0e3 100%); box-shadow: var(--shadow), inset 0 -80px 80px -60px #ff9cc455; }
-.room.dollroom::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 13%; z-index: 1; background: linear-gradient(#ffc1d8, #ff9fc4); box-shadow: 0 -4px 0 #fff8; }
+.room.dollroom { border: 0; border-radius: 30px; background: #e9d3c6 url(/assets/closet/mirror.jpg) center 62% / cover no-repeat; box-shadow: var(--shadow); } /* the mannequin stands in front of the closet's three-way mirror */
 .room.dollroom .stage { inset: 3% 0 5% 0; align-items: flex-end; }
 .room.dollroom .stage .doll { height: 100%; width: auto; max-width: 100%; display: block; filter: drop-shadow(0 6px 10px #7a1d4a30); }
 .room.dollroom .stage.fitting { touch-action: none; cursor: grab; }
@@ -576,31 +575,97 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 
 .dbgchip { position: absolute; left: 10px; top: 10px; z-index: 6; min-height: 36px; padding: 4px 12px; border-radius: 999px; border: 1px solid #ffffff66; background: #0b1b33cc; color: #fff; font: inherit; font-size: 13px; cursor: pointer; }
 
-/* ── cut-out editor ── */
-.cuted { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); overflow: hidden; }
-.cuthead { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+/* ── cut-out editor: one step per screen, fits the phone (no scrolling sideways) ── */
+.cuted { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; height: 100dvh; background: #fbf4f1; color: #3b2730; overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); --line: #e7cfd6; --muted: #7d6570; }
+.cuted .muted { color: var(--muted); }
+.cuthead { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
 .cuthead h2 { margin: 0; font-size: 18px; }
-.cutsteps { display: flex; gap: 6px; list-style: none; margin: 0; padding: 8px 14px 0; font-size: 12px; color: var(--muted); }
-.cutsteps li { flex: 1; padding: 4px 0; border-bottom: 3px solid var(--line); text-align: center; }
-.cutsteps li.on { color: var(--ink); border-color: var(--accent); font-weight: 700; }
-.cutsteps li.done { border-color: var(--accent); }
-.cutbody { flex: 1; overflow: auto; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
-.cutfoot { padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: flex; gap: 10px; }
-.cutfoot .primary { flex: 1; min-height: 48px; }
-.cutstage { display: flex; justify-content: center; }
-.cutstage canvas { max-width: 100%; height: auto; border-radius: 12px; touch-action: none; background: var(--check); }
-.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.modecard { display: grid; gap: 2px; justify-items: center; padding: 12px 6px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff12; font-size: 13px; text-align: center; }
-.modecard span { font-size: 26px; }
-.modecard small { color: var(--accent); font-weight: 700; }
-.modecard.on { border-color: var(--accent); background: #5ad1ff22; }
-.tipbox { padding: 10px 14px; border: 1px solid var(--line); border-radius: 14px; }
-.tipbox h3 { margin: 0 0 6px; font-size: 15px; }
-.tipbox ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
-.tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.tool { min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: #ffffff12; font-size: 12.5px; font-weight: 700; padding: 4px; }
-.tool.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.marksplit { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; align-items: start; }
-.tapbox { display: grid; gap: 6px; margin: 10px 0; }
-.chk { display: flex; align-items: center; gap: 8px; }
+.cuted .ghost { min-height: 44px; padding: 6px 14px; border-radius: 22px; border: 1px solid var(--line); background: #fff; color: #3b2730; font-weight: 700; }
+.cuted .primary { min-height: 52px; border-radius: 26px; border: 0; background: #b5517a; color: #fff; font-weight: 800; font-size: 16px; }
+.cutsteps { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0 12px 6px; font-size: 12px; color: var(--muted); }
+.cutsteps li { flex: 1; padding: 3px 0; border-bottom: 3px solid var(--line); text-align: center; }
+.cutsteps li.on { color: #3b2730; border-color: #b5517a; font-weight: 800; }
+.cutsteps li.done { border-color: #e2a3bb; }
+.cutbody { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 12px; }
+.cuthint { margin: 0; font-size: 14px; }
+.cutstatus { margin: 0; min-height: 1.4em; font-size: 13px; }
+.cutstage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 14px; }
+.cutstage canvas { display: block; border-radius: 10px; touch-action: none; background: #eadde1; }
+.zoomwrap { touch-action: none; background: #efe3e7; }
+.zoomwrap canvas { transform-origin: center; }
+.cutrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cutrow input[type=range] { flex: 1; min-width: 120px; height: 44px; }
+.cutrow select { flex: 1; min-height: 44px; min-width: 0; border-radius: 12px; border: 1px solid var(--line); padding: 0 10px; background: #fff; color: #3b2730; font-size: 15px; }
+.seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 2px solid var(--line); border-radius: 26px; overflow: hidden; }
+.seg2 button { min-height: 48px; border: 0; background: #fff; color: #3b2730; font-weight: 800; font-size: 16px; }
+.seg2 .keep.on { background: #16a34a; color: #fff; }
+.seg2 .rem.on { background: #dc2626; color: #fff; }
+.cutfoot { padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; }
+.cutfoot .primary { flex: 1; }
+.marksplit { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1.25fr 1fr; gap: 8px; }
+.marksplit .cutstage { height: 100%; }
+.chk { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.chk input { width: 22px; height: 22px; }
+/* step 1 of adding a piece */
+.addsrc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.addsrc .srcbtn { min-height: 64px; font-size: 16px; flex-direction: column; gap: 2px; }
+.addsrc .srcbtn span { font-size: 24px; }
+.modechips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.modechips button { min-height: 52px; border-radius: 14px; border: 1px solid var(--line); background: #ffffff12; color: inherit; font-weight: 700; font-size: 13px; padding: 4px; }
+.modechips button.on { border-color: var(--accent); background: #5ad1ff22; }
+.modechips small { display: block; color: var(--accent); font-weight: 700; }
+.tipbox { padding: 8px 12px; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; }
+.tipbox h3 { margin: 0 0 4px; font-size: 14px; }
+.tipbox ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.cutprev { display: flex; gap: 12px; align-items: center; }
+.cutprev img { width: 120px; height: 150px; object-fit: contain; border-radius: 12px; background: var(--check); }
+.cutprev .col { display: grid; gap: 8px; flex: 1; }
 .anchors .chip { scroll-margin-top: 90px; }
+
+/* ── the walk-in closet: full screen, photographed backgrounds, a thin top bar and a section strip ── */
+body.wic-on header.top, body.wic-on #nav { display: none; }
+body.wic-on { overflow: hidden; }
+.wic { position: fixed; inset: 0; z-index: 20; height: 100dvh; display: flex; flex-direction: column; background: #2b1d1a; color: #3b2730; }
+.wic-view { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; touch-action: pan-y; outline-offset: -3px; }
+.wic-zoom { position: absolute; inset: 0; transform-origin: center; transition: transform .2s; }
+.wic-track { position: absolute; top: 0; bottom: 0; left: 0; will-change: transform; }
+.wic-panel { position: absolute; top: 0; bottom: 0; overflow: hidden; }
+.wic-art { position: absolute; background-size: 100% 100%; }
+.wic-item { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(0 6px 8px #3b1f2a55); transition: transform .15s; }
+.wic-item img { width: 100%; height: 100%; object-fit: contain; object-position: top center; pointer-events: none; }
+.wic-item:active { transform: scale(.97); }
+.wic-item.worn { filter: drop-shadow(0 0 6px #fff) drop-shadow(0 6px 8px #3b1f2a55); }
+.wic-item:focus-visible { outline: 3px solid #b5517a; outline-offset: 2px; }
+.wic-hanger { position: absolute; width: 22px; height: 18px; margin-left: -11px; border: 2px solid #c9a24a; border-bottom: 0; border-radius: 11px 11px 0 0; pointer-events: none; }
+.wic-hanger::before { content: ''; position: absolute; left: 50%; top: -9px; width: 6px; height: 9px; margin-left: -3px; border: 2px solid #c9a24a; border-bottom: 0; border-radius: 4px 4px 0 0; }
+.wic-hot { position: absolute; transform: translate(-50%, -50%); min-height: 44px; padding: 6px 12px; border-radius: 22px; border: 1px solid #fff9; background: #fff8f4e6; color: #3b2730; font-weight: 800; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 14px #3b1f2a33; }
+.wic-hot small { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 10px; background: #b5517a; color: #fff; font-size: 11px; }
+.wic-label { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 6px 14px; border-radius: 18px; background: #fff8f4e6; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 14px #3b1f2a33; pointer-events: none; }
+.wic-empty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: min(78%, 300px); padding: 14px; border-radius: 18px; background: #fff8f4ee; text-align: center; box-shadow: 0 6px 20px #3b1f2a33; }
+.wic-empty.low { top: auto; bottom: 56px; transform: translateX(-50%); }
+.wic-empty p { margin: 0 0 8px; font-size: 14px; color: #6b5560; }
+.wic-btn { min-height: 44px; padding: 6px 18px; border-radius: 22px; border: 0; background: #b5517a; color: #fff; font-weight: 800; font-size: 15px; }
+.wic-mirrorfig { position: absolute; left: 33%; top: 33%; width: 34%; height: 52%; padding: 0; border: 0; background: none; }
+.wic-mirrorfig svg { width: 100%; height: 100%; }
+/* the chrome sits over the top of the scene: a thin bar, the challenge pill, the tip (together well under 15% of it) */
+.wic-chrome { position: absolute; left: 0; right: 0; top: 0; z-index: 3; padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); pointer-events: none; }
+.wic-chrome > * { pointer-events: auto; }
+.wic-top { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.wic-round { min-width: 44px; min-height: 44px; border-radius: 22px; border: 0; background: #fff8f4e6; color: #3b2730; font-size: 18px; font-weight: 800; box-shadow: 0 2px 10px #3b1f2a33; }
+.wic-round.wide { margin-left: auto; padding: 0 14px; font-size: 14px; }
+.wic-coins { min-height: 36px; display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; border-radius: 18px; background: #fff8f4e6; font-weight: 800; box-shadow: 0 2px 10px #3b1f2a33; }
+.wic-pillbox { display: inline-grid; gap: 6px; max-width: min(320px, 90%); }
+.wic-pill { justify-self: start; min-height: 36px; padding: 4px 14px; border-radius: 18px; border: 0; background: #b5517ae6; color: #fff; font-weight: 800; font-size: 14px; box-shadow: 0 2px 10px #3b1f2a44; }
+.wic-pill[aria-expanded=true] { background: #8f3a5d; }
+.wic-pillcard { padding: 10px 12px; border-radius: 14px; background: #fff8f4f2; font-size: 13px; box-shadow: 0 6px 18px #3b1f2a44; }
+.wic-pillcard p { margin: 0 0 8px; }
+.wic-tip { position: absolute; right: max(10px, env(safe-area-inset-right)); top: calc(env(safe-area-inset-top) + 56px); max-width: 230px; padding: 8px 34px 8px 10px; border-radius: 12px; background: #3b2730e6; color: #fff; font-size: 12.5px; }
+.wic-x { position: absolute; right: 0; top: 0; width: 44px; height: 44px; border: 0; background: none; color: #fff; font-size: 16px; }
+.wic-strip { flex: 0 0 auto; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: #fff8f4; border-top: 1px solid #ecd6d0; scroll-snap-type: x proximity; }
+.wic-strip::-webkit-scrollbar { display: none; }
+.wic-strip button { flex: 0 0 auto; min-width: 60px; min-height: 52px; display: grid; place-items: center; gap: 0; padding: 4px 6px; border: 0; border-radius: 14px; background: none; color: #7d6570; font-size: 11.5px; font-weight: 700; scroll-snap-align: center; }
+.wic-strip button span { font-size: 20px; line-height: 1.1; }
+.wic-strip button.on { background: #f6dde5; color: #3b2730; box-shadow: inset 0 0 0 2px #b5517a; }
+.wic-card img { display: block; width: 100%; max-height: 46vh; object-fit: contain; border-radius: 14px; background: var(--check); }
+.wic-card .chips { margin-top: 10px; }
