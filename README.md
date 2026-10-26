@@ -29,6 +29,11 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 
 - **Back photo (optional)** on any piece: shows on the back of the 3D garment instead of a darkened copy of the front.
 
+## Dress Up: walk-in closet and mirror
+- **Walk-in closet**: your clothes hang in cabinets by type. Tap a section and the avatar walks over; its rail opens and you scroll along the hangers, tapping as many pieces as you like into your basket.
+- **Try on** takes the basket to the **mirror** (the 3D model in a framed mirror). Swap between grabbed pieces, **Mix my picks**, save the look or log it as today's outfit. The old picker is still there under the picks.
+- **Customize** (🎨) is docked inside the model's box like a create-a-sim panel: Skin, Hair, Style, Eyes, Lips, Body, Room.
+
 ## Cloud sync (optional)
 - **Wardrobe → Cloud sync**: enter your private sync key to keep pieces, photos, outfits, diary and appearance in step across devices. Newest edit wins; deletes sync too. Nothing is uploaded until a key is entered.
 - Backend is a dedicated Supabase project (`sync_records`, `sync_blobs`). There are no accounts: row-level security only allows requests whose `x-sync-key` header hashes to the stored SHA-256 (the key itself is never stored). The URL and publishable key in `public/js/sync.js` are public by design. Treat the sync key like a password; to rotate it, update the hash in `sync_config`.

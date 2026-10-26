@@ -264,3 +264,79 @@ main { overflow-x: clip; }
   /* anything scrolled or tabbed into view stops below the pinned model instead of hiding behind it */
   html:has(.dress .room) { scroll-padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px + clamp(340px, 46vh, 440px) + 12px); scroll-padding-bottom: 96px; }
 }
+
+/* ── scene switch ── */
+.scenebar { display: flex; gap: 6px; background: #0006; border-radius: 99px; padding: 4px; }
+.scenebar button { flex: 1; min-height: 44px; border: 0; border-radius: 99px; background: none; font-weight: 700; font-size: 13px; white-space: nowrap; padding: 0 12px; }
+.scenebar button.on { background: var(--accent); color: var(--accent-ink); }
+.tools button { min-height: 56px; }
+.tools button.on { background: var(--accent); color: var(--accent-ink); }
+
+/* ── the mirror: ornate frame + glass sheen around the model ── */
+.room.mirror { border: 7px solid #d9b45f; border-radius: 34px; box-shadow: 0 0 0 3px #8a6a22, 0 0 0 5px #f3de9a, var(--shadow), inset 0 0 40px #0003; }
+.room.mirror::after { content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none; background: linear-gradient(115deg, #fff0 28%, #ffffff38 34%, #fff0 40%, #fff0 62%, #ffffff24 66%, #fff0 70%); }
+
+/* ── Sims-style customizer docked inside the model's box ── */
+.cas { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: linear-gradient(#08223ce8, #051a2ef5); border-top: 2px solid #5ad1ff99; padding: 6px 8px 8px; backdrop-filter: blur(6px); }
+.cas-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.cas-tabs button { flex: 0 0 auto; min-width: 48px; min-height: 48px; border: 2px solid transparent; border-radius: 14px; background: #ffffff14; display: grid; place-items: center; gap: 0; padding: 2px 6px; font-weight: 700; }
+.cas-tabs button span { font-size: 20px; line-height: 1; }
+.cas-tabs button small { font-size: 10px; }
+.cas-tabs button.on { background: var(--accent); color: var(--accent-ink); border-color: #fff8; }
+.cas-tabs .cas-x { margin-left: auto; background: #ffffff22; }
+.cas-opts { display: flex; gap: 8px; align-items: center; overflow-x: auto; padding: 8px 2px 2px; min-height: 52px; scrollbar-width: thin; }
+.cas-opts .swatches { flex-wrap: nowrap; }
+.cas-opts .chip { flex: 0 0 auto; }
+.cas-opts .sw { flex: 0 0 auto; width: 38px; height: 38px; min-height: 38px; }
+.cas-opts .mini { flex: 0 0 132px; display: grid; gap: 2px; font-size: 11px; font-weight: 700; }
+.cas-opts .mini input { width: 100%; }
+.room.cas-open .turnbar { bottom: 124px; }
+.room.cas-open .tools { bottom: 124px; top: 8px; justify-content: flex-start; overflow-y: auto; }
+@media (max-width: 919px) { .dress .room.cas-open { height: clamp(440px, 64vh, 560px); } }
+.room.cas-open.is3d .stage { inset: 3% 0 112px 0; }
+.room.cas-open .meters, .room.cas-open .streakbadge { display: none; }
+
+/* ── the walk-in closet ── */
+.room.closet-scene { background: linear-gradient(#8a6247, #5d4130 70%); border-color: #e8d2b0aa; }
+.room.closet-scene::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: repeating-linear-gradient(90deg, #d9b48a 0 60px, #cfa77b 60px 120px); border-top: 4px solid #f1dcb8; z-index: 0; }
+.closet-hud { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.basketbadge { background: #07203a; border: 1px solid #5ad1ff88; border-radius: 99px; padding: 8px 14px; font-weight: 800; font-size: 14px; }
+.closet-hud .primary { min-height: 44px; padding: 0 16px; }
+.closet-hud .primary:disabled { opacity: .45; }
+
+.hall { position: absolute; inset: 58px 0 0 0; overflow-x: auto; overflow-y: hidden; z-index: 1; scrollbar-width: none; }
+.hall-track { position: relative; display: flex; gap: 10px; width: max-content; height: 100%; padding: 0 14px; }
+.cabinet { flex: 0 0 104px; height: 62%; align-self: flex-start; display: grid; grid-template-rows: auto 1fr auto; gap: 4px; padding: 8px 6px; border: 3px solid #f1dcb8; border-radius: 14px 14px 6px 6px; background: linear-gradient(90deg, #f6ecdd 49%, #cdb994 49% 51%, #f6ecdd 51%); color: #3b2a1c; text-align: center; box-shadow: 0 6px 0 #0004; }
+.cabinet:active { transform: translateY(2px); }
+.cab-plate { font-size: 12px; font-weight: 800; background: #3b2a1c; color: #f6ecdd; border-radius: 99px; padding: 3px 4px; }
+.cab-rail { position: relative; display: flex; align-items: flex-start; justify-content: center; gap: 2px; padding-top: 10px; border-top: 3px solid #8b8f99; margin-top: 8px; }
+.cab-rail img { width: 30px; height: 56px; object-fit: contain; }
+.cab-rail em { font-size: 11px; color: #8a7a68; }
+.cab-count { font-weight: 800; font-size: 12px; }
+.walker { position: absolute; bottom: 4px; z-index: 3; width: 72px; height: 46%; min-height: 140px; transform: translateX(-50%); transition: left .8s ease-in-out; pointer-events: none; }
+.walker svg { height: 100%; width: auto; display: block; margin: 0 auto; filter: drop-shadow(0 6px 4px #0004); }
+.walker.left svg { transform: scaleX(-1); }
+.walker.walking svg { animation: bob .28s ease-in-out infinite alternate; }
+@keyframes bob { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-5px) rotate(2deg); } }
+.walker.left.walking svg { animation-name: bobl; }
+@keyframes bobl { from { transform: scaleX(-1) translateY(0) rotate(-2deg); } to { transform: scaleX(-1) translateY(-5px) rotate(2deg); } }
+
+.railview { position: absolute; inset: 58px 0 0 0; z-index: 2; display: flex; flex-direction: column; padding: 0 8px 8px; min-height: 0; }
+.rail-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.rail-head h3 { margin: 0; font-size: 15px; background: #07203ab0; padding: 6px 12px; border-radius: 99px; }
+.rail-head .ghost { min-height: 40px; padding: 0 12px; background: #07203ab0; }
+.rail-bar { height: 9px; margin: 12px 0 0; border-radius: 99px; background: linear-gradient(#e8ecf2, #8b8f99); box-shadow: 0 3px 0 #0004; flex: 0 0 auto; }
+.rail-row { flex: 1; min-height: 0; display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden; padding: 0 6px 6px; scroll-snap-type: x proximity; align-items: flex-start; scrollbar-width: thin; }
+.hanger { position: relative; flex: 0 0 116px; scroll-snap-align: start; margin-top: 0; padding: 22px 6px 6px; display: grid; gap: 3px; text-align: center; background: var(--tile); color: var(--tile-ink); border: 3px solid transparent; border-radius: 16px; box-shadow: 0 5px 0 #0003; }
+.hanger img { transform-origin: 50% -8px; animation: sway 4s ease-in-out infinite; }
+.hanger:nth-child(even) img { animation-delay: -2s; }
+@keyframes sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
+.hanger .hook { position: absolute; left: 50%; top: -12px; width: 18px; height: 22px; transform: translateX(-50%); border: 3px solid #b9bec9; border-bottom: 0; border-radius: 12px 12px 0 0; }
+.hanger img { width: 100%; height: 124px; object-fit: contain; filter: drop-shadow(0 3px 3px #0003); }
+.hanger .hname { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hanger .tick { position: absolute; right: 6px; top: 22px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #0007; color: #fff; font-weight: 900; }
+.hanger.on { border-color: var(--hot); box-shadow: 0 0 0 3px #ff7aa855, 0 5px 0 #0003; }
+.hanger.on .tick { background: var(--hot); color: var(--hot-ink); }
+.basket .bthumb { width: 26px; height: 26px; object-fit: contain; vertical-align: middle; }
+@media (prefers-reduced-motion: reduce) { .hanger img, .walker.walking svg { animation: none; } .walker { transition: none; } }
+.room.closet-scene:has(.railview)::before { display: none; }
