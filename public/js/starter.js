@@ -160,9 +160,9 @@ export function checkPicture(img, it) {
 
 /** Clean a cutout that failed the check: drop skin-coloured and dress-form-coloured areas (unless they're the item's own colour), a neck
  *  stand or pole, and anything not joined to the main piece. Returns a new trimmed canvas (to be checked again before it can be Ready). */
-export function cleanUp(cut, it) {
+export function cleanUp(cut, it, { forms = true } = {}) {
   const w = cut.width, h = cut.height, g = cut.getContext('2d', { willReadFrequently: true }), id = g.getImageData(0, 0, w, h), d = id.data;
-  const colours = it.colors.join(' '), dropSkin = !/nude|beige|camel|tan|clear/.test(colours); let dropForm = !LIGHT.test(colours);
+  const colours = it.colors.join(' '), dropSkin = forms && !/nude|beige|camel|tan|clear/.test(colours); let dropForm = forms && !LIGHT.test(colours); // (forms: only when the check saw a form or skin)
   const keep = new Uint8Array(w * h); let area = 0, light = 0; for (let i = 0; i < w * h; i++) if (d[i * 4 + 3] >= 40) { area++; if (isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) light++; }
   if (light / Math.max(1, area) > 0.65) dropForm = false; // the piece itself is mostly white or cream: its light parts are the piece
   const fm = dropForm ? formMask(d, w, h, (i) => d[i * 4 + 3] >= 40, area) : null, em = dropForm ? edgeLightMask(d, w, h, (i) => d[i * 4 + 3] >= 40, area) : null;
@@ -187,7 +187,8 @@ export async function process(blob, it) {
   const { img, url } = await loadImage(blob); URL.revokeObjectURL(url);
   const first = checkPicture(img, it);
   // every cutout is tidied (stray fragments, skin, form scraps at the edges), and the tidy cutout is checked again: Ready needs both to pass
-  const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it), after = checkPicture(padded(cut), it); // (a pure white studio background; kept tight so white and cream pieces keep their edges)
+  const formish = first.reasons.some((r) => /form|neck|pole|skin|white patch/.test(r)); // light parts of a print (leopard) are only touched when a form was seen
+  const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it, { forms: formish }), after = checkPicture(padded(cut), it); // (a pure white studio background; kept tight so white and cream pieces keep their edges)
   return finish(cut, { ok: first.ok && after.ok, reasons: [...new Set([...first.reasons, ...after.reasons.map((r) => `after clean-up: ${r}`)])] });
 }
 /** A cutout on white with a margin, so it's checked like a photo. */

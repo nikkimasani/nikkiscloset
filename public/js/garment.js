@@ -89,7 +89,7 @@ export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
       const l = rs[0][0], r = rs[rs.length - 1][1], y = destY(sy);
       add('side' + f + 'L', [l, sy], [cx - widthAt(y) / 2, y]); add('side' + f + 'R', [r, sy], [cx + widthAt(y) / 2, y]);
     }
-    return { ctl, widen: { y0: Math.round(topY), y1: Math.round(waistY), top: true }, s };
+    return { ctl, widen: null, s }; // (its widths already come from the bust and waist points; widening rows on top would smear the sides)
   }
 
   // tops, outerwear and dresses
