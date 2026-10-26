@@ -593,6 +593,43 @@ try {
   const axeHall = await pw.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
   ok(axeHall.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (walk-in closet): ${axeHall.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
 
+  // the 3D walk-in world: walk around, step on a pad, grab pieces, go to the mirror
+  const c5 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+  const pd = await c5.newPage(); pd.on('pageerror', (e) => errors.push(e.message));
+  await pd.goto(`http://localhost:${PORT}/`); await pd.evaluate(() => localStorage.setItem('scene', '')); await pd.reload();
+  await pd.waitForFunction(() => window.__stage3d);
+  if (!(await pd.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D world tests (no WebGL in this browser)');
+  else {
+    await pd.click('[data-act=samples]'); await pd.waitForFunction(() => window.__closet.items.length === 10);
+    await pd.waitForFunction(() => window.__stage3d.debug()?.world, null, { timeout: 20000 });
+    ok((await pd.evaluate(() => window.__stage3d.debug().world.stations.length)) === 11, 'the 3D closet has a rack per section plus the mirror');
+    const z0 = await pd.evaluate(() => window.__stage3d.debug().world.pos[1]);
+    await pd.evaluate(() => window.__stage3d.setMove(0, 1));
+    let swung = 0; for (let n = 0; n < 8; n++) { await pd.waitForTimeout(90); swung = Math.max(swung, await pd.evaluate(() => window.__stage3d.debug().world.swing)); }
+    await pd.evaluate(() => window.__stage3d.setMove(0, 0));
+    ok(swung > 0.1, `legs and clothes swing while walking (peak ${swung})`);
+    ok((await pd.evaluate(() => window.__stage3d.debug().world.pos[1])) < z0, 'pushing the stick forward walks the avatar into the room');
+    await pd.evaluate(() => window.__stage3d.walkToStation('tops'));
+    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tops', null, { timeout: 20000 });
+    await pd.waitForSelector('.world-rail .hanger');
+    ok((await pd.locator('.world-rail .hanger').count()) >= 2, 'stepping on the Tops pad opens that rack');
+    await pd.click('.world-rail .hanger >> nth=0'); await pd.click('.world-rail .hanger >> nth=1');
+    ok((await pd.locator('.basketbadge').innerText()).includes('2 picked'), 'several pieces can be grabbed at one rack');
+    await pd.click('.world-rail [data-act=railnav][data-v="1"]');
+    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tanks', null, { timeout: 20000 });
+    await pd.waitForSelector('.world-rail .hanger'); await pd.click('.world-rail .hanger >> nth=0');
+    ok((await pd.evaluate(() => window.__closet.basket.length)) === 3, 'the avatar walks to the next rack and keeps your picks');
+    await pd.evaluate(axeSource);
+    const axeW = await pd.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    ok(axeW.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (3D closet): ${axeW.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
+    await pd.click('[data-act=gostation][data-v=mirror]');
+    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'mirror', null, { timeout: 20000 });
+    await pd.click('.world-rail [data-act=tryon]');
+    await pd.waitForSelector('.room.mirror');
+    ok((await pd.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1 && (await pd.evaluate(() => !window.__stage3d.debug().world)), 'the mirror pad takes you to try the picks on');
+  }
+  await c5.close();
+
   // accessibility: axe on each view + dialog
   const axe = async (name) => {
     await p2.evaluate(axeSource);

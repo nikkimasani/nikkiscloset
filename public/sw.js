@@ -6,7 +6,7 @@ const HEAVY = ['/vendor/', '/models/'];
 // The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
 const SHELL = ['/', '/styles.css', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
   '/js/app.js', '/js/aitryon.js', '/js/body.js', '/js/color.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/mannequin.js', '/js/meters.js',
-  '/js/insights.js', '/js/plan.js', '/js/planner.js', '/js/pose.js', '/js/sample.js', '/js/sharecard.js', '/js/stage3d.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/vendor/three/three.module.min.js'];
+  '/js/insights.js', '/js/plan.js', '/js/planner.js', '/js/pose.js', '/js/sample.js', '/js/sharecard.js', '/js/stage3d.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/js/world.js', '/js/character.js', '/vendor/three/three.module.min.js'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

@@ -109,7 +109,7 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
-  if (S.view !== 'tryon') S.lastView = S.view;
+  if (S.view !== 'tryon') { S.lastView = S.view; stage3d.exitWorld(); }
   ({ closet: renderCloset, tryon: renderTryon, plan: () => renderPlan(ctx), planner: renderPlanner, inspo: renderInspo })[S.view]();
 }
 
@@ -592,6 +592,7 @@ const stage3d = {
   attach: (el) => engine?.attach(el), setModel: (m) => engine?.setModel(m), setOutfit: (i, u) => engine?.setOutfit(i, u),
   turn: (d) => engine?.turn(d), setLabel: (t) => engine?.setLabel(t), setRole: () => engine?.setRole(),
   snapshot: () => engine?.snapshot() ?? null, debug: () => engine?.debug(),
+  enterWorld: (o) => engine?.enterWorld(o), exitWorld: () => engine?.exitWorld(), setMove: (x, y) => engine?.setMove(x, y), setFraming: (o) => engine?.setFraming(o), rotateCam: (d) => engine?.rotateCam(d), pop: () => engine?.pop(), walkToStation: (t) => engine?.walkToStation(t),
 };
 
 // 3D when the device supports WebGL (and the user hasn't chosen flat); the 2D SVG mannequin is the fallback.
@@ -731,7 +732,97 @@ function basketPanel() {
     : '<p class="muted">Walk to a section and tap pieces to grab them — as many as you like. Then try them on in front of the mirror.</p>'}</section>`;
 }
 
+const hudHTML = (n) => `<span class="basketbadge" role="status"><span aria-hidden="true">🧺</span> ${n} picked</span>
+  <button class="primary" data-act="tryon" ${n ? '' : 'disabled'}><span aria-hidden="true">🪞</span> Try on</button>`;
+
+/* ── the 3D walk-in world ── */
+const STATION_COLORS = { tops: '#ff7aa8', tanks: '#ff9a6b', bodysuits: '#c76bff', bottoms: '#5aa9ff', skirts: '#ff8fd0', dresses: '#ff5c93', outerwear: '#b08358', shoes: '#ffb13b', bags: '#2fb892', accessories: '#7a8cff', mirror: '#9b6bff' };
+const worldOn = () => S.scene === 'closet' && use3D();
+function worldStations() {
+  return [...SECTION_TYPES.map((t) => ({ type: t, label: TYPES[t].label, emoji: TYPES[t].emoji, color: STATION_COLORS[t], thumbs: S.items.filter((i) => i.type === t).slice(0, 5).map((i) => url(i.id)) })),
+    { type: 'mirror', label: 'Try on', emoji: '🪞', color: STATION_COLORS.mirror, thumbs: [] }];
+}
+function worldNear(type) { // the avatar stepped onto (or off) a pad
+  if (!type) { S.rail = ''; S.dismiss = ''; } else if (S.dismiss !== type) S.rail = type;
+  if (worldOn()) updateWorldUI();
+}
+function mirrorPanel(n) {
+  return `<div class="railview mirrorpanel" role="region" aria-labelledby="mirh"><div class="rail-head"><h3 id="mirh">🪞 Try-on mirror</h3><button class="ghost" data-act="hall">Keep walking</button></div>
+    <p class="muted">${n ? `You picked ${n} piece${n === 1 ? '' : 's'}. Ready to see ${n === 1 ? 'it' : 'them'} on?` : 'Grab a few pieces from the racks first, then come back here.'}</p>
+    <button class="primary wide" data-act="tryon" ${n ? '' : 'disabled'}><span aria-hidden="true">🪞</span> Try on</button></div>`;
+}
+function updateWorldUI() {
+  const n = S.basket.length, focus = document.activeElement?.dataset;
+  const hud = $('.closet-hud'); if (hud) hud.innerHTML = hudHTML(n);
+  const rail = $('#wrail'); if (!rail) return;
+  const oldRow = rail.querySelector('.rail-row'), keep = oldRow && S.lastRail === S.rail ? oldRow.scrollLeft : 0;
+  rail.innerHTML = S.rail === 'mirror' ? mirrorPanel(n) : S.rail ? railHTML(S.rail) : '';
+  rail.hidden = !S.rail; S.lastRail = S.rail;
+  const row = rail.querySelector('.rail-row'); if (row) row.scrollLeft = keep;
+  $('.room.world').classList.toggle('railopen', !!S.rail); stage3d.setFraming(!!S.rail);
+  $('#whint').textContent = S.rail ? '' : 'Drag the stick, or tap the floor, to walk to a wardrobe.';
+  $('#wbasket').innerHTML = basketPanel();
+  document.querySelectorAll('.world-jump button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === S.rail)));
+  if (focus?.act) document.querySelector(`#main [data-act="${focus.act}"]${focus.id ? `[data-id="${focus.id}"]` : focus.v ? `[data-v="${focus.v}"]` : ''}`)?.focus({ preventScroll: true });
+}
+function bindJoystick() {
+  const j = $('#joy'); if (!j) return;
+  const knob = j.firstElementChild; let pid = null;
+  const set = (e) => {
+    const r = j.getBoundingClientRect(), R = r.width / 2 - 14; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    const l = Math.hypot(dx, dy); if (l > R) { dx = (dx / l) * R; dy = (dy / l) * R; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`; stage3d.setMove(dx / R, -dy / R);
+  };
+  j.onpointerdown = (e) => { pid = e.pointerId; j.setPointerCapture(pid); set(e); e.preventDefault(); };
+  j.onpointermove = (e) => { if (e.pointerId === pid) set(e); };
+  const end = (e) => { if (e.pointerId !== pid) return; pid = null; knob.style.transform = ''; stage3d.setMove(0, 0); };
+  j.onpointerup = end; j.onpointercancel = end;
+}
+function mountWorld() {
+  const el = $('#stage'); if (!el) return;
+  if (!stage3d.loaded) {
+    el.innerHTML = '<p class="muted loading">Opening your closet…</p>';
+    loadEngine().then(() => { if ($('#stage') && worldOn()) mountWorld(); }).catch(() => { store.set('flat', '1'); renderTryon(); });
+    return;
+  }
+  el.replaceChildren(); stage3d.attach(el);
+  stage3d.setModel({ body: currentBody(), skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, face: { eyes: S.eyes, lips: S.lips } });
+  stage3d.setOutfit(outfitItems(S.outfit), S.urls);
+  stage3d.setRole(); stage3d.setLabel('Your walk-in closet. Use the stick or the arrow keys to walk, or the buttons below to jump to a wardrobe.');
+  stage3d.enterWorld({ stations: worldStations(), onNear: worldNear });
+}
+function renderWorld() {
+  if ($('.room.world')) {
+    const sig = S.items.map((i) => i.id + i.type).join();
+    if (sig !== S.worldSig && stage3d.loaded) { S.worldSig = sig; stage3d.enterWorld({ stations: worldStations(), onNear: worldNear, keep: true }); } // pieces were added or removed: restock the racks
+    return updateWorldUI();
+  }
+  S.worldSig = S.items.map((i) => i.id + i.type).join();
+  const roomKey = S.room === 'auto' || !ROOMS[S.room] ? seasonRoom(new Date().getMonth()) : S.room;
+  S.rail = ''; S.dismiss = '';
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Walk-in closet</h2>
+  <div class="dress">
+    <div class="dress-left">
+      ${sceneBar()}
+      <div class="room closet-scene world theme-${roomKey}">
+        <div class="stage" id="stage"></div>
+        <div class="closet-hud"></div>
+        <p class="world-hint" id="whint" role="status"></p>
+        <div class="joy" id="joy" aria-hidden="true"><span class="joy-knob"></span></div>
+        <div class="camrot" role="group" aria-label="Look around"><button data-act="camrot" data-v="-1" aria-label="Look left"><span aria-hidden="true">⟲</span></button><button data-act="camrot" data-v="1" aria-label="Look right"><span aria-hidden="true">⟳</span></button></div>
+        <div class="world-rail" id="wrail" hidden></div>
+      </div>
+      <div class="world-jump" role="group" aria-label="Walk to a wardrobe">${[...SECTION_TYPES, 'mirror'].map((t) => `<button class="chip" aria-pressed="false" data-act="gostation" data-v="${t}"><span aria-hidden="true">${t === 'mirror' ? '🪞' : TYPES[t].emoji}</span> ${t === 'mirror' ? 'Mirror' : TYPES[t].label}</button>`).join('')}</div>
+    </div>
+    <div class="dress-right" id="wbasket"></div>
+  </div>`;
+  S.lastView = 'tryon'; S.lastRail = '';
+  mountWorld(); updateWorldUI(); bindJoystick();
+}
+
 function renderWalkIn() {
+  if (worldOn()) return renderWorld();
+  stage3d.exitWorld();
   if (S.rail && !TYPES[S.rail]) S.rail = '';
   const roomKey = S.room === 'auto' || !ROOMS[S.room] ? seasonRoom(new Date().getMonth()) : S.room;
   const oldRow = $('.rail-row'), keepX = oldRow && S.lastRail === S.rail ? oldRow.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
@@ -741,8 +832,7 @@ function renderWalkIn() {
     <div class="dress-left">
       ${sceneBar()}
       <div class="room closet-scene theme-${roomKey}">
-        <div class="closet-hud"><span class="basketbadge" role="status"><span aria-hidden="true">🧺</span> ${n} picked</span>
-          <button class="primary" data-act="tryon" ${n ? '' : 'disabled'}><span aria-hidden="true">🪞</span> Try on</button></div>
+        <div class="closet-hud">${hudHTML(n)}</div>
         ${S.rail ? railHTML(S.rail) : hallHTML()}
       </div>
     </div>
@@ -776,6 +866,7 @@ function walkTo(type) {
 function renderTryon() { return S.scene === 'closet' ? renderWalkIn() : renderMirror(); }
 
 function renderMirror() {
+  stage3d.exitWorld();
   if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
   const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
   const worn = outfitItems(S.outfit);
@@ -793,19 +884,19 @@ function renderMirror() {
         <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
-        ${metersHTML(worn)}
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${use3D() ? `<div class="turnbar" role="group" aria-label="Turn the model"><button data-act="turn" data-v="-1" aria-label="Turn left"><span aria-hidden="true">◀</span></button><button data-act="turn" data-v="0">Front</button><button data-act="turn" data-v="1" aria-label="Turn right"><span aria-hidden="true">▶</span></button></div>` : ''}
-        <div class="tools" role="group" aria-label="Quick actions">
-          <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
-          <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
-          <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
-          <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
-          <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
-        </div>
         ${S.cas ? casHTML() : ''}
       </div>
-      <div class="moods" role="group" aria-label="Mood": what’s the occasion?">
+      <div class="tools" role="group" aria-label="Quick actions">
+        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
+        <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
+        <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
+        <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
+        <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
+      </div>
+      ${metersHTML(worn)}
+      <div class="moods" role="group" aria-label="Mood: what’s the occasion?">
         ${OCCASIONS.map((o) => `<button class="chip ${S.mood === o ? 'on' : ''}" aria-pressed="${S.mood === o}" data-act="mood" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}</button>`).join('')}
       </div>
       ${weatherLine()}
@@ -1000,9 +1091,11 @@ document.addEventListener('click', async (e) => {
     case 'tab': S.tab = v; return renderTryon();
     case 'scene': clearTimeout(S.walkT); S.scene = v; store.set('scene', v); S.cas = false; return renderTryon();
     case 'section': return walkTo(v);
-    case 'hall': S.rail = ''; return renderWalkIn();
-    case 'railnav': { const k = SECTION_TYPES.length; S.rail = SECTION_TYPES[(SECTION_TYPES.indexOf(S.rail) + (+v) + k) % k]; S.hallType = S.rail; return renderWalkIn(); }
-    case 'grab': S.basket = S.basket.includes(id) ? S.basket.filter((x) => x !== id) : [...S.basket, id]; return renderWalkIn();
+    case 'hall': if (worldOn()) { S.dismiss = S.rail; S.rail = ''; return updateWorldUI(); } S.rail = ''; return renderWalkIn();
+    case 'gostation': S.dismiss = ''; stage3d.walkToStation(v); return;
+    case 'railnav': { const k = SECTION_TYPES.length, next = SECTION_TYPES[(SECTION_TYPES.indexOf(S.rail) + (+v) + k) % k]; if (worldOn()) { S.dismiss = ''; stage3d.walkToStation(next); return; } S.rail = next; S.hallType = next; return renderWalkIn(); }
+    case 'camrot': stage3d.rotateCam(+v); return;
+    case 'grab': { const adding = !S.basket.includes(id); S.basket = adding ? [...S.basket, id] : S.basket.filter((x) => x !== id); if (adding && worldOn()) stage3d.pop(); return renderWalkIn(); }
     case 'ungrab': S.basket = S.basket.filter((x) => x !== id); return renderWalkIn();
     case 'clearbasket': S.basket = []; return renderWalkIn();
     case 'tryon': {
