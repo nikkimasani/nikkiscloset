@@ -806,15 +806,19 @@ const todayBand = () => todayWeather(ctx).band || '';
 /** Start today's challenge if it's a new date (or the first run). */
 function ensureDay() {
   const date = iso(new Date());
-  if (S.game.day?.date === date) return;
+  if (S.game.day?.date === date) return retheme(); // mood or forecast may have arrived since this morning
   S.events = S.events.filter((e) => e.date >= iso(new Date(Date.now() - 7 * 864e5))); // forget old events
   S.game = rollOver(S.game, date, () => pickTheme({ date, events: S.events, mood: S.mood, band: todayBand() }));
-  saveGame(); store.set('events', JSON.stringify(S.events));
+  // Written without the "prefs changed" stamp: an automatic rollover must not look newer than cloud settings that the startup sync is about to pull.
+  try { localStorage.setItem('game', JSON.stringify(S.game)); localStorage.setItem('events', JSON.stringify(S.events)); } catch { /* private mode */ }
 }
-/** An event was added or removed: today's challenge follows it, unless you've already been rated. */
+/** The theme follows its inputs (event, mood, forecast) until you've been rated. A random theme stays put unless something better turns up. */
 function retheme() {
   const d = S.game.day; if (!d || d.stars || d.ended) return;
-  S.game = { ...S.game, day: { ...d, theme: pickTheme({ date: d.date, events: S.events, mood: S.mood, band: todayBand() }) } }; saveGame();
+  const theme = pickTheme({ date: d.date, events: S.events, mood: S.mood, band: todayBand() });
+  if (d.theme.source === 'random' && theme.source === 'random') return;
+  if (JSON.stringify(theme) === JSON.stringify(d.theme)) return;
+  S.game = { ...S.game, day: { ...d, theme } }; saveGame();
 }
 const streakNow = () => wearStreak(S.wears, iso(new Date()));
 const hasOutfit = () => Object.keys(S.outfit).some((k) => itemById(S.outfit[k]));
@@ -822,14 +826,14 @@ const hasOutfit = () => Object.keys(S.outfit).some((k) => itemById(S.outfit[k]))
 function gameBarHTML(big) {
   const d = S.game.day; if (!d) return '';
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
-  const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. Head to bed to end the day.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
+  const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. ${aptOn() ? 'Head to bed' : 'Tap End the day'} to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
   return `<div class="gamebar ${big ? 'big' : ''}" role="region" aria-label="Today’s challenge">
     <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
       <span class="gb-meter" role="meter" aria-label="Energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.energy}"><span aria-hidden="true">⚡</span><i style="width:${d.energy}%"></i></span>
       <span class="gb-meter mood" role="meter" aria-label="Mood" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.mood}"><span aria-hidden="true">${d.mood >= 70 ? '😄' : d.mood >= 40 ? '🙂' : '😐'}</span><i style="width:${d.mood}%"></i></span></div>
-    ${d.phase === 'done' ? '' : `<button class="primary gb-rate" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>`}</div>`;
+    ${d.phase === 'done' ? '' : `<button class="primary gb-rate" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>`}${d.phase === 'evening' && !aptOn() ? `<button class="ghost gb-end" data-act="endday"><span aria-hidden="true">🌙</span> End the day (log this outfit)</button>` : ''}</div>`;
 }
 const refreshGame = () => { document.querySelectorAll('.gamebar').forEach((b) => (b.outerHTML = gameBarHTML(b.classList.contains('big')))); apt?.setGuide(guideFor({ game: S.game, hasOutfit: hasOutfit() })); };
 
@@ -847,7 +851,7 @@ function rateNow() {
     <div class="row" style="margin-top:12px"><button class="ghost" id="rwclose">Keep dressing</button><button class="primary grow" id="rwbed">🛏️ Go to bed</button></div>
     ${reducedMotion() ? '' : `<div class="confetti" aria-hidden="true">${Array.from({ length: rating.stars * 8 }, (_, i) => `<span style="--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.12}s;--c:${['#ff5c93', '#ffd23f', '#5ad1ff', '#9b6bff', '#2fb892'][i % 5]}"></span>`).join('')}</div>`}</div>`, 'Your look');
   $('#rwclose').onclick = () => { closeModal(); refreshGame(); if (S.view === 'tryon') renderTryon(); };
-  $('#rwbed').onclick = () => { closeModal(); refreshGame(); if (aptOn()) { apt?.walkToStation('bed'); } else { S.scene = 'apt'; store.set('scene', 'apt'); renderTryon(); } };
+  $('#rwbed').onclick = () => { closeModal(); refreshGame(); if (aptOn()) apt?.walkToStation('bed'); else $('.gb-end')?.focus(); };
   refreshGame();
 }
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;

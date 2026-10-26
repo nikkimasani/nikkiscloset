@@ -316,6 +316,21 @@ try {
     await p3.click('#rwclose');
     await p3.reload(); await p3.waitForFunction(() => window.__closet.game.coins > 0);
     ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'coins are kept after a reload');
+    // without the 3D apartment (flat mode / no WebGL) the day can still be closed from the banner
+    await p3.waitForSelector('.gamebar .gb-end');
+    await p3.click('[data-act=styleme]'); await p3.waitForFunction(() => document.querySelector('.gamebar [data-act=rate]:not([disabled])'));
+    await p3.click('.gamebar .gb-end');
+    await p3.waitForFunction(() => window.__closet.game.day.phase === 'done');
+    ok(true, 'the day can be ended from the 2D banner (no apartment needed)');
+    // picking a mood re-themes a day that hasn't been rated yet
+  }
+  {
+    const cM = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+    const pM = await cM.newPage(); pM.on('pageerror', (e) => errors.push(e.message));
+    await pM.goto(`http://localhost:${PORT}/`); await pM.waitForFunction(() => window.__closet && window.__closet.game.day);
+    await pM.click('[data-act=mood][data-v=Dinner]');
+    await pM.waitForFunction(() => window.__closet.game.day.theme.source === 'mood');
+    ok(await pM.evaluate(() => window.__closet.game.day.theme.occasion) === 'Dinner', 'picking a mood re-themes the unrated day');
   }
   // an event on today's date becomes the day's challenge
   {
