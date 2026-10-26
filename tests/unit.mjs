@@ -260,3 +260,15 @@ test('skin and hair shades are derived from the customizer colours', () => {
   const t = tokens({ skin: '#eec3a0', hair: '#4a2e1e' });
   assert.notEqual(t.skinShade, t.skin); assert.equal(mix('#000000', '#ffffff', 0.5), '#808080');
 });
+
+test('every API route is registered on all three hosts (local server, Vercel, Cloudflare worker)', () => {
+  const paths = (f) => [...readFileSync(new URL(f, import.meta.url), 'utf8').matchAll(/'(\/api\/\w+)'/g)].map((m) => m[1]).sort().join();
+  const local = paths('../server.js');
+  assert.equal(paths('../worker/index.js'), local);
+  for (const route of local.split(',')) assert.ok(readFileSync(new URL(`..${route}.js`, import.meta.url), 'utf8').includes('POST') || readFileSync(new URL(`..${route}.js`, import.meta.url), 'utf8').includes('export'), `Vercel function for ${route}`);
+});
+test('the share-target service worker redirects to absolute URLs', () => {
+  const sw = readFileSync(new URL('../public/sw.js', import.meta.url), 'utf8');
+  assert.ok(!/Response\.redirect\((`|')\//.test(sw), 'no relative Response.redirect');
+  assert.equal(new URL('/?add=shared', 'https://x.example/share').href, 'https://x.example/?add=shared');
+});

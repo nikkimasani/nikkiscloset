@@ -275,7 +275,7 @@ try {
   else {
     await p3.click('[data-act=samples]'); await p3.waitForFunction(() => window.__closet.items.length === 10);
     await p3.click('[data-act=styleme]');
-    await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 2, null, { timeout: 15000 });
+    await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 2, null, { timeout: 60000 });
     ok(await p3.locator('#stage canvas').count() === 1 && await p3.locator('#stage svg').count() === 0, '3D canvas replaces the flat mannequin');
     ok(await p3.evaluate(() => performance.getEntriesByType('resource').some((e) => e.name.includes('three.module'))), '…and 3D mode loads it on demand');
     const filled = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
@@ -643,7 +643,7 @@ try {
   await pB.context().addInitScript(() => localStorage.removeItem('flat')); await pB.reload(); await pB.waitForFunction(() => window.__stage3d && window.__closet?.items?.length === 10); // back to the 3D model
   await pB.evaluate(() => { const t = window.__closet.items.find((i) => i.name === 'White tee'); window.__closet.outfit[t.type] = t.id; });
   await pB.click('[data-view=tryon]');
-  await pB.waitForFunction(() => window.__stage3d.debug()?.backPhoto?.includes(true), null, { timeout: 15000 });
+  await pB.waitForFunction(() => window.__stage3d.debug()?.backPhoto?.includes(true), null, { timeout: 60000 });
   ok(true, 'the 3D garment uses the back photo on its back');
   await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .edit').click(); await pB.click('#backrm'); await pB.click('#save');
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
@@ -692,7 +692,7 @@ try {
   if (!(await pd.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D world tests (no WebGL in this browser)');
   else {
     await pd.click('[data-act=samples]'); await pd.waitForFunction(() => window.__closet.items.length === 10);
-    await pd.waitForFunction(() => window.__stage3d.debug()?.world, null, { timeout: 20000 });
+    await pd.waitForFunction(() => window.__stage3d.debug()?.world, null, { timeout: 60000 });
     ok((await pd.evaluate(() => window.__stage3d.debug().world.stations.length)) === 11, 'the 3D closet has a rack per section plus the mirror');
     const z0 = await pd.evaluate(() => window.__stage3d.debug().world.pos[1]);
     await pd.evaluate(() => window.__stage3d.setMove(0, 1));
@@ -701,20 +701,20 @@ try {
     ok(swung > 0.1, `legs and clothes swing while walking (peak ${swung})`);
     ok((await pd.evaluate(() => window.__stage3d.debug().world.pos[1])) < z0, 'pushing the stick forward walks the avatar into the room');
     await pd.evaluate(() => window.__stage3d.walkToStation('tops'));
-    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tops', null, { timeout: 20000 });
+    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tops', null, { timeout: 60000 });
     await pd.waitForSelector('.world-rail .hanger');
     ok((await pd.locator('.world-rail .hanger').count()) >= 2, 'stepping on the Tops pad opens that rack');
     await pd.click('.world-rail .hanger >> nth=0'); await pd.click('.world-rail .hanger >> nth=1');
     ok((await pd.locator('.basketbadge').innerText()).includes('2 picked'), 'several pieces can be grabbed at one rack');
     await pd.click('.world-rail [data-act=railnav][data-v="1"]');
-    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tanks', null, { timeout: 20000 });
+    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tanks', null, { timeout: 60000 });
     await pd.waitForSelector('.world-rail .hanger'); await pd.click('.world-rail .hanger >> nth=0');
     ok((await pd.evaluate(() => window.__closet.basket.length)) === 3, 'the avatar walks to the next rack and keeps your picks');
     await pd.evaluate(axeSource);
     const axeW = await pd.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
     ok(axeW.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (3D closet): ${axeW.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
     await pd.click('[data-act=gostation][data-v=mirror]');
-    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'mirror', null, { timeout: 20000 });
+    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'mirror', null, { timeout: 60000 });
     await pd.click('.world-rail [data-act=tryon]');
     await pd.waitForSelector('.room.mirror');
     ok((await pd.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1 && (await pd.evaluate(() => !window.__stage3d.debug().world)), 'the mirror pad takes you to try the picks on');

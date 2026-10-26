@@ -1,8 +1,8 @@
 // Cloudflare Worker: serves the static app (ASSETS) and the /api/tryon function.
 import { handleTryOn } from '../lib/tryon.js';
-import { handleCutout, handlePin, handleTag } from '../lib/ai.js';
+import { handleCutout, handlePin, handleTag, handleProduct } from '../lib/ai.js';
 
-const ROUTES = { '/api/tryon': handleTryOn, '/api/cutout': handleCutout, '/api/tag': handleTag, '/api/pin': handlePin };
+const ROUTES = { '/api/tryon': handleTryOn, '/api/cutout': handleCutout, '/api/tag': handleTag, '/api/pin': handlePin, '/api/product': handleProduct };
 
 export default {
   async fetch(request, env) {
