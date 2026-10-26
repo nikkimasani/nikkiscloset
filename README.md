@@ -29,7 +29,15 @@ On a phone, open the same URL on your network; "Add piece" opens the camera.
 
 - **Back photo (optional)** on any piece: shows on the back of the 3D garment instead of a darkened copy of the front.
 
-## Dress Up: walk-in closet and mirror
+## Adding pieces
+**+ Add piece** opens one dialog: **Take photo**, **Choose photo**, **Paste** (a copied picture or product link; ⌘/Ctrl+V works too) or **From a link**. The on-device cutout shows instantly; with your passcode saved, the server cutout and auto-fill then run on their own (switch off in the dialog). An optional **Cut out on this device** button runs an AI model in the browser instead (about 45 MB the first time, from staticimgly.com; it lives in `public/lab/` with its own security policy; the library is AGPL-3.0, see `public/vendor/imgly/LICENSE.md`). `/api/product` reads a shop page's title, brand, price and picture on the server (https only, public hosts only, passcode required).
+From other apps: Android/desktop installs get a Share-menu entry (PWA share target). iPhones use a Shortcut that opens `/?add=paste` or `/?add=link&u=…` (steps are in the Wardrobe tab).
+
+## The 2D doll (Dress up)
+The default Dress up screen is a paper doll. Your photo cutouts snap to anchor points by category, stacked shoes → bottoms → dress → top → jacket → bag, with accessories on top; **Fit** lets you drag, pinch, nudge, resize and rotate a piece and toggle tucked/untucked. Fits are remembered per piece *and per art pack*.
+The art is swappable: everything about a doll lives in `public/dolls/<pack>/` (`pack.json` has anchors, stacking order and file names; the layers are SVG or PNG). To use your own illustrated base, copy `public/dolls/studio/`, replace the art, adjust the anchors, and set `DEFAULT_PACK` in `public/js/doll.js`. Clothes, ordering and fitting code never touch the art.
+
+## Dress Up: walk-in closet and 3D mirror
 - **Walk-in closet (3D)**: a pink 3D room with a rack for every kind of clothing, your real photos hanging on them. Walk the avatar around with the on-screen stick (or WASD/arrow keys on a computer), tap the floor to walk there, drag to look around, or use the buttons under the room to jump to a rack. Step on a glowing pad and that rack's hangers open; tap as many pieces as you like. The mirror pad takes you to try them on. (Flat mode / no WebGL falls back to the 2D cabinets below.)
 - **2D closet**: your clothes hang in cabinets by type. Tap a section and the avatar walks over; its rail opens and you scroll along the hangers, tapping as many pieces as you like into your basket.
 - **Try on** takes the basket to the **mirror** (the 3D model in a framed mirror). Swap between grabbed pieces, **Mix my picks**, save the look or log it as today's outfit. The old picker is still there under the picks.

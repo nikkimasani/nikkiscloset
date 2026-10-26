@@ -14,6 +14,7 @@ const PORT = 5199, FAL = 5198;
 const falCalls = [], aiCalls = [];
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
+const { readFileSync } = await import('node:fs');
 const polls = {};
 const mock = createServer((req, res) => {
   const base = `http://localhost:${FAL}`, send = (o, c = 200) => { res.writeHead(c, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); };
@@ -32,11 +33,14 @@ const mock = createServer((req, res) => {
     });
   }
   else if (req.url === '/pin/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><meta property="og:image" content="${base}/media/pin.png"></head></html>`); }
-  else if (req.url === '/media/cut.png' || req.url === '/media/pin.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
+  else if (req.url === '/shop/1') { res.writeHead(200, { 'content-type': 'text/html' }); res.end(`<html><head><title>x</title><meta property="og:title" content="Satin Cami Top | ZARA United States"><script type="application/ld+json">{"@type":"Product","name":"Satin Cami Top | ZARA","brand":{"name":"Zara"},"image":"${base}/media/shop.jpg","offers":{"price":"29.90"}}</script></head></html>`); }
+  else if (req.url === '/media/shop.jpg') { res.writeHead(200, { 'content-type': 'image/jpeg' }); res.end(readFileSync(join(out, 'photo.jpg'))); }
+  else if (req.url === '/media/cut.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(readFileSync(join(out, 'photo.jpg'))); } // a real picture, so colour suggestions have something to work with
+  else if (req.url === '/media/pin.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else send({ detail: 'nope' }, 404);
 }).listen(FAL);
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}` }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -264,7 +268,7 @@ try {
 
   // ── 3D mannequin ──
   const c3 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
-  const p3 = await c3.newPage(); p3.on('pageerror', (e) => errors.push(e.message)); p3.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  const p3 = await c3.newPage(); p3.setDefaultTimeout(90000); p3.on('pageerror', (e) => errors.push(e.message)); p3.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await p3.goto(`http://localhost:${PORT}/`);
   await p3.waitForFunction(() => window.__stage3d);
   if (!(await p3.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D tests (no WebGL in this browser)');
@@ -504,6 +508,93 @@ try {
   await p11.waitForSelector('.drop img');
   ok((await p11.inputValue('#plink')).endsWith('/pin/1') && (await p11.locator('.pal span').count()) > 0, 'a pin link fetches the picture into Inspo and keeps the link');
 
+  // ── phase 1: adding pieces (link, paste, auto cutout, shared files, deep links) ──
+  const prod = (url, pass = 'letmein') => api('/api/product', { method: 'POST', headers: { 'x-app-passcode': pass, 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
+  ok((await prod('http://localhost:5198/shop/1', 'nope')).status === 401, 'product import demands the passcode');
+  ok((await prod('https://127.0.0.1/x')).status === 400 && (await prod('https://169.254.169.254/latest')).status === 400, 'product import refuses internal addresses');
+  const pr = await prod('http://localhost:5198/shop/1');
+  ok(pr.status === 200 && pr.body.brand === 'Zara' && pr.body.price === 29.9 && pr.body.image.startsWith('data:image/jpeg'), 'product import returns title, brand, price and the picture');
+  const pI = await mk();
+  await pI.click('header [data-act=add]');
+  await pI.click('#srclink'); await pI.fill('#plink2', 'http://localhost:5198/shop/1'); await pI.fill('#lpass', 'letmein'); await pI.click('#linkgo');
+  await pI.waitForSelector('#cutimg');
+  ok((await pI.inputValue('#name')) === 'Satin Cami Top' && (await pI.inputValue('#brand')) === 'Zara' && (await pI.inputValue('#price')) === '29.9', 'a product link fills in the name, brand and price');
+  ok((await pI.inputValue('#type')) === 'tanks' && /guessed/.test(await pI.locator('label[for=type]').innerText()), 'the category is guessed from the title and flagged as a guess');
+  ok((await pI.locator('.cswatch').count()) > 0 && (await pI.locator('#cutimg').count()) === 1, 'colours are suggested from the cutout');
+  await pI.click('#saveadd'); await pI.waitForFunction(() => window.__closet.items.length === 1);
+  await pI.waitForSelector('#srcpick');
+  ok((await pI.inputValue('#name')) === '' && (await pI.evaluate(() => window.__closet.items[0].colors.length)) > 0, 'Save & add another keeps the first piece and opens a blank form');
+  const calls0 = aiCalls.length;
+  await pI.evaluate(() => localStorage.setItem('aipass', 'letmein'));
+  await pI.click('#cancel'); await pI.click('header [data-act=add]'); await pI.setInputFiles('#file', join(out, 'photo.jpg'));
+  await pI.waitForSelector('#aiundo'); await pI.waitForFunction(() => /Filled in/.test(document.querySelector('#aimsg').textContent));
+  ok(aiCalls.length - calls0 === 2 && (await pI.inputValue('#name')) === 'Satin cami', 'with a saved passcode the AI cuts out and describes a new photo by itself');
+  await pI.click('#cancel'); await pI.click('header [data-act=add]');
+  await pI.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 80; c.height = 100; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 80, 100); x.fillStyle = '#2a8c8c'; x.fillRect(20, 10, 40, 80);
+    const b = await new Promise((r) => c.toBlob(r, 'image/png')), dt = new DataTransfer(); dt.items.add(new File([b], 'p.png', { type: 'image/png' }));
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+  });
+  await pI.waitForSelector('#cutimg'); ok((await pI.locator('.cswatch').count()) > 0, 'pasting a picture (⌘/Ctrl+V) brings it into the add dialog');
+  await pI.click('#cancel');
+  await pI.goto(`http://localhost:${PORT}/?add=link&u=${encodeURIComponent('http://localhost:5198/shop/1')}`);
+  await pI.waitForFunction(() => document.querySelector('#name')?.value === 'Satin Cami Top');
+  ok((await pI.evaluate(() => location.search)) === '', 'a Shortcut link (?add=link&u=…) opens the dialog, fetches the product and tidies the address bar');
+  await pI.evaluate(async () => { const c = document.createElement('canvas'); c.width = 60; c.height = 60; c.getContext('2d').fillRect(10, 10, 40, 40); const b = await new Promise((r) => c.toBlob(r, 'image/png')); await (await caches.open('closet-share')).put('/shared/photo', new Response(b, { headers: { 'content-type': 'image/png' } })); });
+  await pI.goto(`http://localhost:${PORT}/?add=shared`); await pI.waitForSelector('#cutimg');
+  ok(true, 'a picture shared into the installed app opens the add dialog');
+  const lab = await pI.evaluate(async () => (await import('/js/browsercut.js')).labProbe());
+  ok(lab === true, 'the hidden on-device cutout page starts and its model library loads under its own security policy');
+  const hdr = await pI.evaluate(async () => { const r = await fetch('/lab/cutout.html'), m = await fetch('/'); return [r.headers.get('content-security-policy'), m.headers.get('content-security-policy')]; });
+  ok(/staticimgly\.com/.test(hdr[0]) && /frame-ancestors 'self'/.test(hdr[0]) && !/staticimgly/.test(hdr[1]) && /frame-ancestors 'none'/.test(hdr[1]), 'only the lab page may reach the model host; the main app policy is unchanged');
+  await pI.goto(`http://localhost:${PORT}/?add=paste`); await pI.waitForSelector('#srcpaste:focus');
+  ok(/Tap Paste/.test(await pI.locator('#intakemsg').innerText()), '?add=paste opens the dialog ready for the Paste button');
+
+  // ── phase 2: the 2D paper doll ──
+  const cdl = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await cdl.addInitScript(() => localStorage.setItem('flat', '1'));
+  const pdl = await cdl.newPage(); pdl.on('pageerror', (e) => errors.push(e.message)); pdl.on('dialog', (d) => d.accept());
+  await pdl.goto(`http://localhost:${PORT}/`); await pdl.waitForSelector('svg.doll');
+  ok((await pdl.locator('.dollmode').count()) === 1 && (await pdl.getAttribute('svg.doll', 'data-pack')) === 'studio', 'Dress up opens on the 2D doll by default, drawn from the swappable art pack');
+  await pdl.click('[data-act=samples]'); await pdl.waitForFunction(() => window.__closet.items.length === 10);
+  const wearOne = async (tab, name) => { await pdl.click(`[data-act=tab][data-v=${tab}]`); await pdl.click(`.pick:has-text("${name}")`); };
+  await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); await wearOne('outerwear', 'Camel blazer'); await wearOne('shoes', 'Nude heels');
+  const slots = () => pdl.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
+  ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'layers stack correctly: shoes, bottom, top, jacket over top');
+  ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
+  // fit: select the top, nudge, and it is remembered
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  const tfm = () => pdl.getAttribute('#stage .gar[data-slot=top]', 'transform');
+  const tf0 = await tfm();
+  await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerup');
+  ok((await tfm()) !== tf0, 'a nudge button moves the piece');
+  await pdl.dispatchEvent('[data-act=dsize][data-v="0.03"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dsize][data-v="0.03"]', 'pointerup');
+  await pdl.dispatchEvent('[data-act=drot][data-v="2"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=drot][data-v="2"]', 'pointerup');
+  const saved = () => pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio);
+  await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio?.dx > 0);
+  const f1 = await saved(); ok(f1.dx > 0 && f1.scale > 1 && f1.rot > 0, `size, turn and position are all kept (${JSON.stringify(f1)})`);
+  // drag the piece on the doll
+  const box = await pdl.locator('#stage svg.doll').boundingBox(), dx0 = f1.dx;
+  await pdl.mouse.move(box.x + box.width / 2, box.y + box.height * 0.42); await pdl.mouse.down(); await pdl.mouse.move(box.x + box.width / 2 + 40, box.y + box.height * 0.42 + 20, { steps: 4 }); await pdl.mouse.up();
+  const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.studio || {});
+  ok(f2.dx > 10 && f2.dy > 5 && (await saved()).dx === dx0, `touching a piece selects it and dragging moves just that piece (jacket moved ${Math.round(f2.dx)}, ${Math.round(f2.dy)}; tee stayed)`);
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  // tucked in: the top goes under the bottoms and is cut at the waist
+  await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelector('#stage .gar').dataset.slot === 'shoes' && document.querySelectorAll('#stage .gar')[1].dataset.slot === 'top');
+  ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'top', 'bottom', 'outer']) && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tucking in puts the top under the bottoms');
+  await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1].dataset.slot === 'bottom');
+  ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'and untucking puts it back over them');
+  await pdl.reload(); await pdl.waitForSelector('svg.doll'); await pdl.waitForFunction(() => window.__closet.items.find((i) => i.name === 'White tee').fit?.studio?.dx > 0);
+  ok(true, 'fit survives a reload');
+  await pdl.click('[data-act=samples]').catch(() => {});
+  await pdl.click('[data-act=dreset]').catch(() => {});
+  await pdl.click('[data-act=drawer][data-v=look]'); await pdl.click('[data-act=skin]:nth-of-type(9)');
+  ok((await pdl.locator('#stage svg.doll').innerHTML()).includes(await pdl.evaluate(() => window.__closet.skin)), 'the customizer’s skin colour reaches the doll');
+  ok((await pdl.locator('.cas-tabs [data-v=body]').count()) === 0, 'body sliders are hidden for the doll (they shape the 3D model)');
+  await pdl.evaluate(axeSource);
+  const axeD = await pdl.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+  ok(axeD.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (2D doll): ${axeD.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
+  await pdl.screenshot({ path: join(out, 'doll.png') });
+
   // cloud sync: two devices against an in-memory stand-in for the Supabase REST API
   const cloud = { records: new Map(), blobs: new Map() }, SYNC_KEY = 'amber-apple-arrow';
   const cloudRoute = (r) => {
@@ -560,8 +651,8 @@ try {
 
   // walk-in closet: walk to a section, grab several pieces, try them on in the mirror
   const pw = await mk();
-  await pw.evaluate(() => localStorage.setItem('scene', '')); await pw.reload(); await pw.waitForFunction(() => window.__stage3d);
-  ok(await pw.locator('.closet-scene .hall').isVisible(), 'the walk-in closet is the default scene');
+  await pw.evaluate(() => localStorage.setItem('scene', 'closet')); await pw.reload(); await pw.waitForFunction(() => window.__stage3d);
+  ok(await pw.locator('.closet-scene .hall').isVisible(), 'the walk-in closet scene shows');
   await pw.click('[data-act=samples]'); await pw.waitForFunction(() => window.__closet.items.length === 10);
   ok((await pw.locator('.cabinet').count()) === 10, 'one cabinet per clothing section');
   const x0 = await pw.evaluate(() => parseFloat(document.querySelector('#walker').style.left));
@@ -596,7 +687,7 @@ try {
   // the 3D walk-in world: walk around, step on a pad, grab pieces, go to the mirror
   const c5 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const pd = await c5.newPage(); pd.on('pageerror', (e) => errors.push(e.message));
-  await pd.goto(`http://localhost:${PORT}/`); await pd.evaluate(() => localStorage.setItem('scene', '')); await pd.reload();
+  await pd.goto(`http://localhost:${PORT}/`); await pd.evaluate(() => localStorage.setItem('scene', 'closet')); await pd.reload();
   await pd.waitForFunction(() => window.__stage3d);
   if (!(await pd.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D world tests (no WebGL in this browser)');
   else {

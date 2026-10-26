@@ -164,3 +164,99 @@ import { matchInspo } from '../public/js/stylist.js';
 test('inspo matching copes with a picture that has no usable colours', () => {
   assert.deepEqual(matchInspo(closet, [], { wanted: ['top', 'bottom'], occasion: '' }), { picks: {}, gaps: [] });
 });
+
+// ── item intake helpers and the product-page importer ──
+import { guessType, tidyTitle, firstLink, deepLink } from '../public/js/intake.js';
+import { publicUrlOk, extractProduct, handleProduct } from '../lib/ai.js';
+
+test('category guess reads the words, most specific first', () => {
+  assert.equal(guessType('Satin Cami Top'), 'tanks');
+  assert.equal(guessType('Denim Mini Skirt'), 'skirts');
+  assert.equal(guessType('sweater dress'), 'dresses');
+  assert.equal(guessType('Wide-Leg Jeans'), 'bottoms');
+  assert.equal(guessType('Cropped denim jacket'), 'outerwear');
+  assert.equal(guessType('IMG_2041'), null);
+  assert.equal(guessType('Leather Crossbody Bag'), 'bags');
+  assert.equal(guessType('Chunky White Sneakers'), 'shoes');
+});
+
+test('page titles are tidied and shared text yields its link', () => {
+  assert.equal(tidyTitle('Satin Cami Top | ZARA United States', 'Zara'), 'Satin Cami Top');
+  assert.equal(tidyTitle('Buy Linen Shirt - Nordstrom'), 'Linen Shirt');
+  assert.equal(tidyTitle('Zara Pleated Skirt', 'Zara'), 'Pleated Skirt');
+  assert.equal(firstLink('Look at this! https://shop.example.com/p/1?x=2. so cute'), 'https://shop.example.com/p/1?x=2');
+  assert.equal(firstLink('no link'), '');
+  assert.deepEqual(deepLink('?add=link&u=https%3A%2F%2Fa.com%2Fp'), { mode: 'link', url: 'https://a.com/p' });
+  assert.equal(deepLink('?add=evil'), null);
+  assert.equal(deepLink(''), null);
+});
+
+test('product importer refuses private and non-https addresses', () => {
+  for (const u of ['https://shop.example.com/p/1', 'https://www.zara.com/us/en/x.html']) assert.ok(publicUrlOk(u), u);
+  for (const u of ['http://shop.com/p', 'https://127.0.0.1/', 'https://10.0.0.5/x', 'https://[::1]/', 'https://localhost/', 'https://router.local/', 'https://a.internal/x', 'https://user:pw@shop.com/', 'https://shop.com:8443/', 'file:///etc/passwd', 'javascript:alert(1)', 'https://metadata/']) assert.ok(!publicUrlOk(u), u);
+  assert.ok(publicUrlOk('http://localhost:5198/p', ['localhost:5198']));
+});
+
+test('product page details come from JSON-LD first, then meta tags', () => {
+  const ld = '<script type="application/ld+json">{"@graph":[{"@type":"Product","name":"Linen Shirt","brand":{"@type":"Brand","name":"Everlane"},"image":["https://cdn.x.com/a.jpg"],"offers":{"@type":"Offer","price":"68.00"}}]}</script>';
+  assert.deepEqual(extractProduct(ld), { title: 'Linen Shirt', brand: 'Everlane', price: 68, image: 'https://cdn.x.com/a.jpg' });
+  const meta = '<title>Plain page</title><meta property="og:title" content="Wool &amp; Silk Scarf"><meta property="og:image" content="/img/s.png"><meta property="product:price:amount" content="1,250.50">';
+  const m = extractProduct(meta);
+  assert.equal(m.title, 'Wool & Silk Scarf'); assert.equal(m.image, '/img/s.png'); assert.equal(m.price, 1250.5); assert.equal(m.brand, '');
+  assert.equal(extractProduct('<html></html>').image, null);
+});
+
+test('product endpoint demands the passcode but not a fal key', async () => {
+  const req = (pass, url = 'https://shop.example.com/p') => new Request('http://x/api/product', { method: 'POST', headers: { 'x-app-passcode': pass ?? '' }, body: JSON.stringify({ url }) });
+  assert.equal((await handleProduct(req('x'), {})).status, 503);
+  assert.equal((await handleProduct(req('wrong'), { APP_PASSCODE: 'right' })).status, 401);
+  assert.equal((await handleProduct(req('right', 'https://127.0.0.1/x'), { APP_PASSCODE: 'right' })).status, 400);
+  assert.equal((await handleProduct(new Request('http://x', { method: 'GET' }), { APP_PASSCODE: 'right' })).status, 405);
+});
+
+// ── 2D doll: art is separate from the placement and layering rules ──
+import { dollSVG, fitOf, garmentTransform, tokens, mix, isTuckable } from '../public/js/doll.js';
+import { readFileSync, readdirSync } from 'node:fs';
+const studio = JSON.parse(readFileSync(new URL('../public/dolls/studio/pack.json', import.meta.url), 'utf8'));
+const studioFiles = Object.fromEntries(readdirSync(new URL('../public/dolls/studio/', import.meta.url)).filter((f) => f.endsWith('.svg')).map((f) => [f, readFileSync(new URL(`../public/dolls/studio/${f}`, import.meta.url), 'utf8')]));
+const pack = { ...studio, files: studioFiles };
+const mkItem = (id, type, extra = {}) => ({ id, type, name: id, ...extra });
+const urls = new Map([['t', 'blob:t'], ['b', 'blob:b'], ['j', 'blob:j']]);
+const slotsIn = (svg) => [...svg.matchAll(/data-slot="(\w+)"/g)].map((m) => m[1]);
+
+test('the studio pack covers every clothing type and every file it names exists', async () => {
+  const { TYPES } = await import('../public/js/data.js');
+  for (const t of Object.keys(TYPES)) assert.ok(studio.anchors[t], `anchor for ${t}`);
+  for (const f of Object.values(studio.layers)) for (const g of f.includes('{style}') ? studio.hairStyles.map((s) => f.replace('{style}', s)) : [f]) assert.ok(studioFiles[g], g);
+});
+
+test('doll layers stack in the right order, and tucking swaps top and bottom', () => {
+  const items = { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms'), outer: mkItem('j', 'outerwear') };
+  const look = { skin: '#eec3a0', hair: '#4a2e1e', hairStyle: 'bob', eyes: '#2b1d17', lips: '#c4505f' };
+  assert.deepEqual(slotsIn(dollSVG({ pack, look, items, urls })), ['bottom', 'top', 'outer']);
+  const tucked = { ...items, top: { ...items.top, fit: { studio: { tuck: true } } } };
+  const svg = dollSVG({ pack, look, items: tucked, urls });
+  assert.deepEqual(slotsIn(svg), ['top', 'bottom', 'outer']);
+  assert.match(svg, /clip-path="url\(#tuckclip-\d+\)"/);
+  assert.ok(!/\{\{/.test(svg), 'no unfilled art tokens');
+  assert.ok(svg.includes('#4a2e1e') || svg.includes('4a2e1e'), 'hair colour reaches the art');
+});
+
+test('each art pack remembers its own fit for a piece', () => {
+  const it = mkItem('t', 'tops', { fit: { studio: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
+  assert.equal(fitOf(it, { id: 'studio' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);
+  const a = studio.anchors.tops;
+  assert.match(garmentTransform(a, { scale: 1, dx: 0, dy: 0, rot: 0 }), /^translate\(250 347\) rotate\(0\) scale\(1\) translate\(-145 -135\)$/);
+  assert.ok(isTuckable(mkItem('t', 'tops'), pack) && !isTuckable(mkItem('d', 'dresses'), pack));
+});
+
+test('a different art pack changes the drawing and the placement without touching the rules', () => {
+  const alt = { ...pack, id: 'alt', view: [0, 0, 1000, 1800], anchors: { ...pack.anchors, tops: { x: 300, y: 400, w: 400, h: 400, align: 'xMidYMin' } }, layers: { ...pack.layers, body: 'mybody.svg' }, files: { ...studioFiles, 'mybody.svg': '<rect id="mine" width="10" height="10" fill="{{skin}}"/>' } };
+  const svg = dollSVG({ pack: alt, look: { skin: '#123456', hair: '#000000', hairStyle: 'pixie', eyes: '#000000', lips: '#ff0000' }, items: { top: mkItem('t', 'tops') }, urls });
+  assert.match(svg, /viewBox="0 0 1000 1800"/); assert.match(svg, /id="mine"[^>]*fill="#123456"/); assert.match(svg, /translate\(500 600\)/);
+});
+
+test('skin and hair shades are derived from the customizer colours', () => {
+  const t = tokens({ skin: '#eec3a0', hair: '#4a2e1e' });
+  assert.notEqual(t.skinShade, t.skin); assert.equal(mix('#000000', '#ffffff', 0.5), '#808080');
+});

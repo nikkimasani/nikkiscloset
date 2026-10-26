@@ -402,3 +402,65 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .room.cas-open .tools { bottom: auto; top: auto; overflow: visible; }
 .room.cas-open .meters, .room.cas-open .streakbadge { display: block; }
 @media (min-width: 640px) { .tools button { min-height: 70px; font-size: 12px; } }
+
+/* ── adding a piece: where is the photo? ── */
+.intake { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+@media (min-width: 520px) { .intake { grid-template-columns: repeat(4, 1fr); } }
+.srcbtn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 14px; background: #ffffff12; font-weight: 700; font-size: 14px; }
+.srcbtn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.linkrow { margin: 4px 0 8px; }
+.linkrow .row { align-items: stretch; flex-wrap: nowrap; }
+.linkrow input[type=url] { min-width: 0; }
+.steps { padding-left: 20px; display: grid; gap: 6px; } .steps code { word-break: break-all; font-size: 12px; }
+
+/* ── the 2D doll screen ── */
+.cswatches { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cswatch { width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
+.cswatch.on { outline: 3px solid var(--accent); outline-offset: 2px; }
+.scenebar { flex-wrap: wrap; }
+.room.dollroom { border: 0; border-radius: 30px; background: radial-gradient(120% 80% at 50% 0%, #fff7fb 0%, #ffe3ef 55%, #ffd0e3 100%); box-shadow: var(--shadow), inset 0 -80px 80px -60px #ff9cc455; }
+.room.dollroom::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 13%; z-index: 1; background: linear-gradient(#ffc1d8, #ff9fc4); box-shadow: 0 -4px 0 #fff8; }
+.room.dollroom .stage { inset: 3% 0 5% 0; align-items: flex-end; }
+.room.dollroom .stage .doll { height: 100%; width: auto; max-width: 100%; display: block; filter: drop-shadow(0 6px 10px #7a1d4a30); }
+.room.dollroom .stage.fitting { touch-action: none; cursor: grab; }
+.room.dollroom .stage .gar { cursor: pointer; }
+.room.dollroom .stage .selbox { stroke: #ff3d8b; stroke-width: 3; stroke-dasharray: 9 7; pointer-events: none; }
+.room.dollroom .gem, .room.dollroom .wall, .room.dollroom .floor, .room.dollroom .rug { display: none; }
+.dollfit { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 18px; background: #ffffff12; }
+.dollhint { text-align: center; margin: 4px 0; }
+.dfname { font-size: 13px; }
+.dfrow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.fb { min-width: 44px; min-height: 44px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 12px; background: #ffffff1c; font-weight: 800; font-size: 17px; touch-action: manipulation; user-select: none; }
+.fb.wide { font-size: 13px; padding: 6px 12px; }
+.fb[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.fb:active { transform: scale(.94); }
+.sepv { width: 1px; height: 28px; background: var(--line); margin: 0 4px; }
+.dfpieces { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+.dollmode .tabs { overflow-x: auto; flex-wrap: nowrap; scroll-snap-type: x proximity; }
+.dollmode .tab { flex: 0 0 auto; display: grid; justify-items: center; gap: 2px; min-width: 68px; min-height: 64px; font-size: 11px; border-radius: 16px; scroll-snap-align: start; }
+.dollmode .tab > span { font-size: 24px; line-height: 1; }
+.dollmode .tray-row { gap: 10px; }
+.dollmode .pick { border-radius: 18px; box-shadow: 0 4px 14px #0003; }
+.dollmode .pick.on { outline: 3px solid var(--accent); outline-offset: 2px; }
+.room.dollroom { height: clamp(440px, 64vh, 640px); }
+@media (max-width: 919px) {
+  .dollmode .tools { order: 1; }
+  .dollmode .dress-right { order: 2; }
+  .dollmode .meters, .dollmode .moods, .dollmode .wxline { order: 3; }
+  .dress.dollmode .room { height: clamp(340px, 48vh, 460px); }
+}
+
+/* fit bar docked inside the doll's box */
+.room.dollroom { display: flex; flex-direction: column; }
+.room.dollroom .stage { position: relative; inset: auto; flex: 1 1 0; min-height: 0; width: 100%; }
+.dollbar { position: relative; z-index: 4; flex: 0 0 auto; display: grid; gap: 6px; padding: 8px 10px 10px; background: #1b0f2fe8; backdrop-filter: blur(6px); border-radius: 18px 18px 0 0; color: #fff; }
+.dollbar[hidden] { display: none; }
+.dbname { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+.dbname b { color: #ffd1e6; }
+.dbrow { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.dbrow .fb, .dbname .fb { flex: 0 0 auto; }
+.dollbar .fb { min-width: 40px; min-height: 40px; padding: 4px 8px; font-size: 16px; color: #fff; border-color: #ffffff40; }
+.dollbar .fb.done { font-size: 12px; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-height: 34px; }
+.dolltoggle { position: absolute; top: 12px; right: 12px; z-index: 5; min-height: 40px; padding: 4px 14px; border-radius: 99px; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-weight: 800; font-size: 13px; }
+.dolltoggle[aria-expanded=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.dollfit { padding: 6px 0; border: 0; background: none; }
