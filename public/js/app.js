@@ -18,7 +18,7 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 import { browserCut } from './browsercut.js';
 import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
-import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES } from './game.js';
+import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather } from './game.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -46,6 +46,8 @@ const S = {
   inspo: null,                      // working inspo draft
   ai: null, aiError: '', aiBusy: false, aiAbort: null, // fal.ai render of the current outfit
 };
+S.game = grandfather(S.game, S.hairStyle); // a hairstyle you already wore stays yours (kept in memory until the next save)
+
 
 const itemById = (id) => S.items.find((i) => i.id === id);
 const url = (key, blob) => { if (!S.urls.has(key) && blob) S.urls.set(key, URL.createObjectURL(blob)); return S.urls.get(key); };
@@ -742,7 +744,7 @@ function casHTML() {
     avatar: AVATARS.map((id, n) => chip('avatar', id, `${id.includes('female') ? '👩' : '🧑'} ${n % 6 + 1}`, S.avatar === id)).join(''),
     skin: sw(SKIN, S.skin, 'skin', 'Skin tone'),
     hair: sw(HAIR, S.hair, 'hair', 'Hair colour'),
-    style: HAIR_STYLES.map(([k, l]) => chip('hairstyle', k, l, S.hairStyle === k)).join(''),
+    style: HAIR_STYLES.map(([k, l]) => { const c = catalogItem(`hair:${k}`), lock = c && !owns(S.game, c.id); return chip('hairstyle', k, lock ? `🔒 ${l} · 🪙${c.price}` : l, S.hairStyle === k); }).join(''),
     eyes: sw(EYES, S.eyes, 'eyes', 'Eye colour'),
     lips: sw(LIPS, S.lips, 'lips', 'Lip colour'),
     room: [['auto', 'Follow the season'], ...Object.entries(ROOMS).map(([k, [l, e]]) => [k, `${e} ${l}`])].map(([k, l]) => chip('room', k, l, S.room === k)).join(''),
@@ -828,7 +830,7 @@ function gameBarHTML(big) {
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
   const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. ${aptOn() ? 'Head to bed' : 'Tap End the day'} to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
   return `<div class="gamebar ${big ? 'big' : ''}" role="region" aria-label="Today’s challenge">
-    <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
+    <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span><button class="gb-shop" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
       <span class="gb-meter" role="meter" aria-label="Energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.energy}"><span aria-hidden="true">⚡</span><i style="width:${d.energy}%"></i></span>
@@ -856,6 +858,91 @@ function rateNow() {
 }
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+
+/* ───────────────────────── the shop and build mode ───────────────────────── */
+const placedDefs = () => (S.game.placed || []).map((p) => { const c = catalogItem(p.id); return c ? { uid: p.uid, model: c.model, scale: c.scale, solid: c.solid, x: p.x, z: p.z, ry: p.ry } : null; }).filter(Boolean);
+const SHOP_TABS = [['furn', '🛋️ Furniture'], ['room', '🎨 Rooms'], ['hair', '💇 Hair']];
+function showShop(tab = S.shopTab || 'furn', focus = '') {
+  S.shopTab = tab;
+  if ($('#modal').hidden) openModal();
+  const g = S.game, card = (c) => {
+    const have = c.kind === 'furn' ? furnitureStock(g, c.id) : 0, mine = owns(g, c.id), cur = c.kind === 'room' ? g.decor === c.id.slice(5) : c.kind === 'hair' && S.hairStyle === c.id.slice(5);
+    const act = c.kind === 'furn' ? `<button class="primary" data-act="shopbuy" data-v="${c.id}" ${g.coins < c.price ? 'aria-disabled="true"' : ''}>Buy · 🪙 ${c.price}</button>`
+      : mine ? `<button class="${cur ? 'ghost' : 'primary'}" data-act="shopuse" data-v="${c.id}" aria-pressed="${cur}">${cur ? 'In use ✓' : c.kind === 'room' ? 'Use' : 'Wear'}</button>`
+      : `<button class="primary" data-act="shopbuy" data-v="${c.id}" ${g.coins < c.price ? 'aria-disabled="true"' : ''}>Buy · 🪙 ${c.price}</button>`;
+    return `<li class="shopcard"><span class="se" aria-hidden="true">${c.emoji}</span><span class="sn">${esc(c.name)}${c.kind === 'furn' && have ? `<small>${have} in storage</small>` : ''}${c.kind !== 'furn' && mine && c.price ? '<small>Yours</small>' : ''}</span>${act}</li>`;
+  };
+  paintSheet(`<p class="shopcoins" role="status">You have <b>🪙 ${g.coins}</b> coins. Earn more by rating your look each day.</p>
+    <div class="tabs" role="tablist" aria-label="Shop sections">${SHOP_TABS.map(([k, l]) => `<button role="tab" class="chip" aria-selected="${tab === k}" data-act="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
+    <ul class="shoplist">${CATALOG.filter((c) => c.kind === tab).map(card).join('')}</ul>
+    ${tab === 'furn' ? '<p class="muted">Bought furniture waits in storage. Open 🔨 Build in your apartment to place it.</p>' : ''}
+    <div class="row" style="margin-top:12px"><button class="ghost grow" id="shopclose">Close</button></div>`, 'Shop');
+  $('#shopclose').onclick = closeModal;
+  if (focus) $(`#modal [data-act][data-v="${CSS.escape(focus)}"]`)?.focus();
+}
+function shopBuy(id) {
+  const r = buy(S.game, id); if (!r.ok) return toast(r.reason);
+  S.game = r.game; saveGame(); refreshGame(); toast(`Bought ${catalogItem(id).name} ✓`); showShop(S.shopTab, id);
+}
+function shopUse(id) {
+  const c = catalogItem(id); if (!c || !owns(S.game, id)) return;
+  if (c.kind === 'room') { S.game = useRoom(S.game, id); saveGame(); apt?.setTheme(S.game.decor); }
+  else if (c.kind === 'hair') { S.hairStyle = id.slice(5); store.set('hairstyle', S.hairStyle); if (S.view === 'tryon' && !aptOn()) renderTryon(); }
+  showShop(S.shopTab, id);
+}
+
+const SNAP = 0.25, snap = (v) => Math.round(v / SNAP) * SNAP;
+const pieceDef = (p) => { const c = catalogItem(p.id); return { uid: p.uid, model: c.model, scale: c.scale, solid: c.solid, x: p.x, z: p.z, ry: p.ry }; };
+function buildBarHTML() {
+  const b = S.build, stock = CATALOG.filter((c) => c.kind === 'furn' && furnitureStock(S.game, c.id) > 0), sel = b.sel && S.game.placed.find((p) => p.uid === b.sel), sc = sel && catalogItem(sel.id);
+  return `<div class="bb-top"><b>🔨 Build</b><span class="bb-hint" role="status">${sel ? `Tap the floor to move the ${esc(sc.name)}, or use the arrows.` : 'Tap a piece to pick it up, or place something from storage.'}</span><button class="primary" data-act="bdone">Done</button></div>
+    ${sel ? `<div class="bb-sel" role="group" aria-label="Move the ${esc(sc.name)}"><button data-act="bnudge" data-v="left" aria-label="Move left">◀</button><button data-act="bnudge" data-v="up" aria-label="Move away">▲</button><button data-act="bnudge" data-v="down" aria-label="Move closer">▼</button><button data-act="bnudge" data-v="right" aria-label="Move right">▶</button><button class="chip" data-act="bturn"><span aria-hidden="true">⟳</span> Turn</button><button class="chip" data-act="bstore"><span aria-hidden="true">📦</span> Put away</button></div>` : ''}
+    <div class="bb-stock" role="group" aria-label="In storage">${stock.length ? stock.map((c) => `<button class="chip" data-act="bplace" data-v="${c.id}"><span aria-hidden="true">${c.emoji}</span> ${esc(c.name)} ×${furnitureStock(S.game, c.id)}</button>`).join('') : '<span class="muted">Nothing in storage. </span><button class="chip" data-act="shop"><span aria-hidden="true">🛍️</span> Shop for furniture</button>'}</div>`;
+}
+function paintBuild(focus = '') {
+  const bar = $('#buildbar'); if (!bar || !S.build) return;
+  bar.hidden = false; bar.innerHTML = buildBarHTML();
+  if (focus) bar.querySelector(`[data-act="${focus}"]`)?.focus();
+}
+async function buildSync() { await apt?.setExtras(placedDefs(), S.build?.sel || ''); paintBuild(); }
+function startBuild() {
+  if (!apt?.running || S.station) return;
+  S.build = { sel: '' }; apt.setPaused(true); apt.setFloorTap(buildTap);
+  $('.room.apt')?.classList.add('building'); paintBuild('bdone'); buildSync();
+}
+function endBuild() {
+  S.build = null; apt?.setFloorTap(null); apt?.setPaused(false); apt?.setExtras(placedDefs());
+  $('.room.apt')?.classList.remove('building'); const bar = $('#buildbar'); if (bar) { bar.hidden = true; bar.innerHTML = ''; } $('[data-act=build]')?.focus();
+}
+async function buildMove(uid, patch) {
+  const p = S.game.placed.find((x) => x.uid === uid); if (!p) return false;
+  const next = { ...p, ...patch, ry: patch.ry === undefined ? p.ry : ((patch.ry % 4) + 4) % 4 }, res = await apt.canPlace(pieceDef(next), uid);
+  if (!res.ok) { toast(res.why); return false; }
+  S.game = movePiece(S.game, uid, patch); saveGame(); await buildSync(); return true;
+}
+function buildTap(x, z, uid) {
+  if (!S.build) return;
+  if (uid && uid !== S.build.sel) { S.build.sel = uid; return buildSync(); }
+  if (S.build.sel && Number.isFinite(x)) buildMove(S.build.sel, { x: snap(x), z: snap(z) });
+}
+async function buildPlace(id) {
+  const c = catalogItem(id); if (!c || furnitureStock(S.game, id) <= 0) return;
+  const spots = []; for (let x = -6; x <= 6; x += 0.5) for (let z = -5; z <= 5; z += 0.5) spots.push([x, z]);
+  const me = apt.where() || [0, 2], dir = apt.camDir()?.forward || [0, -1], cx = me[0] + dir[0] * 3.5, cz = me[1] + dir[1] * 3.5; // start looking just ahead of where the camera faces, so you can see it land
+  spots.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cz) - Math.hypot(b[0] - cx, b[1] - cz));
+  for (const [x, z] of spots) {
+    if ((await apt.canPlace({ model: c.model, scale: c.scale, solid: c.solid, x, z, ry: 0 })).ok) {
+      const r = placePiece(S.game, id, x, z, 0); S.game = r.game; saveGame(); S.build.sel = r.uid; await buildSync(); return;
+    }
+  }
+  toast('There’s no free spot. Put something away first.');
+}
+function buildNudge(dir) {
+  const d = apt?.camDir(), sel = S.build?.sel && S.game.placed.find((p) => p.uid === S.build.sel); if (!d || !sel) return;
+  const v = { up: d.forward, down: d.forward.map((n) => -n), right: d.right, left: d.right.map((n) => -n) }[dir];
+  return buildMove(sel.uid, { x: snap(sel.x + v[0] * SNAP * 2), z: snap(sel.z + v[1] * SNAP * 2) });
+}
+
 /* ───────────────────────── the 3D apartment ───────────────────────── */
 let apt = null, aptLoad = null; // the engine, loaded on demand
 const aptOn = () => S.scene === 'apt' && webglOK && store.get('flat', '') !== '1';
@@ -863,7 +950,7 @@ const loadApt = () => (aptLoad ||= import('./apartment.js').then((m) => (apt = m
 const STATIONS = [['wardrobe', 'Wardrobe', '👗', 'Pick pieces from your closet'], ['vanity', 'Vanity', '💄', 'Skin, hair, make-up and your avatar'], ['mirror', 'Mirror', '🪞', 'Dress up and see how it looks'], ['bed', 'Bed', '🛏️', 'End the day: log what you wore'], ['desk', 'Desk', '🖥️', 'Plan your week']];
 const aptLook = () => ({ skin: S.skin, hair: S.hair });
 const aptStations = () => STATIONS.map(([type, label, emoji]) => ({ type, label, emoji, thumbs: type === 'wardrobe' ? S.items.slice(-6).map((i) => url(i.id)) : [] }));
-const leaveApt = () => { if (apt?.running) { S.aptPos = apt.where(); apt.stop(); } };
+const leaveApt = () => { S.build = null; if (apt?.running) { S.aptPos = apt.where(); apt.stop(); } };
 
 function renderApartment() {
   if ($('.room.apt')) return updateAptUI();
@@ -878,7 +965,8 @@ function renderApartment() {
       <div class="joy" id="joy" aria-hidden="true"><span class="joy-knob"></span></div>
       <div class="camrot" role="group" aria-label="Look around"><button data-act="camrot" data-v="-1" aria-label="Look left"><span aria-hidden="true">⟲</span></button><button data-act="camrot" data-v="1" aria-label="Look right"><span aria-hidden="true">⟳</span></button></div>
     </div>
-    <div class="world-jump" role="group" aria-label="Walk to a station">${STATIONS.map(([t, l, e]) => `<button class="chip" aria-pressed="false" data-act="gostation" data-v="${t}"><span aria-hidden="true">${e}</span> ${l}</button>`).join('')}</div>
+    <div class="buildbar" id="buildbar" hidden></div>
+    <div class="world-jump" role="group" aria-label="Walk to a station"><button class="chip build" data-act="build"><span aria-hidden="true">🔨</span> Build</button>${STATIONS.map(([t, l, e]) => `<button class="chip" aria-pressed="false" data-act="gostation" data-v="${t}"><span aria-hidden="true">${e}</span> ${l}</button>`).join('')}</div>
   </div></div>`;
   S.lastView = 'tryon';
   bindJoystick(); mountApartment();
@@ -890,10 +978,10 @@ async function mountApartment() {
   try { engine = await loadApt(); } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
   if (!aptOn() || $('#stage') !== el) return;
   try {
-    await engine.start({ el, stations: aptStations(), look: aptLook(), avatar: S.avatar, pos: S.aptPos, onNear: aptNear, onEnter: aptEnter, onProgress: (f) => { const b = $('#aptbar'); if (b) b.value = Math.round(f * 100); } });
+    await engine.start({ el, stations: aptStations(), look: aptLook(), avatar: S.avatar, pos: S.aptPos, decor: S.game.decor, onNear: aptNear, onEnter: aptEnter, onProgress: (f) => { const b = $('#aptbar'); if (b) b.value = Math.round(f * 100); } });
   } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
   if (!aptOn() || !$('#stage')) return engine.stop();
-  $('#aptbar')?.remove(); refreshGame(); engine.setLabel('Your apartment. Use the stick or the arrow keys to walk, or the buttons below to go to a station.');
+  engine.setExtras(placedDefs()); $('#aptbar')?.remove(); refreshGame(); engine.setLabel('Your apartment. Use the stick or the arrow keys to walk, or the buttons below to go to a station.');
   S.aptSig = S.items.map((i) => i.id).join();
   if (S.station) engine.setPaused(true);
 }
@@ -1298,7 +1386,7 @@ document.addEventListener('click', async (e) => {
     case 'eyes': S.eyes = v; store.set('eyes', v); return renderTryon();
     case 'lips': S.lips = v; store.set('lips', v); return renderTryon();
     case 'room': S.room = v; store.set('room', v); return renderTryon();
-    case 'hairstyle': S.hairStyle = v; store.set('hairstyle', v); return renderTryon();
+    case 'hairstyle': if (!owns(S.game, `hair:${v}`)) return showShop('hair'); S.hairStyle = v; store.set('hairstyle', v); return renderTryon();
     case 'bodytype': await setShape({ ...BODY_TYPES[v] }, v); return renderTryon();
     case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; S.eyes = EYES[0]; S.lips = LIPS[0]; S.room = 'auto'; ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room'].forEach((k) => store.set(k, '')); return renderTryon();
     case 'export': return exportBackup();
@@ -1336,6 +1424,16 @@ document.addEventListener('click', async (e) => {
       S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 8); saveGame(); } return renderTryon();
     }
     case 'rate': return rateNow();
+    case 'shop': return showShop(S.shopTab || 'furn');
+    case 'shoptab': return showShop(v);
+    case 'shopbuy': return shopBuy(v);
+    case 'shopuse': return shopUse(v);
+    case 'build': return S.build ? endBuild() : startBuild();
+    case 'bdone': return endBuild();
+    case 'bplace': return buildPlace(v);
+    case 'bnudge': return buildNudge(v);
+    case 'bturn': { const p = S.build?.sel && S.game.placed.find((x) => x.uid === S.build.sel); return p && buildMove(p.uid, { ry: p.ry + 1 }); }
+    case 'bstore': { if (!S.build?.sel) return; S.game = putAway(S.game, S.build.sel); saveGame(); S.build.sel = ''; return buildSync(); }
     case 'endday': {
       if (!hasOutfit()) return toast('Dress the doll first');
       S.date = iso(new Date()); S.month = new Date(); if (!S.wears.some((w) => w.date === S.date)) await logWear(S.date, S.mood);
