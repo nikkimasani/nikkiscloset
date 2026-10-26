@@ -15,6 +15,7 @@ import { syncState, connect as syncConnect, disconnect as syncDisconnect, syncNo
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI, productAI } from './aitryon.js';
+import { browserCut } from './browsercut.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -205,7 +206,11 @@ function openItemModal(existing, preset = {}) {
         <label class="row" style="margin-top:6px"><input type="checkbox" id="aiauto" ${store.get('aiauto', '1') !== '0' ? 'checked' : ''}> Run automatically on new photos</label>
         <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
         <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aicut">${d.aiCanvas ? 'Redo AI cutout' : 'Cleaner cutout'}</button>${d.aiCanvas ? '<button type="button" class="ghost" id="aiundo">Use the on-device cutout</button>' : ''}<button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
-        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc([d.cutMsg, d.tagMsg].filter(Boolean).join(' '))}</div></div>` : ''}
+        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc([d.cutMsg, d.tagMsg].filter(Boolean).join(' '))}</div></div>
+      <div class="aibox"><div class="muted"><b>🧠 Cut out on this device (optional)</b> — no passcode or credits. The first time it downloads an AI model (about 45 MB); your photo never leaves this phone.</div>
+        <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="devcut"${d.devBusy ? ' disabled' : ''}>Cut out on this device</button></div>
+        <progress id="devbar" max="100" value="0" aria-label="Model download" ${d.devBusy ? '' : 'hidden'}></progress>
+        <div id="devmsg" class="muted" role="status" aria-live="polite">${esc(d.devMsg || '')}</div></div>` : ''}
       <div class="backbox"><label class="f" for="backfile">Back photo (optional — shows on the back of the 3D model)</label>
         <input type="file" id="backfile" accept="image/*">
         ${d.backUrl || d.backBlob ? `<div class="row" style="margin-top:8px"><img class="backthumb" src="${d.backUrl || (existing && url(existing.id + ':back')) || ''}" alt="Back of the piece" width="56" height="56"><button type="button" class="ghost" id="backrm">Remove back photo</button></div>` : ''}</div>
@@ -348,6 +353,22 @@ function openItemModal(existing, preset = {}) {
         d.tagMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
         paint();
       } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
+    };
+    if ($('#devcut')) $('#devcut').onclick = async () => {
+      const seq = modalSeq, photo = d.photoSeq, bar = $('#devbar'), msg = $('#devmsg');
+      d.devBusy = true; $('#devcut').disabled = true; bar.hidden = false; bar.removeAttribute('value'); msg.textContent = 'Starting…';
+      try {
+        const blob = await browserCut(await canvasToBlob(d.base, 'image/png'), (f, phase) => {
+          if (seq !== modalSeq) return;
+          if (phase === 'download') { bar.value = Math.round((f ?? 0) * 100); msg.textContent = `Downloading the model… ${Math.round((f ?? 0) * 100)}% (only the first time)`; }
+          else { bar.removeAttribute('value'); msg.textContent = 'Cutting it out…'; }
+        });
+        if (seq !== modalSeq || photo !== d.photoSeq) return;
+        const img = new Image(); img.src = URL.createObjectURL(blob); await img.decode();
+        const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); URL.revokeObjectURL(img.src);
+        d.aiCanvas = trimTransparent(c); d.cutMsg = 'Done — on-device AI cutout applied. Use the button below to go back if it looks worse.'; d.devBusy = false; d.devMsg = '';
+        recut(); paint();
+      } catch (e) { d.devBusy = false; if (seq === modalSeq) { d.devMsg = e.message; paint(); } }
     };
     d.autoRun = async (pass) => { await Promise.all([runCut(pass), runTag(pass)]); };
     if ($('#aicut')) $('#aicut').onclick = () => { const pass = mpass(); if (pass) runCut(pass); };

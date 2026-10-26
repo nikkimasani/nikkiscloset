@@ -22,6 +22,8 @@ const security = {
   'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer',
   'permissions-policy': 'camera=(self), microphone=(), geolocation=(self)',
 };
+// The hidden on-device-cutout page (and only it) may fetch its model from staticimgly.com and start blob workers, and the app may frame it.
+const labSecurity = { ...security, 'content-security-policy': "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://staticimgly.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob: data: https://staticimgly.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'" };
 
 createServer(async (req, res) => {
   try {
@@ -36,7 +38,7 @@ createServer(async (req, res) => {
     const file = join(root, normalize(p));
     if (!file.startsWith(root)) throw new Error('nope');
     const body = await readFile(file);
-    res.writeHead(200, { ...security, 'content-type': types[extname(file)] || 'application/octet-stream' });
+    res.writeHead(200, { ...(p.startsWith('/lab/') ? labSecurity : security), 'content-type': types[extname(file)] || 'application/octet-stream' });
     res.end(body);
   } catch {
     res.writeHead(404, { 'content-type': 'text/plain' });

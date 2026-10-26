@@ -543,6 +543,10 @@ try {
   await pI.evaluate(async () => { const c = document.createElement('canvas'); c.width = 60; c.height = 60; c.getContext('2d').fillRect(10, 10, 40, 40); const b = await new Promise((r) => c.toBlob(r, 'image/png')); await (await caches.open('closet-share')).put('/shared/photo', new Response(b, { headers: { 'content-type': 'image/png' } })); });
   await pI.goto(`http://localhost:${PORT}/?add=shared`); await pI.waitForSelector('#cutimg');
   ok(true, 'a picture shared into the installed app opens the add dialog');
+  const lab = await pI.evaluate(async () => (await import('/js/browsercut.js')).labProbe());
+  ok(lab === true, 'the hidden on-device cutout page starts and its model library loads under its own security policy');
+  const hdr = await pI.evaluate(async () => { const r = await fetch('/lab/cutout.html'), m = await fetch('/'); return [r.headers.get('content-security-policy'), m.headers.get('content-security-policy')]; });
+  ok(/staticimgly\.com/.test(hdr[0]) && /frame-ancestors 'self'/.test(hdr[0]) && !/staticimgly/.test(hdr[1]) && /frame-ancestors 'none'/.test(hdr[1]), 'only the lab page may reach the model host; the main app policy is unchanged');
   await pI.goto(`http://localhost:${PORT}/?add=paste`); await pI.waitForSelector('#srcpaste:focus');
   ok(/Tap Paste/.test(await pI.locator('#intakemsg').innerText()), '?add=paste opens the dialog ready for the Paste button');
 
