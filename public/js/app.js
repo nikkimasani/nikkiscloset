@@ -205,7 +205,7 @@ function openItemModal(existing, preset = {}) {
         <label class="row" style="margin-top:6px"><input type="checkbox" id="aiauto" ${store.get('aiauto', '1') !== '0' ? 'checked' : ''}> Run automatically on new photos</label>
         <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
         <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aicut">${d.aiCanvas ? 'Redo AI cutout' : 'Cleaner cutout'}</button>${d.aiCanvas ? '<button type="button" class="ghost" id="aiundo">Use the on-device cutout</button>' : ''}<button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
-        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc(d.aiMsg || '')}</div></div>` : ''}
+        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc([d.cutMsg, d.tagMsg].filter(Boolean).join(' '))}</div></div>` : ''}
       <div class="backbox"><label class="f" for="backfile">Back photo (optional — shows on the back of the 3D model)</label>
         <input type="file" id="backfile" accept="image/*">
         ${d.backUrl || d.backBlob ? `<div class="row" style="margin-top:8px"><img class="backthumb" src="${d.backUrl || (existing && url(existing.id + ':back')) || ''}" alt="Back of the piece" width="56" height="56"><button type="button" class="ghost" id="backrm">Remove back photo</button></div>` : ''}</div>
@@ -260,7 +260,7 @@ function openItemModal(existing, preset = {}) {
         if (meta.price && d.price === '') d.price = String(meta.price);
         const guess = guessType(`${meta.title || ''} ${title}`);
         if (guess && !existing) { d.type = guess; d.typeGuess = true; }
-        d.aiCanvas = null; d.aiMsg = '';
+        d.aiCanvas = null; d.cutMsg = d.tagMsg = '';
         recut(); paint(); autoAI();
       } catch (err) { toast(err.message); }
     };
@@ -330,7 +330,7 @@ function openItemModal(existing, preset = {}) {
         const img = new Image(); img.src = await cutoutAI(d.base, pass); await img.decode();
         if (seq !== modalSeq || photo !== d.photoSeq) return; // the dialog closed or a different photo was chosen meanwhile
         const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0);
-        d.aiCanvas = trimTransparent(c); d.aiMsg = 'Done — AI cutout applied. Use the button below to go back if it looks worse.';
+        d.aiCanvas = trimTransparent(c); d.cutMsg = 'Done — AI cutout applied. Use the button below to go back if it looks worse.';
         recut(); paint();
       } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
@@ -345,13 +345,13 @@ function openItemModal(existing, preset = {}) {
         if (t.season) d.season = t.season;
         if (t.occasions.length) { d.occasions = t.occasions; bits.push(t.occasions.join(', ')); }
         if (t.brand && !d.brand.trim()) d.brand = t.brand;
-        d.aiMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
+        d.tagMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
         paint();
       } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
     };
     d.autoRun = async (pass) => { await Promise.all([runCut(pass), runTag(pass)]); };
     if ($('#aicut')) $('#aicut').onclick = () => { const pass = mpass(); if (pass) runCut(pass); };
-    if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.aiMsg = ''; recut(); paint(); };
+    if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.cutMsg = ''; recut(); paint(); };
     if ($('#aitag')) $('#aitag').onclick = () => { const pass = mpass(); if (pass) runTag(pass); };
     $('.swatches').onclick = (e) => { const h = e.target.dataset?.hex; if (!h) return; d.color = { hex: h, name: colorName(h) }; d.colorPicked = true; paint(); };
     if (d.pending) { // opened from a deep link or a shared file
