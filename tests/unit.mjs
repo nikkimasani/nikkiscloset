@@ -441,20 +441,26 @@ test('only a phone screenshot is cropped to its product photo; a set photographe
 });
 
 /* ── hairstyles: Nikki's own pictures, laid over the head ── */
-test('every hairstyle in the config has its picture on the hair canvas, and a ponytail\'s tail goes behind the body', async () => {
-  const { hairOf } = await import('../public/js/doll.js');
+test('every hairstyle is fitted by its landmarks: temples on her temples, hairline on her hairline; hair behind the neck goes behind the body', async () => {
+  const { hairOf, hairPlacement } = await import('../public/js/doll.js');
+  const P = config.points;
+  for (const k of ['crown', 'hairline', 'templeL', 'templeR', 'jawL', 'jawR', 'nape']) assert.ok(P[k], `head point ${k}`);
   for (const st of config.hair.styles.filter((s) => s.id !== 'none')) {
-    for (const f of [st.id, ...(st.back ? [st.id + '-back'] : [])]) {
-      const png = readFileSync(new URL(`../public/assets/avatar/hair/${f}.png`, import.meta.url));
-      assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], config.hair.box.slice(2), `${f}.png is on the ${config.hair.box.slice(2).join(' x ')} canvas`);
-    }
+    const png = readFileSync(new URL(`../public/assets/avatar/hair/${st.id}.png`, import.meta.url));
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], st.size, `${st.id}: size in the config matches the picture`);
+    const [sx, sy, tx, ty] = hairPlacement(pack, st.marks), at = ([x, y]) => [x * sx + tx, y * sy + ty];
+    assert.ok(Math.abs(at(st.marks.templeL)[0] - P.templeL[0]) < 0.5 && Math.abs(at(st.marks.templeR)[0] - P.templeR[0]) < 0.5, `${st.id}: temples on hers`);
+    assert.ok(Math.abs(at(st.marks.hairline)[1] - P.hairline[1]) < 0.5, `${st.id}: hairline on hers`);
+    assert.ok(Math.abs(at(st.marks.crown)[1] - P.crown[1]) < 2, `${st.id}: crown on hers`);
   }
   assert.equal(hairOf(pack, 'none', 'natural'), null, 'no picture for the base picture\'s own hair');
-  const h = hairOf(pack, 'ponytail', 'auburn'), svg = dollSVG({ pack, items: {}, urls, hair: h });
-  const back = svg.indexOf('hair/ponytail-back.png'), body = svg.indexOf('class="basepic"'), front = svg.indexOf('hair/ponytail.png');
-  assert.ok(back > 0 && back < body && body < front, 'tail behind the body, the rest in front');
+  const moved = hairOf(pack, 'bob', 'natural', { bob: { templeL: [0, 0] } });
+  assert.deepEqual(moved.marks.templeL, [0, 0], 'a saved adjustment replaces that landmark');
+  const svg = dollSVG({ pack, items: {}, urls, hair: hairOf(pack, 'waves', 'auburn') });
+  const back = svg.indexOf('class="hairback"'), body = svg.indexOf('class="basepic"'), front = svg.indexOf('class="hairfront"');
+  assert.ok(back > 0 && back < body && body < front, 'the hair behind the neck is drawn before the body, the rest after');
   assert.match(svg, /<feColorMatrix type="matrix"/, 'colour applied as a filter, the picture itself is untouched');
-  assert.ok(!/feColorMatrix/.test(dollSVG({ pack, items: {}, urls, hair: hairOf(pack, 'bob', 'natural') })), 'as drawn: no filter');
+  assert.match(svg, /<feGaussianBlur in="SourceAlpha"/, 'a soft shadow where the hair meets the face');
 });
 
 /* ── starter closet ── */

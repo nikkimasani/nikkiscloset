@@ -22,12 +22,22 @@ export function loadPack(id = DEFAULT_PACK) {
 }
 export const getPack = (id = DEFAULT_PACK) => packs.get(id)?.pack || null;
 
-/** The hairstyle to draw: { front, back, m } (picture URLs and an optional colour matrix), or null for the base picture's own slicked-back hair. */
-export function hairOf(pack, style, color) {
+/** The hairstyle to draw: { href, size, marks, m, tone } (its picture, landmarks in its own pixels and an optional colour matrix), or null for
+ *  the base picture's own slicked-back hair. overrides: { styleId: marks } saved from "Adjust fit". */
+export function hairOf(pack, style, color, overrides = {}) {
   const h = pack?.hair, st = h?.styles.find((s) => s.id === style);
-  if (!st || st.id === 'none') return null;
-  const v = pack.version ? `?v=${pack.version}` : '', f = (n) => `${pack.base}hair/${n}.png${v}`;
-  return { front: f(st.id), back: st.back ? f(st.id + '-back') : '', m: h.colors.find((c) => c.id === color)?.m || null };
+  if (!st || st.id === 'none' || !st.size) return null;
+  const v = pack.version ? `?v=${pack.version}` : '';
+  return { id: st.id, href: `${pack.base}hair/${st.id}.png${v}`, size: st.size, marks: { ...st.marks, ...(overrides[st.id] || {}) }, m: h.colors.find((c) => c.id === color)?.m || null, tone: st.tone || '#2a1c12' };
+}
+/** Where a hairstyle goes: scaled so its temples span her temples, placed so its hairline sits on hers, and stretched up or down (a little)
+ *  so its crown sits on her crown. Returns [sx, sy, tx, ty] for matrix(sx 0 0 sy tx ty). */
+export function hairPlacement(pack, marks) {
+  const P = pack.points, M = marks;
+  const sx = (P.templeR[0] - P.templeL[0]) / Math.max(4, M.templeR[0] - M.templeL[0]);
+  const syRaw = (P.hairline[1] - P.crown[1]) / Math.max(4, M.hairline[1] - M.crown[1]), sy = Math.min(sx * 1.2, Math.max(sx * 0.85, syRaw));
+  const mx = (M.templeL[0] + M.templeR[0]) / 2, px = (P.templeL[0] + P.templeR[0]) / 2;
+  return [sx, sy, px - mx * sx, P.hairline[1] - M.hairline[1] * sy];
 }
 
 /* ── body points -> a box for each kind of clothing ── */
@@ -65,7 +75,7 @@ export function contentBox(a, m) {
   const r = imageRect(a, m);
   return { x: num(r.x + m.bx * r.w), y: num(r.y + m.by * r.h), w: num(m.bw * r.w), h: num(m.bh * r.h) };
 }
-const POINT_COLOR = { neck: '#ff3d8b', hairline: '#a855f7', shoulder: '#ff9f1c', bust: '#e11d48', waist: '#16a34a', hip: '#2563eb', armpit: '#db2777', elbow: '#0d9488', wrist: '#65a30d', crotch: '#dc2626', waistband: '#15803d', knee: '#7c3aed', ankle: '#0891b2', foot: '#ca8a04' };
+const POINT_COLOR = { crown: '#7c3aed', temple: '#0891b2', jaw: '#b45309', nape: '#64748b', ear: '#db2777', eyes: '#0d9488', head: '#7c3aed', hand: '#65a30d', belt: '#15803d', neck: '#ff3d8b', hairline: '#a855f7', shoulder: '#ff9f1c', bust: '#e11d48', waist: '#16a34a', hip: '#2563eb', armpit: '#db2777', elbow: '#0d9488', wrist: '#65a30d', crotch: '#dc2626', waistband: '#15803d', knee: '#7c3aed', ankle: '#0891b2', foot: '#ca8a04' };
 /** The debug picture: every body point, the width lines they give, and the box of each piece being worn. */
 export function pointsOverlay(pack, items = {}) {
   const P = pack.points; if (!P) return '';
@@ -127,8 +137,27 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
   };
   const clothes = order.map(garment).join('');
   const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
-  const hb = pack.hair?.box, hairPic = (href) => (href && hb ? `<image class="hairpic" href="${href}" x="${hb[0]}" y="${hb[1]}" width="${hb[2]}" height="${hb[3]}"${hair.m ? ` filter="url(#hairtint-${n})"` : ''}/>` : '');
-  const parts = { hairBack: hair ? hairPic(hair.back) : '', body, clothes, hair: hair ? hairPic(hair.front) : '', acc: garment('acc') };
+  let hairBack = '', hairFront = '', hairDefs = '';
+  if (hair && pack.points.crown) { // behind the body: the hair inside the neck column below the jaw, and a soft fill between her skull and the hair's crown
+    const P = pack.points, [sx, sy, tx, ty] = hairPlacement(pack, hair.marks), img = `<image class="hairpic" href="${hair.href}" width="${hair.size[0]}" height="${hair.size[1]}" transform="matrix(${num(sx)} 0 0 ${num(sy)} ${num(tx)} ${num(ty)})"/>`;
+    // hair below the jaw in a column as wide as her neck goes behind the body (her neck and chest hide it); the edges are feathered so no line shows
+    const ny = (P.jawL[1] + P.jawR[1]) / 2, [nx0, nx1] = pack.hair.neck || [P.jawL[0] + 8, P.jawR[0] - 8], big = 4000, tw = (P.templeR[0] - P.templeL[0]) / 2;
+    const col = `<rect x="${nx0}" y="${ny}" width="${nx1 - nx0}" height="${big}" fill="#fff" filter="url(#hairsoft-${n})"/>`;
+    hairDefs = `<filter id="hairsoft-${n}" x="-50%" y="-5%" width="200%" height="110%"><feGaussianBlur stdDeviation="9"/></filter>
+      <mask id="hairback-${n}" maskUnits="userSpaceOnUse" x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}">${col}</mask>
+      <mask id="hairfront-${n}" maskUnits="userSpaceOnUse" x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}"><rect x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}" fill="#fff"/>${col.replace('#fff', '#000')}</mask>
+      <filter id="hairfx-${n}" x="-10%" y="-10%" width="120%" height="125%" color-interpolation-filters="sRGB">${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0" result="c"/>` : '<feOffset dx="0" dy="0" result="c"/>'}
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/><feOffset dy="3" result="b"/><feFlood flood-color="#1a0d06" flood-opacity=".35"/><feComposite in2="b" operator="in" result="sh"/>
+        <feMerge><feMergeNode in="sh"/><feMergeNode in="c"/></feMerge></filter>
+      <filter id="hairgap-${n}" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="7"/>${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/>` : ''}</filter>`;
+    const st = pack.hair.styles.find((s) => s.id === hair.id), full = st?.backfill !== 'top';
+    // the back of her head, in the hair's colour: fills any gap between the skull and the hair's crown, and (for hair worn down) what shows beside the face
+    const fill = full ? { cy: (P.crown[1] + ny + 60) / 2 + 10, rx: tw * 1.22, ry: (ny + 60 - P.crown[1]) / 2 - 6 } : { cy: P.crown[1] + (P.hairline[1] - P.crown[1]) * 0.75, rx: tw * 0.95, ry: (P.hairline[1] - P.crown[1]) * 0.7 };
+    hairBack = `<g class="hairback"><ellipse cx="${P.crown[0]}" cy="${num(fill.cy)}" rx="${num(fill.rx)}" ry="${num(fill.ry)}" fill="${hair.tone}" opacity=".92" filter="url(#hairgap-${n})"/>
+      <g mask="url(#hairback-${n})"><g filter="url(#hairfx-${n})">${img}</g></g></g>`;
+    hairFront = `<g class="hairfront" mask="url(#hairfront-${n})"><g filter="url(#hairfx-${n})">${img}</g></g>`;
+  }
+  const parts = { hairBack, body, clothes, hair: hairFront, acc: garment('acc') };
   const [x, y, w, h] = pack.view;
   const names = Object.values(items).map((i) => i.name).filter(Boolean);
   const desc = label || (names.length ? `Model wearing ${names.join(', ')}` : 'Model with no clothes selected');
@@ -140,7 +169,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hair?.m ? `<filter id="hairtint-${n}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/></filter>` : ''}<clipPath id="tuckclip-${n}"><rect x="0" y="0" width="${pack.size[0]}" height="${pack.waistY + 12}"/></clipPath></defs>
+    <defs>${fx}${hairDefs}<clipPath id="tuckclip-${n}"><rect x="0" y="0" width="${pack.size[0]}" height="${pack.waistY + 12}"/></clipPath></defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 

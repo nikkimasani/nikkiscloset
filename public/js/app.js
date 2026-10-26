@@ -175,7 +175,8 @@ const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
 /** Your chosen hairstyle and colour, ready for dollSVG. */
-const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor);
+const hairMarks = () => { try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } }; // your own "Adjust fit" landmarks, per style
+const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
@@ -645,7 +646,7 @@ async function runSync() {
 
 /* ───────────────────────── backup & restore ───────────────────────── */
 const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
-const PREFS = ['budget', 'game', 'events', 'hairstyle', 'haircolor'];
+const PREFS = ['budget', 'game', 'events', 'hairstyle', 'haircolor', 'hairmarks'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
 const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
@@ -818,11 +819,35 @@ function casHTML() {
     <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div></div>`;
 }
 
+/** "Adjust fit" for a hairstyle: drag its four landmarks on the picture (crown, hairline, temples); the head preview follows. Saved per style. */
+function openHairFit(styleId) {
+  const st = dollPack?.hair?.styles.find((s) => s.id === styleId); if (!st?.marks) return;
+  const saved = hairMarks(), start = { ...st.marks, ...(saved[styleId] || {}) }, marks = JSON.parse(JSON.stringify(start));
+  const LBL = { crown: 'Crown', hairline: 'Hairline', templeL: 'Temple', templeR: 'Temple' }, [iw, ih] = st.size;
+  openModal();
+  const preview = () => { const h = hairOf(dollPack, styleId, S.hairColor, { [styleId]: marks }), P = dollPack.points;
+    return dollSVG({ pack: dollPack, items: {}, urls: new Map(), hair: h, cls: 'hairprev', label: 'Head preview' }).replace(/viewBox="[^"]*"/, `viewBox="${P.crown[0] - 230} ${P.crown[1] - 120} 460 520"`); };
+  const dot = (k) => `<button type="button" class="hfdot ${k}" data-k="${k}" style="left:${(100 * marks[k][0]) / iw}%;top:${(100 * marks[k][1]) / ih}%" aria-label="${LBL[k]} (drag to move)"><span>${LBL[k]}</span></button>`;
+  paintSheet(`<p class="muted">Drag the dots onto the hair: <b>Crown</b> at the top of the head, <b>Hairline</b> at the top of the face opening, the two <b>Temples</b> on the opening's edges at eyebrow height. The preview follows.</p>
+    <div class="hairfit"><div class="hfpic" style="aspect-ratio:${iw}/${ih}"><img src="${dollPack.base}hair/${styleId}.png${dollPack.version ? `?v=${dollPack.version}` : ''}" alt="">${Object.keys(LBL).map(dot).join('')}</div><div class="hfprev" id="hfprev">${preview()}</div></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between"><button class="ghost" id="hfreset">Suggested</button><span class="row"><button class="ghost" id="hfcancel">Cancel</button><button class="primary" id="hfsave">Save</button></span></div>`, `Fit: ${esc(st.name)}`);
+  const pic = $('.hfpic'), refresh = () => { $('#hfprev').innerHTML = preview(); };
+  pic.querySelectorAll('.hfdot').forEach((d) => {
+    d.onpointerdown = (e) => { d.setPointerCapture(e.pointerId); e.preventDefault(); };
+    d.onpointermove = (e) => { if (!d.hasPointerCapture(e.pointerId)) return; const r = pic.getBoundingClientRect(), u = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), v = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      marks[d.dataset.k] = [Math.round(u * iw * 10) / 10, Math.round(v * ih * 10) / 10]; d.style.left = `${u * 100}%`; d.style.top = `${v * 100}%`; refresh(); };
+  });
+  $('#hfreset').onclick = () => { Object.assign(marks, JSON.parse(JSON.stringify(st.marks))); pic.querySelectorAll('.hfdot').forEach((d) => { d.style.left = `${(100 * marks[d.dataset.k][0]) / iw}%`; d.style.top = `${(100 * marks[d.dataset.k][1]) / ih}%`; }); refresh(); };
+  $('#hfcancel').onclick = () => closeModal();
+  $('#hfsave').onclick = () => { const all = hairMarks(); if (JSON.stringify(marks) === JSON.stringify(st.marks)) delete all[styleId]; else all[styleId] = marks; store.set('hairmarks', JSON.stringify(all)); closeModal(); renderTryon(); toast('Hair fit saved ✓'); };
+}
+
 /** Hairstyle and hair colour chips (the customizer and the vanity use the same ones). */
 function hairPickerHTML() {
   const h = dollPack?.hair; if (!h) return '';
   const v = dollPack.version ? `?v=${dollPack.version}` : '';
   return `<div class="hairpick"><div class="opt-row" role="group" aria-label="Hairstyle">${h.styles.map((s) => `<button class="hairchip ${S.hairStyle === s.id ? 'on' : ''}" aria-pressed="${S.hairStyle === s.id}" data-act="hairstyle" data-v="${s.id}">${s.id === 'none' ? '<span class="th none" aria-hidden="true">✕</span>' : `<span class="th"><img src="${dollPack.base}hair/${s.id}.png${v}" alt="" draggable="false"></span>`}<small>${s.name}</small></button>`).join('')}</div>
+    ${S.hairStyle !== 'none' ? `<button class="chip hairadjust" data-act="hairfit" data-v="${S.hairStyle}"><span aria-hidden="true">✋</span> Adjust fit</button>` : ''}
     <div class="opt-row swatches" role="group" aria-label="Hair colour">${h.colors.map((c) => `<button class="hairsw ${S.hairColor === c.id ? 'on' : ''}" aria-pressed="${S.hairColor === c.id}" data-act="haircolor" data-v="${c.id}" style="--sw:${c.sw}" ${S.hairStyle === 'none' ? 'disabled' : ''}><i aria-hidden="true"></i><small>${c.name}</small></button>`).join('')}</div></div>`;
 }
 
@@ -1280,7 +1305,7 @@ async function dollCanvas() {
   const fits = new Map();
   for (const it of Object.values(items)) { urls.set(it.id, await blobToData(it.cutout)); if (S.fitBlobs.has(it.id)) fits.set(it.id, await blobToData(S.fitBlobs.get(it.id))); }
   const bodyFile = dollPack.layers.body, baseData = await blobToData(await (await fetch(baseFor(items) || dollPack.files[bodyFile])).blob()); // an SVG drawn as an image can't fetch files either
-  let hair = myHair(); if (hair) hair = { ...hair, front: await blobToData(await (await fetch(hair.front)).blob()), back: hair.back && await blobToData(await (await fetch(hair.back)).blob()) };
+  let hair = myHair(); if (hair) hair = { ...hair, href: await blobToData(await (await fetch(hair.href)).blob()) }; // (an SVG drawn as an image can't fetch files)
   const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits, hair });
   const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   try { await img.decode(); } catch { return null; }
@@ -1445,6 +1470,7 @@ document.addEventListener('click', async (e) => {
     case 'wictip': store.set('wictip', '1'); return $('.wic-tip')?.remove();
     case 'cas': S.casTab = v; return renderTryon();
     case 'casclose': S.cas = false; return renderTryon();
+    case 'hairfit': return openHairFit(v);
     case 'gbpill': S.gbOpen = !S.gbOpen; return refreshGame();
     case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
     case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;

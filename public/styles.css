@@ -677,7 +677,7 @@ body.wic-on { overflow: hidden; }
 .hairchip.on, .hairsw.on { border-color: #c2185b; background: #fff0f5; }
 .hairchip small, .hairsw small { font-size: 11px; font-weight: 700; line-height: 1.1; max-width: 72px; text-align: center; }
 .hairchip .th { position: relative; display: block; width: 60px; height: 60px; overflow: hidden; border-radius: 12px; background: #f3e3da; }
-.hairchip .th img { position: absolute; width: 140px; max-width: none; left: -40px; top: -2px; }
+.hairchip .th img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
 .hairchip .th.none { display: grid; place-items: center; font-size: 22px; color: #8a6b78; }
 .hairsw { min-width: 58px; }
 .hairsw i { display: block; width: 30px; height: 30px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #0002; }
@@ -769,3 +769,14 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
   .dress.dollmode .pick span { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dress.dollmode .pick small { display: none; }
   .dress.dollmode .room.dollroom { height: max(400px, calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - 60px - 170px)); }
 }
+/* hairstyle "Adjust fit" */
+.hairadjust { justify-self: start; min-height: 40px; }
+.hairfit { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+.hfpic { position: relative; background: repeating-conic-gradient(#efe7e2 0 25%, #fff 0 50%) 0 0 / 16px 16px; border-radius: 14px; touch-action: none; }
+.hfpic img { width: 100%; height: 100%; display: block; }
+.hfdot { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 3px solid #fff; background: #c2185b; box-shadow: 0 2px 6px #0006; padding: 0; touch-action: none; cursor: grab; }
+.hfdot.crown { background: #7c3aed; } .hfdot.hairline { background: #e11d48; } .hfdot.templeL, .hfdot.templeR { background: #0891b2; }
+.hfdot span { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: #fff; background: #000a; padding: 0 4px; border-radius: 4px; white-space: nowrap; }
+.hfprev { background: #e9d3c6 url(/assets/closet/mirror.jpg) center 20% / cover; border-radius: 14px; overflow: hidden; }
+.hfprev svg { width: 100%; height: auto; display: block; }
+@media (max-width: 520px) { .hairfit { grid-template-columns: 1fr 1fr; } }

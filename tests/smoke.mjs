@@ -301,7 +301,14 @@ try {
     ok(JSON.stringify(await p3.locator('.cas-tabs [data-act=cas]').evaluateAll((b) => b.map((x) => x.dataset.v))) === '["hair","anchors"]', 'Customize on the doll offers your hairstyles and the anchor points (no dead face, body or room options)');
     ok(await p3.locator('.hairchip').count() === 8 && await p3.locator('#stage .hairpic').count() === 0, 'eight hairstyle choices; the base picture\'s own hair until you pick one');
     await p3.click('.hairchip[data-v=ponytail]'); await p3.click('.hairsw[data-v=auburn]');
-    ok(await p3.locator('#stage .hairpic').count() === 2 && await p3.locator('#stage feColorMatrix').count() === 1, 'a ponytail is drawn in front and its tail behind the body, tinted auburn');
+    ok(await p3.locator('#stage .hairback .hairpic').count() === 1 && await p3.locator('#stage .hairfront .hairpic').count() === 1 && await p3.locator('#stage feColorMatrix').count() >= 1, 'a ponytail is drawn in front, with what hangs behind the neck behind the body, tinted auburn');
+    // Adjust fit: drag a landmark and the hair moves; it's saved for that style
+    const t0 = await p3.locator('#stage .hairfront .hairpic').getAttribute('transform');
+    await p3.click('.hairadjust'); await p3.waitForSelector('.hfdot.templeR');
+    const db = await p3.locator('.hfdot.templeR').boundingBox(); await p3.mouse.move(db.x + db.width / 2, db.y + db.height / 2); await p3.mouse.down(); await p3.mouse.move(db.x + db.width / 2 + 30, db.y + db.height / 2, { steps: 4 }); await p3.mouse.up();
+    await p3.click('#hfsave');
+    ok(JSON.parse(await p3.evaluate(() => localStorage.getItem('hairmarks'))).ponytail?.templeR && (await p3.locator('#stage .hairfront .hairpic').getAttribute('transform')) !== t0, 'dragging a landmark in Adjust fit refits the hair and is saved for that style');
+    await p3.evaluate(() => localStorage.removeItem('hairmarks'));
     ok(await p3.evaluate(() => Promise.all([...document.querySelectorAll('#stage .hairpic')].map((i) => fetch(i.getAttribute('href')).then((r) => r.ok)))).then((r) => r.every(Boolean)), 'the hair pictures load');
     await p3.screenshot({ path: join(out, '10a-hair.png') });
     ok(await p3.evaluate(() => JSON.stringify(Object.keys(localStorage).filter((k) => /hair(style|color)$/.test(k)).map((k) => localStorage[k]).sort())) === '["auburn","ponytail"]', 'the hairstyle and colour are remembered');
