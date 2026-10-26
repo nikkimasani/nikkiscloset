@@ -265,7 +265,7 @@ function tick(now) {
   }
   if (near?.type !== a.near?.type) { a.near = near; a.dwell = 0; a.onNear?.(near?.type || null); }
   if (near && near.armed && !a.paused) { a.dwell += dt; if (a.dwell > 0.35 && a.speed < 0.25) { near.armed = false; a.onEnter?.(near.type); } }
-  a.renderer.render(a.scene, a.camera);
+  if (A === a) a.renderer.render(a.scene, a.camera); // (a callback above may have left the apartment)
 }
 
 /* ───────── public API ───────── */
@@ -328,17 +328,17 @@ export const apartment = {
     bump();
     // input
     const cv = renderer.domElement;
-    const kd = (down) => (e) => { const key = e.key.toLowerCase(); if (key === 'q' || key === 'e') { A.key.dir = down ? (key === 'q' ? 1 : -1) : 0; return; } const dir = KEYS[key]; if (!dir) return; e.preventDefault(); down ? A.keys.add(dir) : A.keys.delete(dir); };
-    A.kd = kd(true); A.ku = kd(false); cv.addEventListener('keydown', A.kd); cv.addEventListener('keyup', A.ku); cv.addEventListener('blur', () => A.keys.clear());
+    const kd = (down) => (e) => { const key = e.key.toLowerCase(); if (key === 'q' || key === 'e') { me.key.dir = down ? (key === 'q' ? 1 : -1) : 0; return; } const dir = KEYS[key]; if (!dir) return; e.preventDefault(); down ? me.keys.add(dir) : me.keys.delete(dir); };
+    cv.addEventListener('keydown', kd(true)); cv.addEventListener('keyup', kd(false)); cv.addEventListener('blur', () => me.keys.clear());
     let drag = null;
     cv.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 }; cv.setPointerCapture(e.pointerId); cv.focus({ preventScroll: true }); });
-    cv.addEventListener('pointermove', (e) => { if (!drag) return; drag.moved += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); A.yawGoal -= (e.clientX - drag.x) * 0.008; drag.x = e.clientX; drag.y = e.clientY; A.lookedAt = performance.now(); });
-    const up = (e) => { const d = drag; drag = null; if (d && e.type === 'pointerup' && d.moved < 10 && performance.now() - d.t < 450) tap(e); };
+    cv.addEventListener('pointermove', (e) => { if (!drag) return; drag.moved += Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y); me.yawGoal -= (e.clientX - drag.x) * 0.008; drag.x = e.clientX; drag.y = e.clientY; me.lookedAt = performance.now(); });
+    const up = (e) => { const d = drag; drag = null; if (A === me && d && e.type === 'pointerup' && d.moved < 10 && performance.now() - d.t < 450) tap(e); };
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     const ro = new ResizeObserver(() => resize()); ro.observe(el); A.ro = ro;
     A.watch = new FrameWatch(() => { renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); });
     resize();
-    A.last = performance.now(); A.raf = requestAnimationFrame(tick);
+    A.last = performance.now(); A.raf = requestAnimationFrame(tick); A.ready = true;
     return this;
   },
 
@@ -364,7 +364,7 @@ export const apartment = {
   debug() {
     if (!A) return null;
     const cp = A.camera.position, inside = A.solids.some((s) => cp.x > s.x0 && cp.x < s.x1 && cp.z > s.z0 && cp.z < s.z1 && cp.y > s.y0 && cp.y < s.y1);
-    return { pos: [A.pos.x, A.pos.z], cam: [cp.x, cp.y, cp.z], camInsideFurniture: inside, camDist: A.camDist, near: A.near?.type || null, speed: A.speed, solids: A.solids.length, stations: A.stations.map((s) => s.type), yaw: A.yaw, pathLen: A.path?.length || 0, canvas: [A.renderer.domElement.width, A.renderer.domElement.height], tris: A.renderer.info.render.triangles, calls: A.renderer.info.render.calls };
+    return { ready: !!A.ready, pos: [A.pos.x, A.pos.z], cam: [cp.x, cp.y, cp.z], camInsideFurniture: inside, camDist: A.camDist, near: A.near?.type || null, speed: A.speed, solids: A.solids.length, stations: A.stations.map((s) => s.type), yaw: A.yaw, pathLen: A.path?.length || 0, canvas: [A.renderer.domElement.width, A.renderer.domElement.height], tris: A.renderer.info.render.triangles, calls: A.renderer.info.render.calls };
   },
   /** Test hook: put the avatar somewhere. */
   teleport(x, z) { if (A) { A.pos.set(x, 0, z); pushOut(A.pos, AV_R); A.path = null; apartment.rearm(); } },

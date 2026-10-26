@@ -37,11 +37,15 @@ From other apps: Android/desktop installs get a Share-menu entry (PWA share targ
 The default Dress up screen is a paper doll. Your photo cutouts snap to anchor points by category, stacked shoes → bottoms → dress → top → jacket → bag, with accessories on top; **Fit** lets you drag, pinch, nudge, resize and rotate a piece and toggle tucked/untucked. Fits are remembered per piece *and per art pack*.
 The art is swappable: everything about a doll lives in `public/dolls/<pack>/` (`pack.json` has anchors, stacking order and file names; the layers are SVG or PNG). To use your own illustrated base, copy `public/dolls/studio/`, replace the art, adjust the anchors, and set `DEFAULT_PACK` in `public/js/doll.js`. Clothes, ordering and fitting code never touch the art.
 
-## Dress Up: walk-in closet and 3D mirror
-- **Walk-in closet (3D)**: a pink 3D room with a rack for every kind of clothing, your real photos hanging on them. Walk the avatar around with the on-screen stick (or WASD/arrow keys on a computer), tap the floor to walk there, drag to look around, or use the buttons under the room to jump to a rack. Step on a glowing pad and that rack's hangers open; tap as many pieces as you like. The mirror pad takes you to try them on. (Flat mode / no WebGL falls back to the 2D cabinets below.)
-- **2D closet**: your clothes hang in cabinets by type. Tap a section and the avatar walks over; its rail opens and you scroll along the hangers, tapping as many pieces as you like into your basket.
-- **Try on** takes the basket to the **mirror** (the 3D model in a framed mirror). Swap between grabbed pieces, **Mix my picks**, save the look or log it as today's outfit. The old picker is still there under the picks.
-- **Customize** (🎨) is docked inside the model's box like a create-a-sim panel: Skin, Hair, Style, Eyes, Lips, Body, Room.
+## My apartment (3D)
+**Dress up → My apartment** is a little 3D studio you walk around as a rigged low-poly avatar (Kenney "Mini Characters", twelve to choose from at the Vanity). Walk with the on-screen stick, WASD/arrow keys, or tap the floor (it finds its way round furniture); drag to look around, or use the ⟲ ⟳ buttons. The camera follows from behind and above and stops short of furniture and walls, so it never ends up inside anything.
+Step on a glowing circle (or tap its chip under the room) and that station's screen opens full-screen:
+- **Wardrobe**: browse your real pieces by type and put them on the doll.
+- **Vanity**: avatar, skin, hair, eyes, lips.
+- **Mirror**: opens the 2D dress-up doll.
+- **Bed**: log today's outfit and see your streak.
+- **Desk**: opens the planner.
+Furniture is KayKit "Furniture Bits" (CC0) and the avatar is Kenney's (CC0); about 1.7 MB of models in all (`public/assets/`, credits in `CREDITS.txt`), downloaded only when you open the apartment. Phones without WebGL, or with "flat" mode on, just get the 2D doll.
 
 ## Cloud sync (optional)
 - **Wardrobe → Cloud sync**: enter your private sync key to keep pieces, photos, outfits, diary and appearance in step across devices. Newest edit wins; deletes sync too. Nothing is uploaded until a key is entered.

@@ -266,63 +266,44 @@ try {
   ok(falCalls.length === blocked, 'a $0 budget stops a new render before any money is spent');
 
 
-  // ── 3D mannequin ──
-  const c3 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
+  // ── dress-up: the doll and its customizer ──
+  const c3 = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const p3 = await c3.newPage(); p3.setDefaultTimeout(90000); p3.on('pageerror', (e) => errors.push(e.message)); p3.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   await p3.goto(`http://localhost:${PORT}/`);
-  await p3.waitForFunction(() => window.__stage3d);
-  if (!(await p3.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D tests (no WebGL in this browser)');
-  else {
+  await p3.waitForFunction(() => window.__closet);
+  {
     await p3.click('[data-act=samples]'); await p3.waitForFunction(() => window.__closet.items.length === 10);
     await p3.click('[data-act=styleme]');
-    await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 2, null, { timeout: 60000 });
-    ok(await p3.locator('#stage canvas').count() === 1 && await p3.locator('#stage svg').count() === 0, '3D canvas replaces the flat mannequin');
-    ok(await p3.evaluate(() => performance.getEntriesByType('resource').some((e) => e.name.includes('three.module'))), '…and 3D mode loads it on demand');
-    const filled = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
-    ok(filled > 0.04 && filled < 0.6, `figure is actually drawn (${(filled * 100).toFixed(1)}% of canvas)`);
-    const dbg3 = await p3.evaluate(() => window.__stage3d.debug());
-    ok(dbg3.depths.length >= 2 && dbg3.depths.every((d) => d >= 8), `clothes are real 3D volumes, not flat sheets (thickness per piece: ${dbg3.depths.join(', ')} units)`);
-    const before = (await p3.evaluate(() => window.__stage3d.debug())).rot;
-    await p3.click('[data-act=turn][data-v="1"]');
-    ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot - before - Math.PI / 4) < 1e-6, 'turn button rotates the model 45°');
-    await p3.click('[data-act=turn][data-v="0"]');
-    ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot) < 1e-6, 'Front button returns to facing the camera');
-    const box = await p3.locator('#stage canvas').boundingBox();
-    await p3.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p3.mouse.down(); await p3.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2, { steps: 4 }); await p3.mouse.up();
-    ok(Math.abs((await p3.evaluate(() => window.__stage3d.debug())).rot) > 0.3, 'dragging the model spins it');
-    const types0 = (await p3.evaluate(() => window.__stage3d.debug())).types;
-    await p3.click('[data-act=mood][data-v="Dinner"]'); await p3.click('[data-act=styleme]'); await p3.waitForTimeout(600);
-    ok((await p3.evaluate(() => window.__stage3d.debug())).garments >= 2, `outfit changes update the 3D garments (was ${types0.join('+')})`);
+    await p3.waitForFunction(() => document.querySelectorAll('#stage .gar').length >= 2);
+    ok(await p3.locator('#stage svg.doll').count() === 1 && await p3.locator('#stage canvas').count() === 0, 'Style me dresses the 2D doll');
+    const types0 = await p3.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
+    await p3.click('[data-act=mood][data-v="Dinner"]'); await p3.click('[data-act=styleme]'); await p3.waitForTimeout(400);
+    ok((await p3.locator('#stage .gar').count()) >= 2, `outfit changes update the doll (was ${types0.join('+')})`);
     await p3.evaluate(axeSource);
     const r3 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
     const bad3 = r3.violations.filter((v) => v.impact !== 'minor');
-    ok(bad3.length === 0, `axe (3D dress-up): ${bad3.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
-    await p3.screenshot({ path: join(out, '10-3d.png') });
+    ok(bad3.length === 0, `axe (dress-up): ${bad3.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await p3.screenshot({ path: join(out, '10-doll.png') });
     // customization
     await p3.click('[data-act=drawer][data-v=look]');
     await p3.click('[data-act=cas][data-v=style]'); await p3.click('[data-act=hairstyle][data-v=pony]');
     await p3.click('[data-act=cas][data-v=hair]'); await p3.click('[data-act=hair][data-v="#e8639a"]');
     await p3.click('[data-act=cas][data-v=skin]'); await p3.click('[data-act=skin][data-v="#8a5636"]');
-    await p3.click('[data-act=cas][data-v=body]'); await p3.click('[data-act=bodytype][data-v="Plus size"]'); await p3.waitForTimeout(500);
-    const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin'), shape: JSON.parse(localStorage.getItem('shape') || 'null') }));
-    ok(saved.style === 'pony' && saved.hair === '#e8639a' && saved.skin === '#8a5636' && saved.shape?.build > 1.2, 'appearance choices are saved on the device');
-    await p3.locator('#sh-legs').fill('1.15');
-    ok((await p3.evaluate(() => JSON.parse(localStorage.getItem('shape')))).legs === 1.15 && (await p3.evaluate(() => localStorage.getItem('shapename'))) === 'Custom', 'sliders fine-tune the body (preset becomes Custom)');
-    const filled2 = await p3.evaluate(() => { const c = document.querySelector('#stage canvas'), t = document.createElement('canvas'); t.width = c.width; t.height = c.height; const x = t.getContext('2d'); x.drawImage(c, 0, 0); const d = x.getImageData(0, 0, t.width, t.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 200) n++; return n / (t.width * t.height); });
-    ok(filled2 > 0.04 && filled2 < 0.6, `customized figure still renders in frame (${(filled2 * 100).toFixed(1)}% of canvas)`);
+    const saved = await p3.evaluate(() => ({ style: localStorage.getItem('hairstyle'), hair: localStorage.getItem('hair'), skin: localStorage.getItem('skin') }));
+    ok(saved.style === 'pony' && saved.hair === '#e8639a' && saved.skin === '#8a5636', 'appearance choices are saved on the device');
+    const svgHtml = await p3.locator('#stage svg.doll').innerHTML();
+    ok(svgHtml.includes('#8a5636') && svgHtml.includes('#e8639a'), 'skin and hair colours reach the doll');
     await p3.evaluate(axeSource);
     const r4 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
     const bad4 = r4.violations.filter((v) => v.impact !== 'minor');
     ok(bad4.length === 0, `axe (customize tab): ${bad4.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
     await p3.click('[data-act=resetlook]');
     ok((await p3.evaluate(() => localStorage.getItem('shape'))) === '', 'Reset appearance clears customizations');
-    await p3.click('[data-act=drawer][data-v=me]'); await p3.check('#flat');
-    ok(await p3.locator('#stage svg').count() === 1, 'Flat 2D toggle switches back to the SVG mannequin');
   }
 
 
   // ── audit regressions ──
-  const mk = async () => { const c = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, acceptDownloads: true }); await c.addInitScript(() => localStorage.setItem('flat', '1')); const pg = await c.newPage(); pg.on('pageerror', (e) => errors.push(e.message)); pg.on('dialog', (d) => d.accept()); await pg.goto(`http://localhost:${PORT}/`); await pg.waitForFunction(() => window.__stage3d); return pg; };
+  const mk = async () => { const c = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, acceptDownloads: true }); await c.addInitScript(() => localStorage.setItem('flat', '1')); const pg = await c.newPage(); pg.on('pageerror', (e) => errors.push(e.message)); pg.on('dialog', (d) => d.accept()); await pg.goto(`http://localhost:${PORT}/`); await pg.waitForFunction(() => window.__closet); return pg; };
   const p4 = await mk();
   ok(!(await p4.evaluate(() => performance.getEntriesByType('resource').some((e) => e.name.includes('three.module')))), 'flat mode never downloads the 3D engine');
   await p4.click('[data-act=samples]'); await p4.waitForFunction(() => window.__closet.items.length === 10);
@@ -463,9 +444,7 @@ try {
 
 
   // ── batch A2: look card, room themes + face options, saved renders + budget ──
-  if (await p3.evaluate(() => window.__stage3d.usable)) {
-    await p3.click('[data-act=drawer][data-v=me]'); if (await p3.locator('#flat').isChecked()) await p3.uncheck('#flat'); // back to 3D
-    await p3.waitForFunction(() => window.__stage3d.debug()?.garments >= 1);
+  {
     await p3.click('[data-act=drawer][data-v=looks]');
     const [shot] = await Promise.all([p3.waitForEvent('download'), p3.click('[data-act=sharecard]')]);
     const cardPath = join(out, 'look-card.png'); await shot.saveAs(cardPath);
@@ -633,93 +612,71 @@ try {
   await devA.click('[data-view=closet]'); await devA.click('[data-act=syncnow]'); await devA.waitForFunction(() => window.__closet?.items?.length === 0);
   ok(true, 'a delete on one device removes the piece on the other');
 
-  // front + back photos: the back photo is kept with the piece and wraps the back of the 3D garment
+  // front + back photos: the back photo is kept with the piece
   const pB = await mk(); await pB.click('[data-view=closet]'); await pB.click('[data-act=samples]'); await pB.waitForFunction(() => window.__closet.items.length === 10);
   await pB.locator('.piece:has-text("White tee") .edit').click();
   const backPhoto = join(out, 'back.jpg'); writeFileSync(backPhoto, Buffer.from((await pB.evaluate(() => { const c = document.createElement('canvas'); c.width = 600; c.height = 800; const x = c.getContext('2d'); x.fillStyle = '#e8dfd0'; x.fillRect(0, 0, 600, 800); x.fillStyle = '#2a4d9b'; x.beginPath(); x.moveTo(220, 100); x.lineTo(380, 100); x.lineTo(470, 700); x.lineTo(130, 700); x.fill(); return c.toDataURL('image/jpeg', 0.9); })).split(',')[1], 'base64'));
   await pB.setInputFiles('#backfile', backPhoto); await pB.waitForSelector('.backthumb');
   await pB.click('#save'); await pB.waitForFunction(() => window.__closet.items.some((i) => i.name === 'White tee' && i.backCutout instanceof Blob && i.backCutout.size > 0));
   ok(true, 'a back photo is saved with the piece');
-  await pB.context().addInitScript(() => localStorage.removeItem('flat')); await pB.reload(); await pB.waitForFunction(() => window.__stage3d && window.__closet?.items?.length === 10); // back to the 3D model
-  await pB.evaluate(() => { const t = window.__closet.items.find((i) => i.name === 'White tee'); window.__closet.outfit[t.type] = t.id; });
-  await pB.click('[data-view=tryon]');
-  await pB.waitForFunction(() => window.__stage3d.debug()?.backPhoto?.includes(true), null, { timeout: 60000 });
-  ok(true, 'the 3D garment uses the back photo on its back');
   await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .edit').click(); await pB.click('#backrm'); await pB.click('#save');
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
   ok(true, 'the back photo can be removed');
 
-  // walk-in closet: walk to a section, grab several pieces, try them on in the mirror
-  const pw = await mk();
-  await pw.evaluate(() => localStorage.setItem('scene', 'closet')); await pw.reload(); await pw.waitForFunction(() => window.__stage3d);
-  ok(await pw.locator('.closet-scene .hall').isVisible(), 'the walk-in closet scene shows');
-  await pw.click('[data-act=samples]'); await pw.waitForFunction(() => window.__closet.items.length === 10);
-  ok((await pw.locator('.cabinet').count()) === 10, 'one cabinet per clothing section');
-  const x0 = await pw.evaluate(() => parseFloat(document.querySelector('#walker').style.left));
-  await pw.click('[data-act=section][data-v=tops]');
-  ok((await pw.evaluate(() => parseFloat(document.querySelector('#walker').style.left))) !== x0, 'the avatar walks over to the section');
-  await pw.waitForSelector('.railview .hanger');
-  ok((await pw.locator('.railview .hanger').count()) >= 2, 'the section opens as a rail of hangers');
-  await pw.click('.hanger >> nth=0'); await pw.click('.hanger >> nth=1');
-  ok((await pw.locator('.basketbadge').innerText()).includes('2 picked'), 'grabbing several pieces at once fills the basket');
-  await pw.click('[data-act=railnav][data-v="1"]'); await pw.click('.hanger >> nth=0');
-  ok((await pw.evaluate(() => window.__closet.basket.length)) === 3 && (await pw.locator('.basket .chip').count()) === 3, 'picks carry across sections and are listed');
-  await pw.click('.basket [data-act=ungrab] >> nth=2');
-  ok((await pw.evaluate(() => window.__closet.basket.length)) === 2, 'a pick can be put back');
-  await pw.click('.basket [data-act=tryon]');
-  await pw.waitForSelector('.room.mirror');
-  ok((await pw.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1, 'Try on dresses the model in the picks and opens the mirror');
-  ok((await pw.locator('.picks .pick').count()) === 2, 'the grabbed pieces stay handy at the mirror');
-  await pw.click('[data-act=mix]');
-  ok((await pw.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1, 'Mix my picks re-dresses from the basket');
-  await pw.click('[data-act=drawer][data-v=look]');
-  ok((await pw.locator('.room .cas').count()) === 1 && (await pw.locator('.room .cas [data-act=skin]').count()) > 3, 'the customizer opens inside the model box');
-  await pw.click('[data-act=cas][data-v=lips]'); await pw.click('.cas [data-act=lips]:nth-of-type(3)');
-  ok((await pw.evaluate(() => window.__closet.lips)) !== '#c4505f', 'picking a swatch changes the model right there');
-  await pw.evaluate(axeSource);
-  const axeCas = await pw.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
-  ok(axeCas.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (mirror + customizer): ${axeCas.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
-  await pw.click('[data-act=scene][data-v=closet]');
-  await pw.evaluate(axeSource);
-  const axeHall = await pw.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
-  ok(axeHall.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (walk-in closet): ${axeHall.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
-
-  // the 3D walk-in world: walk around, step on a pad, grab pieces, go to the mirror
-  const c5 = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
-  const pd = await c5.newPage(); pd.on('pageerror', (e) => errors.push(e.message));
-  await pd.goto(`http://localhost:${PORT}/`); await pd.evaluate(() => localStorage.setItem('scene', 'closet')); await pd.reload();
-  await pd.waitForFunction(() => window.__stage3d);
-  if (!(await pd.evaluate(() => window.__stage3d.usable))) console.log('SKIP  3D world tests (no WebGL in this browser)');
+  // ── phase 3: the 3D apartment ──
+  const ca = await _newContext({ viewport: { width: 390, height: 844 }, isMobile: true }); await ca.addInitScript(() => localStorage.setItem('scene', 'apt'));
+  const pa = await ca.newPage(); pa.setDefaultTimeout(120000); pa.on('pageerror', (e) => errors.push(e.message)); pa.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  await pa.goto(`http://localhost:${PORT}/`); await pa.waitForFunction(() => window.__closet);
+  if (!(await pa.evaluate(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } }))) console.log('SKIP  apartment tests (no WebGL in this browser)');
   else {
-    await pd.click('[data-act=samples]'); await pd.waitForFunction(() => window.__closet.items.length === 10);
-    await pd.waitForFunction(() => window.__stage3d.debug()?.world, null, { timeout: 60000 });
-    ok((await pd.evaluate(() => window.__stage3d.debug().world.stations.length)) === 11, 'the 3D closet has a rack per section plus the mirror');
-    const z0 = await pd.evaluate(() => window.__stage3d.debug().world.pos[1]);
-    await pd.evaluate(() => window.__stage3d.setMove(0, 1));
-    let swung = 0; for (let n = 0; n < 8; n++) { await pd.waitForTimeout(90); swung = Math.max(swung, await pd.evaluate(() => window.__stage3d.debug().world.swing)); }
-    await pd.evaluate(() => window.__stage3d.setMove(0, 0));
-    ok(swung > 0.1, `legs and clothes swing while walking (peak ${swung})`);
-    ok((await pd.evaluate(() => window.__stage3d.debug().world.pos[1])) < z0, 'pushing the stick forward walks the avatar into the room');
-    await pd.evaluate(() => window.__stage3d.walkToStation('tops'));
-    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tops', null, { timeout: 60000 });
-    await pd.waitForSelector('.world-rail .hanger');
-    ok((await pd.locator('.world-rail .hanger').count()) >= 2, 'stepping on the Tops pad opens that rack');
-    await pd.click('.world-rail .hanger >> nth=0'); await pd.click('.world-rail .hanger >> nth=1');
-    ok((await pd.locator('.basketbadge').innerText()).includes('2 picked'), 'several pieces can be grabbed at one rack');
-    await pd.click('.world-rail [data-act=railnav][data-v="1"]');
-    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'tanks', null, { timeout: 60000 });
-    await pd.waitForSelector('.world-rail .hanger'); await pd.click('.world-rail .hanger >> nth=0');
-    ok((await pd.evaluate(() => window.__closet.basket.length)) === 3, 'the avatar walks to the next rack and keeps your picks');
-    await pd.evaluate(axeSource);
-    const axeW = await pd.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
-    ok(axeW.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (3D closet): ${axeW.violations.map((v) => v.id + '[' + v.nodes.map((n) => n.target).join(' ') + ']').join('; ') || 'no violations'}`);
-    await pd.click('[data-act=gostation][data-v=mirror]');
-    await pd.waitForFunction(() => window.__stage3d.debug().world.near === 'mirror', null, { timeout: 60000 });
-    await pd.click('.world-rail [data-act=tryon]');
-    await pd.waitForSelector('.room.mirror');
-    ok((await pd.evaluate(() => Object.keys(window.__closet.outfit).length)) >= 1 && (await pd.evaluate(() => !window.__stage3d.debug().world)), 'the mirror pad takes you to try the picks on');
+    await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
+    const d0 = await pa.evaluate(() => window.__apt.debug());
+    ok(JSON.stringify(d0.stations) === JSON.stringify(['wardrobe', 'vanity', 'mirror', 'bed', 'desk']) && d0.solids >= 10, `the apartment has its five stations and ${d0.solids} solid pieces of furniture`);
+    await pa.screenshot({ path: join(out, '20-apartment.png') });
+    await pa.locator('#stage canvas').focus();
+    await pa.keyboard.down('ArrowUp'); await pa.waitForTimeout(1200); await pa.keyboard.up('ArrowUp');
+    ok((await pa.evaluate(() => window.__apt.debug().pos[1])) < d0.pos[1] - 0.3, 'the arrow keys walk the avatar forward');
+    // the camera must never end up inside furniture, wherever you stand and however you turn
+    let inside = 0, checked = 0;
+    for (const [x, z] of [[-4.7, 2.4], [-3.7, 3.4], [5.3, 1.5], [4.2, 3.3], [0, -4.2], [-3, -2.8], [2.8, -2.4], [-6.3, 4.6], [6.2, -3.5], [-2.4, 0.3]]) {
+      await pa.evaluate(([x, z]) => window.__apt.teleport(x, z), [x, z]);
+      for (let turn = 0; turn < 4; turn++) { await pa.evaluate(() => window.__apt.rotateCam(2)); let dbg; for (let n = 0; n < 12; n++) { await pa.waitForTimeout(350); dbg = await pa.evaluate(() => window.__apt.debug()); if (!dbg.camInsideFurniture && dbg.camDist >= 1.1) break; } checked++; if (dbg.camInsideFurniture || dbg.camDist < 1.1) { inside++; console.log('  camera problem at', x, z, JSON.stringify(dbg.cam), dbg.camDist); } }
+    }
+    ok(inside === 0, `the follow camera never clips into furniture (${checked} viewpoints checked)`);
+    await pa.evaluate(() => window.__apt.teleport(0, 2.6));
+    // walk to the wardrobe: its full-screen screen opens by itself
+    await pa.click('[data-act=gostation][data-v=wardrobe]');
+    await pa.waitForSelector('#stationui:not([hidden]) #sttitle', { timeout: 120000 });
+    ok(/Wardrobe/.test(await pa.locator('#sttitle').innerText()), 'walking up to the wardrobe opens its screen');
+    await pa.click('[data-act=samples]'); await pa.waitForFunction(() => window.__closet.items.length === 10); await pa.waitForSelector('.st-grid .pick');
+    await pa.click('.st-grid .pick >> nth=0');
+    ok((await pa.locator('#stationui .st-doll .gar').count()) === 1 && await pa.evaluate(() => Object.keys(window.__closet.outfit).length === 1), 'picking a piece dresses the doll');
+    await pa.evaluate(axeSource);
+    const ra = await pa.evaluate(() => window.axe.run(document.querySelector('#stationui'), { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
+    const bada = ra.violations.filter((v) => v.impact !== 'minor');
+    ok(bada.length === 0, `axe (wardrobe screen): ${bada.map((v) => `${v.id}[${v.nodes.map((n) => n.target).join(' ')}]`).join('; ') || 'no violations'}`);
+    await pa.screenshot({ path: join(out, '21-wardrobe.png') });
+    await pa.keyboard.press('Escape');
+    ok(await pa.locator('#stationui').isHidden() && await pa.evaluate(() => !document.querySelector('main').inert), 'Esc closes the screen and gives the apartment back');
+    // vanity: look and avatar
+    await pa.click('[data-act=gostation][data-v=vanity]'); await pa.waitForSelector('#stationui:not([hidden]) .cas', { timeout: 120000 });
+    await pa.click('[data-act=cas][data-v=avatar]'); await pa.click('[data-act=avatar][data-v=mini_male_b]');
+    await pa.click('[data-act=cas][data-v=hair]'); await pa.click('[data-act=hair][data-v="#7c4dff"]');
+    ok((await pa.evaluate(() => [localStorage.getItem('avatar'), localStorage.getItem('hair')])).join() === 'mini_male_b,#7c4dff', 'the vanity changes the avatar and its hair colour');
+    await pa.click('[data-act=stclose]');
+    // bed: end the day
+    await pa.click('[data-act=gostation][data-v=bed]'); await pa.waitForSelector('#stationui:not([hidden])', { timeout: 120000 });
+    await pa.waitForFunction(() => /Bed/.test(document.querySelector('#sttitle')?.textContent || ''));
+    await pa.click('[data-act=wearToday]'); await pa.waitForFunction(() => window.__closet.wears.length >= 1);
+    ok((await pa.evaluate(() => window.__closet.wears.length)) >= 1, 'the bed logs today’s outfit');
+    await pa.click('[data-act=stclose]');
+    // mirror and desk take you to the doll and the planner
+    await pa.click('[data-act=gostation][data-v=mirror]'); await pa.waitForSelector('.dollmode svg.doll', { timeout: 120000 });
+    ok(await pa.evaluate(() => !window.__apt?.running), 'the mirror takes you to the doll (and the apartment stops running)');
+    await pa.click('[data-act=scene][data-v=apt]'); await pa.waitForFunction(() => window.__apt?.debug()?.ready, null, { timeout: 180000 });
+    await pa.click('[data-act=gostation][data-v=desk]'); await pa.waitForSelector('[data-view=plan].on', { timeout: 120000 });
+    ok(true, 'the desk opens the planner');
   }
-  await c5.close();
 
   // accessibility: axe on each view + dialog
   const axe = async (name) => {

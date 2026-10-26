@@ -487,5 +487,5 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
 .st-grid .pick { width: auto; }
 .st-lead { font-size: 17px; font-weight: 700; margin: 0 0 8px; }
-.room.apt .world-hint { top: auto; bottom: 14px; left: 130px; right: 66px; text-align: left; line-height: 1.2; font-size: 12px; background: #0b1a33aa; border-radius: 14px; padding: 6px 10px; }
+.room.apt .world-hint { top: auto; bottom: 14px; left: 130px; right: 124px; text-align: left; line-height: 1.2; font-size: 12px; background: #0b1a33aa; border-radius: 14px; padding: 6px 10px; }
 @media (min-width: 920px) { .room.apt .world-hint { left: 140px; right: 90px; } }

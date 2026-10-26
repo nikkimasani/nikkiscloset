@@ -4,8 +4,8 @@ import * as THREE from '../vendor/three/three.module.min.js';
 import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { MeshoptDecoder } from '../vendor/three/meshopt_decoder.module.js';
 import { clone } from '../vendor/three/SkeletonUtils.js';
+import { AVATARS } from './data.js';
 
-export const AVATARS = ['mini_female_a', 'mini_female_b', 'mini_female_c', 'mini_female_d', 'mini_female_e', 'mini_female_f', 'mini_male_a', 'mini_male_b', 'mini_male_c', 'mini_male_d', 'mini_male_e', 'mini_male_f'];
 const REST_HEIGHT = 0.78; // the model's height in its own units
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
 const cache = new Map();
