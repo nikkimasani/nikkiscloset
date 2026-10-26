@@ -18,7 +18,8 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 import { browserCut } from './browsercut.js';
 import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
-import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather } from './game.js';
+import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather, usePhoto } from './game.js';
+import { BACKGROUNDS, POSES, composePhoto, photoBlob } from './photo.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -67,7 +68,7 @@ function openModal() {
   document.querySelectorAll('header, main').forEach((e) => (e.inert = true));
 }
 function closeModal() {
-  modalSeq++;
+  modalSeq++; S.photoOpen = false;
   $('#modal').hidden = true;
   document.querySelectorAll('header, main').forEach((e) => (e.inert = !!S.station));
   lastFocus?.isConnected && lastFocus.focus();
@@ -859,16 +860,61 @@ function rateNow() {
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 
+
+/* ───────────────────────── photo mode and the lookbook ───────────────────────── */
+const photoPick = () => ({ bg: S.game.photo?.bg || 'blush', pose: S.game.photo?.pose || 'stand' });
+function photoCanvas() {
+  const d = S.game.day, { bg, pose } = photoPick(), stars = d?.stars ? ` · ${'★'.repeat(d.stars)}` : '';
+  return composePhoto({ doll: S.photoDoll, bg, pose, title: d ? themeLine(d.theme) : 'My look', sub: new Date().toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' }) + stars });
+}
+function paintPhoto() {
+  const pick = photoPick(), chip = (act, kind, k, label) => { const c = catalogItem(`${kind}:${k}`), lock = c && !owns(S.game, c.id); return `<button class="chip ${pick[kind] === k ? 'on' : ''}" aria-pressed="${pick[kind] === k}" data-act="${act}" data-v="${k}">${lock ? `🔒 ${esc(label)} · 🪙${c.price}` : esc(label)}</button>`; };
+  paintSheet(`<canvas id="phcanvas" class="phcanvas" width="720" height="960" role="img" aria-label="Preview of your photo"></canvas>
+    <h3>Backdrop</h3><div class="chips" role="group" aria-label="Backdrop">${Object.entries(BACKGROUNDS).map(([k, b]) => chip('phbg', 'bg', k, b.name)).join('')}</div>
+    <h3>Pose</h3><div class="chips" role="group" aria-label="Pose">${Object.entries(POSES).map(([k, b]) => chip('phpose', 'pose', k, b.name)).join('')}</div>
+    <div class="row" style="margin-top:12px"><button class="primary grow" data-act="phtake"><span aria-hidden="true">📸</span> Save to my lookbook</button><button class="ghost" data-act="phshare">Share</button></div>
+    <div class="row" style="margin-top:8px"><button class="ghost grow" id="phclose">Close</button></div>`, 'Photo mode');
+  $('#phcanvas').getContext('2d').drawImage(photoCanvas(), 0, 0);
+  $('#phclose').onclick = closeModal;
+}
+async function openPhoto() {
+  if (!hasOutfit()) return toast('Dress the doll first');
+  const c = await dollCanvas(); if (!c) return toast('The doll isn’t ready yet. Try again in a moment.');
+  S.photoDoll = c; if ($('#modal').hidden) openModal(); S.photoOpen = true; paintPhoto();
+}
+async function photoSave() {
+  const blob = await photoBlob(photoCanvas()), today = iso(new Date());
+  let w = [...S.wears].reverse().find((x) => x.date === today);
+  if (!w) { await logWear(today, S.mood); w = [...S.wears].reverse().find((x) => x.date === today); }
+  if (!w) return;
+  if (S.urls.has('photo:' + w.id)) { URL.revokeObjectURL(S.urls.get('photo:' + w.id)); S.urls.delete('photo:' + w.id); }
+  w.photo = blob; await put('wears', w); url('photo:' + w.id, blob);
+  toast('Saved to your lookbook ✓ (Diary)');
+}
+const lookbook = () => S.wears.filter((w) => w.photo).sort((a, b) => b.createdAt - a.createdAt);
+function lookbookHTML() {
+  const list = lookbook();
+  return `<div class="panel"><h3>Lookbook</h3>${list.length ? `<div class="lookbook">${list.map((w) => `<button class="lb" data-act="lbopen" data-id="${w.id}" aria-label="Open the photo from ${esc(w.date)}"><img src="${url('photo:' + w.id, w.photo)}" alt=""></button>`).join('')}</div>` : '<p class="muted">Photos you take in 📸 Photo mode (on the Dress up screen) are kept here.</p>'}</div>`;
+}
+function lookbookOpen(id) {
+  const w = S.wears.find((x) => x.id === id); if (!w?.photo) return;
+  openModal();
+  paintSheet(`<img class="lbbig" src="${url('photo:' + w.id, w.photo)}" alt="Your look from ${esc(w.date)}">
+    <div class="row" style="margin-top:10px"><button class="primary grow" data-act="lbshare" data-id="${w.id}">Share</button><button class="ghost danger" data-act="lbdel" data-id="${w.id}">Remove photo</button></div>
+    <div class="row" style="margin-top:8px"><button class="ghost grow" id="lbclose">Close</button></div>`, `Look from ${esc(w.date)}`);
+  $('#lbclose').onclick = closeModal;
+}
+
 /* ───────────────────────── the shop and build mode ───────────────────────── */
 const placedDefs = () => (S.game.placed || []).map((p) => { const c = catalogItem(p.id); return c ? { uid: p.uid, model: c.model, scale: c.scale, solid: c.solid, x: p.x, z: p.z, ry: p.ry } : null; }).filter(Boolean);
-const SHOP_TABS = [['furn', '🛋️ Furniture'], ['room', '🎨 Rooms'], ['hair', '💇 Hair']];
+const SHOP_TABS = [['furn', '🛋️ Furniture'], ['room', '🎨 Rooms'], ['hair', '💇 Hair'], ['bg', '🖼️ Backdrops'], ['pose', '🧍 Poses']];
 function showShop(tab = S.shopTab || 'furn', focus = '') {
   S.shopTab = tab;
   if ($('#modal').hidden) openModal();
   const g = S.game, card = (c) => {
-    const have = c.kind === 'furn' ? furnitureStock(g, c.id) : 0, mine = owns(g, c.id), cur = c.kind === 'room' ? g.decor === c.id.slice(5) : c.kind === 'hair' && S.hairStyle === c.id.slice(5);
+    const have = c.kind === 'furn' ? furnitureStock(g, c.id) : 0, mine = owns(g, c.id), name = c.id.slice(c.kind.length + 1), cur = c.kind === 'room' ? g.decor === name : c.kind === 'hair' ? S.hairStyle === name : ['bg', 'pose'].includes(c.kind) && (g.photo || {})[c.kind] === name;
     const act = c.kind === 'furn' ? `<button class="primary" data-act="shopbuy" data-v="${c.id}" ${g.coins < c.price ? 'aria-disabled="true"' : ''}>Buy · 🪙 ${c.price}</button>`
-      : mine ? `<button class="${cur ? 'ghost' : 'primary'}" data-act="shopuse" data-v="${c.id}" aria-pressed="${cur}">${cur ? 'In use ✓' : c.kind === 'room' ? 'Use' : 'Wear'}</button>`
+      : mine ? `<button class="${cur ? 'ghost' : 'primary'}" data-act="shopuse" data-v="${c.id}" aria-pressed="${cur}">${cur ? 'In use ✓' : c.kind === 'hair' ? 'Wear' : 'Use'}</button>`
       : `<button class="primary" data-act="shopbuy" data-v="${c.id}" ${g.coins < c.price ? 'aria-disabled="true"' : ''}>Buy · 🪙 ${c.price}</button>`;
     return `<li class="shopcard"><span class="se" aria-hidden="true">${c.emoji}</span><span class="sn">${esc(c.name)}${c.kind === 'furn' && have ? `<small>${have} in storage</small>` : ''}${c.kind !== 'furn' && mine && c.price ? '<small>Yours</small>' : ''}</span>${act}</li>`;
   };
@@ -876,8 +922,9 @@ function showShop(tab = S.shopTab || 'furn', focus = '') {
     <div class="tabs" role="tablist" aria-label="Shop sections">${SHOP_TABS.map(([k, l]) => `<button role="tab" class="chip" aria-selected="${tab === k}" data-act="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
     <ul class="shoplist">${CATALOG.filter((c) => c.kind === tab).map(card).join('')}</ul>
     ${tab === 'furn' ? '<p class="muted">Bought furniture waits in storage. Open 🔨 Build in your apartment to place it.</p>' : ''}
+    ${['bg', 'pose'].includes(tab) ? '<p class="muted">Used in 📸 Photo mode on the Dress up screen.</p>' : ''}
     <div class="row" style="margin-top:12px"><button class="ghost grow" id="shopclose">Close</button></div>`, 'Shop');
-  $('#shopclose').onclick = closeModal;
+  $('#shopclose').onclick = () => { const back = S.photoOpen; closeModal(); if (back) openPhoto(); };
   if (focus) $(`#modal [data-act][data-v="${CSS.escape(focus)}"]`)?.focus();
 }
 function shopBuy(id) {
@@ -887,6 +934,7 @@ function shopBuy(id) {
 function shopUse(id) {
   const c = catalogItem(id); if (!c || !owns(S.game, id)) return;
   if (c.kind === 'room') { S.game = useRoom(S.game, id); saveGame(); apt?.setTheme(S.game.decor); }
+  else if (['bg', 'pose'].includes(c.kind)) { S.game = usePhoto(S.game, id); saveGame(); }
   else if (c.kind === 'hair') { S.hairStyle = id.slice(5); store.set('hairstyle', S.hairStyle); if (S.view === 'tryon' && !aptOn()) renderTryon(); }
   showShop(S.shopTab, id);
 }
@@ -1075,6 +1123,7 @@ function renderMirror() {
         <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
         <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
         <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
+        ${dollOn() ? '<button data-act="photo"><span aria-hidden="true">📸</span>Photo</button>' : ''}
         <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
       </div>
       ${metersHTML(worn)}
@@ -1277,7 +1326,7 @@ function renderPlanner() {
     <div>
       ${st ? `<p class="streak" role="status"><span aria-hidden="true">🔥</span> <b>${st}-day outfit streak</b> — keep it going!</p>` : ''}
       <div class="panel" style="margin-top:0"><h3>${new Date(S.date + 'T12:00').toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric' })}</h3>
-        ${dayWears.map((w) => `<div class="logrow">${w.render ? `<img class="render-thumb" src="${url('render:' + w.id, w.render)}" alt="Photo of this outfit">` : ''}<div class="thumbs">${w.itemIds.map(itemById).filter(Boolean).map((i) => `<img src="${url(i.id)}" alt="${esc(i.name)}" title="${esc(i.name)}">`).join('')}</div>
+        ${dayWears.map((w) => `<div class="logrow">${w.photo ? `<button class="lb" data-act="lbopen" data-id="${w.id}" aria-label="Open the photo"><img src="${url('photo:' + w.id, w.photo)}" alt=""></button>` : ''}${w.render ? `<img class="render-thumb" src="${url('render:' + w.id, w.render)}" alt="Photo of this outfit">` : ''}<div class="thumbs">${w.itemIds.map(itemById).filter(Boolean).map((i) => `<img src="${url(i.id)}" alt="${esc(i.name)}" title="${esc(i.name)}">`).join('')}</div>
           <div class="grow muted">${esc(w.occasion || '')}${w.note ? ' — ' + esc(w.note) : ''}</div>
           <button class="ghost danger" data-act="delwear" data-id="${w.id}" aria-label="Delete this entry"><span aria-hidden="true">×</span></button></div>`).join('') || '<p class="muted">Nothing logged for this day.</p>'}
         <h3 style="margin-top:14px">Log an outfit</h3>
@@ -1285,6 +1334,7 @@ function renderPlanner() {
         <select id="wocc" aria-label="Occasion"><option value="">Occasion</option>${OCCASIONS.map((o) => `<option>${o}</option>`).join('')}</select>
         <input type="text" id="wnote" aria-label="Note" placeholder="Note (e.g. got compliments!)" style="margin-top:6px">
         <div class="row" style="margin-top:8px"><button class="primary" data-act="logday">Log it</button><button class="ghost" data-act="tab-tryon">Edit outfit</button></div></div>
+      ${lookbookHTML()}
       ${insightsHTML(ins)}
       <div class="panel"><h3>Closet stats</h3>
         <div class="muted">Most worn</div>${top.map((i) => `<div class="logrow"><img src="${url(i.id)}" style="width:32px;height:32px;object-fit:contain" alt=""> <span class="grow">${esc(i.name)}</span><b>${counts[i.id]}×</b></div>`).join('') || '<div class="muted">Log some outfits to see this.</div>'}
@@ -1424,6 +1474,13 @@ document.addEventListener('click', async (e) => {
       S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 8); saveGame(); } return renderTryon();
     }
     case 'rate': return rateNow();
+    case 'photo': return openPhoto();
+    case 'phbg': case 'phpose': { const kind = act === 'phbg' ? 'bg' : 'pose'; if (!owns(S.game, `${kind}:${v}`)) return showShop(kind); S.game = usePhoto(S.game, `${kind}:${v}`); saveGame(); return paintPhoto(); }
+    case 'phtake': return photoSave();
+    case 'phshare': { const b = await photoBlob(photoCanvas()), r = await shareOrDownload(b, `look-${iso(new Date())}.jpg`, 'My look'); return r !== 'cancelled' && toast(r === 'shared' ? 'Shared ✓' : 'Photo saved'); }
+    case 'lbopen': return lookbookOpen(id);
+    case 'lbshare': { const w = S.wears.find((x) => x.id === id); if (!w?.photo) return; const r = await shareOrDownload(w.photo, `look-${w.date}.jpg`, 'My look'); return r !== 'cancelled' && toast(r === 'shared' ? 'Shared ✓' : 'Photo saved'); }
+    case 'lbdel': { const w = S.wears.find((x) => x.id === id); if (!w) return; delete w.photo; await put('wears', w); URL.revokeObjectURL(S.urls.get('photo:' + id) || ''); S.urls.delete('photo:' + id); closeModal(); return renderPlanner(); }
     case 'shop': return showShop(S.shopTab || 'furn');
     case 'shoptab': return showShop(v);
     case 'shopbuy': return shopBuy(v);

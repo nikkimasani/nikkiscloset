@@ -274,7 +274,8 @@ test('the share-target service worker redirects to absolute URLs', () => {
 });
 
 // ── the game around the closet ──
-import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather } from '../public/js/game.js';
+import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather, usePhoto } from '../public/js/game.js';
+import { BACKGROUNDS, POSES } from '../public/js/photo.js';
 const piece = (id, type, o = {}) => ({ id, type, name: id, occasions: [], color: { hex: '#e8dfd0' }, season: 'all', ...o });
 
 test('the daily theme comes from an event first, then a mood, then harsh weather, then luck', () => {
@@ -350,4 +351,15 @@ test('rooms and old hairstyles', () => {
   assert.ok(owns(grandfather(initial(), 'curly'), 'hair:curly'), 'a style you already wore stays yours');
   assert.equal(grandfather(initial(), 'long').owned.length, 0);
   assert.ok(catalogItem('room:dusk'));
+});
+
+test('photo mode: every backdrop and pose for sale has a drawing, and you can only use what you own', () => {
+  for (const c of CATALOG.filter((x) => x.kind === 'bg')) assert.ok(BACKGROUNDS[c.id.slice(3)], `${c.id} has a backdrop`);
+  for (const c of CATALOG.filter((x) => x.kind === 'pose')) assert.ok(POSES[c.id.slice(5)], `${c.id} has a pose`);
+  assert.deepEqual(Object.keys(BACKGROUNDS).sort(), CATALOG.filter((x) => x.kind === 'bg').map((x) => x.id.slice(3)).sort(), 'nothing drawn but not sold');
+  let g = { ...initial(), coins: 100 };
+  assert.deepEqual(g.photo, { bg: 'blush', pose: 'stand' });
+  assert.equal(usePhoto(g, 'bg:sunset').photo.bg, 'blush', 'not owned: unchanged');
+  g = buy(g, 'bg:sunset').game; assert.equal(usePhoto(g, 'bg:sunset').photo.bg, 'sunset'); assert.equal(usePhoto(g, 'bg:studio').photo.bg, 'studio', 'free ones are always yours');
+  assert.equal(usePhoto({ ...g, photo: undefined }, 'pose:stand').photo.bg, 'blush', 'an old save without photo settings still works');
 });

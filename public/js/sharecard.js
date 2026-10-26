@@ -51,7 +51,7 @@ export async function lookCard({ title, sub = '', items, model = null }) {
 
 /** Use the phone's share sheet when it can share a file; otherwise download it. */
 export async function shareOrDownload(blob, filename, title) {
-  const file = new File([blob], filename, { type: 'image/png' });
+  const file = new File([blob], filename, { type: blob.type || 'image/png' });
   if (navigator.canShare?.({ files: [file] })) { try { await navigator.share({ files: [file], title }); return 'shared'; } catch (e) { if (e.name === 'AbortError') return 'cancelled'; } }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = filename; document.body.append(a); a.click(); a.remove();
