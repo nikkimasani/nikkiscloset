@@ -18,6 +18,7 @@ import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, c
 import { browserCut } from './browsercut.js';
 import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
+import { AVATARS } from './avatar.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -32,7 +33,7 @@ const S = {
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
   urls: new Map(),
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
-  scene: store.get('scene', 'doll'), rail: '', basket: [], cas: false, casTab: 'skin', hallX: null, // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
+  scene: store.get('scene', 'doll'), avatar: store.get('avatar', 'mini_female_a'), station: '', aptPos: null, rail: '', basket: [], cas: false, casTab: 'skin', hallX: null, // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
@@ -64,7 +65,7 @@ function openModal() {
 function closeModal() {
   modalSeq++;
   $('#modal').hidden = true;
-  document.querySelectorAll('header, main').forEach((e) => (e.inert = false));
+  document.querySelectorAll('header, main').forEach((e) => (e.inert = !!S.station));
   lastFocus?.isConnected && lastFocus.focus();
 }
 /** Paint a dialog sheet, keeping keyboard focus on the same control across re-renders. */
@@ -115,7 +116,7 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
-  if (S.view !== 'tryon') { S.lastView = S.view; stage3d.exitWorld(); }
+  if (S.view !== 'tryon') { S.lastView = S.view; stage3d.exitWorld(); leaveApt(); }
   ({ closet: renderCloset, tryon: renderTryon, plan: () => renderPlan(ctx), planner: renderPlanner, inspo: renderInspo })[S.view]();
 }
 
@@ -733,7 +734,7 @@ function outfitLabel() {
   return `3D model ${names.length ? 'wearing ' + names.join(', ') : 'with no clothes selected'}. Use the turn buttons to rotate.`;
 }
 function mountStage() {
-  const el = $('#stage'); if (!el) return;
+  const el = $('#stage'); if (!el || aptOn()) return;
   if (!use3D()) { el.innerHTML = stageHTML(); return; }
   if (!stage3d.loaded) { // show the flat model right away while the 3D engine downloads, then swap
     el.innerHTML = mannequin(S.outfit);
@@ -747,7 +748,7 @@ function mountStage() {
   stage3d.setRole(); stage3d.setLabel(outfitLabel());
 }
 function refreshStage() {
-  const s = $('#stage'); if (!s) return;
+  const s = $('#stage'); if (!s || aptOn()) return;
   if (use3D() && stage3d.loaded) { stage3d.setOutfit(outfitItems(S.outfit), S.urls); stage3d.setLabel(outfitLabel()); } else s.innerHTML = use3D() ? mannequin(S.outfit) : stageHTML();
 }
 
@@ -760,7 +761,7 @@ function metersHTML(worn) {
 }
 
 const SHAPE_SLIDERS = [['shoulders', 'Shoulders', .8, 1.25], ['hips', 'Hips', .8, 1.35], ['torso', 'Torso length', .85, 1.15], ['legs', 'Leg length', .8, 1.2], ['build', 'Build (soft ↔ full)', .85, 1.4]];
-const CAS_TABS = [['skin', 'Skin', '🧑'], ['hair', 'Hair', '🎨'], ['style', 'Style', '💇'], ['eyes', 'Eyes', '👁️'], ['lips', 'Lips', '💋'], ['body', 'Body', '🧍'], ['room', 'Room', '🏠']];
+const CAS_TABS = [['avatar', 'Avatar', '🧍'], ['skin', 'Skin', '🧑'], ['hair', 'Hair', '🎨'], ['style', 'Style', '💇'], ['eyes', 'Eyes', '👁️'], ['lips', 'Lips', '💋'], ['body', 'Body', '🧍'], ['room', 'Room', '🏠']];
 /** The "create-a-sim" style picker: docked inside the model's box, one category at a time, options in a single scrolling strip. */
 function casHTML() {
   const close = '<button class="cas-x" data-act="casclose" aria-label="Close customizer"><span aria-hidden="true">✕</span></button>';
@@ -769,7 +770,9 @@ function casHTML() {
   const sw = (list, cur, act, label) => `<div class="swatches" role="group" aria-label="${label}">${list.map((c, n) => `<button class="sw ${c === cur ? 'on' : ''}" aria-pressed="${c === cur}" data-act="${act}" data-v="${c}" style="background:${c}" aria-label="${label} ${n + 1}"></button>`).join('')}
     <label class="sw custom" title="Pick any colour"><span class="sr-only">Custom ${label.toLowerCase()}</span><input type="color" id="custom-${act}" value="${cur}"></label></div>`;
   const chip = (act, v, label, on) => `<button class="chip ${on ? 'on' : ''}" aria-pressed="${on}" data-act="${act}" data-v="${v}">${label}</button>`;
+  if (aptOn() ? !['avatar', 'skin', 'hair', 'style', 'eyes', 'lips'].includes(S.casTab) : S.casTab === 'avatar') S.casTab = aptOn() ? 'avatar' : 'skin';
   const panes = {
+    avatar: AVATARS.map((id, n) => chip('avatar', id, `${id.includes('female') ? '👩' : '🧑'} ${n % 6 + 1}`, S.avatar === id)).join(''),
     skin: sw(SKIN, S.skin, 'skin', 'Skin tone'),
     hair: sw(HAIR, S.hair, 'hair', 'Hair colour'),
     style: HAIR_STYLES.map(([k, l]) => chip('hairstyle', k, l, S.hairStyle === k)).join(''),
@@ -780,7 +783,7 @@ function casHTML() {
       + SHAPE_SLIDERS.map(([k, l, a, b]) => `<label class="mini" for="sh-${k}"><span>${l}</span><input type="range" id="sh-${k}" data-shape="${k}" min="${a}" max="${b}" step="0.01" value="${shape[k]}"></label>`).join(''),
   };
   return `<div class="cas" role="region" aria-label="Customize your model">
-    <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => !(dollOn() && k === 'body')).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}
+    <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => (k === 'avatar' ? aptOn() : !((dollOn() || aptOn()) && (k === 'body' || (aptOn() && k === 'room'))))).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}
       <button data-act="resetlook" aria-label="Reset appearance"><span aria-hidden="true">↺</span><small>Reset</small></button>${close}</div>
     <div class="cas-opts">${panes[S.casTab] || panes.skin}</div></div>`;
 }
@@ -813,6 +816,7 @@ function drawerHTML(worn, fit) {
 
 const sceneBar = () => `<div class="scenebar" role="group" aria-label="Where to dress up">
   <button class="${S.scene === 'doll' ? 'on' : ''}" aria-pressed="${S.scene === 'doll'}" data-act="scene" data-v="doll"><span aria-hidden="true">👗</span> Dress up</button>
+  ${webglOK && store.get('flat', '') !== '1' ? `<button class="${S.scene === 'apt' ? 'on' : ''}" aria-pressed="${S.scene === 'apt'}" data-act="scene" data-v="apt"><span aria-hidden="true">🏠</span> My apartment</button>` : ''}
   <button class="${S.scene === 'closet' ? 'on' : ''}" aria-pressed="${S.scene === 'closet'}" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>
   <button class="${S.scene === 'mirror' ? 'on' : ''}" aria-pressed="${S.scene === 'mirror'}" data-act="scene" data-v="mirror"><span aria-hidden="true">🪞</span> 3D mirror</button></div>`;
 
@@ -895,11 +899,11 @@ function bindJoystick() {
   const set = (e) => {
     const r = j.getBoundingClientRect(), R = r.width / 2 - 14; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
     const l = Math.hypot(dx, dy); if (l > R) { dx = (dx / l) * R; dy = (dy / l) * R; }
-    knob.style.transform = `translate(${dx}px, ${dy}px)`; stage3d.setMove(dx / R, -dy / R);
+    knob.style.transform = `translate(${dx}px, ${dy}px)`; (aptOn() ? apt : stage3d)?.setMove(dx / R, -dy / R);
   };
   j.onpointerdown = (e) => { pid = e.pointerId; j.setPointerCapture(pid); set(e); e.preventDefault(); };
   j.onpointermove = (e) => { if (e.pointerId === pid) set(e); };
-  const end = (e) => { if (e.pointerId !== pid) return; pid = null; knob.style.transform = ''; stage3d.setMove(0, 0); };
+  const end = (e) => { if (e.pointerId !== pid) return; pid = null; knob.style.transform = ''; (aptOn() ? apt : stage3d)?.setMove(0, 0); };
   j.onpointerup = end; j.onpointercancel = end;
 }
 function mountWorld() {
@@ -987,7 +991,103 @@ function walkTo(type) {
   clearTimeout(S.walkT); S.walkT = setTimeout(open, 850);
 }
 
-function renderTryon() { return S.scene === 'closet' ? renderWalkIn() : renderMirror(); }
+
+/* ───────────────────────── the 3D apartment ───────────────────────── */
+let apt = null, aptLoad = null; // the engine, loaded on demand
+const aptOn = () => S.scene === 'apt' && webglOK && store.get('flat', '') !== '1';
+const loadApt = () => (aptLoad ||= import('./apartment.js').then((m) => (apt = m.apartment)));
+const STATIONS = [['wardrobe', 'Wardrobe', '👗', 'Pick pieces from your closet'], ['vanity', 'Vanity', '💄', 'Skin, hair, make-up and your avatar'], ['mirror', 'Mirror', '🪞', 'Dress up and see how it looks'], ['bed', 'Bed', '🛏️', 'End the day: log what you wore'], ['desk', 'Desk', '🖥️', 'Plan your week']];
+const aptLook = () => ({ skin: S.skin, hair: S.hair });
+const aptStations = () => STATIONS.map(([type, label, emoji]) => ({ type, label, emoji, thumbs: type === 'wardrobe' ? S.items.slice(-6).map((i) => url(i.id)) : [] }));
+const leaveApt = () => { if (apt?.running) { S.aptPos = apt.where(); apt.stop(); } };
+
+function renderApartment() {
+  if ($('.room.apt')) return updateAptUI();
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Your apartment</h2>
+  <div class="dress aptmode"><div class="dress-left">
+    ${sceneBar()}
+    <div class="room world apt">
+      <div class="stage" id="stage"><p class="muted loading" role="status">Opening your apartment…</p></div>
+      <progress class="aptbar" id="aptbar" max="100" value="0" aria-label="Loading the apartment"></progress>
+      <p class="world-hint" id="whint" role="status">Drag the stick, or tap the floor, to walk. Step on a glowing circle to use it.</p>
+      <div class="joy" id="joy" aria-hidden="true"><span class="joy-knob"></span></div>
+      <div class="camrot" role="group" aria-label="Look around"><button data-act="camrot" data-v="-1" aria-label="Look left"><span aria-hidden="true">⟲</span></button><button data-act="camrot" data-v="1" aria-label="Look right"><span aria-hidden="true">⟳</span></button></div>
+    </div>
+    <div class="world-jump" role="group" aria-label="Walk to a station">${STATIONS.map(([t, l, e]) => `<button class="chip" aria-pressed="false" data-act="gostation" data-v="${t}"><span aria-hidden="true">${e}</span> ${l}</button>`).join('')}</div>
+  </div></div>`;
+  S.lastView = 'tryon';
+  bindJoystick(); mountApartment();
+}
+
+async function mountApartment() {
+  const el = $('#stage'); if (!el) return;
+  let engine;
+  try { engine = await loadApt(); } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
+  if (!aptOn() || $('#stage') !== el) return;
+  try {
+    await engine.start({ el, stations: aptStations(), look: aptLook(), avatar: S.avatar, pos: S.aptPos, onNear: aptNear, onEnter: aptEnter, onProgress: (f) => { const b = $('#aptbar'); if (b) b.value = Math.round(f * 100); } });
+  } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
+  if (!aptOn() || !$('#stage')) return engine.stop();
+  $('#aptbar')?.remove(); engine.setLabel('Your apartment. Use the stick or the arrow keys to walk, or the buttons below to go to a station.');
+  S.aptSig = S.items.map((i) => i.id).join();
+  if (S.station) engine.setPaused(true);
+}
+function aptNear(type) {
+  const h = $('#whint'); if (h) h.textContent = type ? `${STATIONS.find((x) => x[0] === type)[1]}: ${STATIONS.find((x) => x[0] === type)[3]}` : 'Drag the stick, or tap the floor, to walk. Step on a glowing circle to use it.';
+  document.querySelectorAll('.world-jump button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === type)));
+}
+function aptEnter(type) {
+  if (type === 'mirror') { leaveApt(); S.scene = 'doll'; store.set('scene', 'doll'); return renderTryon(); }
+  if (type === 'desk') { leaveApt(); return go('plan'); }
+  openStation(type);
+}
+function updateAptUI() {
+  if (S.station) refreshStation();
+  apt?.setLook(aptLook());
+}
+
+/* the full-screen screens you reach by walking up to a station */
+function openStation(type) {
+  S.station = type; apt?.setPaused(true);
+  lastFocus = document.activeElement;
+  const ui = $('#stationui'); ui.hidden = false;
+  document.querySelectorAll('header, main, #nav').forEach((e) => (e.inert = true));
+  refreshStation(true);
+}
+function closeStation() {
+  S.station = ''; const ui = $('#stationui'); ui.hidden = true; ui.innerHTML = '';
+  document.querySelectorAll('header, main, #nav').forEach((e) => (e.inert = false));
+  apt?.setPaused(false); apt?.rearm();
+  const cv = $('#stage canvas'); (cv || lastFocus)?.focus?.({ preventScroll: true });
+}
+function refreshStation(focusTitle = false) {
+  const ui = $('#stationui'), st = STATIONS.find((x) => x[0] === S.station); if (!ui || !st) return;
+  const keep = ui.querySelector('.st-body')?.scrollTop || 0, focus = document.activeElement?.dataset;
+  const worn = outfitItems(S.outfit);
+  const small = dollOn() || dollPack ? dollSVG({ pack: dollPack, look: { skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, eyes: S.eyes, lips: S.lips }, items: worn, urls: S.urls, cls: 'mini' }) : '';
+  let body = '';
+  if (S.station === 'wardrobe') {
+    if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type;
+    const list = S.items.filter((i) => i.type === S.tab), counts = wearCounts();
+    body = `<div class="st-two"><div class="st-doll" aria-hidden="false">${small}</div><div class="st-main">
+      <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
+      ${S.items.length ? `<div class="st-grid">${list.length ? list.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
+      <div class="row" style="margin-top:12px"><button class="primary grow" data-act="stgo" data-v="mirror"><span aria-hidden="true">🪞</span> See it on the doll</button><button class="ghost" data-act="styleme"><span aria-hidden="true">🎲</span> Style me</button></div></div></div>`;
+  } else if (S.station === 'vanity') {
+    body = `<div class="st-two"><div class="st-doll">${small}</div><div class="st-main">${casHTML().replace(/<button data-act="casclose"[^>]*>.*?<\/button>/, '')}</div></div>`;
+  } else if (S.station === 'bed') {
+    const stk = wearStreak(S.wears, iso(new Date())), today = S.wears.find((w) => w.date === iso(new Date()));
+    body = `<div class="st-two"><div class="st-doll">${small}</div><div class="st-main">
+      <p class="st-lead">${today ? 'You already logged today’s outfit. Sleep tight! 🌙' : Object.keys(worn).length ? 'Wearing this today? Log it before you turn in.' : 'Dress the doll first (Wardrobe station), then come back to log it.'}</p>
+      ${stk ? `<p class="muted" role="status"><span aria-hidden="true">🔥</span> ${stk}-day outfit streak</p>` : ''}${weatherLine()}
+      <div class="row"><button class="primary grow" data-act="wearToday" ${Object.keys(worn).length ? '' : 'disabled'}><span aria-hidden="true">📅</span> I wore this today</button><button class="ghost" data-act="stgo" data-v="wardrobe">Change outfit</button></div></div></div>`;
+  }
+  ui.innerHTML = `<div class="st-card" role="dialog" aria-modal="true" aria-labelledby="sttitle"><header class="st-head"><h2 id="sttitle" tabindex="-1"><span aria-hidden="true">${st[2]}</span> ${st[1]}</h2><button class="ghost st-close" data-act="stclose" aria-label="Back to the apartment">✕ Back</button></header><div class="st-body">${body}</div></div>`;
+  const sb = ui.querySelector('.st-body'); if (sb) sb.scrollTop = keep;
+  if (focusTitle) $('#sttitle', ui).focus(); else if (focus?.act) ui.querySelector(`[data-act="${focus.act}"]${focus.id ? `[data-id="${focus.id}"]` : focus.v ? `[data-v="${focus.v}"]` : ''}`)?.focus({ preventScroll: true });
+}
+
+function renderTryon() { if (aptOn()) return renderApartment(); leaveApt(); return S.scene === 'closet' ? renderWalkIn() : renderMirror(); }
 
 function renderMirror() {
   stage3d.exitWorld();
@@ -1312,9 +1412,12 @@ document.addEventListener('click', async (e) => {
     case 'scene': clearTimeout(S.walkT); S.scene = v; store.set('scene', v); S.cas = false; return renderTryon();
     case 'section': return walkTo(v);
     case 'hall': if (worldOn()) { S.dismiss = S.rail; S.rail = ''; return updateWorldUI(); } S.rail = ''; return renderWalkIn();
-    case 'gostation': S.dismiss = ''; stage3d.walkToStation(v); return;
+    case 'gostation': S.dismiss = ''; if (aptOn()) { apt?.walkToStation(v); $('#stage canvas')?.focus({ preventScroll: true }); return; } stage3d.walkToStation(v); return;
     case 'railnav': { const k = SECTION_TYPES.length, next = SECTION_TYPES[(SECTION_TYPES.indexOf(S.rail) + (+v) + k) % k]; if (worldOn()) { S.dismiss = ''; stage3d.walkToStation(next); return; } S.rail = next; S.hallType = next; return renderWalkIn(); }
-    case 'camrot': stage3d.rotateCam(+v); return;
+    case 'camrot': (aptOn() ? apt : stage3d)?.rotateCam(+v); return;
+    case 'avatar': S.avatar = v; store.set('avatar', v); apt?.setAvatar(v, aptLook()); return refreshStation();
+    case 'stclose': return closeStation();
+    case 'stgo': { closeStation(); if (v === 'mirror') return aptEnter('mirror'); apt?.walkToStation(v); return; }
     case 'grab': { const adding = !S.basket.includes(id); S.basket = adding ? [...S.basket, id] : S.basket.filter((x) => x !== id); if (adding && worldOn()) stage3d.pop(); return renderWalkIn(); }
     case 'ungrab': S.basket = S.basket.filter((x) => x !== id); return renderWalkIn();
     case 'clearbasket': S.basket = []; return renderWalkIn();
@@ -1430,7 +1533,7 @@ document.addEventListener('paste', (e) => {
   if (f) setInspoFile(f);
 });
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hidden) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (!$('#modal').hidden) closeModal(); else if (S.station) closeStation(); });
 
 /** /?add=paste|link|photo (from an iOS Shortcut) or /?add=shared (a file or link shared into the installed app). */
 async function openFromLink() {
@@ -1453,7 +1556,7 @@ const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, manneq
   loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); }); // so "Style me" and the weather chip know today's weather
   render();
   window.__closet = S; // handy for debugging
-  window.__stage3d = stage3d;
+  window.__stage3d = stage3d; Object.defineProperty(window, '__apt', { get: () => apt });
   try { const m = sessionStorage.getItem('synced'); if (m) { sessionStorage.removeItem('synced'); syncMsg = m; toast(m); } } catch { /* private mode */ }
   if (syncState().on) runSync(); // pick up changes from other devices
   openFromLink();
