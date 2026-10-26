@@ -186,11 +186,14 @@ export const seedFor = (it, attempt = 0) => (it.seed + attempt * 7919) % 2147483
 const SMALL = new Set(['shoes', 'bags', 'accessories']);
 /** The picture size (used by fal; Cloudflare's FLUX.1 schnell always makes 1024x1024): portrait for clothing, square for the rest. */
 export const sizeFor = (it) => (SMALL.has(it.type) ? { width: 1024, height: 1024 } : { width: 1024, height: 1365 });
-/** The fixed style every picture ends with, so the set looks consistent. */
-export const STYLE_SUFFIX = 'Plain pure white #FFFFFF background, soft even studio lighting, sharp focus, high-end e-commerce catalogue style, neutral true-to-life colour. The whole item is in frame and centered with white space around it. No person, no model, no visible mannequin or dress form, no hanger, no text, no logos, no brand marks, no props.';
+/** The fixed style every picture ends with, so the set looks consistent. FLUX schnell tends to draw whatever a prompt names, even after
+ *  "no", so the prompt only describes what we want: words like mannequin, model, person or dress form never appear (a test checks this). */
+export const STYLE_SUFFIX = 'centered, entire item visible with margin on all sides, plain pure white background, soft even lighting, sharp focus, true-to-life colour';
+/** Pieces that need to hold their shape in a flat lay (corsets, tube tops, bustiers). */
+export const structured = (it) => /corset|tube|bustier|strapless/i.test(`${it.name} ${it.detail}`);
 export function promptFor(it) {
-  const what = `${it.detail}, ${it.colors.join(' and ')}`;
-  return SMALL.has(it.type)
-    ? `E-commerce product photo of ${it.type === 'accessories' ? '' : "women's "}${what}, front three-quarter view. ${STYLE_SUFFIX}`
-    : `Ghost-mannequin e-commerce product photo of women's ${what}, shown front-facing with a natural three-dimensional worn shape, as if on an invisible body. ${STYLE_SUFFIX}`;
+  const what = `${it.colors.join(' and ')} ${it.detail}`;
+  if (SMALL.has(it.type)) return `Product photo of ${what}, viewed from the front at a slight angle, ${STYLE_SUFFIX}`;
+  return `Flat lay product photo of ${what}, laid flat and neatly arranged, viewed from directly above${structured(it) ? ', flat lay, front view, structured shape' : ''}, ${STYLE_SUFFIX}`;
 }
+export const FORBIDDEN_WORDS = /mannequin|\bmodel\b|person|dress form|hanger/i;

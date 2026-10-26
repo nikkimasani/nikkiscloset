@@ -12,11 +12,12 @@ const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-co
 const PORT = 5199, FAL = 5198;
 // Mock of fal's queue API so the whole AI try-on path runs offline (field names per fal's public docs).
 const { readFileSync } = await import('node:fs');
-const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], limitAt: Infinity, sent: {}, tries: {} };
+const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], limitAt: Infinity, sent: {}, tries: {}, used: 0 };
 // The fake Cloudflare answers each piece with its own picture (one of seven real cutouts on white, by its place in the list), so the
 // review grid can be checked tile by tile. Two pieces come back bad at first: one passes on its 3rd try, one never does.
 const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/items.js');
-const WHITE = ['dress', 'blazer', 'snake', 'flare', 'banana', 'tie', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
+// (tie.png is a blouse on a dress form: the check rightly fails it, so it isn't a stand-in for a good picture)
+const WHITE = ['dress', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
 const BAD = { 'starter-cream-crochet-cami': 2, 'starter-navy-halter-top': 99 };
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
@@ -40,6 +41,8 @@ const mock = createServer((req, res) => {
   else if (req.method === 'POST' && req.url === '/fal-ai/flux-pro/v1.1') {
     let b = ''; req.on('data', (d) => (b += d)).on('end', () => { const body = JSON.parse(b); starterCalls.push(body); send({ images: [{ url: `${base}/media/starter.png` }], seed: body.seed }); });
   }
+  else if (req.method === 'POST' && req.url === '/rest/v1/rpc/starter_usage_today') send(cf.used);
+  else if (req.method === 'POST' && req.url === '/rest/v1/rpc/starter_usage_add') { let b = ''; req.on('data', (d) => (b += d)).on('end', () => { cf.used = Math.round((cf.used + JSON.parse(b).n) * 10) / 10; send(cf.used); }); }
   else if (req.method === 'POST' && req.url === '/client/v4/accounts/acct1/ai/run/@cf/black-forest-labs/flux-1-schnell') {
     let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
       const body = JSON.parse(b); cf.calls.push({ auth: req.headers.authorization, ...body });
@@ -59,7 +62,7 @@ const mock = createServer((req, res) => {
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else send({ detail: 'nope' }, 404);
 }).listen(FAL);
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: 'acct1', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}` }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: 'acct1', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}`, USAGE_SUPABASE_URL: `http://localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -807,12 +810,12 @@ try {
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
     ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
-    await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
-    ok(cf.calls.length === 24 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /ghost-mannequin/i.test(c.prompt) && /pure white/.test(c.prompt) && /No person, no model, no visible mannequin or dress form, no hanger, no text/.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) with the fixed style suffix; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures)`);
+    await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 60000 }).catch(async (e) => { console.log('TILES', JSON.stringify(await pS.locator('.startertile').evaluateAll((t) => t.map((x) => x.className + ' | ' + x.innerText.replace(/\s+/g, ' '))))); throw e; });
+    ok(cf.calls.length === 24 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && /plain pure white background, soft even lighting/.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures)`);
     const tops = SITEMS.filter((i) => i.batch === 'tops');
     ok(tops.every((it, k) => cf.calls.find((c) => c.prompt === sPrompt(it)).seed === 110000 + k), 'each piece starts from a stable seed for its category (tops 110000 + its place)');
     ok(cf.tries['starter-cream-crochet-cami'] === 3 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a picture that fails the check (not a white background) is remade automatically and passes on its 3rd try');
-    ok(cf.tries['starter-navy-halter-top'] === 3 && /background is not plain white/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes a failing picture is shown as Needs review, with the reason');
+    ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes and an automatic clean-up a failing picture is shown as Needs review, with the reason');
     ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
     ok(/Neurons used today: 1,382 of 10,000/.test(await pS.locator('.sheet').innerText()), 'neurons used today are tracked');
     const srcs = await pS.locator('.startertile img').evaluateAll((im) => im.map((i) => i.src));
@@ -821,19 +824,20 @@ try {
     ok(nReady >= 15 && /\d+ ready/.test(await pS.locator('.sheet .muted').first().innerText()), `${nReady} of 20 pass the check and fit the mannequin`);
     await pS.click('.starterlog summary');
     const logText = await pS.locator('.starterlog').innerText();
-    ok((logText.match(/HTTP 200/g) || []).length === 24 && /saved as \/starter-draft\/starter-black-strapless-tube-top/.test(logText) && /Ghost-mannequin/.test(logText), 'the log lists every call: prompt, HTTP status, size and where it was saved');
+    ok((logText.match(/HTTP 200/g) || []).length === 24 && /saved as \/starter-draft\/starter-black-strapless-tube-top/.test(logText) && /Flat lay product photo/.test(logText) && /navy-halter-top try 3 · seed \d+ · cutout cleaned/.test(logText), 'the log lists every call (prompt, HTTP status, size, where it was saved) and the clean-up');
     writeFileSync(join(out, '40-starter-log.txt'), logText);
     await pS.screenshot({ path: join(out, '40-starter-review.png') });
     await pS.click('.startertile >> nth=3'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20);
     ok(cf.calls.length === 25 && cf.calls[24].seed !== cf.calls[3].seed, 'tapping a picture makes it again, with the next seed');
-    await pS.click('#sbok'); await pS.waitForFunction(() => window.__closet.items.length === 20);
+    await pS.click('#sbok'); await pS.waitForFunction((n) => window.__closet.items.length === n, nReady);
+    ok(cf.used === 1440, `the day's neurons are counted on the server (${cf.used})`);
     const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => ({ s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready }))));
     ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id) && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions and source Starter');
     ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare sent for it (no mix-ups between pieces)');
-    ok(its.find((i) => i.id === 'starter-navy-halter-top').ready === false && its.filter((i) => i.ready).length === nReady, 'only checked pieces that fit are marked ready');
-    ok(new RegExp(`${nReady} of 140 ready · ${20 - nReady} need review · 120 not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
-    ok(await pS.locator('.piece .starterbadge').count() === 20, 'each one carries a Starter badge');
-    ok(await pS.locator('[data-act=starterbatch][data-v=tops]').isDisabled(), 'the tops batch is done (only missing pieces are made)');
+    ok(its.length === nReady && its.every((i) => i.ready) && !its.some((i) => i.id === 'starter-navy-halter-top'), 'only Ready pieces are added: one that needs review never reaches the closet or the model');
+    ok(new RegExp(`${nReady} of 140 ready · 0 need review .* · ${140 - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
+    ok(await pS.locator('.piece .starterbadge').count() === nReady, 'each one carries a Starter badge');
+    ok(/1 to make/.test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'the tops batch has only the piece that needed review left to make');
     await pS.screenshot({ path: join(out, '41-starter-closet.png') });
     // the daily limit: Cloudflare stops after 8 more; progress is kept and the rest carry on after the reset
     cf.limitAt = cf.calls.length + 8;
@@ -843,14 +847,15 @@ try {
     ok(okN === 8 && /carry on after 00:00 UTC \(in \d+h \d+m\)/.test(await pS.locator('.limitnote').innerText()), `at the daily limit the batch pauses with ${okN} made and says when it resumes`);
     await pS.screenshot({ path: join(out, '42-starter-limit.png') });
     await pS.click('#sbcancel');
-    cf.limitAt = Infinity; const before = cf.calls.length; await pS.evaluate(() => localStorage.removeItem('starter_neurons')); // a new day
-    await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 60000 });
+    ok(cf.used === 10000, 'at the limit the server records the day as used up');
+    cf.limitAt = Infinity; cf.used = 0; const before = cf.calls.length; await pS.evaluate(() => localStorage.removeItem('starter_neurons')); // a new day
+    await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
     ok(cf.calls.length - before === 12, `after the reset only the missing 12 are made; the 8 saved earlier are reused (made ${cf.calls.length - before})`);
     await pS.click('#sbcancel');
     await pS.click('.piece.is-starter .edit >> nth=0'); await pS.click('#ownit');
     await pS.click('[data-act=fsrc][data-v=mine]'); ok(await pS.locator('.piece').count() === 1, 'I own this makes it yours: the Mine filter shows it');
-    await pS.click('[data-act=fsrc][data-v=starter]'); ok(await pS.locator('.piece').count() === 19, 'the Starter filter shows the rest');
-    await pS.click('.piece.is-starter .edit >> nth=0'); await pS.click('#rm'); await pS.waitForFunction(() => window.__closet.items.length === 19);
+    await pS.click('[data-act=fsrc][data-v=starter]'); ok(await pS.locator('.piece').count() === nReady - 1, 'the Starter filter shows the rest');
+    await pS.click('.piece.is-starter .edit >> nth=0'); await pS.click('#rm'); await pS.waitForFunction((n) => window.__closet.items.length === n, nReady - 1);
     ok(true, 'Remove takes a starter piece out');
     await pS.click('[data-act=hidestarter]'); await pS.waitForFunction(() => window.__closet && window.__closet.items.length === 1);
     ok(await pS.evaluate(() => window.__closet.items.every((i) => i.source !== 'starter')), 'hiding starter pieces leaves only yours everywhere');

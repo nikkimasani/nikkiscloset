@@ -3,7 +3,7 @@
 // through the normal pipeline here: white background removed, colours read, tags from the list. Landmarks are suggested the first time
 // the piece is fitted, like any other. Nothing is saved until you approve the batch.
 import { ITEMS, seedFor } from '../starter/items.js';
-import { loadImage, toCanvas, removeBackground, canvasToBlob } from './cutout.js';
+import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName } from './color.js';
 import { uid } from './db.js';
 
@@ -17,6 +17,12 @@ const today = () => new Date().toISOString().slice(0, 10); // (a UTC day, like C
 export const nextReset = (now = Date.now()) => { const d = new Date(now); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
 /** Neurons used today (estimated, counted on this device). */
 export function usedToday() { try { const u = JSON.parse(localStorage.getItem('starter_neurons') || '{}'); return u.day === today() ? u.n : 0; } catch { return 0; } }
+/** Take the server's count for today (kept in Supabase, shared by every device) when it sends one. */
+export const setUsed = (n) => { if (Number.isFinite(n)) try { localStorage.setItem('starter_neurons', JSON.stringify({ day: today(), n })); } catch { /* private mode */ } };
+/** Ask the server how many neurons today has used (no picture is made). */
+export async function refreshUsage(pass) {
+  try { const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ usage: true }) }); const j = await r.json(); if (r.ok && j.used !== null) setUsed(j.used); return j.used ?? null; } catch { return null; }
+}
 const addUsed = (n) => { try { localStorage.setItem('starter_neurons', JSON.stringify({ day: today(), n: usedToday() + n })); } catch { /* private mode */ } };
 /** Room for one more picture today? */
 export const canGenerate = () => usedToday() + NEURONS_EACH <= BUDGET;
@@ -35,9 +41,9 @@ export async function generate(it, pass, { attempt = 0, engine } = {}) {
   const seed = seedFor(it, attempt), t0 = Date.now();
   const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ id: it.id, seed, ...(engine && { engine }) }) });
   const j = await r.json().catch(() => ({}));
-  if (r.status === 429 && j.limit) { addUsed(Math.max(0, DAILY_FREE - usedToday())); throw new DailyLimit(j.resetAt || nextReset()); } // Cloudflare says so: nothing more today
+  if (r.status === 429 && j.limit) { setUsed(j.used ?? DAILY_FREE); throw new DailyLimit(j.resetAt || nextReset()); } // Cloudflare says so: nothing more today
   if (!r.ok || !j.image) throw Object.assign(new Error(j.error || `Generating failed (${r.status})`), { info: { attempt, seed, status: r.status } });
-  addUsed(j.neurons ?? NEURONS_EACH);
+  if (Number.isFinite(j.used)) setUsed(j.used); else addUsed(j.neurons ?? NEURONS_EACH); // the server's count when it has one
   const blob = await (await fetch(j.image)).blob(); // this piece's own picture, decoded from its own response
   await saveDraft(it.id, blob);
   return { blob, info: { attempt, seed, status: r.status, engine: j.engine, bytes: blob.size, key: key(it.id), ms: Date.now() - t0, prompt: j.prompt || '' } };
@@ -45,25 +51,50 @@ export async function generate(it, pass, { attempt = 0, engine } = {}) {
 
 /* ── the automatic check: plain white background, the whole item in frame, nothing else in the picture ── */
 const WARM = /nude|beige|camel|tan|brown|cognac|oatmeal|taupe|champagne|gold|butter|cream|ivory|chocolate|straw|tortoise/;
-/** Look at a generated picture: { ok, reasons[] }. Pure pixel checks (no AI): white border, margin on every side, one main shape, no skin. */
-export function checkPicture(img, it) {
-  const s = Math.min(1, 256 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height)), w = Math.round((img.naturalWidth || img.width) * s), h = Math.round((img.naturalHeight || img.height) * s);
-  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h);
-  const d = g.getImageData(0, 0, w, h).data, fg = new Uint8Array(w * h).fill(1), reasons = [];
+const LIGHT = /white|cream|ivory|oatmeal|beige|champagne|grey|clear|nude|butter|taupe/;
+const isSkin = (r, g, b) => { const cr = 128 + 0.5 * r - 0.4187 * g - 0.0813 * b, cb = 128 - 0.1687 * r - 0.3313 * g + 0.5 * b; return cr > 138 && cr < 175 && cb > 85 && cb < 125 && r > 90 && r > g && g > b; };
+/** A dress-form body or stand: light, colourless (white, grey or putty), and not the item's own colour. */
+const isForm = (r, g, b) => Math.min(r, g, b) > 150 && Math.max(r, g, b) - Math.min(r, g, b) < 26;
+/** Where a dress form is: light, colourless patches that touch the outside of the item (a form sticks out past the garment), as a 0/1 mask.
+ *  The light parts of a print (the cream in leopard) are enclosed by the garment, so they stay. inItem(i): is pixel i part of the item. */
+function formMask(d, w, h, inItem, itemArea, minFrac = 0.03) {
+  const a = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) if (inItem(i) && isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) a[i] = 1;
+  const lab = new Int32Array(w * h), q = new Int32Array(w * h), out = new Uint8Array(w * h), edgeMin = Math.max(6, Math.round(Math.min(w, h) * 0.03));
+  for (let i = 0, k = 0; i < w * h; i++) { if (!a[i] || lab[i]) continue; k++; let hd = 0, tl = 0, edge = 0; q[tl++] = i; lab[i] = k;
+    while (hd < tl) { const p = q[hd++], x = p % w; for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) {
+      if (j < 0 || j >= w * h) { edge++; continue; } if (!inItem(j)) edge++; else if (a[j] && !lab[j]) { lab[j] = k; q[tl++] = j; } } }
+    if (tl > itemArea * minFrac && edge >= Math.max(edgeMin, 0.6 * Math.sqrt(tl))) for (let t = 0; t < tl; t++) out[q[t]] = 1; }
+  return out;
+}
+/** Runs of item pixels in one row of a mask: [[x0, x1], ...]. */
+const runs = (fg, w, y) => { const out = []; let st = -1; for (let x = 0; x <= w; x++) { const on = x < w && fg[y * w + x]; if (on && st < 0) st = x; if (!on && st >= 0) { out.push([st, x - 1]); st = -1; } } return out; };
+
+/** The picture on white at check size: { w, h, d (RGBA), fg (item mask: everything not reached by white from the edges) }. */
+function analyse(img) {
+  const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height, s = Math.min(1, 256 / Math.max(W, H)), w = Math.round(W * s), h = Math.round(H * s);
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+  g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h); // (a cutout's see-through background counts as white)
+  const d = g.getImageData(0, 0, w, h).data, fg = new Uint8Array(w * h).fill(1);
   const white = (o) => Math.min(d[o], d[o + 1], d[o + 2]) >= 244 && Math.max(d[o], d[o + 1], d[o + 2]) - Math.min(d[o], d[o + 1], d[o + 2]) <= 10;
   // the background is the white reached from the picture's edges, so a white or cream piece (outlined by its own seams and shading) stays whole
-  const q0 = new Int32Array(w * h); let qh = 0, qt = 0;
-  for (let x = 0; x < w; x++) for (const y of [0, h - 1]) { const i = y * w + x; if (fg[i] && white(i * 4)) { fg[i] = 0; q0[qt++] = i; } }
-  for (let y = 0; y < h; y++) for (const x of [0, w - 1]) { const i = y * w + x; if (fg[i] && white(i * 4)) { fg[i] = 0; q0[qt++] = i; } }
-  while (qh < qt) { const p = q0[qh++], x = p % w; for (const k of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (k >= 0 && k < w * h && fg[k] && white(k * 4)) { fg[k] = 0; q0[qt++] = k; } }
-  let ring = 0, ringWhite = 0, skin = 0, n = 0, x0 = w, y0 = h, x1 = -1, y1 = -1;
+  const q = new Int32Array(w * h); let qh = 0, qt = 0;
+  const seed = (i) => { if (fg[i] && white(i * 4)) { fg[i] = 0; q[qt++] = i; } };
+  for (let x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x); } for (let y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1); }
+  while (qh < qt) { const p = q[qh++], x = p % w; for (const k of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (k >= 0 && k < w * h && fg[k] && white(k * 4)) { fg[k] = 0; q[qt++] = k; } }
+  return { w, h, d, fg };
+}
+
+/** Look at a picture (a generated photo or a cleaned cutout): { ok, reasons[] }. Pixel checks only: white border, margin on every side,
+ *  one main shape, no skin, no dress-form body, neck stand or pole. */
+export function checkPicture(img, it) {
+  const { w, h, d, fg } = analyse(img), reasons = [];
+  let ring = 0, ringWhite = 0, skin = 0, form = 0, n = 0, x0 = w, y0 = h, x1 = -1, y1 = -1;
   const m = Math.max(2, Math.round(Math.min(w, h) * 0.02));
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const i = y * w + x, o = i * 4, edge = x < m || y < m || x >= w - m || y >= h - m;
     if (edge) { ring++; if (!fg[i]) ringWhite++; }
     if (fg[i]) { n++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
-      const [r, gg, b] = [d[o], d[o + 1], d[o + 2]], cr = 128 + 0.5 * r - 0.4187 * gg - 0.0813 * b, cb = 128 - 0.1687 * r - 0.3313 * gg + 0.5 * b;
-      if (cr > 138 && cr < 175 && cb > 85 && cb < 125 && r > 90 && r > gg && gg > b) skin++; }
+      if (isSkin(d[o], d[o + 1], d[o + 2])) skin++; }
   }
   if (ringWhite / ring < 0.97) reasons.push('background is not plain white');
   if (n && (x0 < 2 || y0 < 2 || x1 > w - 3 || y1 > h - 3)) reasons.push('item runs off the edge');
@@ -79,8 +110,44 @@ export function checkPicture(img, it) {
   const many = it.type === 'shoes' || ['earrings', 'rings', 'necklace', 'bracelet', 'anklet'].includes(it.acc) || /set|pair/i.test(it.detail);
   const extra = sizes.slice(1).filter((z) => z > Math.max(30, sizes[0] * 0.015) && z < sizes[0] * 0.25).length;
   if (extra > (many ? 4 : 0)) reasons.push('more than the item in the picture (text, a hanger or a prop?)');
-  if (!WARM.test(it.colors.join(' ')) && n && skin / n > 0.12) reasons.push('looks like skin (a person or mannequin?)');
+  const colours = it.colors.join(' ');
+  if (n && skin / n > (WARM.test(colours) ? 0.35 : 0.08)) reasons.push('skin-coloured areas (a person or a body form?)');
+  let light = 0; for (let i = 0; i < w * h; i++) if (fg[i] && isForm(d[i * 4], d[i * 4 + 1], d[i * 4 + 2])) light++;
+  const lightPiece = LIGHT.test(colours) || light / Math.max(1, n) > 0.65; // the piece itself is white, cream or grey: a form can't be told apart by colour
+  if (n && !lightPiece) { const fm = formMask(d, w, h, (i) => fg[i], n); for (let i = 0; i < w * h; i++) form += fm[i]; if (form / n > 0.03) reasons.push('a white or grey body shape (a dress form?)'); }
+  // a neck stand on top or a pole underneath: the clothing's outline narrows to one thin, centred strip at its top or bottom
+  if (n > 200 && !['shoes', 'bags', 'accessories'].includes(it.type)) {
+    const bw = x1 - x0 + 1, cx = (x0 + x1) / 2, thin = (yy, f) => { const r = runs(fg, w, yy); return r.length === 1 && r[0][1] - r[0][0] + 1 < bw * f && Math.abs((r[0][0] + r[0][1]) / 2 - cx) < bw * 0.1; };
+    const band = (a, b, f) => { let t = 0, all = 0; for (let yy = a; yy <= b; yy++) { all++; if (thin(yy, f)) t++; } return all && t / all > 0.7; };
+    const bh = y1 - y0 + 1;
+    if (band(y0, y0 + Math.round(bh * 0.07), 0.15)) reasons.push('a neck stand above the item (a dress form?)');
+    // a stand's pole is very thin; a bodysuit's crotch, a skirt's hem or a dress's slit are not
+    if (band(y1 - Math.round(bh * 0.1), y1, 0.06) && it.type !== 'bodysuits') reasons.push('a pole under the item (a dress form stand?)');
+  }
   return { ok: !reasons.length, reasons };
+}
+
+/** Clean a cutout that failed the check: drop skin-coloured and dress-form-coloured areas (unless they're the item's own colour), a neck
+ *  stand or pole, and anything not joined to the main piece. Returns a new trimmed canvas (to be checked again before it can be Ready). */
+export function cleanUp(cut, it) {
+  const w = cut.width, h = cut.height, g = cut.getContext('2d', { willReadFrequently: true }), id = g.getImageData(0, 0, w, h), d = id.data;
+  const colours = it.colors.join(' '), dropSkin = !/nude|beige|camel|tan|clear/.test(colours), dropForm = !LIGHT.test(colours);
+  const keep = new Uint8Array(w * h); let area = 0; for (let i = 0; i < w * h; i++) if (d[i * 4 + 3] >= 40) area++;
+  const fm = dropForm ? formMask(d, w, h, (i) => d[i * 4 + 3] >= 40, area) : null;
+  for (let i = 0; i < w * h; i++) { const o = i * 4; if (d[o + 3] < 40) continue; keep[i] = (dropSkin && isSkin(d[o], d[o + 1], d[o + 2])) || fm?.[i] ? 0 : 1; }
+  // thin centred strips at the top and bottom (neck stand, pole) go too
+  let y0 = 0, y1 = h - 1; while (y0 < h && !runs(keep, w, y0).length) y0++; while (y1 > 0 && !runs(keep, w, y1).length) y1--;
+  let bw = 0; for (let y = y0; y <= y1; y++) { const r = runs(keep, w, y); if (r.length) bw = Math.max(bw, r[r.length - 1][1] - r[0][0] + 1); }
+  for (const dir of [1, -1]) for (let y = dir > 0 ? y0 : y1; y >= y0 && y <= y1; y += dir) { const r = runs(keep, w, y); if (r.length === 1 && r[0][1] - r[0][0] + 1 < bw * 0.2) { for (let x = r[0][0]; x <= r[0][1]; x++) keep[y * w + x] = 0; } else break; }
+  // only the biggest connected piece (plus anything at least a quarter its size: a second trouser leg, the other shoe)
+  const lab = new Int32Array(w * h), q = new Int32Array(w * h), sizes = [0]; let k = 0;
+  for (let i = 0; i < w * h; i++) { if (!keep[i] || lab[i]) continue; k++; let hd = 0, tl = 0; q[tl++] = i; lab[i] = k;
+    while (hd < tl) { const p = q[hd++], x = p % w; for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (j >= 0 && j < w * h && keep[j] && !lab[j]) { lab[j] = k; q[tl++] = j; } }
+    sizes.push(tl); }
+  const big = Math.max(0, ...sizes);
+  for (let i = 0; i < w * h; i++) if (!lab[i] || sizes[lab[i]] < big * 0.25) d[i * 4 + 3] = 0;
+  g.putImageData(id, 0, 0);
+  return trimTransparent(cut, 2);
 }
 
 /** The normal pipeline on a white-background product photo: checked, background off (no tap needed), cropped, colours read. */
@@ -88,6 +155,20 @@ export async function process(blob, it) {
   const { img, url } = await loadImage(blob); URL.revokeObjectURL(url);
   const check = checkPicture(img, it);
   const cut = removeBackground(toCanvas(img, 1000), { tolerance: 18 }); // pure white studio background; kept tight so white and cream pieces keep their edges
+  return finish(cut, check);
+}
+/** The last resort for a picture that failed its check after the automatic remakes: clean the cutout, then check the clean cutout. */
+export async function processCleaned(blob, it, firstCheck) {
+  const { img, url } = await loadImage(blob); URL.revokeObjectURL(url);
+  const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it);
+  const pad = document.createElement('canvas'); pad.width = Math.round(cut.width * 1.2); pad.height = Math.round(cut.height * 1.2); // checked with a white margin, like a photo
+  const pg = pad.getContext('2d'); pg.fillStyle = '#fff'; pg.fillRect(0, 0, pad.width, pad.height); pg.drawImage(cut, (pad.width - cut.width) / 2, (pad.height - cut.height) / 2);
+  const check = checkPicture(pad, it);
+  if (LIGHT.test(it.colors.join(' ')) && firstCheck?.reasons.some((r) => /dress form|neck stand|pole|body form/.test(r))) // a white or cream piece on a white form: the two can't be told apart by colour
+    check.ok = false, check.reasons = [...check.reasons, 'a light piece on a form: the form could not be removed automatically'];
+  return { ...(await finish(cut, check)), cleaned: true };
+}
+async function finish(cut, check) {
   const pal = palette(cut).filter((c) => c.share > 0.04);
   const main = pal[0]?.hex || '#cccccc';
   return { check, canvas: cut, cutout: await canvasToBlob(cut, 'image/webp', 0.92), color: { hex: main, name: colorName(main) }, colors: pal.map((c) => c.hex) };

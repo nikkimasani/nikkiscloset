@@ -465,18 +465,18 @@ test('the starter list: 20 pieces in each of 7 batches, valid types and occasion
   for (const [b] of BATCHES) assert.equal(ITEMS.filter((i) => i.batch === b).length, 20, b);
   for (const i of ITEMS) { assert.ok(T[i.type], i.id); assert.ok(i.occasions.length && i.occasions.every((o) => O.includes(o)), i.id); assert.ok(['light', 'all', 'warm'].includes(i.season)); }
   const top = ITEMS.find((i) => i.batch === 'tops'), shoe = ITEMS.find((i) => i.batch === 'shoes');
-  assert.match(promptFor(top), /ghost-mannequin/i); assert.match(promptFor(top), /no visible mannequin or dress form, no hanger/); assert.match(promptFor(top), /pure white/);
+  assert.match(promptFor(top), /^Flat lay product photo of .*, laid flat and neatly arranged, viewed from directly above, flat lay, front view, structured shape, centered, entire item visible with margin on all sides, plain pure white background, soft even lighting/);
+  for (const i of ITEMS) assert.doesNotMatch(promptFor(i), /mannequin|\bmodel\b|person|dress form/i, `${i.id}: no word that makes FLUX draw a body or a form`);
   assert.deepEqual(sizeFor(top), { width: 1024, height: 1365 }); assert.deepEqual(sizeFor(shoe), { width: 1024, height: 1024 });
-  for (const i of ITEMS) assert.match(promptFor(i), /no text, no logos/i);
 });
 test('/api/starter only makes pieces on the list, on Cloudflare (fal only as a fallback), and reports the daily limit', async () => {
   const { handleStarter, isDailyLimit, NEURONS_EACH, nextResetUTC } = await import('../lib/ai.js');
-  const env = { CF_ACCOUNT_ID: 'a', CF_API_TOKEN: 't', APP_PASSCODE: 'pw' };
+  const env = { CF_ACCOUNT_ID: 'a', CF_API_TOKEN: 't', APP_PASSCODE: 'pw', USAGE_DISABLED: '1' };
   const call = (body, pass = 'pw', e = env) => handleStarter(new Request('http://x/api/starter', { method: 'POST', headers: { 'x-app-passcode': pass, 'content-type': 'application/json' }, body: JSON.stringify(body) }), e);
   assert.equal((await call({ id: 'a cat in a hat' })).status, 400);
   assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'nope')).status, 401);
-  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw' })).status, 503, 'says what to set when no engine is configured');
-  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw', FAL_KEY: 'f' })).status, 503, 'no silent switch to fal (paid) when Cloudflare is not set up');
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw', USAGE_DISABLED: '1' })).status, 503, 'says what to set when no engine is configured');
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw', FAL_KEY: 'f', USAGE_DISABLED: '1' })).status, 503, 'no silent switch to fal (paid) when Cloudflare is not set up');
   assert.equal(NEURONS_EACH, 57.6, '4 tiles x 4.8 + 4 steps x 9.6');
   assert.ok(isDailyLimit(429, '') && isDailyLimit(400, '4006: you have used up your daily free allocation of 10,000 neurons') && !isDailyLimit(500, 'internal error'));
   assert.equal(new Date(nextResetUTC(Date.UTC(2026, 9, 26, 17, 5))).toISOString(), '2026-10-27T00:00:00.000Z');

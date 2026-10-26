@@ -82,7 +82,10 @@ async function load() {
   [S.items, S.outfits, S.wears, S.inspos, profiles, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist'].map(all));
   S.profile = profiles[0] || null;
   if (S.profile?.photo) url('profile', S.profile.photo);
-  if (store.get('hidestarter', '') === '1') S.items = S.items.filter((i) => !starter.isStarter(i)); // (still in the database, backups and sync)
+  // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
+  S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
+  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1')); // (hidden ones stay in the database, backups and sync)
+  for (const i of S.items) if (starter.isStarter(i) && !i.placedFromAnchors) { delete i.fit; i.adj = { scale: 1, dx: 0, dy: 0 }; i.placedFromAnchors = 1; put('items', i); } // one-time: drop saved drag offsets so starter pieces sit by the body points
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
@@ -507,7 +510,7 @@ function starterPanel() {
     <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
     <div class="starterbatches">${STARTER_BATCHES.map(([k, l, e]) => { const left = starter.missingIn(k, S.items).length, n = STARTER_ITEMS.filter((i) => i.batch === k).length;
       return `<button class="ghost" data-act="starterbatch" data-v="${k}" ${left && !hidden ? '' : 'disabled'}><span aria-hidden="true">${e}</span> ${l} <small>${left ? `${left} to make · ~${fmt(left * each)} neurons` : `all ${n} in`}</small></button>`; }).join('')}</div>
-    ${(() => { const st = S.items.filter(starter.isStarter), r = st.filter((i) => i.ready).length; return `<p class="starterready" role="status"><b>${r} of ${STARTER_ITEMS.length} ready</b> · ${st.length - r} need review · ${STARTER_ITEMS.length - st.length} not made yet</p>`; })()}
+    ${(() => { const r = S.items.filter(starter.isStarter).length, rv = (S.starterReview || []).length; return `<p class="starterready" role="status"><b>${r} of ${STARTER_ITEMS.length} ready</b> · ${rv} need review (kept off the model; open their category to remake them) · ${STARTER_ITEMS.length - r - rv} not made yet</p>${rv ? `<button class="ghost danger" data-act="rmstarterreview">Delete the ${rv} that need review</button>` : ''}`; })()}
     <label class="check"><input type="checkbox" data-act="hidestarter" ${hidden ? 'checked' : ''}> Hide all starter pieces${all || hidden ? '' : ' (none yet)'}</label></section>`;
 }
 
@@ -526,6 +529,7 @@ async function openStarterBatch(batch) {
   if (!pass) return; store.set('aipass', pass);
   const list = starter.missingIn(batch, S.items), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = [];
   const tiles = new Map(list.map((it) => [it.id, { it, state: 'wait', url: '', done: null, original: null, err: '', fresh: false, attempt: 0 }]));
+  await starter.refreshUsage(pass); // today's count from the server, so a batch never starts past the free allowance
   openModal(); const seq = modalSeq, closed = () => modalSeq !== seq; let resetAt = 0, timer = 0; // (Esc or Cancel closes it; what's made is kept)
   const left = (ms) => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`; };
   const note = (t, e) => { const line = { piece: t.it.id, ...e }; log.push(line); console.info('[starter]', line); };
@@ -539,14 +543,16 @@ async function openStarterBatch(batch) {
     if (closed()) return clearTimeout(timer);
     const T = [...tiles.values()], made = T.filter((t) => t.state === 'ok'), ready = made.filter((t) => t.done.ready).length, busy = T.some((t) => t.state === 'run' || (t.state === 'wait' && !resetAt));
     const status = resetAt ? `<p class="limitnote" role="status">⏸ Today’s free Cloudflare allowance is used up. ${made.length} of ${tiles.size} made and saved; the rest carry on after 00:00 UTC (in ${left(resetAt - Date.now())}). You can approve these now or leave this open.</p>` : '';
-    paintSheet(`${status}<p class="muted">${busy ? `Making ${label.toLowerCase()}… ` : ''}<b>${ready} ready</b>, ${made.length - ready} need review, ${T.length - made.length} to go. Each is checked (white background, whole item in frame, nothing else in the picture) and tried on the mannequin. Tap a picture to make it again. Nothing is added until you approve. <span class="nowrap">Neurons used today: ${Math.round(starter.usedToday()).toLocaleString('en-US')} of ${starter.DAILY_FREE.toLocaleString('en-US')}.</span></p>
+    paintSheet(`${status}<p class="muted">${busy ? `Making ${label.toLowerCase()}… ` : ''}<b>${ready} ready</b>, ${made.length - ready} need review, ${T.length - made.length} to go. Each is checked (white background, whole item in frame, nothing else in the picture) and tried on the mannequin. Tap a picture to make it again. Only <b>ready</b> pieces are added when you approve; the rest stay here to remake. <span class="nowrap">Neurons used today: ${Math.round(starter.usedToday()).toLocaleString('en-US')} of ${starter.DAILY_FREE.toLocaleString('en-US')}.</span></p>
       <div class="startergrid">${T.map(tile).join('')}</div>
-      <details class="starterlog"><summary>Log (${log.length})</summary><ol>${log.map((l) => `<li><code>${esc(l.piece)}</code> try ${l.attempt + 1} · seed ${l.seed} · ${l.from === 'saved' ? 'saved picture reused' : `HTTP ${l.status}${l.bytes ? ` · ${Math.round(l.bytes / 1024)} KB` : ''}${l.ms ? ` · ${(l.ms / 1000).toFixed(1)}s` : ''}`}${l.key ? ` · saved as <code>${esc(l.key)}</code>` : ''} · ${l.error ? `error: ${esc(l.error)}` : l.check ? (l.check.ok ? 'check passed' : 'check failed: ' + esc(l.check.reasons.join('; '))) : ''}${l.fits === undefined ? '' : l.fits ? ' · fits' : ' · does not fit'}${l.prompt ? `<br><small>${esc(l.prompt)}</small>` : ''}</li>`).join('')}</ol></details>
-      <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="ghost" id="sbcancel">${made.length ? 'Later' : 'Cancel'}</button><button class="primary" id="sbok" ${made.length && !T.some((t) => t.state === 'run') ? '' : 'disabled'}>Approve · add ${made.length} to my closet</button></div>`, `Starter ${label.toLowerCase()}`);
+      <details class="starterlog"><summary>Log (${log.length})</summary><ol>${log.map((l) => `<li><code>${esc(l.piece)}</code> try ${l.attempt + 1} · seed ${l.seed} · ${l.from === 'saved' ? 'saved picture reused' : l.from === 'cleaned' ? 'cutout cleaned (skin, form and stray parts removed)' : `HTTP ${l.status}${l.bytes ? ` · ${Math.round(l.bytes / 1024)} KB` : ''}${l.ms ? ` · ${(l.ms / 1000).toFixed(1)}s` : ''}`}${l.key ? ` · saved as <code>${esc(l.key)}</code>` : ''} · ${l.error ? `error: ${esc(l.error)}` : l.check ? (l.check.ok ? 'check passed' : 'check failed: ' + esc(l.check.reasons.join('; '))) : ''}${l.fits === undefined ? '' : l.fits ? ' · fits' : ' · does not fit'}${l.prompt ? `<br><small>${esc(l.prompt)}</small>` : ''}</li>`).join('')}</ol></details>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="ghost" id="sbcancel">${made.length ? 'Later' : 'Cancel'}</button><button class="primary" id="sbok" ${ready && !T.some((t) => t.state === 'run') ? '' : 'disabled'}>Approve · add ${ready} ready</button></div>`, `Starter ${label.toLowerCase()}`);
     $('#sbcancel').onclick = () => closeModal();
     $('#sbok').onclick = async () => {
-      const add = [...tiles.values()].filter((t) => t.state === 'ok'); closeModal(); clearTimeout(timer);
-      for (const t of add) { const item = { ...starter.toItem(t.it, t.done, t.original), ...(t.done.marks && { marks: t.done.marks }) }; await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); starter.dropDraft(t.it.id); }
+      const add = [...tiles.values()].filter((t) => t.state === 'ok' && t.done.ready); closeModal(); clearTimeout(timer); // pieces that need review stay out (their pictures are kept: open the batch again to remake them)
+      for (const t of add) { const item = { ...starter.toItem(t.it, t.done, t.original), ...(t.done.marks && { marks: t.done.marks }), placedFromAnchors: 1 }; await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); starter.dropDraft(t.it.id); }
+      const replaced = (S.starterReview || []).filter((r) => add.some((t) => t.it.id === r.starterId)); // the earlier versions that needed review
+      for (const r of replaced) await del('items', r.id); S.starterReview = (S.starterReview || []).filter((r) => !replaced.includes(r));
       S.filter.src = 'starter'; render(); toast(`Added ${add.length} starter ${label.toLowerCase()} ✓`);
     };
     $('#modal').querySelectorAll('.startertile').forEach((b) => (b.onclick = () => { const t = tiles.get(b.dataset.id); if (t.state === 'wait' || t.state === 'run') return; if (t.state === 'ok') t.attempt++; t.state = 'wait'; t.fresh = true; queue.push(t); pump(); paint(); }));
@@ -556,8 +562,9 @@ async function openStarterBatch(batch) {
       let blob = !t.fresh && await starter.draftOf(t.it.id), info;
       if (blob) info = { attempt: t.attempt, seed: seedFor(t.it, t.attempt), from: 'saved', key: `/starter-draft/${t.it.id}` };
       else ({ blob, info } = await starter.generate(t.it, pass, { attempt: t.attempt }).catch((e) => { if (!(e instanceof starter.DailyLimit)) note(t, { ...(e.info || { attempt: t.attempt }), error: e.message }); throw e; }));
-      const done = await starter.process(blob, t.it);
+      let done = await starter.process(blob, t.it);
       if (!done.check.ok && auto < 2) { note(t, { ...info, check: done.check }); t.attempt++; t.fresh = true; paint(); continue; }
+      if (!done.check.ok) { note(t, { ...info, check: done.check }); done = await starter.processCleaned(blob, t.it, done.check); info = { ...info, from: 'cleaned' }; } // last resort: clean the cutout, then check it again
       const fit = done.check.ok ? await starterFits(t.it, done) : { ok: false };
       done.ready = done.check.ok && fit.ok; done.marks = fit.marks; done.why = [...done.check.reasons, ...(done.check.ok && !fit.ok ? ['does not fit the mannequin'] : [])];
       note(t, { ...info, check: done.check, fits: done.check.ok ? fit.ok : undefined });
@@ -1385,6 +1392,7 @@ document.addEventListener('click', async (e) => {
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
     case 'fsrc': S.filter.src = v; return renderCloset();
+    case 'rmstarterreview': { const bad = S.starterReview || []; if (!bad.length || !confirm(`Delete ${bad.length} starter piece${bad.length === 1 ? '' : 's'} that need review? You can make them again from Starter closet.`)) return; for (const b of bad) await del('items', b.id); S.starterReview = []; render(); return toast(`Deleted ${bad.length} ✓`); }
     case 'starterbatch': return openStarterBatch(v);
     case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
     case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'doll'; return go('tryon'); }
