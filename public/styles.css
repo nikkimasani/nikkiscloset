@@ -711,3 +711,36 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .startertile.review { border-color: #e0a06a; } .startertile.ready { border-color: #7cc49155; }
 .starterlog { margin-top: 10px; font-size: 12px; } .starterlog ol { max-height: 30vh; overflow: auto; padding-left: 20px; } .starterlog small { color: #8b7a82; word-break: break-word; }
 .starterready { margin: 8px 0; }
+
+/* ── Dress up on a phone: the model gets most of the screen, head to feet; Hair / Anchors / Fit open as a bottom sheet ── */
+.gb-pill { display: none; }
+.rate-fab { display: none; }
+.hairchip.on, .hairsw.on { color: #3b1f2a; } /* (dark text on the light highlight) */
+.hairchip.on small, .hairsw.on small { color: #3b1f2a; }
+@media (max-width: 919px) {
+  .dress.dollmode .room.dollroom { height: max(60dvh, 380px); }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + max(60dvh, 380px) + 12px); }
+  .dress.dollmode .dress-right { order: 1; } /* the clothes strip sits right under the model */
+  .dress.dollmode .tools, .dress.dollmode .meters, .dress.dollmode .moods, .dress.dollmode .wxline { order: 3; }
+  /* the challenge collapses into a pill; Rate my look floats on the model */
+  .dress.dollmode .gamebar:not(.big) { padding: 0; background: none; border: 0; box-shadow: none; }
+  .dress.dollmode .gamebar:not(.big) .gb-pill { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 6px 14px; border-radius: 99px; border: 1px solid #ffffff30; background: #2a1440d9; color: #fff; font-weight: 700; font-size: 14px; text-align: left; }
+  .gb-pill .gb-coins { margin-left: auto; font-weight: 800; } .gb-pill .gb-caret { transition: transform .2s; } .gamebar.open .gb-caret { transform: rotate(180deg); }
+  .dress.dollmode .gamebar:not(.big):not(.open) > :not(.gb-pill) { display: none; }
+  .dress.dollmode .gamebar.open:not(.big) { padding: 0 0 10px; }
+  .dress.dollmode .gamebar.open:not(.big) .gb-rate { display: none; }
+  .rate-fab { display: inline-flex; align-items: center; gap: 6px; position: absolute; left: 12px; bottom: 12px; z-index: 7; min-height: 44px; padding: 6px 16px; border-radius: 99px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 14px; box-shadow: 0 6px 18px #0005; }
+  .rate-fab:disabled { opacity: .55; }
+  /* a sheet open: the model is pinned between the header and the sheet, scaled to fit (never cropped) */
+  body.dsheet .dress.dollmode .room.dollroom { position: fixed; z-index: 30; top: calc(var(--top-h, 64px) + 6px); left: 12px; right: 12px; height: calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - var(--sheet-h, 40dvh) - 12px); min-height: 0; border-radius: 22px; }
+  body.dsheet { --sheet-h: 40dvh; }
+  body.dsheet .rate-fab, body.dsheet .dress.dollmode .room .streakbadge { display: none; }
+  body.dsheet .dress.dollmode .room .cas, body.dsheet .dress.dollmode .room .dollbar { position: fixed; z-index: 31; left: 0; right: 0; bottom: var(--nav-h, 80px); height: var(--sheet-h); max-height: var(--sheet-h); overflow-y: auto; border-radius: 20px 20px 0 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom) * 0); box-shadow: 0 -10px 30px #0006; }
+  body.dsheet .dress.dollmode .room .cas .cas-opts { flex-wrap: wrap; overflow-x: visible; }
+  body.dsheet .dress.dollmode .room .cas .hairpick { width: 100%; }
+  body.dsheet .dress.dollmode .room .cas .hairpick .opt-row { flex-wrap: wrap; overflow-x: visible; }
+  body.dsheet .dress.dollmode .room .dollbar .dbrow { flex-wrap: wrap; }
+  body.dsheet .dress.dollmode .room .stage { inset: 2% 0 2% 0; }
+}
+@media (max-width: 919px) { body.dsheet .dress.dollmode::before { content: ''; position: fixed; inset: 0; z-index: 29; background: #071a2c; } }
+.dbpieces { flex-wrap: nowrap; overflow-x: auto; } .dbpieces .chip { flex: 0 0 auto; color: #fff; } .dbpieces .chip.on { color: var(--accent-ink); }

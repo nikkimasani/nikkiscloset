@@ -1,6 +1,6 @@
 // App side of fitting: reads the base picture's outline once, then turns an item (its cutout + landmarks) into the picture of it worn.
 import { makeBody } from './bodymap.js';
-import { fitGarment } from './garment.js';
+import { isStrapless, fitGarment } from './garment.js';
 import { suggestFor, groupOf, sleevesFromName } from './landmarks.js';
 import { loadImage } from './cutout.js';
 
@@ -30,7 +30,7 @@ export async function fitItem(item, pack) {
   if (!groupOf(item.type) || !item.cutout) return null;
   const [body, cut] = await Promise.all([bodyOf(pack), cutoutCanvas(item.cutout)]);
   const marks = item.marks || suggestFor(item.type, cut, { sleeves: item.sleeves ?? sleevesFromName(item.type, item.name) });
-  const res = fitGarment(cut, item.type, marks, pack, body); if (!res) return null;
+  const res = fitGarment(cut, item.type, marks, pack, body, { strapless: isStrapless(item.name) }); if (!res) return null;
   const blob = await new Promise((r) => res.canvas.toBlob(r, 'image/png'));
   return { url: URL.createObjectURL(blob), blob, marks };
 }

@@ -172,6 +172,7 @@ function go(view) {
 function render() {
   if (S.view !== 'tryon') S.lastView = S.view;
   document.body.classList.toggle('wic-on', S.view === 'tryon' && S.scene === 'closet');
+  if (S.view !== 'tryon' || S.scene === 'closet') document.body.classList.remove('dsheet');
   ({ closet: renderCloset, tryon: renderTryon, plan: () => renderPlan(ctx), planner: renderPlanner, inspo: renderInspo })[S.view]();
 }
 
@@ -860,7 +861,8 @@ function gameBarHTML(big) {
   const d = S.game.day; if (!d) return '';
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
   const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. Tap End the day to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
-  return `<div class="gamebar ${big ? 'big' : ''}" role="region" aria-label="Today’s challenge">
+  return `<div class="gamebar ${big ? 'big' : ''} ${S.gbOpen ? 'open' : ''}" role="region" aria-label="Today’s challenge">
+    ${big ? '' : `<button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>`}
     <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span><button class="gb-shop" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
@@ -1047,6 +1049,13 @@ addEventListener('resize', () => { if (S.view === 'tryon' && S.scene === 'closet
 
 function renderTryon() { ensureDay(); if (S.scene === 'closet') return renderWalkIn(); document.body.classList.remove('wic-on'); return renderMirror(); }
 
+/** The header's and the bottom bar's heights, for the phone layout (the model fits between them and an open sheet). */
+function layoutVars() {
+  const r = document.documentElement.style, h = document.querySelector('header.top')?.getBoundingClientRect().height || 64, n = $('#nav')?.getBoundingClientRect().height || 80;
+  r.setProperty('--top-h', `${Math.round(h)}px`); r.setProperty('--nav-h', `${Math.round(n)}px`);
+}
+addEventListener('resize', () => layoutVars());
+
 function renderMirror() {
   if (dollOn() && S.drawer === 'fit') S.drawer = 'looks'; // the doll's fit controls sit right under it instead
   if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
@@ -1067,6 +1076,7 @@ function renderMirror() {
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
+        ${dollOn() && S.game.day && S.game.day.phase !== 'done' ? `<button class="rate-fab" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>` : ''}
         ${S.cas ? casHTML() : ''}
         ${dollOn() ? dollBarHTML(fit) : ''}
       </div>
@@ -1096,6 +1106,9 @@ function renderMirror() {
       </section>
     </div></div>`;
   S.lastTab = S.tab; S.lastView = 'tryon';
+  // on a phone, Hair / Anchors / Fit open as a bottom sheet and the model shrinks to fit above it (never cropped)
+  document.body.classList.toggle('dsheet', !!(dollOn() && (S.cas || (S.fitOpen && fit))));
+  layoutVars();
   mountStage(); restoreCachedRender();
   if (dollOn()) bindDollGestures($('#stage'));
   const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
@@ -1130,6 +1143,7 @@ function dollBarHTML(fit) {
   const b = (act, v, label, aria) => `<button type="button" class="fb" data-act="${act}" data-v="${v}" data-hold aria-label="${aria}"><span aria-hidden="true">${label}</span></button>`;
   return `<div id="dollbar" class="dollbar" role="group" aria-label="Fit ${esc(fit.name)}">
     <div class="dbname"><img class="dbthumb" src="${url(fit.id)}" alt=""><span>${SLOT_LABEL[slotOf(fit.type)]}: <b>${esc(fit.name)}</b> · drag it on the model, or nudge</span><button type="button" class="fb done" data-act="dfitdone" aria-label="Done fitting">✓ Done</button></div>
+    ${Object.keys(worn).length > 1 ? `<div class="chips dbpieces" role="group" aria-label="Piece to fit">${SLOTS.filter((x) => worn[x]).map((x) => `<button type="button" class="chip ${fit.id === worn[x].id ? 'on' : ''}" aria-pressed="${fit.id === worn[x].id}" data-act="fit" data-id="${worn[x].id}">${SLOT_LABEL[x]}: ${esc(worn[x].name)}</button>`).join('')}</div>` : ''}
     <div class="dbrow">${b('dnudge', 'x:-3', '◀', 'Move left')}${b('dnudge', 'x:3', '▶', 'Move right')}${b('dnudge', 'y:-3', '▲', 'Move up')}${b('dnudge', 'y:3', '▼', 'Move down')}${b('dsize', '-0.03', '−', 'Smaller')}${b('dsize', '0.03', '+', 'Bigger')}${b('drot', '-2', '⟲', 'Rotate left')}${b('drot', '2', '⟳', 'Rotate right')}
       ${isTuckable(fit, dollPack) && worn.bottom ? `<button type="button" class="fb wide" data-act="dtuck" aria-pressed="${f.tuck}">${f.tuck ? 'Tucked in' : 'Untucked'}</button>` : ''}<button type="button" class="fb wide" data-act="dreset">↺ Reset</button></div></div>`;
 }
@@ -1410,6 +1424,7 @@ document.addEventListener('click', async (e) => {
     case 'wictip': store.set('wictip', '1'); return $('.wic-tip')?.remove();
     case 'cas': S.casTab = v; return renderTryon();
     case 'casclose': S.cas = false; return renderTryon();
+    case 'gbpill': S.gbOpen = !S.gbOpen; return refreshGame();
     case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
     case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();

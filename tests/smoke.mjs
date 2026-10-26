@@ -335,7 +335,7 @@ try {
     ok(/Theme:/.test(await p3.locator('.gamebar .gb-theme').innerText()), 'the day starts with a themed challenge banner');
     const coins0 = await p3.evaluate(() => window.__closet.game.coins), energy0 = await p3.evaluate(() => window.__closet.game.day.energy);
     ok(energy0 < 100, `changing the outfit costs a little energy (${energy0}/100)`);
-    await p3.click('[data-act=rate]'); await p3.waitForSelector('.reveal .star.on');
+    await p3.click('[data-act=rate] >> visible=true'); await p3.waitForSelector('.reveal .star.on');
     const rv = await p3.evaluate(() => ({ stars: document.querySelectorAll('.reveal .star.on').length, parts: document.querySelectorAll('.reveal .parts li').length, coins: window.__closet.game.coins, notes: [...document.querySelectorAll('.reveal .parts small')].every((n) => n.textContent.length > 5) }));
     ok(rv.stars >= 1 && rv.parts === 5 && rv.notes && rv.coins > coins0, `rating shows stars (${rv.stars}), five reasons from your tags, and pays coins (${coins0} -> ${rv.coins})`);
     await p3.evaluate(axeSource);
@@ -343,14 +343,15 @@ try {
     ok(rr.violations.filter((v) => v.impact !== 'minor').length === 0, `axe (rating reveal): ${rr.violations.map((v) => v.id).join(', ') || 'no violations'}`);
     await p3.screenshot({ path: join(out, '11-reveal.png') });
     await p3.click('#rwclose');
-    await p3.click('[data-act=rate]'); await p3.waitForSelector('.reveal .star.on');
+    await p3.click('[data-act=rate] >> visible=true'); await p3.waitForSelector('.reveal .star.on');
     ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'rating the same look again pays nothing more');
     await p3.click('#rwclose');
     await p3.reload(); await p3.waitForFunction(() => window.__closet?.game.coins > 0);
     ok((await p3.evaluate(() => window.__closet.game.coins)) === rv.coins, 'coins are kept after a reload');
     // the day is closed from the banner
-    await p3.waitForSelector('.gamebar .gb-end');
+    await p3.waitForSelector('.gamebar .gb-end', { state: 'attached' });
     await p3.click('[data-act=styleme]'); await p3.waitForFunction(() => document.querySelector('.gamebar [data-act=rate]:not([disabled])'));
+    if (await p3.locator('.gb-pill').isVisible()) await p3.click('.gb-pill'); // (on a phone the challenge is a pill: open it)
     await p3.click('.gamebar .gb-end');
     await p3.waitForFunction(() => window.__closet.game.day.phase === 'done');
     ok(true, 'the day can be ended from the banner');
@@ -371,7 +372,7 @@ try {
     await pE.goto(`http://localhost:${PORT}/`); await pE.waitForFunction(() => window.__closet);
     await pE.click('[data-view=plan]'); await pE.fill('#evtitle', 'Sam’s dinner'); await pE.selectOption('#evocc', 'Dinner'); await pE.click('[data-act=evadd]');
     await pE.click('[data-view=tryon]'); await pE.waitForSelector('.gamebar');
-    ok(/Sam’s dinner/.test(await pE.locator('.gamebar .gb-theme').innerText()) && /from your plan/.test(await pE.locator('.gamebar').innerText()), 'an event added in Plan becomes today’s challenge');
+    ok(/Sam’s dinner/.test(await pE.locator('.gamebar .gb-theme').textContent()) && /from your plan/.test(await pE.locator('.gamebar').textContent()), 'an event added in Plan becomes today’s challenge');
   }
 
 
@@ -587,7 +588,7 @@ try {
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'layers stack correctly: shoes, bottom, top, jacket over top');
   ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
   // fit: select the top, nudge, and it is remembered
-  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top") >> visible=true').catch(() => pdl.click('.dbpieces [data-act=fit]:has-text("Top")')); // (on a phone, with the Fit sheet open, the pieces are listed in the sheet)
   const tfm = () => pdl.getAttribute('#stage .gar[data-slot=top]', 'transform');
   const tf0 = await tfm();
   await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerdown'); await pdl.dispatchEvent('[data-act=dnudge][data-v="x:3"]', 'pointerup');
@@ -603,7 +604,7 @@ try {
   await pdl.mouse.move(bx, by); await pdl.mouse.down(); await pdl.mouse.move(bx + 40, by + 20, { steps: 4 }); await pdl.mouse.up();
   const f2 = await pdl.evaluate(() => window.__closet.items.find((i) => i.name === 'Camel blazer').fit?.base || {});
   ok(f2.dx > 10 && f2.dy > 5 && (await saved()).dx === dx0, `touching a piece selects it and dragging moves just that piece (jacket moved ${Math.round(f2.dx)}, ${Math.round(f2.dy)}; tee stayed)`);
-  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top") >> visible=true').catch(() => pdl.click('.dbpieces [data-act=fit]:has-text("Top")')); // (on a phone, with the Fit sheet open, the pieces are listed in the sheet)
   // tucked in: the top goes under the bottoms and is cut at the waist
   await pdl.click('[data-act=dtuck]'); await pdl.waitForFunction(() => document.querySelector('#stage .gar').dataset.slot === 'shoes' && document.querySelectorAll('#stage .gar')[1].dataset.slot === 'top');
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'top', 'bottom', 'outer']) && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tucking in puts the top under the bottoms');
@@ -614,7 +615,7 @@ try {
   // the fit panel names the piece it is fitting, and tapping picks the piece you touched (not just a box that covers the spot)
   const bar = async () => (await pdl.locator('#dollbar .dbname').innerText());
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); // (the outfit isn't kept across a reload)
-  await pdl.click('.dfpieces [data-act=fit]:has-text("Top")');
+  await pdl.click('.dfpieces [data-act=fit]:has-text("Top") >> visible=true').catch(() => pdl.click('.dbpieces [data-act=fit]:has-text("Top")')); // (on a phone, with the Fit sheet open, the pieces are listed in the sheet)
   ok(/White tee/.test(await bar()) && /Top/.test(await bar()), 'the fit panel says which piece: "Top: White tee"');
   ok((await pdl.locator('#dollbar .dbthumb').getAttribute('src')) === (await pdl.evaluate(() => window.__closet.urls.get(window.__closet.items.find((i) => i.name === 'White tee').id))), 'and shows that piece’s own picture');
   const sel = await pdl.evaluate(() => { const g = document.querySelector('#stage .gar.sel'), a = g.querySelector('image').getBoundingClientRect(), b = g.querySelector('.selbox').getBoundingClientRect(); return { sel: g.dataset.slot, inside: b.left >= a.left - 1 && b.right <= a.right + 1 && b.top >= a.top - 1 && b.bottom <= a.bottom + 1 }; });

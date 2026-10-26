@@ -22,7 +22,10 @@ const spanAt = (body, y) => { const o = body.outlineAt(Math.round(y)); return o 
  * The control points of the warp: [{ name, src: [x, y] in cutout pixels, dst: [x, y] in body pixels }], plus how the row pass runs.
  * marks: { name: [u, v] } as fractions of the cutout.
  */
-export function plan(type, marks, cut, pack, body) {
+/** A strapless piece (corset, tube top, bustier): sits on the bust and waist, not on the shoulders. */
+export const isStrapless = (name = '') => /corset|tube|bustier|strapless|bandeau/i.test(name);
+
+export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
   const g = groupOf(type); if (!g) return null;
   const P = pack.points, arms = pack.arms, cx = body.cx, ease = easeOf(type);
   const pt = (n) => (marks[n] ? [marks[n][0] * cut.width, marks[n][1] * cut.height] : null);
@@ -73,6 +76,22 @@ export function plan(type, marks, cut, pack, body) {
     return { ctl, widen, s };
   }
 
+  if (strapless && g === 'top') { // the top edge sits on the bust line, the sides follow the bust and waist points (then the hips' outline)
+    const tl = pt('shoulderL'), tr = pt('shoulderR'), hl = pt('hemL'), hr = pt('hemR'); if (!tl || !tr || !hl || !hr) return null;
+    const bustY = (P.bustL[1] + P.bustR[1]) / 2, topY = bustY - 70, bustW = P.bustR[0] - P.bustL[0], waistW = P.waistR[0] - P.waistL[0], k = 1 + ease;
+    const widthAt = (y) => (y <= bustY ? bustW * k : y <= waistY ? (bustW + (waistW - bustW) * (y - bustY) / (waistY - bustY)) * k : (() => { const e = spanAt(body, y); return Math.max(waistW * k, (e.r - e.l) * 0.98); })()); // (below the waist it hugs the hips)
+    const gTop = (tl[1] + tr[1]) / 2, s = (bustW * k) / Math.max(8, dist(tl, tr)), destY = (y) => Math.min(footY - 60, topY + (y - gTop) * s);
+    add('topL', tl, [cx - widthAt(topY) / 2, topY]); add('topR', tr, [cx + widthAt(topY) / 2, topY]);
+    const hy = destY((hl[1] + hr[1]) / 2); add('hemL', hl, [cx - widthAt(hy) / 2, hy]); add('hemR', hr, [cx + widthAt(hy) / 2, hy]);
+    const data = cut.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, cut.width, cut.height).data;
+    for (const f of [0.33, 0.66]) { // the sides in between, so a corset nips in at the waist like the body does
+      const sy = gTop + ((hl[1] + hr[1]) / 2 - gTop) * f, rs = rowRuns(data, cut.width, Math.round(sy), { thr: 128, gap: 6, min: 3 }); if (!rs.length) continue;
+      const l = rs[0][0], r = rs[rs.length - 1][1], y = destY(sy);
+      add('side' + f + 'L', [l, sy], [cx - widthAt(y) / 2, y]); add('side' + f + 'R', [r, sy], [cx + widthAt(y) / 2, y]);
+    }
+    return { ctl, widen: null, s };
+  }
+
   // tops, outerwear and dresses
   const shL = pt('shoulderL'), shR = pt('shoulderR'); if (!shL || !shR) return null;
   const bodySh = P.shoulderR[0] - P.shoulderL[0], k = type === 'outerwear' ? 1.08 : 1.02, s = bodySh / Math.max(8, dist(shL, shR)), gShY = (shL[1] + shR[1]) / 2;
@@ -106,8 +125,8 @@ export function plan(type, marks, cut, pack, body) {
  * The garment cutout fitted to the body: a canvas the size of the base picture, ready to be drawn at 0,0.
  * `marks` may be null (then they are suggested). Resolves to { canvas, ctl } or null when the piece has no landmarks to warp.
  */
-export function fitGarment(cut, type, marks, pack, body, { ease = easeOf(type), rows = true, debug = null } = {}) {
-  const pl = plan(type, marks, cut, pack, body); if (!pl || pl.ctl.length < 3) return null;
+export function fitGarment(cut, type, marks, pack, body, { ease = easeOf(type), rows = true, debug = null, strapless = false } = {}) {
+  const pl = plan(type, marks, cut, pack, body, { strapless }); if (!pl || pl.ctl.length < 3) return null;
   const [W, H] = pack.size;
   /** Thin-plate-spline warp of `img` through the given controls; a global affine fit pins the far corners so the margins stay sane. */
   const warpWith = (img, ctl) => {

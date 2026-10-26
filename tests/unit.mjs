@@ -499,3 +499,15 @@ test('accessories and bags snap to their body points: earrings split onto both e
   for (const k of ['head', 'eyes', 'earL', 'earR', 'necklace', 'handL', 'handR', 'belt']) assert.ok(config.points[k], `${k} point`);
   for (const [k, rule] of Object.entries(config.accRules)) for (const p of [].concat(rule.at)) assert.ok(config.points[p], `${k} -> ${p}`);
 });
+test('a corset or tube top sits on the bust line, its sides on the bust and waist points (not on the shoulders)', async () => {
+  const { plan, isStrapless } = await import('../public/js/garment.js');
+  assert.ok(isStrapless('Black strapless tube top') && isStrapless('Brown leopard corset top') && !isStrapless('White ribbed tank'));
+  const cut = { width: 200, height: 300, getContext: () => ({ getImageData: () => ({ data: new Uint8ClampedArray(200 * 300 * 4).fill(255) }) }) };
+  const marks = { shoulderL: [0.02, 0.02], shoulderR: [0.98, 0.02], hemL: [0.2, 0.9], hemR: [0.8, 0.9] };
+  const body = { cx: 448, outlineAt: () => ({ l: 250, r: 646 }), crotchY: 900 };
+  const pl = plan('tops', marks, cut, pack, body, { strapless: true }), at = (n) => pl.ctl.find((c) => c.name === n).dst;
+  const P = config.points, bustY = (P.bustL[1] + P.bustR[1]) / 2;
+  assert.equal(at('topL')[1], bustY - 70); assert.ok(Math.abs((at('topL')[0] + at('topR')[0]) / 2 - 448) < 0.01, 'centred on the body');
+  assert.ok(Math.abs(at('topR')[0] - at('topL')[0] - (P.bustR[0] - P.bustL[0]) * 1.05) < 1, 'as wide as the bust (plus a little ease)');
+  assert.ok(!pl.ctl.some((c) => c.name.startsWith('shoulder')), 'nothing pinned to the shoulders');
+});
