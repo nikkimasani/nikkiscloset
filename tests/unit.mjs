@@ -7,7 +7,6 @@ import { styleMe, suitsWeather } from '../public/js/stylist.js';
 import { planWeek, packingList } from '../public/js/planner.js';
 import { outfitMeters } from '../public/js/meters.js';
 import { colorName, hexDist, toLab, unhex } from '../public/js/color.js';
-import { fromProportions, measures, place, DEFAULT_BODY } from '../public/js/body.js';
 import { wear } from '../public/js/data.js';
 
 const it = (id, type, extra = {}) => ({ id, name: id, type, occasions: ['Work / Office'], color: { hex: '#222222' }, createdAt: 0, ...extra });
@@ -109,13 +108,6 @@ test('colour helpers', () => {
   assert.ok(toLab(unhex('#ffffff'))[0] > 99);
 });
 
-test('body model: proportions change the figure, garments scale with build', () => {
-  const tall = measures(fromProportions({ legs: 1.2 })), norm = measures(DEFAULT_BODY);
-  assert.ok(tall.L > norm.L * 1.15 && Math.abs(tall.sw - norm.sw) < 1);
-  const wide = place('tops', { ...fromProportions({ build: 1.3 }) }), slim = place('tops', fromProportions({ build: 1 }));
-  assert.ok(wide.w > slim.w * 1.25);
-});
-
 test('wearing a dress removes top and bottom, and tapping again takes it off', () => {
   let o = wear({}, { id: 't', type: 'tops' }); o = wear(o, { id: 'b', type: 'bottoms' });
   o = wear(o, { id: 'd', type: 'dresses' });
@@ -126,7 +118,7 @@ test('wearing a dress removes top and bottom, and tapping again takes it off', (
 test('wear counts', () => assert.deepEqual(wearCountMap([{ itemIds: ['a', 'b'] }, { itemIds: ['a'] }]), { a: 2, b: 1 }));
 
 // ── AI helper endpoints (pure parts) ──
-import { parseTags, extractOgImage, pinUrlOk, handleCutout, handleTag, handlePin } from '../lib/ai.js';
+import { parseTags, extractOgImage, pinUrlOk, handleSegment, handleTag, handlePin, samPrompts } from '../lib/ai.js';
 
 test('auto-tag parser keeps only values the app accepts', () => {
   const t = parseTags('Sure! ```json\n{"name":"Satin <b>cami</b>","type":"tanks","season":"light","occasions":["GNO","Bogus","Date Night"],"brand":"Zara"}\n```');
@@ -151,13 +143,20 @@ test('og:image extraction handles attribute order and entities', () => {
 
 test('AI endpoints fail closed and demand the passcode', async () => {
   const req = (pass) => new Request('http://x/api/tag', { method: 'POST', headers: { 'x-app-passcode': pass ?? '' }, body: '{}' });
-  for (const h of [handleCutout, handleTag, handlePin]) {
+  for (const h of [handleSegment, handleTag, handlePin]) {
     assert.equal((await h(req('x'), {})).status, 503, 'unconfigured');
     assert.equal((await h(req('wrong'), { FAL_KEY: 'k', APP_PASSCODE: 'right' })).status, 401, 'wrong passcode');
     assert.equal((await h(new Request('http://x', { method: 'GET' }), { FAL_KEY: 'k', APP_PASSCODE: 'right' })).status, 405);
   }
-  const bad = await handleCutout(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'http://evil/x.png' }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
+  const bad = await handleSegment(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'http://evil/x.png', w: 10, h: 10, pos: [[0.5, 0.5]] }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
   assert.equal(bad.status, 400, 'URLs are not accepted as images');
+  const none = await handleSegment(new Request('http://x', { method: 'POST', headers: { 'x-app-passcode': 'right' }, body: JSON.stringify({ image: 'data:image/png;base64,AAAA', w: 10, h: 10, pos: [], neg: [[0.1, 0.1]] }) }), { FAL_KEY: 'k', APP_PASSCODE: 'right' });
+  assert.equal(none.status, 400, 'at least one keep tap');
+});
+
+test('SAM 2 taps become pixel point prompts (1 = keep, 0 = remove); junk is dropped', () => {
+  assert.deepEqual(samPrompts([[0.5, 0.5], [2, 0], ['x', 1]], [[0, 1]], 101, 201), [{ x: 50, y: 100, label: 1 }, { x: 0, y: 200, label: 0 }]);
+  assert.equal(samPrompts(Array(30).fill([0.1, 0.1]), [], 10, 10).length, 12, 'capped');
 });
 
 import { matchInspo } from '../public/js/stylist.js';
@@ -214,51 +213,75 @@ test('product endpoint demands the passcode but not a fal key', async () => {
   assert.equal((await handleProduct(new Request('http://x', { method: 'GET' }), { APP_PASSCODE: 'right' })).status, 405);
 });
 
-// ── 2D doll: art is separate from the placement and layering rules ──
-import { dollSVG, fitOf, garmentTransform, tokens, mix, isTuckable } from '../public/js/doll.js';
-import { readFileSync, readdirSync } from 'node:fs';
-const studio = JSON.parse(readFileSync(new URL('../public/dolls/studio/pack.json', import.meta.url), 'utf8'));
-const studioFiles = Object.fromEntries(readdirSync(new URL('../public/dolls/studio/', import.meta.url)).filter((f) => f.endsWith('.svg')).map((f) => [f, readFileSync(new URL(`../public/dolls/studio/${f}`, import.meta.url), 'utf8')]));
-const pack = { ...studio, files: studioFiles };
+// ── the dress-up figure: a picture shown as it is, plus points and rules for the clothes ──
+import { dollSVG, fitOf, garmentTransform, isTuckable, deriveAnchors, withPoints, bodyWidth, levelY, contentBox, imageRect } from '../public/js/doll.js';
+import { readFileSync, existsSync } from 'node:fs';
+const config = JSON.parse(readFileSync(new URL('../public/assets/avatar/config.json', import.meta.url), 'utf8'));
+const pack = { ...withPoints(config), files: { 'base.png': '/assets/avatar/base.png' }, base: '/assets/avatar/' };
 const mkItem = (id, type, extra = {}) => ({ id, type, name: id, ...extra });
 const urls = new Map([['t', 'blob:t'], ['b', 'blob:b'], ['j', 'blob:j']]);
 const slotsIn = (svg) => [...svg.matchAll(/data-slot="(\w+)"/g)].map((m) => m[1]);
 
-test('the studio pack covers every clothing type and every file it names exists', async () => {
-  const { TYPES } = await import('../public/js/data.js');
-  for (const t of Object.keys(TYPES)) assert.ok(studio.anchors[t], `anchor for ${t}`);
-  for (const f of Object.values(studio.layers)) for (const g of f.includes('{style}') ? studio.hairStyles.map((s) => f.replace('{style}', s)) : [f]) assert.ok(studioFiles[g], g);
+test('base.png is shown unchanged: the picture is an <image> at its own size and nothing draws a body', () => {
+  assert.ok(existsSync(new URL('../public/assets/avatar/base.png', import.meta.url)), 'base.png is in the repo');
+  const png = readFileSync(new URL('../public/assets/avatar/base.png', import.meta.url));
+  assert.equal(png.readUInt32BE(16), config.size[0]); assert.equal(png.readUInt32BE(20), config.size[1]); // the config's size is the picture's real size
+  const svg = dollSVG({ pack, items: {}, urls });
+  assert.match(svg, /<image class="basepic" href="\/assets\/avatar\/base\.png" x="0" y="0" width="896" height="1776"\/>/);
+  assert.match(svg, /viewBox="0 -110 896 1886"/); // (room above the head for a bun or a ponytail)
+  assert.ok(!/<(path|circle|ellipse|polygon)\b/.test(svg), 'no code-drawn shapes');
 });
 
-test('doll layers stack in the right order, and tucking swaps top and bottom', () => {
+test('the config gives every clothing type a box, worked out from the body points', async () => {
+  const { TYPES } = await import('../public/js/data.js');
+  for (const t of Object.keys(TYPES)) { const a = pack.anchors[t]; assert.ok(a && a.w > 50 && a.h > 50, `box for ${t}`); assert.ok(a.x >= 0 && a.x + a.w <= 896 + 1 && a.y + a.h <= 1776 + 120, `${t} stays on the picture`); }
+  const P = config.points, shoulder = bodyWidth(P, 'shoulder'), hip = bodyWidth(P, 'hip');
+  assert.ok(shoulder > 300 && hip > 300, 'widths come from the left and right points');
+  assert.equal(pack.anchors.tops.w, Math.round(shoulder * config.rules.tops.w[1] * 10) / 10, 'shirts are sized by the shoulders');
+  assert.equal(pack.anchors.bottoms.w, Math.round(hip * config.rules.bottoms.w[1] * 10) / 10, 'trousers are sized by the hips');
+  assert.ok(Math.abs(pack.anchors.tops.x + pack.anchors.tops.w / 2 - (P.shoulderL[0] + P.shoulderR[0]) / 2) < 0.2, 'a shirt is centred on the shoulders');
+  assert.equal(pack.anchors.shoes.y + pack.anchors.shoes.h, levelY(P, 'foot') + config.rules.shoes.y1[1], 'shoes end at the feet');
+  // moving the points moves the clothes, with no other change
+  const wider = deriveAnchors({ ...P, shoulderL: [P.shoulderL[0] - 50, P.shoulderL[1]], shoulderR: [P.shoulderR[0] + 50, P.shoulderR[1]] }, config.rules);
+  assert.ok(wider.tops.w > pack.anchors.tops.w + 100 && wider.bottoms.w === pack.anchors.bottoms.w);
+});
+
+test('layers stack as base, clothes, then accessories, and tucking swaps top and bottom', () => {
   const items = { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms'), outer: mkItem('j', 'outerwear') };
-  const look = { skin: '#eec3a0', hair: '#4a2e1e', hairStyle: 'bob', eyes: '#2b1d17', lips: '#c4505f' };
-  assert.deepEqual(slotsIn(dollSVG({ pack, look, items, urls })), ['bottom', 'top', 'outer']);
-  const tucked = { ...items, top: { ...items.top, fit: { studio: { tuck: true } } } };
-  const svg = dollSVG({ pack, look, items: tucked, urls });
+  assert.deepEqual(slotsIn(dollSVG({ pack, items, urls })), ['bottom', 'top', 'outer']);
+  const tucked = { ...items, top: { ...items.top, fit: { base: { tuck: true } } } };
+  const svg = dollSVG({ pack, items: tucked, urls });
   assert.deepEqual(slotsIn(svg), ['top', 'bottom', 'outer']);
   assert.match(svg, /clip-path="url\(#tuckclip-\d+\)"/);
-  assert.ok(!/\{\{/.test(svg), 'no unfilled art tokens');
-  assert.ok(svg.includes('#4a2e1e') || svg.includes('4a2e1e'), 'hair colour reaches the art');
+  const body = svg.indexOf('class="basepic"'), first = svg.indexOf('class="gar'); assert.ok(body > 0 && body < first, 'the picture is under the clothes');
+  assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
-test('each art pack remembers its own fit for a piece', () => {
-  const it = mkItem('t', 'tops', { fit: { studio: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
-  assert.equal(fitOf(it, { id: 'studio' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);
-  const a = studio.anchors.tops;
-  assert.match(garmentTransform(a, { scale: 1, dx: 0, dy: 0, rot: 0 }), /^translate\(250 347\) rotate\(0\) scale\(1\) translate\(-145 -135\)$/);
+test('each piece remembers a small fit for this picture only', () => {
+  const it = mkItem('t', 'tops', { fit: { base: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
+  assert.equal(fitOf(it, { id: 'base' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);
+  const a = { x: 100, y: 200, w: 300, h: 400 };
+  assert.match(garmentTransform(a, { scale: 1, dx: 0, dy: 0, rot: 0 }), /^translate\(250 400\) rotate\(0\) scale\(1\) translate\(-150 -200\)$/);
   assert.ok(isTuckable(mkItem('t', 'tops'), pack) && !isTuckable(mkItem('d', 'dresses'), pack));
 });
 
-test('a different art pack changes the drawing and the placement without touching the rules', () => {
-  const alt = { ...pack, id: 'alt', view: [0, 0, 1000, 1800], anchors: { ...pack.anchors, tops: { x: 300, y: 400, w: 400, h: 400, align: 'xMidYMin' } }, layers: { ...pack.layers, body: 'mybody.svg' }, files: { ...studioFiles, 'mybody.svg': '<rect id="mine" width="10" height="10" fill="{{skin}}"/>' } };
-  const svg = dollSVG({ pack: alt, look: { skin: '#123456', hair: '#000000', hairStyle: 'pixie', eyes: '#000000', lips: '#ff0000' }, items: { top: mkItem('t', 'tops') }, urls });
-  assert.match(svg, /viewBox="0 0 1000 1800"/); assert.match(svg, /id="mine"[^>]*fill="#123456"/); assert.match(svg, /translate\(500 600\)/);
+test('the dashed selection box hugs the visible part of the cutout, not the whole box', () => {
+  const a = { x: 0, y: 0, w: 400, h: 400, align: 'xMidYMin' };
+  const wide = { iw: 200, ih: 100, bx: 0.1, by: 0.2, bw: 0.8, bh: 0.6 };      // a wide picture in a square box: scaled to 400 x 200, top-aligned
+  assert.deepEqual(imageRect(a, wide), { x: 0, y: 0, w: 400, h: 200 });
+  assert.deepEqual(contentBox(a, wide), { x: 40, y: 40, w: 320, h: 120 });
+  const tall = { iw: 100, ih: 200, bx: 0, by: 0, bw: 1, bh: 1 };              // a tall picture: 200 x 400, centred across
+  assert.deepEqual(contentBox(a, tall), { x: 100, y: 0, w: 200, h: 400 });
+  assert.deepEqual(contentBox(a, null), { x: 0, y: 0, w: 400, h: 400 }, 'unknown size: the whole box');
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops') }, urls, meta: new Map([['t', { iw: 100, ih: 100, bx: 0.25, by: 0.25, bw: 0.5, bh: 0.5 }]]), selected: 't' });
+  const box = svg.match(/class="selbox" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/);
+  assert.ok(box && +box[3] < pack.anchors.tops.w, 'the box is smaller than the anchor box when the cutout has empty margins');
 });
 
-test('skin and hair shades are derived from the customizer colours', () => {
-  const t = tokens({ skin: '#eec3a0', hair: '#4a2e1e' });
-  assert.notEqual(t.skinShade, t.skin); assert.equal(mix('#000000', '#ffffff', 0.5), '#808080');
+test('the debug overlay draws every point from the config', () => {
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops') }, urls, debug: true });
+  for (const name of Object.keys(config.points)) assert.ok(svg.includes(`>${name}</text>`), `${name} is labelled`);
+  assert.ok(svg.includes('class="pointsdbg"')); assert.ok(!dollSVG({ pack, items: {}, urls }).includes('pointsdbg'));
 });
 
 test('every API route is registered on all three hosts (local server, Vercel, Cloudflare worker)', () => {
@@ -274,7 +297,7 @@ test('the share-target service worker redirects to absolute URLs', () => {
 });
 
 // ── the game around the closet ──
-import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, guideFor, initial, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather, usePhoto } from '../public/js/game.js';
+import { pickTheme, rateOutfit, coinsFor, rollOver, applyRating, spendEnergy, endDay, initial, CATALOG, catalogItem, owns, buy, usePhoto } from '../public/js/game.js';
 import { BACKGROUNDS, POSES } from '../public/js/photo.js';
 const piece = (id, type, o = {}) => ({ id, type, name: id, occasions: [], color: { hex: '#e8dfd0' }, season: 'all', ...o });
 
@@ -312,45 +335,25 @@ test('coins grow with stars and streak, shrink when tired, and are only paid onc
   assert.equal(game.coins, coinsFor({ stars: 5 }));
 });
 
-test('a new date starts a new day, keeps coins, and the bed ends the day', () => {
+test('a new date starts a new day, keeps coins, and ending the day closes it', () => {
   let g = rollOver(initial(), '2026-10-26', () => ({ title: 'A', occasion: '' })); g = { ...g, coins: 40 };
-  assert.equal(guideFor({ game: g, hasOutfit: false }), 'wardrobe'); assert.equal(guideFor({ game: g, hasOutfit: true }), 'mirror');
   g = spendEnergy(spendEnergy(g, 8), 4); assert.equal(g.day.energy, 88);
-  g = applyRating(g, { stars: 4, score: 80 }).game; assert.equal(guideFor({ game: g, hasOutfit: true }), 'bed');
-  g = endDay(g); assert.equal(g.day.phase, 'done'); assert.equal(guideFor({ game: g, hasOutfit: true }), null); assert.equal(g.history.length, 1);
+  g = applyRating(g, { stars: 4, score: 80 }).game; assert.equal(g.day.phase, 'evening');
+  g = endDay(g); assert.equal(g.day.phase, 'done'); assert.equal(g.history.length, 1);
   const next = rollOver(g, '2026-10-27', () => ({ title: 'B', occasion: '' }));
   assert.equal(next.coins, g.coins); assert.equal(next.day.theme.title, 'B'); assert.equal(next.day.energy, 100); assert.equal(rollOver(next, '2026-10-27', () => ({ title: 'Z' })).day.theme.title, 'B', 'same day: unchanged');
 });
 
-test('the shop: free things are yours, paid things need coins, furniture can be bought again', () => {
+test('the shop: free things are yours, paid things need coins and are bought once', () => {
   let g = { ...initial(), coins: 100 };
-  assert.ok(owns(g, 'hair:long') && owns(g, 'room:rose') && !owns(g, 'hair:bun'), 'free styles are yours from the start');
-  assert.equal(buy({ ...g, coins: 10 }, 'hair:bun').ok, false, 'too poor');
-  let r = buy(g, 'hair:bun'); assert.ok(r.ok && r.game.coins === 60 && owns(r.game, 'hair:bun')); g = r.game;
-  assert.equal(buy(g, 'hair:bun').ok, false, 'a hairstyle is bought once');
-  g = buy(g, 'furn:chair_stool').game; g = buy(g, 'furn:chair_stool').game; assert.equal(furnitureStock(g, 'furn:chair_stool'), 2);
+  assert.ok(owns(g, 'bg:blush') && owns(g, 'pose:stand') && !owns(g, 'bg:sunset'), 'free ones are yours from the start');
+  assert.equal(buy({ ...g, coins: 10 }, 'bg:sunset').ok, false, 'too poor');
+  const r = buy(g, 'bg:sunset'); assert.ok(r.ok && r.game.coins === 70 && owns(r.game, 'bg:sunset')); g = r.game;
+  assert.equal(buy(g, 'bg:sunset').ok, false, 'bought once');
   assert.equal(buy(g, 'nope').ok, false);
-  assert.ok(CATALOG.every((c) => c.kind !== 'furn' || (c.model && c.price > 0)), 'every piece of furniture names its model');
+  assert.ok(CATALOG.every((c) => ['bg', 'pose'].includes(c.kind)), 'only photo-mode things are sold (no furniture: the apartment is gone)');
   assert.equal(new Set(CATALOG.map((c) => c.id)).size, CATALOG.length, 'ids are unique');
-});
-
-test('build mode state: place, move, turn and put away; the stock follows', () => {
-  let g = buy({ ...initial(), coins: 200 }, 'furn:cactus_small_A').game;
-  assert.equal(placePiece(initial(), 'furn:cactus_small_A', 0, 0).uid, '', 'cannot place what you do not own');
-  let p = placePiece(g, 'furn:cactus_small_A', 1.234, -2, 5, 'u1'); g = p.game;
-  assert.equal(g.placed[0].x, 1.23); assert.equal(g.placed[0].ry, 1, 'turns wrap to quarter-turns'); assert.equal(furnitureStock(g, 'furn:cactus_small_A'), 0);
-  assert.equal(placePiece(g, 'furn:cactus_small_A', 0, 0).uid, '', 'out of stock once it is placed');
-  g = movePiece(g, 'u1', { x: 2, ry: -1 }); assert.equal(g.placed[0].x, 2); assert.equal(g.placed[0].ry, 3);
-  g = putAway(g, 'u1'); assert.equal(g.placed.length, 0); assert.equal(furnitureStock(g, 'furn:cactus_small_A'), 1, 'back in storage');
-});
-
-test('rooms and old hairstyles', () => {
-  let g = { ...initial(), coins: 100 };
-  assert.equal(useRoom(g, 'room:sage').decor, 'rose', 'you cannot use a room you have not bought');
-  g = buy(g, 'room:sage').game; assert.equal(useRoom(g, 'room:sage').decor, 'sage');
-  assert.ok(owns(grandfather(initial(), 'curly'), 'hair:curly'), 'a style you already wore stays yours');
-  assert.equal(grandfather(initial(), 'long').owned.length, 0);
-  assert.ok(catalogItem('room:dusk'));
+  assert.ok(catalogItem('pose:twirl'));
 });
 
 test('photo mode: every backdrop and pose for sale has a drawing, and you can only use what you own', () => {
@@ -362,4 +365,155 @@ test('photo mode: every backdrop and pose for sale has a drawing, and you can on
   assert.equal(usePhoto(g, 'bg:sunset').photo.bg, 'blush', 'not owned: unchanged');
   g = buy(g, 'bg:sunset').game; assert.equal(usePhoto(g, 'bg:sunset').photo.bg, 'sunset'); assert.equal(usePhoto(g, 'bg:studio').photo.bg, 'studio', 'free ones are always yours');
   assert.equal(usePhoto({ ...g, photo: undefined }, 'pose:stand').photo.bg, 'blush', 'an old save without photo settings still works');
+});
+
+/* ── garment fitting ── */
+import { tps, affineFit, rowRuns } from '../public/js/warp.js';
+import { homography } from '../public/js/editor.js';
+import { suggest, namesFor, groupOf } from '../public/js/landmarks.js';
+import { alongPath, pathLength } from '../public/js/bodymap.js';
+
+test('thin-plate spline passes through every control point', () => {
+  const src = [[0, 0], [100, 0], [100, 200], [0, 200], [50, 100]], dst = [[10, 5], [120, 0], [95, 210], [-5, 190], [60, 90]], f = tps(src, dst);
+  src.forEach((p, i) => { const [x, y] = f(...p); assert.ok(Math.hypot(x - dst[i][0], y - dst[i][1]) < 1e-6); });
+  const a = affineFit(src.slice(0, 4), src.slice(0, 4).map(([x, y]) => [x * 2 + 3, y * 2 - 1])); assert.deepEqual(a(10, 10).map(Math.round), [23, 19]);
+});
+test('straightening maps the four corners of the product to a rectangle', () => {
+  const q = [[100, 50], [400, 80], [380, 600], [90, 560]], f = homography(q, 300, 500);
+  [[0, 0], [300, 0], [300, 500], [0, 500]].forEach((c, i) => { const [x, y] = f(...q[i]); assert.ok(Math.hypot(x - c[0], y - c[1]) < 1e-6); });
+});
+test('row runs find the pieces of a row, bridging 1px gaps', () => {
+  const w = 20, d = new Uint8ClampedArray(w * 4); [2, 3, 4, 6, 7, 15, 16, 17, 18].forEach((x) => (d[x * 4 + 3] = 255));
+  assert.deepEqual(rowRuns(d, w, 0, { gap: 1, min: 2 }), [[2, 8], [15, 19]]);
+});
+test('landmarks: each category has its own set, and a silhouette gives plausible ones', () => {
+  assert.deepEqual(namesFor('bottoms'), ['waistL', 'waistR', 'crotch', 'hemLo', 'hemLi', 'hemRi', 'hemRo']);
+  assert.ok(namesFor('dresses').includes('waistL') && namesFor('tops').includes('armpitL') && !namesFor('shoes').length);
+  // a plain pair of trousers: waistband on top, two legs below a crotch
+  const w = 100, h = 200, a = new Uint8Array(w * h); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) a[y * w + x] = y < 60 ? (x >= 20 && x < 80 ? 1 : 0) : ((x >= 20 && x < 48) || (x >= 52 && x < 80) ? 1 : 0);
+  const m = suggest('bottoms', { w, h, a }); assert.ok(m.crotch[1] > 0.25 && m.crotch[1] < 0.4 && Math.abs(m.crotch[0] - 0.5) < 0.05, `crotch ${m.crotch}`);
+  assert.ok(m.hemLo[0] < m.hemLi[0] && m.hemLi[0] < m.hemRi[0] && m.hemRi[0] < m.hemRo[0] && m.hemLo[1] > 0.95);
+  assert.equal(groupOf('shoes'), null);
+});
+test('sleeves follow the arm line', () => {
+  const arm = [[0, 0], [0, 100], [0, 300]]; assert.deepEqual(alongPath(arm, 0.5).map(Math.round), [0, 150]); assert.equal(pathLength(arm), 300);
+});
+test('the base picture config has the armpit, crotch and arm points the fit needs', async () => {
+  const c = JSON.parse((await import('node:fs')).readFileSync(new URL('../public/assets/avatar/config.json', import.meta.url), 'utf8'));
+  for (const k of ['armpitL', 'armpitR', 'crotch', 'waistbandL', 'waistbandR', 'wristL', 'wristR']) assert.ok(Array.isArray(c.points[k]), k);
+  assert.ok(c.arms.L.length >= 3 && c.arms.R.length >= 3); assert.deepEqual(c.clothesOrder, ['shoes', 'bottom', 'top', 'dress', 'outer', 'bag']);
+});
+
+/* ── the walk-in closet ── */
+import { SECTIONS, layoutSection, artBox, trackLayout, targetFor, sectionAt } from '../public/js/closet.js';
+test('closet: every section has a place along the walls, and the strip order matches', () => {
+  assert.deepEqual(SECTIONS.map((s) => s.k), ['overview', 'tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 'bags', 'jewelry', 'vanity', 'mirror']);
+  const { at, total } = trackLayout(390, 700);
+  assert.ok(at.overview.w > 390 && at.tops.w === 390 && Math.abs(total - (at.mirror.x + 390)) < 1e-6);
+  for (const s of SECTIONS) assert.equal(sectionAt(targetFor(s.k, 390, 700), 390, 700), s.k === 'overview' ? 'overview' : s.k, s.k);
+  const b = artBox(SECTIONS.find((s) => s.k === 'jewelry'), 390, 700); assert.ok(b.w > 390 * 1.6 && b.x <= 0 && b.x >= 390 - b.w, 'jewelry is the vanity picture zoomed into the island');
+});
+test('closet: pieces hang on the rails and sit on the shelves without spilling out', () => {
+  const rail = SECTIONS.find((s) => s.k === 'dresses'), items = Array.from({ length: 9 }, (_, i) => ({ id: 'd' + i, ar: 0.6 }));
+  const L = layoutSection(rail, items); assert.equal(L.length, 9);
+  for (const p of L) { assert.ok(p.x >= 100 && p.x + p.w <= 845 && p.y > 250 && p.y + p.h < 1300, JSON.stringify(p)); assert.ok(Math.abs(p.hanger[0] - (p.x + p.w / 2)) < 1e-6); }
+  const shoes = layoutSection(SECTIONS.find((s) => s.k === 'shoes'), [{ id: 's', ar: 2 }])[0]; assert.ok(shoes.w <= 0.86 * 210 + 1e-6 && shoes.y + shoes.h <= 457);
+  assert.deepEqual(layoutSection(SECTIONS.find((s) => s.k === 'vanity'), [{ id: 'x', ar: 1 }]), [], 'nothing is placed where nothing belongs');
+});
+
+/* ── selection clean-up and the screenshot crop ── */
+import { cleanMask } from '../public/js/cutmask.js';
+import { productBox } from '../public/js/editor.js';
+test('a selection keeps the garment you tapped and drops a thin stray line', () => {
+  const w = 100, h = 100, data = new Uint8Array(w * h);
+  for (let y = 20; y < 80; y++) for (let x = 40; x < 60; x++) data[y * w + x] = 255; // the garment
+  for (let x = 0; x < 40; x++) data[78 * w + x] = 255; // a 1px divider line touching it
+  for (let y = 5; y < 10; y++) for (let x = 85; x < 95; x++) data[y * w + x] = 255; // a separate speck
+  const out = cleanMask({ w, h, data }, [[0.5, 0.5]]).data;
+  assert.equal(out[50 * w + 50], 255); assert.equal(out[78 * w + 5], 0, 'line gone'); assert.equal(out[7 * w + 90], 0, 'speck gone');
+});
+test('only a phone screenshot is cropped to its product photo; a set photographed with a gap is kept whole', () => {
+  const img = (w, h, bands) => { const data = new Uint8ClampedArray(w * h * 4).fill(255); for (const [y0, y1] of bands) for (let y = y0; y < y1; y++) for (let x = w * 0.1; x < w * 0.9; x++) { const o = (y * w + Math.floor(x)) * 4; data[o] = data[o + 1] = data[o + 2] = 40; } return { data, width: w, height: h }; };
+  const shot = productBox(img(100, 216, [[3, 8], [30, 140], [150, 156], [170, 180]]));
+  assert.deepEqual([shot[0][1], shot[2][1]], [30, 140], 'status bar, text and buttons left out');
+  const set = productBox(img(100, 280, [[10, 120], [150, 270]]));
+  assert.deepEqual(set, [[0, 0], [100, 0], [100, 280], [0, 280]], 'two pieces with a gap: nothing cut away');
+});
+
+/* ── hairstyles: Nikki's own pictures, laid over the head ── */
+test('every hairstyle is fitted by its landmarks: temples on her temples, hairline on her hairline; hair behind the neck goes behind the body', async () => {
+  const { hairOf, hairPlacement } = await import('../public/js/doll.js');
+  const P = config.points;
+  for (const k of ['crown', 'hairline', 'templeL', 'templeR', 'jawL', 'jawR', 'nape']) assert.ok(P[k], `head point ${k}`);
+  for (const st of config.hair.styles.filter((s) => s.id !== 'none')) {
+    const png = readFileSync(new URL(`../public/assets/avatar/hair/${st.id}.png`, import.meta.url));
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], st.size, `${st.id}: size in the config matches the picture`);
+    const [sx, sy, tx, ty] = hairPlacement(pack, st.marks), at = ([x, y]) => [x * sx + tx, y * sy + ty];
+    assert.ok(Math.abs(at(st.marks.templeL)[0] - P.templeL[0]) < 0.5 && Math.abs(at(st.marks.templeR)[0] - P.templeR[0]) < 0.5, `${st.id}: temples on hers`);
+    assert.ok(Math.abs(at(st.marks.hairline)[1] - P.hairline[1]) < 0.5, `${st.id}: hairline on hers`);
+    assert.ok(Math.abs(at(st.marks.crown)[1] - P.crown[1]) < 2, `${st.id}: crown on hers`);
+  }
+  assert.equal(hairOf(pack, 'none', 'natural'), null, 'no picture for the base picture\'s own hair');
+  const moved = hairOf(pack, 'bob', 'natural', { bob: { templeL: [0, 0] } });
+  assert.deepEqual(moved.marks.templeL, [0, 0], 'a saved adjustment replaces that landmark');
+  const svg = dollSVG({ pack, items: {}, urls, hair: hairOf(pack, 'waves', 'auburn') });
+  const back = svg.indexOf('class="hairback"'), body = svg.indexOf('class="basepic"'), front = svg.indexOf('class="hairfront"');
+  assert.ok(back > 0 && back < body && body < front, 'the hair behind the neck is drawn before the body, the rest after');
+  assert.match(svg, /<feColorMatrix type="matrix"/, 'colour applied as a filter, the picture itself is untouched');
+  assert.match(svg, /<feGaussianBlur in="SourceAlpha"/, 'a soft shadow where the hair meets the face');
+});
+
+/* ── starter closet ── */
+test('the starter list: 20 pieces in each of 7 batches, valid types and occasions, one shared image spec', async () => {
+  const { ITEMS, BATCHES, promptFor, sizeFor } = await import('../public/starter/items.js');
+  const { TYPES: T, OCCASIONS: O } = await import('../public/js/data.js');
+  assert.equal(ITEMS.length, 140); assert.equal(new Set(ITEMS.map((i) => i.id)).size, 140, 'unique ids');
+  for (const [b] of BATCHES) assert.equal(ITEMS.filter((i) => i.batch === b).length, 20, b);
+  for (const i of ITEMS) { assert.ok(T[i.type], i.id); assert.ok(i.occasions.length && i.occasions.every((o) => O.includes(o)), i.id); assert.ok(['light', 'all', 'warm'].includes(i.season)); }
+  const top = ITEMS.find((i) => i.batch === 'tops'), shoe = ITEMS.find((i) => i.batch === 'shoes');
+  assert.match(promptFor(top), /^Flat lay product photo of .*, laid flat and neatly arranged, viewed from directly above, flat lay, front view, structured shape, centered, entire item visible with margin on all sides, plain pure white background, soft even lighting/);
+  for (const i of ITEMS) assert.doesNotMatch(promptFor(i), /mannequin|\bmodel\b|person|dress form/i, `${i.id}: no word that makes FLUX draw a body or a form`);
+  assert.deepEqual(sizeFor(top), { width: 1024, height: 1365 }); assert.deepEqual(sizeFor(shoe), { width: 1024, height: 1024 });
+});
+test('/api/starter only makes pieces on the list, on Cloudflare (fal only as a fallback), and reports the daily limit', async () => {
+  const { handleStarter, isDailyLimit, NEURONS_EACH, nextResetUTC } = await import('../lib/ai.js');
+  const env = { CF_ACCOUNT_ID: 'a', CF_API_TOKEN: 't', APP_PASSCODE: 'pw', USAGE_DISABLED: '1' };
+  const call = (body, pass = 'pw', e = env) => handleStarter(new Request('http://x/api/starter', { method: 'POST', headers: { 'x-app-passcode': pass, 'content-type': 'application/json' }, body: JSON.stringify(body) }), e);
+  assert.equal((await call({ id: 'a cat in a hat' })).status, 400);
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'nope')).status, 401);
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw', USAGE_DISABLED: '1' })).status, 503, 'says what to set when no engine is configured');
+  assert.equal((await call({ id: 'starter-black-fitted-tee' }, 'pw', { APP_PASSCODE: 'pw', FAL_KEY: 'f', USAGE_DISABLED: '1' })).status, 503, 'no silent switch to fal (paid) when Cloudflare is not set up');
+  assert.equal(NEURONS_EACH, 57.6, '4 tiles x 4.8 + 4 steps x 9.6');
+  assert.ok(isDailyLimit(429, '') && isDailyLimit(400, '4006: you have used up your daily free allocation of 10,000 neurons') && !isDailyLimit(500, 'internal error'));
+  assert.equal(new Date(nextResetUTC(Date.UTC(2026, 9, 26, 17, 5))).toISOString(), '2026-10-27T00:00:00.000Z');
+});
+test('Style me can use starter pieces but prefers your own', async () => {
+  const { styleMe } = await import('../public/js/stylist.js');
+  const mine = { id: 'm', type: 'tops', occasions: ['Brunch'] }, st = { id: 's', type: 'tops', occasions: ['Brunch'], source: 'starter' }, b = { id: 'b', type: 'bottoms', occasions: ['Brunch'] };
+  let own = 0; for (let k = 0; k < 400; k++) if (styleMe([mine, st, b], 'Brunch').top?.id === 'm') own++;
+  assert.ok(own > 280 && own < 400, `own picked ${own}/400`);
+  assert.equal(styleMe([st, b], 'Brunch').top.id, 's', 'a starter piece fills the gap when you have nothing');
+});
+test('accessories and bags snap to their body points: earrings split onto both ears, a watch on the wrist', () => {
+  const earrings = mkItem('e', 'accessories', { acc: 'earrings' }), meta = new Map([['e', { iw: 200, ih: 100 }], ['w', { iw: 100, ih: 100 }]]);
+  const svg = dollSVG({ pack, items: { acc: earrings }, urls: new Map([['e', 'blob:e']]), meta });
+  const pics = [...svg.matchAll(/<svg x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)" height="([\d.]+)" viewBox="([\d.]+) 0/g)].map((m) => m.slice(1).map(Number));
+  const r = config.accRules.earrings, [eL, eR] = r.at.map((k) => config.points[k]);
+  assert.equal(pics.length, 2, 'one half of the picture on each ear');
+  assert.ok(Math.abs(pics[0][0] + r.anchor[0] * r.w - eL[0]) < 0.2 && Math.abs(pics[1][0] + r.anchor[0] * r.w - eR[0]) < 0.2, 'centred on the ear points');
+  assert.deepEqual([pics[0][4], pics[1][4]], [0, 100], 'left half, right half');
+  for (const k of ['head', 'eyes', 'earL', 'earR', 'necklace', 'handL', 'handR', 'belt']) assert.ok(config.points[k], `${k} point`);
+  for (const [k, rule] of Object.entries(config.accRules)) for (const p of [].concat(rule.at)) assert.ok(config.points[p], `${k} -> ${p}`);
+});
+test('a corset or tube top sits on the bust line, its sides on the bust and waist points (not on the shoulders)', async () => {
+  const { plan, isStrapless } = await import('../public/js/garment.js');
+  assert.ok(isStrapless('Black strapless tube top') && isStrapless('Brown leopard corset top') && !isStrapless('White ribbed tank'));
+  const cut = { width: 200, height: 300, getContext: () => ({ getImageData: () => ({ data: new Uint8ClampedArray(200 * 300 * 4).fill(255) }) }) };
+  const marks = { shoulderL: [0.02, 0.02], shoulderR: [0.98, 0.02], hemL: [0.2, 0.9], hemR: [0.8, 0.9] };
+  const body = { cx: 448, outlineAt: () => ({ l: 250, r: 646 }), crotchY: 900 };
+  const pl = plan('tops', marks, cut, pack, body, { strapless: true }), at = (n) => pl.ctl.find((c) => c.name === n).dst;
+  const P = config.points, bustY = (P.bustL[1] + P.bustR[1]) / 2;
+  assert.equal(at('topL')[1], bustY - 70); assert.ok(Math.abs((at('topL')[0] + at('topR')[0]) / 2 - 448) < 0.01, 'centred on the body');
+  assert.ok(Math.abs(at('topR')[0] - at('topL')[0] - (P.bustR[0] - P.bustL[0]) * 1.05) < 1, 'as wide as the bust (plus a little ease)');
+  assert.ok(!pl.ctl.some((c) => c.name.startsWith('shoulder')), 'nothing pinned to the shoulders');
 });

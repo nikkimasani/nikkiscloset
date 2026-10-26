@@ -1,0 +1,886 @@
+{
+  "version": 5,
+  "id": "base",
+  "name": "Base model",
+  "about": "base.png is shown exactly as it is, at its own proportions. Nothing here draws the body. The numbers below are only coordinates laid over the picture, in the picture's own pixels (896 x 1776), so clothes know where to go. Turn on the debug overlay (Customize > Anchors) to see them on the picture, then edit them here. The armpit, crotch, waistband and arm points are where a garment's matching landmarks (neckline, armpits, crotch, hems, sleeve ends) are warped to; the body's outline for the 'widen to the body' pass is read from base.png's own transparency.",
+  "size": [
+    896,
+    1776
+  ],
+  "view": [
+    0,
+    -110,
+    896,
+    1886
+  ],
+  "layers": {
+    "body": "base.png"
+  },
+  "stack": [
+    "hairBack",
+    "body",
+    "clothes",
+    "hair",
+    "acc"
+  ],
+  "points": {
+    "neck": [
+      448,
+      300
+    ],
+    "hairline": [
+      448,
+      78
+    ],
+    "shoulderL": [
+      250,
+      372
+    ],
+    "shoulderR": [
+      646,
+      372
+    ],
+    "bustL": [
+      298,
+      490
+    ],
+    "bustR": [
+      600,
+      490
+    ],
+    "waistL": [
+      330,
+      610
+    ],
+    "waistR": [
+      563,
+      610
+    ],
+    "hipL": [
+      228,
+      900
+    ],
+    "hipR": [
+      662,
+      900
+    ],
+    "kneeL": [
+      324,
+      1215
+    ],
+    "kneeR": [
+      562,
+      1215
+    ],
+    "ankleL": [
+      292,
+      1590
+    ],
+    "ankleR": [
+      591,
+      1590
+    ],
+    "footL": [
+      266,
+      1735
+    ],
+    "footR": [
+      616,
+      1735
+    ],
+    "armpitL": [
+      312,
+      535
+    ],
+    "armpitR": [
+      586,
+      535
+    ],
+    "elbowL": [
+      221,
+      700
+    ],
+    "elbowR": [
+      673,
+      700
+    ],
+    "wristL": [
+      168,
+      880
+    ],
+    "wristR": [
+      727,
+      880
+    ],
+    "crotch": [
+      445,
+      938
+    ],
+    "waistbandL": [
+      296,
+      700
+    ],
+    "waistbandR": [
+      597,
+      700
+    ],
+    "head": [
+      448,
+      52
+    ],
+    "eyes": [
+      448,
+      153
+    ],
+    "earL": [
+      369,
+      200
+    ],
+    "earR": [
+      527,
+      200
+    ],
+    "necklace": [
+      448,
+      332
+    ],
+    "handL": [
+      166,
+      940
+    ],
+    "handR": [
+      728,
+      940
+    ],
+    "belt": [
+      446,
+      700
+    ],
+    "crown": [
+      448,
+      41
+    ],
+    "templeL": [
+      384,
+      115
+    ],
+    "templeR": [
+      516,
+      115
+    ],
+    "jawL": [
+      393,
+      222
+    ],
+    "jawR": [
+      503,
+      222
+    ],
+    "nape": [
+      448,
+      262
+    ]
+  },
+  "rulesAbout": "Each kind of clothing gets a box worked out from the points. w = [which body width, how many times it]: shoulder, bust, waist, hip or foot (the distance between the left and right point). y0 / y1 = [which level, offset in pixels] for the top and bottom edge: neck, shoulder, bust, waist, hip, knee, ankle, foot. cx = where it is centred: a pair (shoulder, bust, waist, hip, knee, ankle, foot) or [point, offset]. A cutout is scaled to fit inside its box, so a wide shirt is sized by the shoulders, trousers by the hips, and a long coat never runs past the bottom edge of its box.",
+  "rules": {
+    "tops": {
+      "w": [
+        "shoulder",
+        1.3
+      ],
+      "y0": [
+        "neck",
+        -8
+      ],
+      "y1": [
+        "hip",
+        -30
+      ],
+      "cx": "shoulder",
+      "align": "xMidYMin"
+    },
+    "tanks": {
+      "w": [
+        "bust",
+        1.2
+      ],
+      "y0": [
+        "neck",
+        -24
+      ],
+      "y1": [
+        "hip",
+        -30
+      ],
+      "cx": "shoulder",
+      "align": "xMidYMin"
+    },
+    "bodysuits": {
+      "w": [
+        "bust",
+        1.25
+      ],
+      "y0": [
+        "neck",
+        -24
+      ],
+      "y1": [
+        "hip",
+        40
+      ],
+      "cx": "shoulder",
+      "align": "xMidYMin"
+    },
+    "bottoms": {
+      "w": [
+        "hip",
+        1.12
+      ],
+      "y0": [
+        "waist",
+        -16
+      ],
+      "y1": [
+        "ankle",
+        70
+      ],
+      "cx": "hip",
+      "align": "xMidYMin"
+    },
+    "skirts": {
+      "w": [
+        "hip",
+        1.15
+      ],
+      "y0": [
+        "waist",
+        -16
+      ],
+      "y1": [
+        "ankle",
+        0
+      ],
+      "cx": "hip",
+      "align": "xMidYMin"
+    },
+    "dresses": {
+      "w": [
+        "hip",
+        1.18
+      ],
+      "y0": [
+        "neck",
+        -16
+      ],
+      "y1": [
+        "ankle",
+        40
+      ],
+      "cx": "hip",
+      "align": "xMidYMin"
+    },
+    "outerwear": {
+      "w": [
+        "shoulder",
+        1.4
+      ],
+      "y0": [
+        "neck",
+        -18
+      ],
+      "y1": [
+        "knee",
+        120
+      ],
+      "cx": "shoulder",
+      "align": "xMidYMin"
+    },
+    "shoes": {
+      "w": [
+        "foot",
+        1.35
+      ],
+      "y0": [
+        "foot",
+        -230
+      ],
+      "y1": [
+        "foot",
+        10
+      ],
+      "cx": "foot",
+      "align": "xMidYMax"
+    },
+    "bags": {
+      "w": [
+        "hip",
+        0.5
+      ],
+      "y0": [
+        "hip",
+        -150
+      ],
+      "y1": [
+        "knee",
+        -20
+      ],
+      "cx": [
+        "hipR",
+        80
+      ],
+      "align": "xMidYMin"
+    },
+    "accessories": {
+      "w": [
+        "shoulder",
+        0.8
+      ],
+      "y0": [
+        "neck",
+        -70
+      ],
+      "y1": [
+        "bust",
+        -20
+      ],
+      "cx": "shoulder",
+      "align": "xMidYMid"
+    }
+  },
+  "tuckable": [
+    "tops",
+    "tanks",
+    "bodysuits"
+  ],
+  "clothesOrder": [
+    "shoes",
+    "bottom",
+    "top",
+    "dress",
+    "outer",
+    "bag"
+  ],
+  "tuckedOrder": [
+    "shoes",
+    "top",
+    "bottom",
+    "dress",
+    "outer",
+    "bag"
+  ],
+  "arms": {
+    "L": [
+      [
+        258,
+        430
+      ],
+      [
+        268,
+        540
+      ],
+      [
+        247,
+        620
+      ],
+      [
+        221,
+        700
+      ],
+      [
+        194,
+        780
+      ],
+      [
+        170,
+        860
+      ],
+      [
+        168,
+        900
+      ]
+    ],
+    "R": [
+      [
+        638,
+        430
+      ],
+      [
+        628,
+        540
+      ],
+      [
+        648,
+        620
+      ],
+      [
+        673,
+        700
+      ],
+      [
+        700,
+        780
+      ],
+      [
+        723,
+        860
+      ],
+      [
+        727,
+        900
+      ]
+    ]
+  },
+  "versionAbout": "Raise 'version' whenever base.png is replaced, so phones fetch the new picture instead of a cached copy.",
+  "hair": {
+    "about": "Nikki's own hairstyle pictures (background made see-through, cropped). Each style has four landmarks in its own pixels: crown (top of the hair over the skull), hairline (top edge of the face opening) and temples (the opening's edges at temple height). The hair is scaled and placed so they land on the head points of the same names; adjust them in Customize > Hair > Adjust fit. Hair below the jaw inside the neck column is drawn behind the body, the rest in front.",
+    "styles": [
+      {
+        "id": "none",
+        "name": "Slicked back"
+      },
+      {
+        "id": "waves",
+        "name": "Long waves",
+        "size": [
+          400,
+          578
+        ],
+        "marks": {
+          "crown": [
+            196.5,
+            48.2
+          ],
+          "hairline": [
+            196.5,
+            96.9
+          ],
+          "templeL": [
+            112.3,
+            145.6
+          ],
+          "templeR": [
+            285.9,
+            145.6
+          ]
+        },
+        "tone": "#2d221c",
+        "backfill": "full"
+      },
+      {
+        "id": "layered",
+        "name": "Long layers",
+        "size": [
+          406,
+          585
+        ],
+        "marks": {
+          "crown": [
+            202.5,
+            56.2
+          ],
+          "hairline": [
+            202.5,
+            104.9
+          ],
+          "templeL": [
+            118.3,
+            153.6
+          ],
+          "templeR": [
+            291.9,
+            153.6
+          ]
+        },
+        "tone": "#2b1d14",
+        "backfill": "full"
+      },
+      {
+        "id": "sleek",
+        "name": "Sleek side part",
+        "size": [
+          496,
+          592
+        ],
+        "marks": {
+          "crown": [
+            244.0,
+            87.2
+          ],
+          "hairline": [
+            244.0,
+            135.9
+          ],
+          "templeL": [
+            159.8,
+            184.6
+          ],
+          "templeR": [
+            333.4,
+            184.6
+          ]
+        },
+        "tone": "#22160d",
+        "backfill": "full"
+      },
+      {
+        "id": "bob",
+        "name": "Bob",
+        "size": [
+          439,
+          492
+        ],
+        "marks": {
+          "crown": [
+            213.0,
+            115.2
+          ],
+          "hairline": [
+            213.0,
+            163.9
+          ],
+          "templeL": [
+            128.8,
+            212.6
+          ],
+          "templeR": [
+            302.4,
+            212.6
+          ]
+        },
+        "tone": "#20140c",
+        "backfill": "full"
+      },
+      {
+        "id": "curly",
+        "name": "Curls",
+        "size": [
+          514,
+          547
+        ],
+        "marks": {
+          "crown": [
+            258.0,
+            76.2
+          ],
+          "hairline": [
+            258.0,
+            124.9
+          ],
+          "templeL": [
+            173.8,
+            173.6
+          ],
+          "templeR": [
+            347.4,
+            173.6
+          ]
+        },
+        "tone": "#2a1c0f",
+        "backfill": "full"
+      },
+      {
+        "id": "ponytail",
+        "name": "High ponytail",
+        "size": [
+          250,
+          603
+        ],
+        "marks": {
+          "crown": [
+            125.0,
+            131.8
+          ],
+          "hairline": [
+            125.0,
+            180.4
+          ],
+          "templeL": [
+            40.8,
+            229.1
+          ],
+          "templeR": [
+            214.4,
+            229.1
+          ]
+        },
+        "tone": "#251a16",
+        "backfill": "top"
+      },
+      {
+        "id": "bun",
+        "name": "Top bun",
+        "size": [
+          360,
+          477
+        ],
+        "marks": {
+          "crown": [
+            179.5,
+            258.4
+          ],
+          "hairline": [
+            179.5,
+            324.5
+          ],
+          "templeL": [
+            65.2,
+            390.6
+          ],
+          "templeR": [
+            300.9,
+            390.6
+          ]
+        },
+        "tone": "#1f170e",
+        "backfill": "top"
+      }
+    ],
+    "colors": [
+      {
+        "id": "natural",
+        "name": "As drawn",
+        "sw": "#4a3426"
+      },
+      {
+        "id": "black",
+        "name": "Soft black",
+        "sw": "#1d1714",
+        "m": [
+          0.55,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.55,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.55,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "chestnut",
+        "name": "Chestnut",
+        "sw": "#6b3f24",
+        "m": [
+          1.25,
+          0,
+          0,
+          0,
+          0.04,
+          0,
+          1.0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.8,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "auburn",
+        "name": "Auburn",
+        "sw": "#8a3b1f",
+        "m": [
+          1.55,
+          0,
+          0,
+          0,
+          0.08,
+          0,
+          0.9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "id": "honey",
+        "name": "Honey",
+        "sw": "#a8743f",
+        "m": [
+          1.6,
+          0,
+          0,
+          0,
+          0.18,
+          0,
+          1.45,
+          0,
+          0,
+          0.12,
+          0,
+          0,
+          1.1,
+          0,
+          0.05
+        ]
+      },
+      {
+        "id": "blonde",
+        "name": "Blonde",
+        "sw": "#cfa86e",
+        "m": [
+          1.8,
+          0,
+          0,
+          0,
+          0.32,
+          0,
+          1.7,
+          0,
+          0,
+          0.27,
+          0,
+          0,
+          1.4,
+          0,
+          0.15
+        ]
+      }
+    ],
+    "neck": [
+      402,
+      494
+    ]
+  },
+  "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules.",
+  "accRules": {
+    "earrings": {
+      "at": [
+        "earL",
+        "earR"
+      ],
+      "w": 30,
+      "anchor": [
+        0.5,
+        0.04
+      ]
+    },
+    "necklace": {
+      "at": "necklace",
+      "w": 150,
+      "anchor": [
+        0.5,
+        0.08
+      ]
+    },
+    "watch": {
+      "at": "wristL",
+      "w": 46,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "bracelet": {
+      "at": "wristR",
+      "w": 44,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "rings": {
+      "at": "handR",
+      "w": 44,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "anklet": {
+      "at": "ankleR",
+      "w": 58,
+      "anchor": [
+        0.5,
+        0.4
+      ]
+    },
+    "sunglasses": {
+      "at": "eyes",
+      "w": 172,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "hat": {
+      "at": "head",
+      "w": 230,
+      "anchor": [
+        0.5,
+        0.72
+      ]
+    },
+    "headband": {
+      "at": "head",
+      "w": 160,
+      "anchor": [
+        0.5,
+        0.35
+      ]
+    },
+    "clip": {
+      "at": "head",
+      "w": 80,
+      "anchor": [
+        0.5,
+        0.6
+      ]
+    },
+    "belt": {
+      "at": "belt",
+      "w": 337,
+      "anchor": [
+        0.5,
+        0.5
+      ]
+    },
+    "scarf": {
+      "at": "necklace",
+      "w": 150,
+      "anchor": [
+        0.5,
+        0.15
+      ]
+    },
+    "handbag": {
+      "at": "handR",
+      "h": 230,
+      "anchor": [
+        0.5,
+        0.06
+      ]
+    },
+    "clutch": {
+      "at": "handR",
+      "w": 150,
+      "anchor": [
+        0.5,
+        0.45
+      ]
+    },
+    "shoulderbag": {
+      "at": "shoulderR",
+      "h": 560,
+      "anchor": [
+        0.5,
+        0.0
+      ]
+    }
+  }
+}

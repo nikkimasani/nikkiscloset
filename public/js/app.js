@@ -1,24 +1,24 @@
 import { all, get, put, del, uid } from './db.js';
 import { lookCard, shareOrDownload } from './sharecard.js';
-import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, SKIN, HAIR, HAIR_STYLES, AVATARS, BODY_TYPES, EYES, LIPS, ROOMS, seasonRoom, slotOf, wear } from './data.js';
+import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, slotOf, wear } from './data.js';
+import { SECTIONS, HOTSPOTS, sectionOf, layoutSection, artBox, trackLayout, bindCloset } from './closet.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName } from './color.js';
-import { mannequinSVG } from './mannequin.js';
 import { matchInspo, styleMe } from './stylist.js';
-import { SAMPLES, sampleBlob } from './sample.js';
-import { DEFAULT_BODY, HANDLES, fromLandmarks, fromProportions } from './body.js';
-import { detectPose } from './pose.js';
 import { outfitMeters } from './meters.js';
 import { closetInsights, streak as wearStreak } from './insights.js';
-import { webglOK } from './webgl.js';
 import { syncState, connect as syncConnect, disconnect as syncDisconnect, syncNow } from './sync.js';
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
-import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, cutoutAI, tagAI, pinAI, productAI } from './aitryon.js';
-import { browserCut } from './browsercut.js';
-import { loadPack, dollSVG, fitOf, garmentTransform, isTuckable } from './doll.js';
+import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, tagAI, pinAI, productAI } from './aitryon.js';
+import { fitItem, fitSignature, baseUnder } from './fitting.js';
+import { openCutEditor, MODES } from './editor.js';
+import { groupOf } from './landmarks.js';
+import * as starter from './starter.js';
+import { BATCHES as STARTER_BATCHES, ITEMS as STARTER_ITEMS, seedFor } from '../starter/items.js';
+import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
-import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, guideFor, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, furnitureStock, useRoom, placePiece, movePiece, putAway, grandfather, usePhoto } from './game.js';
+import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, usePhoto } from './game.js';
 import { BACKGROUNDS, POSES, composePhoto, photoBlob } from './photo.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -27,27 +27,23 @@ const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0
 const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return v === null || v === '' ? d : v; } catch { return d; } } /* '' means "unset" */, set: (k, v) => { try { localStorage.setItem(k, v); if (PREFS.includes(k)) localStorage.setItem('prefs_u', String(Date.now())); } catch { /* private mode */ } } };
 
 let dollFailed = false;
-let dollPack = null; // the 2D doll's art pack (null while loading or if it can't be loaded: the old mannequin takes over)
+let dollPack = null; // the base picture and its anchor points (null while loading or if it can't be loaded)
 const S = {
   items: [], outfits: [], wears: [], inspos: [], profile: null, plans: [], wishlist: [],
   loc: (() => { try { return JSON.parse(store.get('loc', 'null')); } catch { return null; } })(), forecast: null, weatherError: '',
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
-  urls: new Map(),
+  urls: new Map(), fits: new Map(), fitBoxes: new Map(), bases: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitSig: new Map(), fitPending: new Set(),
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
-  scene: (() => { const v = store.get('scene', 'doll'); return ['doll', 'apt', 'mirror'].includes(v) ? v : v === 'closet' ? 'apt' : 'doll'; })(), // 'mirror' is the plain mannequin: used when the doll's art can't load or you show your own photo avatar: store.get('avatar', 'mini_female_a'), station: '', aptPos: null,
+  scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
-  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'skin', // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
-  filter: { type: 'all', occ: 'all', q: '' },
+  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
+  filter: { type: 'all', occ: 'all', q: '', src: 'all' },
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
-  skin: store.get('skin', SKIN[2]), hair: store.get('hair', HAIR[1]), hairStyle: store.get('hairstyle', 'long'),
-  eyes: store.get('eyes', EYES[0]), lips: store.get('lips', LIPS[0]), room: store.get('room', 'auto'),
-  shape: (() => { try { return JSON.parse(store.get('shape', 'null')); } catch { return null; } })(), shapeName: store.get('shapename', ''),
   month: new Date(), date: iso(new Date()),
   inspo: null,                      // working inspo draft
   ai: null, aiError: '', aiBusy: false, aiAbort: null, // fal.ai render of the current outfit
 };
-S.game = grandfather(S.game, S.hairStyle); // a hairstyle you already wore stays yours (kept in memory until the next save)
 
 
 const itemById = (id) => S.items.find((i) => i.id === id);
@@ -70,7 +66,7 @@ function openModal() {
 function closeModal() {
   modalSeq++; S.photoOpen = false;
   $('#modal').hidden = true;
-  document.querySelectorAll('header, main').forEach((e) => (e.inert = !!S.station));
+  document.querySelectorAll('header, main').forEach((e) => (e.inert = false));
   lastFocus?.isConnected && lastFocus.focus();
 }
 /** Paint a dialog sheet, keeping keyboard focus on the same control across re-renders. */
@@ -82,31 +78,106 @@ function paintSheet(html, title) {
 
 async function load() {
   let profiles;
-  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (!p && S.scene === 'doll') S.scene = 'mirror'; if (S.view === 'tryon' && S.scene !== 'apt') renderTryon(); }); // don't hold up the first screen on the doll's art
+  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); }); // don't hold up the first screen on the doll's art
   [S.items, S.outfits, S.wears, S.inspos, profiles, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist'].map(all));
   S.profile = profiles[0] || null;
   if (S.profile?.photo) url('profile', S.profile.photo);
+  // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
+  S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
+  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1')); // (hidden ones stay in the database, backups and sync)
+  for (const i of S.items) if (starter.isStarter(i) && !i.placedFromAnchors) { delete i.fit; i.adj = { scale: 1, dx: 0, dy: 0 }; i.placedFromAnchors = 1; put('items', i); } // one-time: drop saved drag offsets so starter pieces sit by the body points
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
+  Promise.all(S.items.map(analyseItem)).then(() => { if (S.view === 'tryon' && dollPack) mountStage(); });
+  recheckStarters(); // the dashed selection box and tap-to-select need each cutout's real bounds
+}
+
+/** Starter pieces approved by an older, looser check are checked again with today's (dress-form scraps, wrong colour) and get their
+ *  sleeves from the list. A piece that now fails is cleaned; if it still fails it leaves the closet and the model (its batch remakes it). */
+async function recheckStarters() {
+  const old = S.items.filter((i) => starter.isStarter(i) && (i.checkVersion || 1) < starter.CHECK_VERSION && i.original); if (!old.length) return;
+  let dropped = 0;
+  for (const item of old) {
+    const it = STARTER_ITEMS.find((x) => x.id === item.starterId); if (!it) continue;
+    try {
+      let done = await starter.process(item.original, it); if (!done.check.ok) done = await starter.processCleaned(item.original, it, done.check);
+      const sl = starter.sleevesOf(it), sleeves = sl !== undefined && groupOf(it.type) ? sl : item.sleeves;
+      if (done.check.ok) Object.assign(item, { cutout: done.cutout, color: done.color, colors: done.colors, sleeves, marks: undefined, checkVersion: starter.CHECK_VERSION }); // landmarks found again, with the sleeves
+      else { Object.assign(item, { ready: false, review: done.check.reasons, checkVersion: starter.CHECK_VERSION }); dropped++; }
+      await put('items', item);
+      if (!item.ready) { S.items = S.items.filter((i) => i.id !== item.id); for (const k of Object.keys(S.outfit)) if (S.outfit[k] === item.id) delete S.outfit[k]; S.starterReview = [...(S.starterReview || []), item]; }
+      else { S.urls.delete(item.id); url(item.id, item.cutout); S.meta.delete(item.id); S.fitSig.delete(item.id); await analyseItem(item); }
+    } catch { /* leave it as it was */ }
+  }
+  render(); if (dropped) toast(`${dropped} starter piece${dropped === 1 ? '' : 's'} didn’t pass the new check and went back for remaking`);
+}
+
+/** Look at a cutout once: its size, where the visible part is, and a small see-through map so a tap picks the piece you actually touched. */
+async function analyseItem(item) {
+  if (!item?.cutout) return;
+  try {
+    const { img, url: u } = await loadImage(item.cutout); URL.revokeObjectURL(u);
+    const iw = img.naturalWidth, ih = img.naturalHeight, N = 64, c = document.createElement('canvas'); c.width = N; c.height = N;
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, N, N);
+    const d = g.getImageData(0, 0, N, N).data, mask = new Uint8Array(N * N); let x0 = N, y0 = N, x1 = -1, y1 = -1;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (d[(y * N + x) * 4 + 3] > 40) { mask[y * N + x] = 1; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    S.meta.set(item.id, x1 < 0 ? { iw, ih, bx: 0, by: 0, bw: 1, bh: 1, mask, N } : { iw, ih, bx: x0 / N, by: y0 / N, bw: (x1 - x0 + 1) / N, bh: (y1 - y0 + 1) / N, mask, N });
+  } catch { /* an unreadable picture just keeps the full box */ }
 }
 
 /** slot -> item objects for a {slot: id} map or an id list. */
 function outfitItems(src) {
   const ids = Array.isArray(src) ? src : Object.values(src);
   const out = {};
-  ids.map(itemById).filter(Boolean).forEach((i) => (out[slotOf(i.type)] = i));
+  ids.map(itemById).filter(Boolean).forEach((i) => { out[slotOf(i.type)] = i; queueFit(i); });
   return out;
 }
-const currentBody = () => (!usingPhoto() && S.shape ? fromProportions(S.shape) : S.profile ? { W: S.profile.W, H: S.profile.H, pts: S.profile.pts } : DEFAULT_BODY);
+
+/** The base picture to show under these items: base.png, or (under a short skirt or dress) base.png with the shorts below the hem hidden. */
+function baseFor(items) {
+  const parts = Object.values(items).filter((i) => (i.type === 'dresses' || i.type === 'skirts') && S.fitBlobs.has(i.id));
+  if (!parts.length || !dollPack) return '';
+  const key = parts.map((i) => i.id + S.fitSig.get(i.id)).join('|');
+  if (S.bases.has(key)) return S.bases.get(key) || '';
+  S.bases.set(key, null);
+  baseUnder(dollPack, parts.map((i) => S.fitBlobs.get(i.id))).then((u) => { S.bases.set(key, u); if (u) (S.view === 'tryon' ? mountStage() : render()); }).catch(() => {});
+  return '';
+}
+
+/** A quarter-size see-through map of a fitted picture, so a tap picks the piece you touched. */
+async function maskFromBlob(blob) {
+  const { img, url: u } = await loadImage(blob); URL.revokeObjectURL(u);
+  const w = Math.round(img.naturalWidth / 4), h = Math.round(img.naturalHeight / 4), c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h); const d = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h);
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 40) { data[y * w + x] = 1; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const k = img.naturalWidth / w;
+  return { w, h, data, box: x1 < 0 ? null : { x: x0 * k, y: y0 * k, w: (x1 - x0 + 1) * k, h: (y1 - y0 + 1) * k } };
+}
+
+/** Fit a worn piece to the body in the background (landmarks are suggested the first time and kept on the piece); the figure redraws when it's ready. */
+function queueFit(item) {
+  if (!dollPack || !groupOf(item.type) || !item.cutout) return;
+  const sig = fitSignature(item, dollPack), key = item.id + sig;
+  if (S.fitSig.get(item.id) === sig || S.fitPending.has(key)) return;
+  S.fitPending.add(key);
+  fitItem(item, dollPack).then(async (r) => {
+    S.fitPending.delete(key);
+    if (!r) return;
+    const old = S.fits.get(item.id); if (old) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one)
+    const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
+    if (!item.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
+    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
+  }).catch(() => S.fitPending.delete(key));
+}
 const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
-function mannequin(src, cls = '') {
-  const items = outfitItems(src), done = aiFor(items); // AI result replaces the photo; only un-rendered pieces are layered on
-  const rest = done ? Object.fromEntries(Object.entries(items).filter(([slot]) => !done.includes(slot))) : items;
-  return mannequinSVG({ body: currentBody(), photoUrl: done ? S.ai.image : usingPhoto() ? url('profile') : '', skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, face: { eyes: S.eyes, lips: S.lips }, items: rest, urls: S.urls, cls,
-    label: done ? `Your photo wearing ${Object.values(items).map((i) => i.name).join(', ')}` : '' });
-}
+/** The model wearing an outfit, small (calendar days, inspo matches). */
+/** Your chosen hairstyle and colour, ready for dollSVG. */
+const hairMarks = () => { try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } }; // your own "Adjust fit" landmarks, per style
+const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
+function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
 /* ───────────────────────── router ───────────────────────── */
@@ -121,16 +192,18 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
-  if (S.view !== 'tryon') { S.lastView = S.view; leaveApt(); }
+  if (S.view !== 'tryon') S.lastView = S.view;
+  document.body.classList.toggle('wic-on', S.view === 'tryon' && S.scene === 'closet');
+  if (S.view !== 'tryon' || S.scene === 'closet') document.body.classList.remove('dsheet');
   ({ closet: renderCloset, tryon: renderTryon, plan: () => renderPlan(ctx), planner: renderPlanner, inspo: renderInspo })[S.view]();
 }
 
 /* ───────────────────────── closet ───────────────────────── */
 function renderCloset() {
-  const { type, occ, q } = S.filter;
+  const { type, occ, q, src } = S.filter;
   const counts = Object.fromEntries(Object.keys(TYPES).map((t) => [t, S.items.filter((i) => i.type === t).length]));
   const shown = S.items.filter((i) =>
-    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) &&
+    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) && (src === 'all' || (src === 'starter') === starter.isStarter(i)) &&
     (!q || (i.name + ' ' + (i.brand || '') + ' ' + (i.color?.name || '')).toLowerCase().includes(q.toLowerCase())));
 
   const rails = Object.keys(TYPES).map((t) => {
@@ -147,16 +220,18 @@ function renderCloset() {
       <select id="occ" aria-label="Filter by occasion" style="width:auto"><option value="all">All occasions</option>${OCCASIONS.map((o) => `<option ${o === occ ? 'selected' : ''}>${o}</option>`).join('')}</select>
       <span class="muted">${S.items.length} pieces</span>
     </div>
+    ${S.items.some(starter.isStarter) ? `<div class="chips srcchips" style="margin-top:12px" role="group" aria-label="Whose pieces">${[['all', 'All'], ['mine', 'Mine'], ['starter', 'Starter']].map(([k, l]) => `<button class="chip ${src === k ? 'on' : ''}" aria-pressed="${src === k}" data-act="fsrc" data-v="${k}">${l} · ${S.items.filter((i) => k === 'all' || (k === 'starter') === starter.isStarter(i)).length}</button>`).join('')}</div>` : ''}
     <div class="chips" style="margin-top:12px" role="group" aria-label="Filter by type">
       <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
       ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
     </div>
     ${rails || emptyCloset()}
     ${addPanel()}
+    ${starterPanel()}
     <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
       <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
       <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
-      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove sample pieces</button>' : ''}</div>
+      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
       <input type="file" id="restore" accept=".json,application/json" hidden></section>
     ${syncPanel()}`;
   const qEl = $('#q');
@@ -169,13 +244,12 @@ function emptyCloset() {
   return `<div class="empty"><h2 class="view-title">Your closet is empty ✨</h2>
     <p class="muted">Snap a photo of each piece (flat on a bed or hanging on a plain wall works best) and add it.</p>
     <div class="row" style="justify-content:center;margin-top:14px">
-      <button class="primary" data-act="add">+ Add your first piece</button>
-      <button class="ghost" data-act="samples">Load a sample closet to explore</button></div></div>`;
+      <button class="primary" data-act="add">+ Add your first piece</button></div></div>`;
 }
 
 function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
-  return `<article class="piece">${hanger}
+  return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''}">${hanger}${starter.isStarter(i) ? '<span class="starterbadge">Starter</span>' : ''}
     <button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>
     <button class="img" data-act="tryit" data-id="${i.id}" aria-label="Try on ${esc(i.name)}"><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
@@ -193,35 +267,39 @@ function openItemModal(existing, preset = {}) {
   };
   const seq0 = (openModal(), modalSeq);
   const paint = () => {
-    paintSheet(`
-      <div class="intake" role="group" aria-label="Where is the photo?">
+    const pick = !d.canvas && (!existing || d.newPhoto); // step 1: where the photo comes from
+    if (pick) {
+      const m = MODES[d.capture || 'flat'];
+      paintSheet(`${preset.type && TYPES[d.type] ? `<p class="muted" id="addingtype">Adding: <b>${esc(TYPES[d.type].label)}</b>${d.name ? ` · ${esc(d.name)}` : ''}</p>` : ''}
+      <div class="modechips" role="radiogroup" aria-label="How is the photo taken?">${Object.entries(MODES).map(([k, v]) => `<button type="button" role="radio" aria-checked="${(d.capture || 'flat') === k}" class="${(d.capture || 'flat') === k ? 'on' : ''}" data-mode="${k}"><span aria-hidden="true">${v.icon}</span> ${v.label.replace(' / mirror photo', '')}${v.rec ? '<small>Recommended</small>' : ''}</button>`).join('')}</div>
+      <div class="tipbox"><h3>Tips: ${esc(m.label.toLowerCase())}</h3><ul>${m.tip.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></div>
+      <div class="intake addsrc" role="group" aria-label="Where is the photo?">
         <button type="button" class="srcbtn" id="srccam"><span aria-hidden="true">📷</span> Take photo</button>
         <button type="button" class="srcbtn" id="srcpick"><span aria-hidden="true">🖼️</span> Choose photo</button>
         <button type="button" class="srcbtn" id="srcpaste"><span aria-hidden="true">📋</span> Paste</button>
         <button type="button" class="srcbtn ${d.linkOpen ? 'on' : ''}" id="srclink" aria-expanded="${d.linkOpen}"><span aria-hidden="true">🔗</span> From a link</button>
       </div>
       <input type="file" id="file" accept="image/*" hidden><input type="file" id="camfile" accept="image/*" capture="environment" hidden>
-      ${d.linkOpen ? `<div class="linkrow"><label class="f" for="plink2">Product page link</label>
-        <div class="row"><input type="url" id="plink2" class="grow" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="https://shop.com/…" value="${esc(d.link || '')}"><button type="button" class="ghost" id="linkgo">Get picture</button></div>
+      ${d.linkOpen ? `<div class="linkrow"><label class="f" for="plink2">Product page or Pinterest pin link(s)</label>
+        <div class="row"><textarea id="plink2" class="grow" rows="2" inputmode="url" autocapitalize="none" spellcheck="false" placeholder="A shop page or Pinterest pin. Paste several (one per line) to add them one after another.">${esc(d.link || '')}</textarea><button type="button" class="ghost" id="linkgo">Get picture</button></div>
         ${store.get('aipass', '') ? '' : '<label class="f" for="lpass">Passcode</label><input type="password" id="lpass" autocomplete="current-password">'}</div>` : ''}
-      <div id="intakemsg" class="muted" role="status" aria-live="polite">${esc(d.busy || (d.source ? '' : 'A plain background works best. You can also paste a picture (Ctrl/⌘+V) or share a link.'))}</div>
-      <div class="preview" style="margin-top:10px">
-        <figure><div class="box">${d.source ? `<img src="${d.source}" alt="Your original photo">` : '<span class="muted">Original</span>'}</div><figcaption class="muted">Your photo</figcaption></figure>
-        <figure><div class="box" id="cutbox">${d.cutoutUrl || (existing && url(existing.id)) ? `<img id="cutimg" src="${d.cutoutUrl || url(existing.id)}" alt="Background-removed preview">` : '<span class="muted">Cutout</span>'}</div><figcaption class="muted">Mannequin-ready cutout</figcaption></figure>
-      </div>
-      ${d.source ? `<label class="f" for="tol">Background removal strength: <span id="tolv">${d.tolerance}</span></label>
-        <input type="range" id="tol" min="8" max="110" value="${d.tolerance}">
-        <label class="row" style="margin-top:6px"><input type="checkbox" id="keep" ${d.keep ? 'checked' : ''}> Keep original background</label>
-      <div class="aibox"><div class="muted"><b>✨ AI helpers</b> — cutout and details use a little of your fal credits. With your passcode saved they run on every new photo.</div>
-        <label class="row" style="margin-top:6px"><input type="checkbox" id="aiauto" ${store.get('aiauto', '1') !== '0' ? 'checked' : ''}> Run automatically on new photos</label>
+      <div id="intakemsg" class="muted" role="status" aria-live="polite">${esc(d.busy || 'Screenshots from shopping apps work too: you’ll crop to the product next. You can also paste (Ctrl/⌘+V) or share a link.')}</div>
+      <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="ghost" id="cancel">Cancel</button></div>`, existing ? 'New photo' : 'Add a piece');
+      return wirePick();
+    }
+    const cut = d.cutoutUrl || (existing && url(existing.id));
+    paintSheet(`
+      <div class="cutprev"><img id="cutimg" src="${cut}" alt="The cut-out piece">
+        <div class="col">${d.source || existing?.original ? '<button type="button" class="ghost" id="tapcut">✂️ Redo the selection</button>' : ''}
+          ${groupOf(d.type) ? '<button type="button" class="ghost" id="editmarks">📍 Fit landmarks</button>' : ''}
+          <button type="button" class="ghost" id="newphoto">📷 Use a new photo</button>
+          ${d.engine ? `<span class="muted">${d.engine === 'sam2' ? 'Selected with SAM 2' : 'Selected on this device'}</span>` : ''}</div></div>
+      <div class="aibox"><div class="muted"><b>✨ Auto-fill</b> — name, type and occasions from the photo (a little of your fal credit). With your passcode saved it runs on every new piece.</div>
+        <label class="row" style="margin-top:6px"><input type="checkbox" id="aiauto" ${store.get('aiauto', '1') !== '0' ? 'checked' : ''}> Run automatically</label>
         <label class="f" for="mpass">Passcode</label><input type="password" id="mpass" autocomplete="current-password" value="${esc(store.get('aipass', ''))}">
-        <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aicut">${d.aiCanvas ? 'Redo AI cutout' : 'Cleaner cutout'}</button>${d.aiCanvas ? '<button type="button" class="ghost" id="aiundo">Use the on-device cutout</button>' : ''}<button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
-        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc([d.cutMsg, d.tagMsg].filter(Boolean).join(' '))}</div></div>
-      <div class="aibox"><div class="muted"><b>🧠 Cut out on this device (optional)</b> — no passcode or credits. The first time it downloads an AI model (about 45 MB); your photo never leaves this phone.</div>
-        <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="devcut"${d.devBusy ? ' disabled' : ''}>Cut out on this device</button></div>
-        <progress id="devbar" max="100" value="0" aria-label="Model download" ${d.devBusy ? '' : 'hidden'}></progress>
-        <div id="devmsg" class="muted" role="status" aria-live="polite">${esc(d.devMsg || '')}</div></div>` : ''}
-      <div class="backbox"><label class="f" for="backfile">Back photo (optional — shows on the back of the 3D model)</label>
+        <div class="row" style="margin-top:8px"><button type="button" class="ghost" id="aitag">Auto-fill details</button></div>
+        <div id="aimsg" class="muted" role="status" aria-live="polite">${esc(d.tagMsg || '')}</div></div>
+      <div class="backbox"><label class="f" for="backfile">Back photo (optional)</label>
         <input type="file" id="backfile" accept="image/*">
         ${d.backUrl || d.backBlob ? `<div class="row" style="margin-top:8px"><img class="backthumb" src="${d.backUrl || (existing && url(existing.id + ':back')) || ''}" alt="Back of the piece" width="56" height="56"><button type="button" class="ghost" id="backrm">Remove back photo</button></div>` : ''}</div>
       <label class="f" for="name">Name</label><input type="text" id="name" value="${esc(d.name)}" placeholder="e.g. Black satin cami">
@@ -237,19 +315,127 @@ function openItemModal(existing, preset = {}) {
       <label class="f" for="color">Main colour ${d.color ? `— ${esc(d.color.name)}` : ''}</label>
       <div class="cswatches" role="group" aria-label="Colours found in the photo">${d.palette.map((c) => `<button type="button" class="cswatch ${d.color?.hex === c.hex ? 'on' : ''}" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${esc(colorName(c.hex))}" aria-pressed="${d.color?.hex === c.hex}"></button>`).join('')}<input type="color" id="color" value="${d.color?.hex || '#888888'}" aria-label="Pick any colour" style="width:44px;height:34px;padding:0;border:0;background:none"></div>
       <div class="row" style="margin-top:18px;justify-content:space-between">
-        <span>${existing ? '<button class="ghost danger" id="rm">Delete</button>' : ''}</span>
+        <span class="row">${existing ? `<button class="ghost danger" id="rm">${starter.isStarter(existing) ? 'Remove' : 'Delete'}</button>` : ''}${starter.isStarter(existing) ? '<button class="ghost" id="ownit">✓ I own this</button>' : ''}</span>
         <span class="row"><button class="ghost" id="cancel">Cancel</button>${existing ? '' : '<button class="ghost" id="saveadd">Save &amp; add another</button>'}<button class="primary" id="save">Save to closet</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
     wire();
   };
 
-  const recut = () => {
-    if (!d.base) return;
-    d.canvas = d.aiCanvas || (d.keep ? d.base : removeBackground(d.base, { tolerance: d.tolerance }));
-    d.cutoutUrl = d.canvas.toDataURL('image/png');
+  /** The colours of the cut-out piece (its main colour is suggested unless you picked one). */
+  const recolour = () => {
+    if (!d.canvas) return;
     d.palette = palette(d.canvas, 4).filter((c) => c.share > 0.04);
     const pal = d.palette[0];
     if (pal && !d.colorPicked) d.color = { hex: pal.hex, name: colorName(pal.hex) };
   };
+
+  const say = (m) => { d.busy = m; const el = $('#intakemsg'); if (el) el.textContent = m; };
+  /** A photo came in: crop it, select the piece, fit it (the editor), then the details. */
+  const ingestFile = async (f, meta = {}) => {
+    try {
+      const { img, url: u } = await loadImage(f);
+      d.source = u; d.base = toCanvas(img); d.photoSeq = (d.photoSeq || 0) + 1; d.colorPicked = false; d.busy = ''; d.fromShop = !!meta.title; // a shop's own title and category beat the AI's guess
+      const title = meta.title || f.name?.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40) || '';
+      if (!d.name.trim() || d.autoName) { d.name = meta.title ? tidyTitle(meta.title, meta.brand) : /^(pasted|image|img|photo|screenshot)\b/i.test(title) ? '' : title; d.autoName = !!d.name; }
+      if (meta.brand && !d.brand.trim()) d.brand = meta.brand;
+      if (meta.price && d.price === '') d.price = String(meta.price);
+      const guess = guessType(`${meta.title || ''} ${title}`);
+      if (guess && !existing) { d.type = guess; d.typeGuess = true; }
+      d.tagMsg = '';
+      await runEditor(f);
+    } catch (err) { toast(err.message); }
+  };
+  const runEditor = async (blob) => {
+    const r = await openCutEditor({ blob, name: d.name, type: d.type, capture: d.capture, sleeves: d.sleeves });
+    if (!r) return paint(); // back to where the photo comes from
+    await adopt(r, true); autoAI();
+  };
+  const adopt = async (r, withCut) => {
+    d.type = r.type; d.marks = r.marks; d.marksType = r.type; d.sleeves = r.sleeves; d.capture = r.capture; d.marksSet = true; d.newPhoto = false;
+    if (withCut) {
+      const img = new Image(); img.src = URL.createObjectURL(r.cutout); await img.decode();
+      const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); URL.revokeObjectURL(img.src);
+      d.canvas = c; d.original = r.original; d.engine = r.engine; d.cutoutUrl = c.toDataURL('image/png'); recolour();
+    }
+    paint();
+  };
+  // With a saved passcode, a new piece is described by the AI on its own.
+  const autoAI = () => { const pass = store.get('aipass', ''); if (pass && store.get('aiauto', '1') !== '0' && d.canvas) runTag(pass); };
+  const aiBusy = (msg) => { const el = $('#aimsg'); if (el) el.textContent = msg; if ($('#aitag')) $('#aitag').disabled = !!msg.endsWith('…'); };
+  const runTag = async (pass) => {
+    aiBusy('Looking at it…');
+    const seq = modalSeq, photo = d.photoSeq;
+    try {
+      const t = await tagAI(d.canvas || d.base, pass), bits = [];
+      if (seq !== modalSeq || photo !== d.photoSeq) return;
+      if (t.name && !d.fromShop && (!d.name.trim() || d.autoName)) { d.name = t.name; d.autoName = false; bits.push(t.name); }
+      if (t.type && !(d.fromShop && d.typeGuess) && !d.marksSet) { d.type = t.type; d.typeGuess = false; bits.push(TYPES[t.type].label); }
+      if (t.season) d.season = t.season;
+      if (t.occasions.length) { d.occasions = t.occasions; bits.push(t.occasions.join(', ')); }
+      if (t.brand && !d.brand.trim()) d.brand = t.brand;
+      d.tagMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
+      paint();
+    } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
+  };
+  const fromData = async (dataUri, meta) => ingestFile(await (await fetch(dataUri)).blob(), meta);
+  const fetchLink = async (link) => {
+    const pass = store.get('aipass', '') || $('#lpass')?.value.trim();
+    if (!pass) { d.linkOpen = true; d.link = link; paint(); say('Enter your passcode to fetch links.'); $('#lpass')?.focus(); return; }
+    store.set('aipass', pass); d.link = link; say('Opening the page…'); const seq = modalSeq;
+    try {
+      if (/(^|\.)pinterest\.[a-z.]+$|^pin\.it$/i.test(new URL(link).hostname)) { // a pin: the server fetches the pin's picture
+        const image = await pinAI(link, pass); if (seq !== modalSeq) return;
+        d.linkOpen = false; return fromData(image, {});
+      }
+      const r = await productAI(link, pass);
+      if (seq !== modalSeq) return;
+      d.linkOpen = false; toast(r.title ? `Got “${tidyTitle(r.title, r.brand)}” from ${r.host}` : `Got the picture from ${r.host}`);
+      await fromData(r.image, { title: r.title, brand: r.brand, price: r.price });
+    } catch (err) { if (seq === modalSeq) say(`${err.message} You can also save the picture and use Choose photo.`); }
+  };
+  // Paste: ⌘/Ctrl+V anywhere in the dialog, or the button (iPhone Safari asks "Allow Paste" once per paste)
+  const takeClipboard = async (items, text) => {
+    const img = items.find((x) => x.type?.startsWith('image/'));
+    if (img) return ingestFile(img);
+    const l = firstLink(text); if (l) return fetchLink(l);
+    say('Nothing usable on the clipboard. Copy a picture or a product link first, then tap Paste.');
+  };
+  if (!d.pasteHook) {
+    d.pasteHook = (e) => {
+      if (modalSeq !== seq0 || $('#modal').hidden) return document.removeEventListener('paste', d.pasteHook);
+      if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== 'file' && !e.clipboardData?.files?.length) return; // normal typing paste
+      e.preventDefault(); takeClipboard([...(e.clipboardData?.files || [])], e.clipboardData?.getData('text') || '');
+    };
+    document.addEventListener('paste', d.pasteHook);
+  }
+
+  function wirePick() {
+    $('#cancel').onclick = () => (existing && d.newPhoto ? (d.newPhoto = false, paint()) : closeModal());
+    document.querySelectorAll('.modechips [data-mode]').forEach((b) => (b.onclick = () => { d.capture = b.dataset.mode; paint(); $(`.modechips [data-mode="${d.capture}"]`)?.focus(); }));
+    $('#file').onchange = (e) => { const f = e.target.files[0]; if (f) ingestFile(f); };
+    $('#camfile').onchange = (e) => { const f = e.target.files[0]; if (f) ingestFile(f); };
+    $('#srcpick').onclick = () => $('#file').click();
+    $('#srccam').onclick = () => $('#camfile').click();
+    $('#srclink').onclick = () => { d.linkOpen = !d.linkOpen; paint(); if (d.linkOpen) $('#plink2').focus(); };
+    if ($('#linkgo')) { $('#linkgo').onclick = () => {
+      const all = [...new Set(($('#plink2').value.match(/https?:\/\/[^\s<>"')]+/gi) || []).map((x) => x.replace(/[.,;!?]+$/, '')))];
+      if (!all.length) return say('Paste a link that starts with https://');
+      d.queue = all.slice(1); if (d.queue.length) toast(`${all.length} links: you’ll add them one after another`);
+      fetchLink(all[0]); }; $('#plink2').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#linkgo').click(); } }; }
+    $('#srcpaste').onclick = async () => {
+      try {
+        const clip = await navigator.clipboard.read(), files = [];
+        for (const it of clip) { const t = it.types.find((x) => x.startsWith('image/')); if (t) files.push(new File([await it.getType(t)], 'pasted.png', { type: t })); }
+        let text = ''; if (!files.length) { const tt = clip.flatMap((it) => (it.types.includes('text/plain') ? [it] : []))[0]; text = tt ? await (await tt.getType('text/plain')).text() : ''; }
+        takeClipboard(files, text);
+      } catch { try { takeClipboard([], await navigator.clipboard.readText()); } catch { say('Your browser blocked reading the clipboard. Press ⌘/Ctrl+V in this window, or use Choose photo.'); } }
+    };
+    if (d.pending) { // opened from a deep link or a shared file
+      const p = d.pending; d.pending = null;
+      if (p.file) ingestFile(p.file);
+      else if (p.mode === 'link') { d.linkOpen = true; d.link = p.url; d.queue = p.queue || []; if (p.url) fetchLink(p.url); else { paint(); $('#plink2')?.focus(); } }
+      else if (p.mode === 'paste') { say('Tap Paste to bring in what you copied.'); $('#srcpaste').focus(); }
+    }
+  }
 
   function wire() {
     $('#cancel').onclick = closeModal;
@@ -263,140 +449,31 @@ function openItemModal(existing, preset = {}) {
     $('#price').oninput = (e) => (d.price = e.target.value);
     $('#bought').oninput = (e) => (d.bought = e.target.value);
     $('#season').onchange = (e) => (d.season = e.target.value);
-    $('#type').onchange = (e) => { d.type = e.target.value; d.typeGuess = false; };
+    $('#type').onchange = (e) => { d.type = e.target.value; d.typeGuess = false; if (d.marksSet && groupOf(d.type) !== groupOf(d.marksType)) d.marksSet = false; paint(); };
     $('#color').oninput = (e) => { d.color = { hex: e.target.value, name: colorName(e.target.value) }; d.colorPicked = true; };
-    const ingestFile = async (f, meta = {}) => {
-      try {
-        const { img, url: u } = await loadImage(f);
-        d.source = u; d.base = toCanvas(img); d.photoSeq = (d.photoSeq || 0) + 1; d.colorPicked = false; d.busy = ''; d.fromShop = !!meta.title; // a shop's own title and category beat the AI's guess
-        const title = meta.title || f.name?.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40) || '';
-        if (!d.name.trim() || d.autoName) { d.name = meta.title ? tidyTitle(meta.title, meta.brand) : title; d.autoName = !!d.name; }
-        if (meta.brand && !d.brand.trim()) d.brand = meta.brand;
-        if (meta.price && d.price === '') d.price = String(meta.price);
-        const guess = guessType(`${meta.title || ''} ${title}`);
-        if (guess && !existing) { d.type = guess; d.typeGuess = true; }
-        d.aiCanvas = null; d.cutMsg = d.tagMsg = '';
-        recut(); paint(); autoAI();
-      } catch (err) { toast(err.message); }
-    };
-    const fromData = async (dataUri, meta) => ingestFile(await (await fetch(dataUri)).blob(), meta);
-    const say = (m) => { d.busy = m; const el = $('#intakemsg'); if (el) el.textContent = m; };
-    $('#file').onchange = (e) => { const f = e.target.files[0]; if (f) ingestFile(f); };
-    $('#camfile').onchange = (e) => { const f = e.target.files[0]; if (f) ingestFile(f); };
-    $('#srcpick').onclick = () => $('#file').click();
-    $('#srccam').onclick = () => $('#camfile').click();
-    $('#srclink').onclick = () => { d.linkOpen = !d.linkOpen; paint(); if (d.linkOpen) $('#plink2').focus(); };
-    const fetchLink = async (link) => {
-      const pass = store.get('aipass', '') || $('#lpass')?.value.trim();
-      if (!pass) { d.linkOpen = true; d.link = link; paint(); say('Enter your passcode to fetch links.'); $('#lpass')?.focus(); return; }
-      store.set('aipass', pass); d.link = link; say('Opening the page…'); const seq = modalSeq;
-      try {
-        const r = await productAI(link, pass);
-        if (seq !== modalSeq) return;
-        d.linkOpen = false; await fromData(r.image, { title: r.title, brand: r.brand, price: r.price });
-        toast(r.title ? `Got “${tidyTitle(r.title, r.brand)}” from ${r.host}` : `Got the picture from ${r.host}`);
-      } catch (err) { if (seq === modalSeq) say(`${err.message} You can also save the picture and use Choose photo.`); }
-    };
-    if ($('#linkgo')) { $('#linkgo').onclick = () => { const l = firstLink($('#plink2').value); if (!l) return say('Paste a link that starts with https://'); fetchLink(l); }; $('#plink2').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#linkgo').click(); } }; }
-    // Paste: ⌘/Ctrl+V anywhere in the dialog, or the button (iPhone Safari asks "Allow Paste" once per paste)
-    const takeClipboard = async (items, text) => {
-      const img = items.find((x) => x.type?.startsWith('image/'));
-      if (img) return ingestFile(img);
-      const l = firstLink(text); if (l) return fetchLink(l);
-      say('Nothing usable on the clipboard. Copy a picture or a product link first, then tap Paste.');
-    };
-    $('#srcpaste').onclick = async () => {
-      try {
-        const clip = await navigator.clipboard.read(), files = [];
-        for (const it of clip) { const t = it.types.find((x) => x.startsWith('image/')); if (t) files.push(new File([await it.getType(t)], 'pasted.png', { type: t })); }
-        let text = ''; if (!files.length) { const tt = clip.flatMap((it) => (it.types.includes('text/plain') ? [it] : []))[0]; text = tt ? await (await tt.getType('text/plain')).text() : ''; }
-        takeClipboard(files, text);
-      } catch { try { takeClipboard([], await navigator.clipboard.readText()); } catch { say('Your browser blocked reading the clipboard. Press ⌘/Ctrl+V in this window, or use Choose photo.'); } }
-    };
-    if (!d.pasteHook) {
-      d.pasteHook = (e) => {
-        if (modalSeq !== seq0 || $('#modal').hidden) return document.removeEventListener('paste', d.pasteHook);
-        if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== 'file' && !e.clipboardData?.files?.length) return; // normal typing paste
-        e.preventDefault(); takeClipboard([...(e.clipboardData?.files || [])], e.clipboardData?.getData('text') || '');
-      };
-      document.addEventListener('paste', d.pasteHook);
-    }
-    // With a saved passcode, a new photo is cut out and described by the AI on its own (the on-device cutout shows first, instantly).
-    const autoAI = () => {
-      const pass = store.get('aipass', ''); if (!pass || store.get('aiauto', '1') === '0' || !d.base) return;
-      d.autoRun?.(pass);
-    };
     $('#backfile').onchange = async (e) => {
       const f = e.target.files[0]; if (!f) return;
       try {
         const { img } = await loadImage(f);
-        d.backCanvas = trimTransparent(removeBackground(toCanvas(img), { tolerance: d.tolerance }));
+        d.backCanvas = trimTransparent(removeBackground(toCanvas(img), { tolerance: 42 }));
         d.backUrl = d.backCanvas.toDataURL('image/png'); d.backBlob = null; paint();
       } catch (err) { toast(err.message); }
     };
     if ($('#backrm')) $('#backrm').onclick = () => { d.backCanvas = null; d.backBlob = null; d.backUrl = ''; paint(); };
     if ($('#aiauto')) $('#aiauto').onchange = (e) => store.set('aiauto', e.target.checked ? '1' : '0');
     const mpass = () => { const v = $('#mpass').value.trim(); if (!v) { toast('Enter your passcode first'); return null; } store.set('aipass', v); return v; };
-    const aiBusy = (msg) => { const el = $('#aimsg'); if (el) el.textContent = msg; if ($('#aicut')) $('#aicut').disabled = $('#aitag').disabled = !!msg.endsWith('…'); };
-    const runCut = async (pass) => {
-      aiBusy('Cutting it out…');
-      const seq = modalSeq, photo = d.photoSeq;
-      try {
-        const img = new Image(); img.src = await cutoutAI(d.base, pass); await img.decode();
-        if (seq !== modalSeq || photo !== d.photoSeq) return; // the dialog closed or a different photo was chosen meanwhile
-        const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0);
-        d.aiCanvas = trimTransparent(c); d.cutMsg = 'Done — AI cutout applied. Use the button below to go back if it looks worse.';
-        recut(); paint();
-      } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
-    };
-    const runTag = async (pass) => {
-      aiBusy('Looking at it…');
-      const seq = modalSeq, photo = d.photoSeq;
-      try {
-        const t = await tagAI(d.base, pass), bits = [];
-        if (seq !== modalSeq || photo !== d.photoSeq) return;
-        if (t.name && !d.fromShop && (!d.name.trim() || d.autoName)) { d.name = t.name; d.autoName = false; bits.push(t.name); }
-        if (t.type && !(d.fromShop && d.typeGuess)) { d.type = t.type; d.typeGuess = false; bits.push(TYPES[t.type].label); }
-        if (t.season) d.season = t.season;
-        if (t.occasions.length) { d.occasions = t.occasions; bits.push(t.occasions.join(', ')); }
-        if (t.brand && !d.brand.trim()) d.brand = t.brand;
-        d.tagMsg = bits.length ? `Filled in: ${bits.join(' · ')}. Check it and edit anything that’s off.` : 'The AI couldn’t tell much from that photo.';
-        paint();
-      } catch (e) { if (seq === modalSeq) aiBusy(e.message); }
-    };
-    if ($('#devcut')) $('#devcut').onclick = async () => {
-      const seq = modalSeq, photo = d.photoSeq, bar = $('#devbar'), msg = $('#devmsg');
-      d.devBusy = true; $('#devcut').disabled = true; bar.hidden = false; bar.removeAttribute('value'); msg.textContent = 'Starting…';
-      try {
-        const blob = await browserCut(await canvasToBlob(d.base, 'image/png'), (f, phase) => {
-          if (seq !== modalSeq) return;
-          if (phase === 'download') { bar.value = Math.round((f ?? 0) * 100); msg.textContent = `Downloading the model… ${Math.round((f ?? 0) * 100)}% (only the first time)`; }
-          else { bar.removeAttribute('value'); msg.textContent = 'Cutting it out…'; }
-        });
-        if (seq !== modalSeq || photo !== d.photoSeq) return;
-        const img = new Image(); img.src = URL.createObjectURL(blob); await img.decode();
-        const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img, 0, 0); URL.revokeObjectURL(img.src);
-        d.aiCanvas = trimTransparent(c); d.cutMsg = 'Done — on-device AI cutout applied. Use the button below to go back if it looks worse.'; d.devBusy = false; d.devMsg = '';
-        recut(); paint();
-      } catch (e) { d.devBusy = false; if (seq === modalSeq) { d.devMsg = e.message; paint(); } }
-    };
-    d.autoRun = async (pass) => { await Promise.all([runCut(pass), runTag(pass)]); };
-    if ($('#aicut')) $('#aicut').onclick = () => { const pass = mpass(); if (pass) runCut(pass); };
-    if ($('#aiundo')) $('#aiundo').onclick = () => { d.aiCanvas = null; d.cutMsg = ''; recut(); paint(); };
     if ($('#aitag')) $('#aitag').onclick = () => { const pass = mpass(); if (pass) runTag(pass); };
+    $('#newphoto').onclick = () => { d.newPhoto = true; d.canvas = null; d.cutoutUrl = ''; paint(); };
+    if ($('#tapcut')) $('#tapcut').onclick = async () => runEditor(d.source ? await (await fetch(d.source)).blob() : existing.original);
+    $('#editmarks') && ($('#editmarks').onclick = async () => {
+      const r = await openCutEditor({ start: 'marks', name: d.name, cutout: d.canvas ? await canvasToBlob(d.canvas, 'image/png') : existing.cutout, type: d.type, marks: d.marksSet ? d.marks : existing?.type === d.type ? existing.marks : null, sleeves: d.marksSet ? d.sleeves : existing?.sleeves, capture: d.capture || existing?.capture });
+      if (r) await adopt(r, false);
+    });
     $('.cswatches').onclick = (e) => { const h = e.target.dataset?.hex; if (!h) return; d.color = { hex: h, name: colorName(h) }; d.colorPicked = true; paint(); };
-    if (d.pending) { // opened from a deep link or a shared file
-      const p = d.pending; d.pending = null;
-      if (p.file) ingestFile(p.file);
-      else if (p.mode === 'link') { d.linkOpen = true; d.link = p.url; if (p.url) fetchLink(p.url); else { paint(); $('#plink2')?.focus(); } }
-      else if (p.mode === 'paste') { say('Tap Paste to bring in what you copied.'); $('#srcpaste').focus(); }
-    }
-    const tol = $('#tol');
-    if (tol) {
-      if (d.aiCanvas) { tol.disabled = true; $('#keep').disabled = true; }
-      tol.oninput = () => { d.tolerance = +tol.value; $('#tolv').textContent = tol.value; recut(); $('#cutbox').innerHTML = `<img id="cutimg" src="${d.cutoutUrl}" alt="Background-removed preview">`; };
-      $('#keep').onchange = (e) => { d.keep = e.target.checked; recut(); paint(); };
-    }
+    if ($('#ownit')) $('#ownit').onclick = async () => { // a starter piece becomes yours: same picture and tags, no longer marked Starter
+      const it = { ...existing, source: 'own', updatedAt: Date.now() }; await put('items', it); S.items = S.items.map((i) => (i.id === it.id ? it : i));
+      closeModal(); render(); toast(`“${it.name}” is yours now ✓`);
+    };
     if ($('#rm')) $('#rm').onclick = async () => {
       if (!confirm(`Delete “${existing.name}” from your closet?`)) return;
       await removeItems([existing.id]);
@@ -412,13 +489,17 @@ function openItemModal(existing, preset = {}) {
         color: d.color || existing?.color, colors: d.palette.length ? d.palette.map((c) => c.hex) : existing?.colors, cutout, adj: existing?.adj || { scale: 1, dx: 0, dy: 0 },
         price: parseFloat(d.price) > 0 ? Math.round(parseFloat(d.price) * 100) / 100 : undefined, bought: d.bought || undefined, season: d.season,
         createdAt: existing?.createdAt || Date.now(), updatedAt: Date.now(),
+        marks: d.marksSet ? d.marks || undefined : existing && existing.type === d.type ? existing.marks : undefined, // landmarks are suggested again if the category changed
+        sleeves: d.marksSet ? d.sleeves : existing?.sleeves, capture: d.capture || existing?.capture, original: d.original || existing?.original,
       };
       await put('items', item);
       if (existing) { S.urls.delete(item.id); S.items = S.items.map((i) => (i.id === item.id ? item : i)); } else S.items.push(item);
       S.urls.delete(item.id + ':back'); if (backCutout) url(item.id + ':back', backCutout);
-      url(item.id, item.cutout);
+      url(item.id, item.cutout); S.meta.delete(item.id); await analyseItem(item);
       if (preset.onSaved) await preset.onSaved(item);
-      closeModal(); toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your closet ✓'); render();
+      closeModal(); render();
+      if (d.queue?.length) { const [next, ...rest] = d.queue; toast(`Saved “${item.name}” ✓ — ${d.queue.length} to go`); return openItemModal(undefined, { intake: { mode: 'link', url: next, queue: rest } }); }
+      toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your closet ✓');
       if (again) openItemModal(undefined, { type: item.type });
     };
     $('#save').onclick = () => save(false);
@@ -443,6 +524,85 @@ async function removeItems(ids) {
 /* ───────────────────────── cloud sync ───────────────────────── */
 let syncMsg = '';
 /** Ways to get pieces in from other apps. iPhones can't use the web "share to app" feature, so this explains a Shortcut instead. */
+/** Closet > Starter closet: generate the starter pieces one batch (category) at a time on Cloudflare's free tier, with the neuron budget shown. */
+function starterPanel() {
+  const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
+  const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
+    <p class="muted">Product photos made from your style profile (chic neutral casual + polished workwear), so outfits work before your own clothes are in. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it. Style me prefers your own pieces when they fit.</p>
+    <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
+    <div class="starterbatches">${STARTER_BATCHES.map(([k, l, e]) => { const left = starter.missingIn(k, S.items).length, n = STARTER_ITEMS.filter((i) => i.batch === k).length;
+      return `<button class="ghost" data-act="starterbatch" data-v="${k}" ${left && !hidden ? '' : 'disabled'}><span aria-hidden="true">${e}</span> ${l} <small>${left ? `${left} to make · ~${fmt(left * each)} neurons` : `all ${n} in`}</small></button>`; }).join('')}</div>
+    ${(() => { const r = S.items.filter(starter.isStarter).length, rv = (S.starterReview || []).length; return `<p class="starterready" role="status"><b>${r} of ${STARTER_ITEMS.length} ready</b> · ${rv} need review (kept off the model; open their category to remake them) · ${STARTER_ITEMS.length - r - rv} not made yet</p>${rv ? `<button class="ghost danger" data-act="rmstarterreview">Delete the ${rv} that need review</button>` : ''}`; })()}
+    <label class="check"><input type="checkbox" data-act="hidestarter" ${hidden ? 'checked' : ''}> Hide all starter pieces${all || hidden ? '' : ' (none yet)'}</label></section>`;
+}
+
+/** Does a starter piece go on the mannequin? Clothing must warp onto the body; shoes need the feet box, bags and accessories a body point. */
+async function starterFits(it, done) {
+  const pack = dollPack || await loadPack(); if (!pack) return { ok: false };
+  if (groupOf(it.type)) { const r = await fitItem({ id: it.id, type: it.type, name: it.name, cutout: done.cutout }, pack).catch(() => null); if (r) URL.revokeObjectURL(r.url); return { ok: !!r, marks: r?.marks }; }
+  return { ok: it.type === 'shoes' ? !!pack.anchors?.shoes : !!(it.acc && pack.accRules?.[it.acc]) };
+}
+
+/** One batch: make the pieces still missing (reusing pictures saved earlier), check each one (remade automatically up to twice if it fails)
+ *  and try it on the mannequin, then show them in a review grid (tap one to make it again) and add them only when approved.
+ *  At the daily limit it pauses, keeps what's made, and carries on after 00:00 UTC. Each tile only ever shows its own picture. */
+async function openStarterBatch(batch) {
+  const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim();
+  if (!pass) return; store.set('aipass', pass);
+  const list = starter.missingIn(batch, S.items), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = [];
+  const tiles = new Map(list.map((it) => [it.id, { it, state: 'wait', url: '', done: null, original: null, err: '', fresh: false, attempt: 0 }]));
+  await starter.refreshUsage(pass); // today's count from the server, so a batch never starts past the free allowance
+  openModal(); const seq = modalSeq, closed = () => modalSeq !== seq; let resetAt = 0, timer = 0; // (Esc or Cancel closes it; what's made is kept)
+  const left = (ms) => { const m = Math.max(1, Math.round(ms / 60000)); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`; };
+  const note = (t, e) => { const line = { piece: t.it.id, ...e }; log.push(line); console.info('[starter]', line); };
+  const tile = (t) => {
+    const busy = t.state === 'run' || (t.state === 'wait' && !resetAt), r = t.done?.ready;
+    const pic = t.url ? `<img src="${t.url}" alt="">` : `<span class="spin" aria-hidden="true">${t.state === 'err' ? '⚠️' : t.state === 'wait' && resetAt ? '🌙' : '⏳'}</span>`;
+    const tag = t.state === 'ok' ? (r ? '<b class="ok">✓ Ready</b>' : `<b class="rev">Needs review</b><em>${esc(t.done.why.join('; '))}</em>`) : t.state === 'err' ? `<b class="rev">Failed · Retry</b><em>${esc(t.err)}</em>` : t.state === 'run' && t.attempt ? `<em>remaking (try ${t.attempt + 1})</em>` : '';
+    return `<button class="startertile ${t.state} ${t.state === 'ok' ? (r ? 'ready' : 'review') : ''}" data-id="${t.it.id}" ${busy ? 'disabled' : ''} aria-label="${esc(t.it.name)}${t.state === 'ok' ? (r ? ', ready' : ', needs review') + ', tap to make it again' : t.state === 'err' ? ', failed, tap to retry' : ', in progress'}">${pic}<small>${esc(t.it.name)}</small>${tag}</button>`;
+  };
+  const paint = () => {
+    if (closed()) return clearTimeout(timer);
+    const T = [...tiles.values()], made = T.filter((t) => t.state === 'ok'), ready = made.filter((t) => t.done.ready).length, busy = T.some((t) => t.state === 'run' || (t.state === 'wait' && !resetAt));
+    const status = resetAt ? `<p class="limitnote" role="status">⏸ Today’s free Cloudflare allowance is used up. ${made.length} of ${tiles.size} made and saved; the rest carry on after 00:00 UTC (in ${left(resetAt - Date.now())}). You can approve these now or leave this open.</p>` : '';
+    paintSheet(`${status}<p class="muted">${busy ? `Making ${label.toLowerCase()}… ` : ''}<b>${ready} ready</b>, ${made.length - ready} need review, ${T.length - made.length} to go. Each is checked (white background, whole item in frame, nothing else in the picture) and tried on the mannequin. Tap a picture to make it again. Only <b>ready</b> pieces are added when you approve; the rest stay here to remake. <span class="nowrap">Neurons used today: ${Math.round(starter.usedToday()).toLocaleString('en-US')} of ${starter.DAILY_FREE.toLocaleString('en-US')}.</span></p>
+      <div class="startergrid">${T.map(tile).join('')}</div>
+      <details class="starterlog"><summary>Log (${log.length})</summary><ol>${log.map((l) => `<li><code>${esc(l.piece)}</code> try ${l.attempt + 1} · seed ${l.seed} · ${l.from === 'saved' ? 'saved picture reused' : l.from === 'cleaned' ? 'cutout cleaned (skin, form and stray parts removed)' : `HTTP ${l.status}${l.bytes ? ` · ${Math.round(l.bytes / 1024)} KB` : ''}${l.ms ? ` · ${(l.ms / 1000).toFixed(1)}s` : ''}`}${l.key ? ` · saved as <code>${esc(l.key)}</code>` : ''} · ${l.error ? `error: ${esc(l.error)}` : l.check ? (l.check.ok ? 'check passed' : 'check failed: ' + esc(l.check.reasons.join('; '))) : ''}${l.fits === undefined ? '' : l.fits ? ' · fits' : ' · does not fit'}${l.prompt ? `<br><small>${esc(l.prompt)}</small>` : ''}</li>`).join('')}</ol></details>
+      <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="ghost" id="sbcancel">${made.length ? 'Later' : 'Cancel'}</button><button class="primary" id="sbok" ${ready && !T.some((t) => t.state === 'run') ? '' : 'disabled'}>Approve · add ${ready} ready</button></div>`, `Starter ${label.toLowerCase()}`);
+    $('#sbcancel').onclick = () => closeModal();
+    $('#sbok').onclick = async () => {
+      const add = [...tiles.values()].filter((t) => t.state === 'ok' && t.done.ready); closeModal(); clearTimeout(timer); // pieces that need review stay out (their pictures are kept: open the batch again to remake them)
+      for (const t of add) { const item = { ...starter.toItem(t.it, t.done, t.original), ...(t.done.marks && { marks: t.done.marks }), placedFromAnchors: 1 }; await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); starter.dropDraft(t.it.id); }
+      const replaced = (S.starterReview || []).filter((r) => add.some((t) => t.it.id === r.starterId)); // the earlier versions that needed review
+      for (const r of replaced) await del('items', r.id); S.starterReview = (S.starterReview || []).filter((r) => !replaced.includes(r));
+      S.filter.src = 'starter'; render(); toast(`Added ${add.length} starter ${label.toLowerCase()} ✓`);
+    };
+    $('#modal').querySelectorAll('.startertile').forEach((b) => (b.onclick = () => { const t = tiles.get(b.dataset.id); if (t.state === 'wait' || t.state === 'run') return; if (t.state === 'ok') t.attempt++; t.state = 'wait'; t.fresh = true; queue.push(t); pump(); paint(); }));
+  };
+  const make = async (t) => { // one piece: its own picture, checked, remade at most twice automatically, then tried on the mannequin
+    for (let auto = 0; ; auto++) {
+      let blob = !t.fresh && await starter.draftOf(t.it.id), info;
+      if (blob) info = { attempt: t.attempt, seed: seedFor(t.it, t.attempt), from: 'saved', key: `/starter-draft/${t.it.id}` };
+      else ({ blob, info } = await starter.generate(t.it, pass, { attempt: t.attempt }).catch((e) => { if (!(e instanceof starter.DailyLimit)) note(t, { ...(e.info || { attempt: t.attempt }), error: e.message }); throw e; }));
+      let done = await starter.process(blob, t.it);
+      if (!done.check.ok && auto < 2) { note(t, { ...info, check: done.check }); t.attempt++; t.fresh = true; paint(); continue; }
+      if (!done.check.ok) { note(t, { ...info, check: done.check }); done = await starter.processCleaned(blob, t.it, done.check); info = { ...info, from: 'cleaned' }; } // last resort: clean the cutout, then check it again
+      const fit = done.check.ok ? await starterFits(t.it, done) : { ok: false };
+      done.ready = done.check.ok && fit.ok; done.marks = fit.marks; done.why = [...done.check.reasons, ...(done.check.ok && !fit.ok ? ['does not fit the mannequin'] : [])];
+      note(t, { ...info, check: done.check, fits: done.check.ok ? fit.ok : undefined });
+      return { blob, done };
+    }
+  };
+  const queue = [...tiles.values()]; let running = 0;
+  const pause = (at) => { resetAt = at; clearTimeout(timer); timer = setTimeout(() => { resetAt = 0; pump(); paint(); }, Math.max(1000, at - Date.now() + 60000)); }; // a minute after the reset
+  const pump = () => { while (running < 3 && queue.length && !closed() && !resetAt) { const t = queue.shift(); running++; t.state = 'run'; t.err = '';
+    make(t).then(({ blob, done }) => { t.original = blob; t.done = done; if (t.url) URL.revokeObjectURL(t.url); t.url = URL.createObjectURL(done.cutout); t.state = 'ok'; t.fresh = false; })
+      .catch((e) => { if (e instanceof starter.DailyLimit) { t.state = 'wait'; queue.unshift(t); pause(e.resetAt); return; } if (t.url) { URL.revokeObjectURL(t.url); t.url = ''; } t.done = null; t.state = 'err'; t.err = e.message; if (/passcode/i.test(e.message)) store.set('aipass', ''); })
+      .finally(() => { running--; pump(); paint(); }); } };
+  pump(); paint();
+}
+
 function addPanel() {
   const base = location.origin;
   return `<section class="panel" aria-label="Add from other apps"><h3>Add from other apps</h3>
@@ -486,7 +646,7 @@ async function runSync() {
 
 /* ───────────────────────── backup & restore ───────────────────────── */
 const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
-const PREFS = ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room', 'budget', 'avatar', 'game', 'events'];
+const PREFS = ['budget', 'game', 'events', 'hairstyle', 'haircolor', 'hairmarks'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
 const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
@@ -515,132 +675,41 @@ async function importBackup(file) {
   } catch (e) { toast(e.message || 'Could not read that file'); }
 }
 
-async function loadSamples() {
-  for (const s of SAMPLES) {
-    const cutout = await sampleBlob(s);
-    const item = {
-      id: uid(), name: s.name, type: s.type, occasions: s.occasions, brand: '', sample: true, season: s.season || 'all',
-      color: { hex: s.hex, name: colorName(s.hex) }, cutout, adj: { scale: 1, dx: 0, dy: 0 }, createdAt: Date.now(),
-    };
-    await put('items', item); S.items.push(item); url(item.id, cutout);
-  }
-  toast('Sample closet loaded — swap in your real pieces anytime'); render();
-}
-
-/* ───────────────────────── my model (photo + proportions) ───────────────────────── */
+/* ───────────────────────── my photo (for the photoreal try-on) ───────────────────────── */
 function openModelModal() {
-  const prof = S.profile;
-  const d = {
-    W: prof?.W || DEFAULT_BODY.W, H: prof?.H || DEFAULT_BODY.H,
-    pts: structuredClone(prof?.pts || DEFAULT_BODY.pts),
-    photo: prof?.photo || null, photoUrl: prof?.photo ? url('profile') : '', canvas: null,
-    display: prof?.display || 'mannequin', warnings: [], busy: false,
-    prop: { shoulders: 1, hips: 1, torso: 1, legs: 1 },
-  };
+  const prof = S.profile, d = { canvas: null, photoUrl: prof?.photo ? url('profile') : '', display: prof?.display || 'model' };
   openModal();
-  const body = () => ({ W: d.W, H: d.H, pts: d.pts });
-  const preview = () => mannequinSVG({ body: body(), photoUrl: '', skin: S.skin, hair: S.hair, items: {}, urls: S.urls, label: 'Preview of your proportions' });
-
   const paint = () => {
-    const sl = (k, l) => `<label class="f" for="p-${k}">${l}</label><input type="range" id="p-${k}" data-prop="${k}" min="0.75" max="1.3" step="0.01" value="${d.prop[k]}">`;
     paintSheet(`
-      <p class="muted">For the most accurate try-on, upload a full-body photo: stand facing the camera, arms slightly away from your sides, whole body in frame (shoes included), fitted or neutral clothes, plain background, phone held at hip height. <b>The photo never leaves this device.</b></p>
+      <p class="muted">The photoreal try-on renders your pieces on a photo of you. Use a full-body photo: stand facing the camera, arms slightly away from your sides, whole body in frame, plain background, phone held at hip height.</p>
       <label class="f" for="mfile">Full-body photo</label>
       <input type="file" id="mfile" accept="image/*">
-      <div id="mstatus" class="muted" role="status" aria-live="polite">${d.busy ? 'Finding your body points…' : ''}</div>
-      ${d.warnings.map((w) => `<div class="gap" role="alert">${esc(w)}</div>`).join('')}
-      <div class="mgrid">
-        <div>${d.photoUrl ? `<p class="muted" id="caldesc">Drag the dots onto your joints, or focus one and use the arrow keys (Shift = bigger steps).</p><svg id="cal" class="cal-svg" viewBox="0 0 ${d.W} ${d.H}" aria-describedby="caldesc"><image href="${d.photoUrl}" width="${d.W}" height="${d.H}"/></svg>` : '<div class="empty" style="padding:30px 10px">Upload a photo to place your body points, or just use the sliders →</div>'}</div>
-        <div><div class="stage" id="mprev" style="padding:6px">${preview()}</div>
-          <details style="margin-top:8px" ${d.photoUrl ? '' : 'open'}><summary>Adjust proportions by hand</summary>
-            ${sl('shoulders', 'Shoulders')}${sl('hips', 'Hips')}${sl('torso', 'Torso length')}${sl('legs', 'Leg length')}
-            <p class="muted">${d.photoUrl ? 'Using these replaces the photo-based points.' : ''}</p></details></div>
-      </div>
+      <div id="mstatus" class="muted" role="status" aria-live="polite"></div>
+      ${d.photoUrl ? `<div class="stage" style="padding:6px;margin-top:8px"><img class="myphoto" src="${d.photoUrl}" alt="Your photo"></div>` : ''}
       <fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="f">Show me as</legend>
-        <label class="row"><input type="radio" name="disp" value="mannequin" ${d.display === 'mannequin' ? 'checked' : ''}> Mannequin shaped like me</label>
-        <label class="row"><input type="radio" name="disp" value="photo" ${d.display === 'photo' ? 'checked' : ''} ${d.photoUrl ? '' : 'disabled'}> My photo (most realistic)</label></fieldset>
+        <label class="row"><input type="radio" name="disp" value="model" ${d.display !== 'photo' ? 'checked' : ''}> The model</label>
+        <label class="row"><input type="radio" name="disp" value="photo" ${d.display === 'photo' ? 'checked' : ''} ${d.photoUrl ? '' : 'disabled'}> My photo (the photoreal try-on shows here)</label></fieldset>
       <div class="row" style="margin-top:16px;justify-content:space-between">
-        <span>${prof ? '<button class="ghost danger" id="mreset">Remove my model</button>' : ''}</span>
-        <span class="row"><button class="ghost" id="mcancel">Cancel</button><button class="primary" id="msave">Save</button></span></div>`, 'Make it look like me');
-    wire();
-  };
-
-  function refreshPreview() { $('#mprev').innerHTML = preview(); }
-
-  function drawCal() {
-    const svg = $('#cal'); if (!svg) return;
-    svg.querySelectorAll('.cal-el').forEach((n) => n.remove());
-    const p = d.pts, r = Math.max(5, d.W * 0.013);
-    const line = (a, b) => `<line class="cal-el skel" x1="${p[a][0]}" y1="${p[a][1]}" x2="${p[b][0]}" y2="${p[b][1]}" stroke-width="${r * 0.35}"/>`;
-    const lines = [['shL', 'shR'], ['hipL', 'hipR'], ['shL', 'hipL'], ['shR', 'hipR'], ['hipL', 'knL'], ['knL', 'anL'], ['hipR', 'knR'], ['knR', 'anR'], ['shL', 'wrL'], ['shR', 'wrR']].map(([a, b]) => line(a, b)).join('');
-    const dots = HANDLES.map(([k, label]) => `<circle class="cal-el handle" data-k="${k}" cx="${p[k][0]}" cy="${p[k][1]}" r="${r}" tabindex="0" role="button" aria-label="${label}: use arrow keys to move"/>`).join('');
-    svg.insertAdjacentHTML('beforeend', lines + dots);
-  }
-
-  function moveHandle(k, x, y) {
-    d.pts[k] = [Math.max(0, Math.min(d.W, x)), Math.max(0, Math.min(d.H, y))];
-    const svg = $('#cal'), el = svg.querySelector(`[data-k="${k}"]`);
-    drawCal(); // lines + dots are cheap to redraw; restore focus on the same dot
-    if (document.activeElement === document.body || document.activeElement === el) svg.querySelector(`[data-k="${k}"]`)?.focus();
-    refreshPreview();
-  }
-
-  function wire() {
+        <span>${prof ? '<button class="ghost danger" id="mreset">Remove my photo</button>' : ''}</span>
+        <span class="row"><button class="ghost" id="mcancel">Cancel</button><button class="primary" id="msave">Save</button></span></div>`, 'My photo');
     $('#mcancel').onclick = closeModal;
     document.querySelectorAll('[name=disp]').forEach((r) => (r.onchange = () => (d.display = r.value)));
-    document.querySelectorAll('[data-prop]').forEach((r) => (r.oninput = () => {
-      d.prop[r.dataset.prop] = +r.value;
-      Object.assign(d, fromProportions(d.prop)); d.photo = null; d.photoUrl = ''; d.display = 'mannequin';
-      refreshPreview();
-    }));
     $('#mfile').onchange = async (e) => {
       const f = e.target.files[0]; if (!f) return;
-      d.busy = true; d.warnings = []; $('#mstatus').textContent = 'Finding your body points… (first time takes a few seconds)';
-      try {
-        const { img } = await loadImage(f);
-        const canvas = toCanvas(img, 1000);
-        d.canvas = canvas; d.W = canvas.width; d.H = canvas.height;
-        d.photoUrl = canvas.toDataURL('image/jpeg', 0.9);
-        d.display = 'photo';
-        let lm = null;
-        try { lm = await detectPose(canvas); } catch (err) { console.warn(err); d.warnings.push('Automatic detection isn’t available in this browser — place the dots by hand.'); }
-        if (lm) { const r = fromLandmarks(lm, d.W, d.H); d.pts = r.body.pts; d.warnings.push(...r.warnings); }
-        else {
-          if (!d.warnings.length) d.warnings.push('I couldn’t find a full body in that photo. Drag the dots onto your joints, or try a clearer photo.');
-          const k = d.H / DEFAULT_BODY.H, ox = d.W / 2 - 150 * k;
-          d.pts = Object.fromEntries(Object.entries(DEFAULT_BODY.pts).map(([n, [x, y]]) => [n, [x * k + ox, y * k]]));
-        }
-      } catch (err) { d.warnings = [err.message]; }
-      d.busy = false; paint(); drawCal();
+      try { const { img } = await loadImage(f); d.canvas = toCanvas(img, 1000); d.photoUrl = d.canvas.toDataURL('image/jpeg', 0.9); d.display = 'photo'; paint(); } catch (err) { $('#mstatus').textContent = err.message; }
     };
-    const svg = $('#cal');
-    if (svg) {
-      drawCal();
-      let drag = null;
-      const toSvg = (e) => { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
-      svg.onpointerdown = (e) => { const k = e.target.dataset?.k; if (!k) return; drag = k; svg.setPointerCapture(e.pointerId); e.preventDefault(); };
-      svg.onpointermove = (e) => { if (!drag) return; const p = toSvg(e); moveHandle(drag, p.x, p.y); };
-      svg.onpointerup = svg.onpointercancel = () => (drag = null);
-      svg.onkeydown = (e) => {
-        const k = e.target.dataset?.k; if (!k) return;
-        const step = (e.shiftKey ? 10 : 2) * (d.W / 600), v = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[e.key];
-        if (!v) return; e.preventDefault(); moveHandle(k, d.pts[k][0] + v[0], d.pts[k][1] + v[1]);
-      };
-    }
     $('#msave').onclick = async () => {
-      let photo = d.photo;
-      if (d.photoUrl && d.canvas) photo = await canvasToBlob(d.canvas, 'image/jpeg', 0.9);
-      const rec = { id: 'me', rev: Date.now(), W: d.W, H: d.H, pts: d.pts, photo: d.photoUrl ? photo : null, display: d.photoUrl ? d.display : 'mannequin' };
+      const photo = d.canvas ? await canvasToBlob(d.canvas, 'image/jpeg', 0.9) : prof?.photo || null;
+      const rec = { id: 'me', rev: d.canvas ? Date.now() : prof?.rev || Date.now(), W: d.canvas?.width || prof?.W || 0, H: d.canvas?.height || prof?.H || 0, photo, display: photo ? d.display : 'model' };
       await put('profile', rec); S.profile = rec;
       S.urls.delete('profile'); if (rec.photo) url('profile', rec.photo);
-      S.shape = null; S.shapeName = ''; store.set('shape', ''); store.set('shapename', ''); // the new model replaces any body-type preset
-      closeModal(); toast('Your model is saved ✓'); render();
+      closeModal(); toast('Saved ✓'); render();
     };
     if ($('#mreset')) $('#mreset').onclick = async () => {
-      if (!confirm('Remove your saved photo and proportions?')) return;
+      if (!confirm('Remove your saved photo?')) return;
       await del('profile', 'me'); S.profile = null; S.urls.delete('profile'); closeModal(); render();
     };
-  }
+  };
   paint();
 }
 
@@ -710,16 +779,16 @@ async function runAIRender(force = false) {
 
 /* ───────────────────────── try on ───────────────────────── */
 const dollOn = () => S.scene === 'doll' && !dollFailed && !usingPhoto();
-async function setShape(shape, name) {
-  S.shape = shape; S.shapeName = name;
-  store.set('shape', JSON.stringify(shape)); store.set('shapename', name);
-  if (S.profile?.display === 'photo') { S.profile.display = 'mannequin'; await put('profile', S.profile); } // a body type customizes the mannequin, not the photo
-}
 function stageHTML() {
-  if (dollOn()) return !dollPack ? '<p class="muted dollhint" role="status">Getting the doll ready…</p>' : dollSVG({ pack: dollPack, look: { skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, eyes: S.eyes, lips: S.lips }, items: outfitItems(S.outfit), urls: S.urls, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
-  return mannequin(S.outfit); // the doll's art couldn't load: fall back to the plain mannequin
+  if (usingPhoto()) {
+    const items = outfitItems(S.outfit), done = aiFor(items);
+    return `<img class="myphoto" src="${done ? S.ai.image : url('profile')}" alt="${done ? `Your photo wearing ${Object.values(items).map((i) => i.name).join(', ')}` : 'Your photo'}">`;
+  }
+  if (dollFailed) return '<p class="muted dollhint" role="alert">The model picture couldn’t load. Check your connection and reload.</p>';
+  if (!dollPack) return '<p class="muted dollhint" role="status">Getting the model ready…</p>';
+  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
 }
-function mountStage() { const el = $('#stage'); if (el && !aptOn()) el.innerHTML = stageHTML(); }
+function mountStage() { if (S.scene === 'closet' && S.view === 'tryon') return wicRefresh(); const el = $('#stage'); if (el) el.innerHTML = stageHTML(); }
 const refreshStage = mountStage;
 
 const DRAWERS = [['fit', '📏 Fit'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
@@ -730,32 +799,56 @@ function metersHTML(worn) {
   return `<div class="meters" role="group" aria-label="Outfit meters">${bar('Mood fit', S.mood ? m?.fit : null)}${bar('Colours', m?.harmony)}${bar('Fresh', m?.fresh)}</div>`;
 }
 
-const SHAPE_SLIDERS = [['shoulders', 'Shoulders', .8, 1.25], ['hips', 'Hips', .8, 1.35], ['torso', 'Torso length', .85, 1.15], ['legs', 'Leg length', .8, 1.2], ['build', 'Build (soft ↔ full)', .85, 1.4]];
-const CAS_TABS = [['avatar', 'Avatar', '🧍'], ['skin', 'Skin', '🧑'], ['hair', 'Hair', '🎨'], ['style', 'Style', '💇'], ['eyes', 'Eyes', '👁️'], ['lips', 'Lips', '💋'], ['body', 'Body', '🧍'], ['room', 'Room', '🏠']];
+const CAS_TABS = [['hair', 'Hair', '💇'], ['anchors', 'Anchors', '📍']];
 /** The "create-a-sim" style picker: docked inside the model's box, one category at a time, options in a single scrolling strip. */
 function casHTML() {
   const close = '<button class="cas-x" data-act="casclose" aria-label="Close customizer"><span aria-hidden="true">✕</span></button>';
-  if (usingPhoto()) return `<div class="cas" role="region" aria-label="Customize your model"><p class="muted">You’re showing your own photo. Switch to the mannequin under <b>Me</b> to customize it.</p>${close}</div>`;
-  const shape = S.shape || BODY_TYPES.Average;
-  const sw = (list, cur, act, label) => `<div class="swatches" role="group" aria-label="${label}">${list.map((c, n) => `<button class="sw ${c === cur ? 'on' : ''}" aria-pressed="${c === cur}" data-act="${act}" data-v="${c}" style="background:${c}" aria-label="${label} ${n + 1}"></button>`).join('')}
-    <label class="sw custom" title="Pick any colour"><span class="sr-only">Custom ${label.toLowerCase()}</span><input type="color" id="custom-${act}" value="${cur}"></label></div>`;
-  const chip = (act, v, label, on) => `<button class="chip ${on ? 'on' : ''}" aria-pressed="${on}" data-act="${act}" data-v="${v}">${label}</button>`;
-  if (aptOn() ? !['avatar', 'skin', 'hair', 'style', 'eyes', 'lips'].includes(S.casTab) : S.casTab === 'avatar') S.casTab = aptOn() ? 'avatar' : 'skin';
+  if (usingPhoto()) return `<div class="cas" role="region" aria-label="Customize your model"><p class="muted">You’re showing your own photo. Switch back to the model under <b>Me</b> to customize it.</p>${close}</div>`;
+  // The base picture is fixed art: hair is your own hairstyle pictures laid over it; the anchor points are coordinates over it.
+  const tabs = dollPack?.hair ? ['hair', 'anchors'] : ['anchors'];
+  if (!tabs.includes(S.casTab)) S.casTab = tabs[0];
+  const pts = dollPack?.points || {};
   const panes = {
-    avatar: AVATARS.map((id, n) => chip('avatar', id, `${id.includes('female') ? '👩' : '🧑'} ${n % 6 + 1}`, S.avatar === id)).join(''),
-    skin: sw(SKIN, S.skin, 'skin', 'Skin tone'),
-    hair: sw(HAIR, S.hair, 'hair', 'Hair colour'),
-    style: HAIR_STYLES.map(([k, l]) => { const c = catalogItem(`hair:${k}`), lock = c && !owns(S.game, c.id); return chip('hairstyle', k, lock ? `🔒 ${l} · 🪙${c.price}` : l, S.hairStyle === k); }).join(''),
-    eyes: sw(EYES, S.eyes, 'eyes', 'Eye colour'),
-    lips: sw(LIPS, S.lips, 'lips', 'Lip colour'),
-    room: [['auto', 'Follow the season'], ...Object.entries(ROOMS).map(([k, [l, e]]) => [k, `${e} ${l}`])].map(([k, l]) => chip('room', k, l, S.room === k)).join(''),
-    body: Object.keys(BODY_TYPES).map((k) => chip('bodytype', k, k, !!S.shape && S.shapeName === k)).join('')
-      + SHAPE_SLIDERS.map(([k, l, a, b]) => `<label class="mini" for="sh-${k}"><span>${l}</span><input type="range" id="sh-${k}" data-shape="${k}" min="${a}" max="${b}" step="0.01" value="${shape[k]}"></label>`).join(''),
+    hair: hairPickerHTML(),
+    anchors: `<div class="anchors"><button class="chip ${S.dbgPts ? 'on' : ''}" aria-pressed="${!!S.dbgPts}" data-act="dbgpts"><span aria-hidden="true">📍</span> Show the points on the model</button>
+      <p class="muted">Clothes snap to these points: shoulders and hips set the size, the waist, neck and feet set the position. They are coordinates over the picture, kept in <code>assets/avatar/config.json</code>.</p>
+      <details><summary>All ${Object.keys(pts).length} points and their coordinates</summary><ul class="ptlist">${Object.entries(pts).map(([k, [x, y]]) => `<li><span>${k}</span> <b>${x}, ${y}</b></li>`).join('')}</ul></details></div>`,
   };
   return `<div class="cas" role="region" aria-label="Customize your model">
-    <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => (k === 'avatar' ? aptOn() : !((dollOn() || aptOn()) && (k === 'body' || (aptOn() && k === 'room'))))).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}
-      <button data-act="resetlook" aria-label="Reset appearance"><span aria-hidden="true">↺</span><small>Reset</small></button>${close}</div>
-    <div class="cas-opts">${panes[S.casTab] || panes.skin}</div></div>`;
+    <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => tabs.includes(k)).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}${close}</div>
+    <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div></div>`;
+}
+
+/** "Adjust fit" for a hairstyle: drag its four landmarks on the picture (crown, hairline, temples); the head preview follows. Saved per style. */
+function openHairFit(styleId) {
+  const st = dollPack?.hair?.styles.find((s) => s.id === styleId); if (!st?.marks) return;
+  const saved = hairMarks(), start = { ...st.marks, ...(saved[styleId] || {}) }, marks = JSON.parse(JSON.stringify(start));
+  const LBL = { crown: 'Crown', hairline: 'Hairline', templeL: 'Temple', templeR: 'Temple' }, [iw, ih] = st.size;
+  openModal();
+  const preview = () => { const h = hairOf(dollPack, styleId, S.hairColor, { [styleId]: marks }), P = dollPack.points;
+    return dollSVG({ pack: dollPack, items: {}, urls: new Map(), hair: h, cls: 'hairprev', label: 'Head preview' }).replace(/viewBox="[^"]*"/, `viewBox="${P.crown[0] - 230} ${P.crown[1] - 120} 460 520"`); };
+  const dot = (k) => `<button type="button" class="hfdot ${k}" data-k="${k}" style="left:${(100 * marks[k][0]) / iw}%;top:${(100 * marks[k][1]) / ih}%" aria-label="${LBL[k]} (drag to move)"><span>${LBL[k]}</span></button>`;
+  paintSheet(`<p class="muted">Drag the dots onto the hair: <b>Crown</b> at the top of the head, <b>Hairline</b> at the top of the face opening, the two <b>Temples</b> on the opening's edges at eyebrow height. The preview follows.</p>
+    <div class="hairfit"><div class="hfpic" style="aspect-ratio:${iw}/${ih}"><img src="${dollPack.base}hair/${styleId}.png${dollPack.version ? `?v=${dollPack.version}` : ''}" alt="">${Object.keys(LBL).map(dot).join('')}</div><div class="hfprev" id="hfprev">${preview()}</div></div>
+    <div class="row" style="margin-top:12px;justify-content:space-between"><button class="ghost" id="hfreset">Suggested</button><span class="row"><button class="ghost" id="hfcancel">Cancel</button><button class="primary" id="hfsave">Save</button></span></div>`, `Fit: ${esc(st.name)}`);
+  const pic = $('.hfpic'), refresh = () => { $('#hfprev').innerHTML = preview(); };
+  pic.querySelectorAll('.hfdot').forEach((d) => {
+    d.onpointerdown = (e) => { d.setPointerCapture(e.pointerId); e.preventDefault(); };
+    d.onpointermove = (e) => { if (!d.hasPointerCapture(e.pointerId)) return; const r = pic.getBoundingClientRect(), u = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), v = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      marks[d.dataset.k] = [Math.round(u * iw * 10) / 10, Math.round(v * ih * 10) / 10]; d.style.left = `${u * 100}%`; d.style.top = `${v * 100}%`; refresh(); };
+  });
+  $('#hfreset').onclick = () => { Object.assign(marks, JSON.parse(JSON.stringify(st.marks))); pic.querySelectorAll('.hfdot').forEach((d) => { d.style.left = `${(100 * marks[d.dataset.k][0]) / iw}%`; d.style.top = `${(100 * marks[d.dataset.k][1]) / ih}%`; }); refresh(); };
+  $('#hfcancel').onclick = () => closeModal();
+  $('#hfsave').onclick = () => { const all = hairMarks(); if (JSON.stringify(marks) === JSON.stringify(st.marks)) delete all[styleId]; else all[styleId] = marks; store.set('hairmarks', JSON.stringify(all)); closeModal(); renderTryon(); toast('Hair fit saved ✓'); };
+}
+
+/** Hairstyle and hair colour chips (the customizer and the vanity use the same ones). */
+function hairPickerHTML() {
+  const h = dollPack?.hair; if (!h) return '';
+  const v = dollPack.version ? `?v=${dollPack.version}` : '';
+  return `<div class="hairpick"><div class="opt-row" role="group" aria-label="Hairstyle">${h.styles.map((s) => `<button class="hairchip ${S.hairStyle === s.id ? 'on' : ''}" aria-pressed="${S.hairStyle === s.id}" data-act="hairstyle" data-v="${s.id}">${s.id === 'none' ? '<span class="th none" aria-hidden="true">✕</span>' : `<span class="th"><img src="${dollPack.base}hair/${s.id}.png${v}" alt="" draggable="false"></span>`}<small>${s.name}</small></button>`).join('')}</div>
+    ${S.hairStyle !== 'none' ? `<button class="chip hairadjust" data-act="hairfit" data-v="${S.hairStyle}"><span aria-hidden="true">✋</span> Adjust fit</button>` : ''}
+    <div class="opt-row swatches" role="group" aria-label="Hair colour">${h.colors.map((c) => `<button class="hairsw ${S.hairColor === c.id ? 'on' : ''}" aria-pressed="${S.hairColor === c.id}" data-act="haircolor" data-v="${c.id}" style="--sw:${c.sw}" ${S.hairStyle === 'none' ? 'disabled' : ''}><i aria-hidden="true"></i><small>${c.name}</small></button>`).join('')}</div></div>`;
 }
 
 function weatherLine() {
@@ -773,9 +866,9 @@ function drawerHTML(worn, fit) {
       ${S.outfits.length ? `<h3>Saved looks</h3><div class="chips">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}${o.occasion ? ' · ' + esc(o.occasion) : ''}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : '<p class="muted">Saved looks show up here.</p>'}`;
   if (S.drawer === 'ai') return aiPanel();
   if (S.drawer === 'me') return `<div class="row" role="group" aria-label="Model">
-        <button class="chip ${usingPhoto() ? '' : 'on'}" aria-pressed="${!usingPhoto()}" data-act="display" data-v="mannequin" ${S.profile ? '' : 'disabled'}>${S.profile ? 'Mannequin shaped like me' : 'Default mannequin'}</button>
+        <button class="chip ${usingPhoto() ? '' : 'on'}" aria-pressed="${!usingPhoto()}" data-act="display" data-v="model">The model</button>
         <button class="chip ${usingPhoto() ? 'on' : ''}" aria-pressed="${usingPhoto()}" data-act="display" data-v="photo" ${S.profile?.photo ? '' : 'disabled'}>My photo</button></div>
-      <button class="primary wide" data-act="setup">${S.profile ? 'Edit my model' : '✨ Make it look like me'}</button>`;
+      <button class="primary wide" data-act="setup">${S.profile ? 'Change my photo' : '📷 Add my photo (for the photoreal try-on)'}</button>`;
   return Object.keys(worn).length
     ? `<div class="chips">${SLOTS.filter((s) => worn[s]).map((s) => `<button class="chip ${fit?.id === worn[s].id ? 'on' : ''}" aria-pressed="${fit?.id === worn[s].id}" data-act="fit" data-id="${worn[s].id}">${SLOT_LABEL[s]}: ${esc(worn[s].name)}</button>`).join('')}</div>
       ${fit ? `<p class="muted">Fine-tune “${esc(fit.name)}”</p>${[['scale', 'Size', 0.5, 1.8, 0.02], ['dx', 'Left / right', -60, 60, 1], ['dy', 'Up / down', -80, 80, 1]].map(([k, l, a, b, st]) => `<label class="f" for="adj-${k}">${l}</label><input type="range" id="adj-${k}" data-adj="${k}" min="${a}" max="${b}" step="${st}" value="${fit.adj[k]}">`).join('')}
@@ -783,25 +876,9 @@ function drawerHTML(worn, fit) {
     : '<p class="muted">Pick pieces from the wardrobe below to dress your model.</p>';
 }
 
-const sceneBar = () => `<div class="scenebar" role="group" aria-label="Where to dress up">
-  <button class="${S.scene !== 'apt' ? 'on' : ''}" aria-pressed="${S.scene !== 'apt'}" data-act="scene" data-v="doll"><span aria-hidden="true">👗</span> Dress up</button>
-  ${webglOK && store.get('flat', '') !== '1' ? `<button class="${S.scene === 'apt' ? 'on' : ''}" aria-pressed="${S.scene === 'apt'}" data-act="scene" data-v="apt"><span aria-hidden="true">🏠</span> My apartment</button>` : ''}</div>`;
-
-/** The on-screen walking stick. */
-function bindJoystick() {
-  const j = $('#joy'); if (!j) return;
-  const knob = j.firstElementChild; let pid = null;
-  const set = (e) => {
-    const r = j.getBoundingClientRect(), R = r.width / 2 - 14; let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-    const l = Math.hypot(dx, dy); if (l > R) { dx = (dx / l) * R; dy = (dy / l) * R; }
-    knob.style.transform = `translate(${dx}px, ${dy}px)`; apt?.setMove(dx / R, -dy / R);
-  };
-  j.onpointerdown = (e) => { pid = e.pointerId; j.setPointerCapture(pid); set(e); e.preventDefault(); };
-  j.onpointermove = (e) => { if (e.pointerId === pid) set(e); };
-  const end = (e) => { if (e.pointerId !== pid) return; pid = null; knob.style.transform = ''; apt?.setMove(0, 0); };
-  j.onpointerup = end; j.onpointercancel = end;
-}
-
+const sceneBar = () => `<div class="scenebar" role="group" aria-label="Where to be">
+  <button class="on" aria-pressed="true" data-act="scene" data-v="doll"><span aria-hidden="true">🪞</span> Dress up</button>
+  <button aria-pressed="false" data-act="scene" data-v="closet"><span aria-hidden="true">✨</span> Walk-in closet</button></div>`;
 
 /* ───────────────────────── the daily challenge ───────────────────────── */
 const saveGame = () => store.set('game', JSON.stringify(S.game));
@@ -829,16 +906,17 @@ const hasOutfit = () => Object.keys(S.outfit).some((k) => itemById(S.outfit[k]))
 function gameBarHTML(big) {
   const d = S.game.day; if (!d) return '';
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
-  const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. ${aptOn() ? 'Head to bed' : 'Tap End the day'} to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
-  return `<div class="gamebar ${big ? 'big' : ''}" role="region" aria-label="Today’s challenge">
+  const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. Tap End the day to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
+  return `<div class="gamebar ${big ? 'big' : ''} ${S.gbOpen ? 'open' : ''}" role="region" aria-label="Today’s challenge">
+    ${big ? '' : `<div class="gb-pillrow"><button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>${d.phase === 'done' ? '' : `<button class="gb-ratebtn" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate</button>`}<button class="gb-closet" data-act="scene" data-v="closet" aria-label="Walk-in closet"><span aria-hidden="true">✨</span></button></div>`}
     <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span><button class="gb-shop" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
       <span class="gb-meter" role="meter" aria-label="Energy" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.energy}"><span aria-hidden="true">⚡</span><i style="width:${d.energy}%"></i></span>
       <span class="gb-meter mood" role="meter" aria-label="Mood" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${d.mood}"><span aria-hidden="true">${d.mood >= 70 ? '😄' : d.mood >= 40 ? '🙂' : '😐'}</span><i style="width:${d.mood}%"></i></span></div>
-    ${d.phase === 'done' ? '' : `<button class="primary gb-rate" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>`}${d.phase === 'evening' && !aptOn() ? `<button class="ghost gb-end" data-act="endday"><span aria-hidden="true">🌙</span> End the day (log this outfit)</button>` : ''}</div>`;
+    ${d.phase === 'done' ? '' : `<button class="primary gb-rate" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate my look</button>`}${d.phase === 'evening' ? `<button class="ghost gb-end" data-act="endday"><span aria-hidden="true">🌙</span> End the day (log this outfit)</button>` : ''}</div>`;
 }
-const refreshGame = () => { document.querySelectorAll('.gamebar').forEach((b) => (b.outerHTML = gameBarHTML(b.classList.contains('big')))); apt?.setGuide(guideFor({ game: S.game, hasOutfit: hasOutfit() })); };
+const refreshGame = () => { document.querySelectorAll('.gamebar').forEach((b) => (b.outerHTML = gameBarHTML(b.classList.contains('big')))); if (S.scene === 'closet' && S.view === 'tryon') wicRefresh(); };
 
 function rateNow() {
   ensureDay();
@@ -851,10 +929,10 @@ function rateNow() {
     <p class="coins-earned">${paid ? `+<b>${paid}</b> <span aria-hidden="true">🪙</span> coins` : 'No new coins: you already earned these today. Beat your best for more.'}</p>
     <ul class="parts">${rating.parts.map((p) => `<li><span>${esc(p.label)}</span><span class="pbar" aria-hidden="true"><i style="width:${(100 * p.got) / p.max}%"></i></span><b>${p.got}/${p.max}</b><small>${esc(p.note)}</small></li>`).join('')}</ul>
     <p class="muted">${esc(rating.tip)}</p>
-    <div class="row" style="margin-top:12px"><button class="ghost" id="rwclose">Keep dressing</button><button class="primary grow" id="rwbed">🛏️ Go to bed</button></div>
+    <div class="row" style="margin-top:12px"><button class="ghost" id="rwclose">Keep dressing</button><button class="primary grow" id="rwbed">🌙 Finish the day</button></div>
     ${reducedMotion() ? '' : `<div class="confetti" aria-hidden="true">${Array.from({ length: rating.stars * 8 }, (_, i) => `<span style="--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.12}s;--c:${['#ff5c93', '#ffd23f', '#5ad1ff', '#9b6bff', '#2fb892'][i % 5]}"></span>`).join('')}</div>`}</div>`, 'Your look');
   $('#rwclose').onclick = () => { closeModal(); refreshGame(); if (S.view === 'tryon') renderTryon(); };
-  $('#rwbed').onclick = () => { closeModal(); refreshGame(); if (aptOn()) apt?.walkToStation('bed'); else $('.gb-end')?.focus(); };
+  $('#rwbed').onclick = () => { closeModal(); refreshGame(); $('.gb-end')?.focus(); };
   refreshGame();
 }
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -906,23 +984,21 @@ function lookbookOpen(id) {
 }
 
 /* ───────────────────────── the shop and build mode ───────────────────────── */
-const placedDefs = () => (S.game.placed || []).map((p) => { const c = catalogItem(p.id); return c ? { uid: p.uid, model: c.model, scale: c.scale, solid: c.solid, x: p.x, z: p.z, ry: p.ry } : null; }).filter(Boolean);
-const SHOP_TABS = [['furn', '🛋️ Furniture'], ['room', '🎨 Rooms'], ['hair', '💇 Hair'], ['bg', '🖼️ Backdrops'], ['pose', '🧍 Poses']];
-function showShop(tab = S.shopTab || 'furn', focus = '') {
+const SHOP_TABS = [['bg', '🖼️ Backdrops'], ['pose', '🧍 Poses']];
+function showShop(tab = S.shopTab || 'bg', focus = '') {
+  if (!SHOP_TABS.some(([k]) => k === tab)) tab = 'bg';
   S.shopTab = tab;
   if ($('#modal').hidden) openModal();
   const g = S.game, card = (c) => {
-    const have = c.kind === 'furn' ? furnitureStock(g, c.id) : 0, mine = owns(g, c.id), name = c.id.slice(c.kind.length + 1), cur = c.kind === 'room' ? g.decor === name : c.kind === 'hair' ? S.hairStyle === name : ['bg', 'pose'].includes(c.kind) && (g.photo || {})[c.kind] === name;
-    const act = c.kind === 'furn' ? `<button class="primary" data-act="shopbuy" data-v="${c.id}" ${g.coins < c.price ? 'aria-disabled="true"' : ''}>Buy · 🪙 ${c.price}</button>`
-      : mine ? `<button class="${cur ? 'ghost' : 'primary'}" data-act="shopuse" data-v="${c.id}" aria-pressed="${cur}">${cur ? 'In use ✓' : c.kind === 'hair' ? 'Wear' : 'Use'}</button>`
+    const mine = owns(g, c.id), cur = (g.photo || {})[c.kind] === c.id.slice(c.kind.length + 1);
+    const act = mine ? `<button class="${cur ? 'ghost' : 'primary'}" data-act="shopuse" data-v="${c.id}" aria-pressed="${cur}">${cur ? 'In use ✓' : 'Use'}</button>`
       : `<button class="primary" data-act="shopbuy" data-v="${c.id}" ${g.coins < c.price ? 'aria-disabled="true"' : ''}>Buy · 🪙 ${c.price}</button>`;
-    return `<li class="shopcard"><span class="se" aria-hidden="true">${c.emoji}</span><span class="sn">${esc(c.name)}${c.kind === 'furn' && have ? `<small>${have} in storage</small>` : ''}${c.kind !== 'furn' && mine && c.price ? '<small>Yours</small>' : ''}</span>${act}</li>`;
+    return `<li class="shopcard"><span class="se" aria-hidden="true">${c.emoji}</span><span class="sn">${esc(c.name)}${mine && c.price ? '<small>Yours</small>' : ''}</span>${act}</li>`;
   };
   paintSheet(`<p class="shopcoins" role="status">You have <b>🪙 ${g.coins}</b> coins. Earn more by rating your look each day.</p>
     <div class="tabs" role="tablist" aria-label="Shop sections">${SHOP_TABS.map(([k, l]) => `<button role="tab" class="chip" aria-selected="${tab === k}" data-act="shoptab" data-v="${k}">${l}</button>`).join('')}</div>
     <ul class="shoplist">${CATALOG.filter((c) => c.kind === tab).map(card).join('')}</ul>
-    ${tab === 'furn' ? '<p class="muted">Bought furniture waits in storage. Open 🔨 Build in your apartment to place it.</p>' : ''}
-    ${['bg', 'pose'].includes(tab) ? '<p class="muted">Used in 📸 Photo mode on the Dress up screen.</p>' : ''}
+    <p class="muted">Used in 📸 Photo mode on the Dress up screen.</p>
     <div class="row" style="margin-top:12px"><button class="ghost grow" id="shopclose">Close</button></div>`, 'Shop');
   $('#shopclose').onclick = () => { const back = S.photoOpen; closeModal(); if (back) openPhoto(); };
   if (focus) $(`#modal [data-act][data-v="${CSS.escape(focus)}"]`)?.focus();
@@ -933,171 +1009,104 @@ function shopBuy(id) {
 }
 function shopUse(id) {
   const c = catalogItem(id); if (!c || !owns(S.game, id)) return;
-  if (c.kind === 'room') { S.game = useRoom(S.game, id); saveGame(); apt?.setTheme(S.game.decor); }
-  else if (['bg', 'pose'].includes(c.kind)) { S.game = usePhoto(S.game, id); saveGame(); }
-  else if (c.kind === 'hair') { S.hairStyle = id.slice(5); store.set('hairstyle', S.hairStyle); if (S.view === 'tryon' && !aptOn()) renderTryon(); }
+  if (['bg', 'pose'].includes(c.kind)) { S.game = usePhoto(S.game, id); saveGame(); }
   showShop(S.shopTab, id);
 }
 
-const SNAP = 0.25, snap = (v) => Math.round(v / SNAP) * SNAP;
-const pieceDef = (p) => { const c = catalogItem(p.id); return { uid: p.uid, model: c.model, scale: c.scale, solid: c.solid, x: p.x, z: p.z, ry: p.ry }; };
-function buildBarHTML() {
-  const b = S.build, stock = CATALOG.filter((c) => c.kind === 'furn' && furnitureStock(S.game, c.id) > 0), sel = b.sel && S.game.placed.find((p) => p.uid === b.sel), sc = sel && catalogItem(sel.id);
-  return `<div class="bb-top"><b>🔨 Build</b><span class="bb-hint" role="status">${sel ? `Tap the floor to move the ${esc(sc.name)}, or use the arrows.` : 'Tap a piece to pick it up, or place something from storage.'}</span><button class="primary" data-act="bdone">Done</button></div>
-    ${sel ? `<div class="bb-sel" role="group" aria-label="Move the ${esc(sc.name)}"><button data-act="bnudge" data-v="left" aria-label="Move left">◀</button><button data-act="bnudge" data-v="up" aria-label="Move away">▲</button><button data-act="bnudge" data-v="down" aria-label="Move closer">▼</button><button data-act="bnudge" data-v="right" aria-label="Move right">▶</button><button class="chip" data-act="bturn"><span aria-hidden="true">⟳</span> Turn</button><button class="chip" data-act="bstore"><span aria-hidden="true">📦</span> Put away</button></div>` : ''}
-    <div class="bb-stock" role="group" aria-label="In storage">${stock.length ? stock.map((c) => `<button class="chip" data-act="bplace" data-v="${c.id}"><span aria-hidden="true">${c.emoji}</span> ${esc(c.name)} ×${furnitureStock(S.game, c.id)}</button>`).join('') : '<span class="muted">Nothing in storage. </span><button class="chip" data-act="shop"><span aria-hidden="true">🛍️</span> Shop for furniture</button>'}</div>`;
-}
-function paintBuild(focus = '') {
-  const bar = $('#buildbar'); if (!bar || !S.build) return;
-  bar.hidden = false; bar.innerHTML = buildBarHTML();
-  if (focus) bar.querySelector(`[data-act="${focus}"]`)?.focus();
-}
-async function buildSync() { await apt?.setExtras(placedDefs(), S.build?.sel || ''); paintBuild(); }
-function startBuild() {
-  if (!apt?.running || S.station) return;
-  S.build = { sel: '' }; apt.setPaused(true); apt.setFloorTap(buildTap);
-  $('.room.apt')?.classList.add('building'); paintBuild('bdone'); buildSync();
-}
-function endBuild() {
-  S.build = null; apt?.setFloorTap(null); apt?.setPaused(false); apt?.setExtras(placedDefs());
-  $('.room.apt')?.classList.remove('building'); const bar = $('#buildbar'); if (bar) { bar.hidden = true; bar.innerHTML = ''; } $('[data-act=build]')?.focus();
-}
-async function buildMove(uid, patch) {
-  const p = S.game.placed.find((x) => x.uid === uid); if (!p) return false;
-  const next = { ...p, ...patch, ry: patch.ry === undefined ? p.ry : ((patch.ry % 4) + 4) % 4 }, res = await apt.canPlace(pieceDef(next), uid);
-  if (!res.ok) { toast(res.why); return false; }
-  S.game = movePiece(S.game, uid, patch); saveGame(); await buildSync(); return true;
-}
-function buildTap(x, z, uid) {
-  if (!S.build) return;
-  if (uid && uid !== S.build.sel) { S.build.sel = uid; return buildSync(); }
-  if (S.build.sel && Number.isFinite(x)) buildMove(S.build.sel, { x: snap(x), z: snap(z) });
-}
-async function buildPlace(id) {
-  const c = catalogItem(id); if (!c || furnitureStock(S.game, id) <= 0) return;
-  const spots = []; for (let x = -6; x <= 6; x += 0.5) for (let z = -5; z <= 5; z += 0.5) spots.push([x, z]);
-  const me = apt.where() || [0, 2], dir = apt.camDir()?.forward || [0, -1], cx = me[0] + dir[0] * 3.5, cz = me[1] + dir[1] * 3.5; // start looking just ahead of where the camera faces, so you can see it land
-  spots.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cz) - Math.hypot(b[0] - cx, b[1] - cz));
-  for (const [x, z] of spots) {
-    if ((await apt.canPlace({ model: c.model, scale: c.scale, solid: c.solid, x, z, ry: 0 })).ok) {
-      const r = placePiece(S.game, id, x, z, 0); S.game = r.game; saveGame(); S.build.sel = r.uid; await buildSync(); return;
-    }
+/* ───────────────────────── the walk-in closet ───────────────────────── */
+let wic = null; // the closet's navigation (closet.js), while it is on screen
+const itemRatio = (it) => { const m = S.meta.get(it.id); return m?.iw && m?.ih ? (m.bw * m.iw) / (m.bh * m.ih) : 0.8; };
+const piecesIn = (sec) => (sec.types ? S.items.filter((i) => sec.types.includes(i.type)) : []);
+/** One section's panel: its photographed background, your pieces placed on it, and its label. */
+function wicPanel(sec, W, H, x) {
+  const b = artBox(sec, W, H), pct = (v, of) => `${(100 * v) / of}%`, [iw, ih] = [b.w / b.s, b.h / b.s], list = piecesIn(sec), worn = new Set(Object.values(S.outfit));
+  let inner = '';
+  if (sec.k === 'overview') {
+    inner = Object.entries(HOTSPOTS).map(([k, [hx, hy]]) => { const t = sectionOf(k), n = piecesIn(t).length;
+      return `<button class="wic-hot" style="left:${pct(hx, iw)};top:${pct(hy, ih)}" data-act="wicgo" data-v="${k}"><span aria-hidden="true">${t.emoji}</span> ${t.label}${t.types ? ` <small>${n}</small>` : ''}</button>`; }).join('');
+  } else if (sec.types) {
+    inner = layoutSection(sec, list.map((i) => ({ id: i.id, ar: itemRatio(i) }))).map((p) => { const it = itemById(p.id);
+      return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
+  } else if (sec.k === 'mirror') {
+    const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
+    inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to dress up">${fig}</button>`;
   }
-  toast('There’s no free spot. Put something away first.');
+  const n = list.length;
+  const label = sec.k === 'overview' ? '' : `<div class="wic-label"><b>${sec.emoji} ${sec.label}</b>${sec.types ? ` · ${n} ${n === 1 ? 'piece' : 'pieces'}` : ''}</div>`;
+  const note = sec.types && !n ? `<div class="wic-empty"><p>No ${sec.label.toLowerCase()} here yet.</p><button class="wic-btn" data-act="add" data-v="${sec.types[0]}">+ Add pieces</button></div>`
+    : sec.k === 'mirror' ? '<div class="wic-empty low"><button class="wic-btn" data-act="wicmirror">🪞 Dress up in the mirror</button></div>'
+    : sec.k === 'vanity' ? `<div class="wic-empty low wic-vanity">${hairPickerHTML()}<button class="wic-btn" data-act="wichair">🪞 Try hair in the mirror</button></div>` : '';
+  return `<section class="wic-panel" data-k="${sec.k}" style="left:${x}px;width:${b.pw}px" aria-label="${sec.label}">
+    <div class="wic-art" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;background-image:url(/assets/closet/${sec.bg}.jpg)">${inner}</div>${label}${note}</section>`;
 }
-function buildNudge(dir) {
-  const d = apt?.camDir(), sel = S.build?.sel && S.game.placed.find((p) => p.uid === S.build.sel); if (!d || !sel) return;
-  const v = { up: d.forward, down: d.forward.map((n) => -n), right: d.right, left: d.right.map((n) => -n) }[dir];
-  return buildMove(sel.uid, { x: snap(sel.x + v[0] * SNAP * 2), z: snap(sel.z + v[1] * SNAP * 2) });
+/** The top bar, the challenge pill and the tip: drawn over the closet, never over the strip. */
+function wicChrome() {
+  const bar = $('.wic-chrome'); if (!bar) return;
+  const d = S.game.day, open = !!S.wicPill;
+  bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to dress up"><span aria-hidden="true">←</span></button>
+      <span class="wic-coins" role="status"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span>
+      <button class="wic-round wide" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button></div>
+    ${d ? `<div class="wic-pillbox"><button class="wic-pill" data-act="wicpill" aria-expanded="${open}" aria-controls="wicpillcard">${esc(themeLine(d.theme))}</button>
+      ${open ? `<div class="wic-pillcard" id="wicpillcard"><p>Today’s challenge: <b>${esc(d.theme.title)}</b>. ${d.stars ? `You scored ${d.stars}★.` : hasOutfit() ? 'Rate your look in the mirror.' : 'Pick pieces, then rate the look in the mirror.'}</p><button class="wic-btn" data-act="wicmirror">🪞 To the mirror</button></div>` : ''}</div>` : ''}
+    ${store.get('wictip', '') ? '' : '<div class="wic-tip" role="status">Swipe to move along the walls, or tap a section. Pinch to look closer. <button class="wic-x" data-act="wictip" aria-label="Got it">✕</button></div>'}`;
 }
-
-/* ───────────────────────── the 3D apartment ───────────────────────── */
-let apt = null, aptLoad = null; // the engine, loaded on demand
-const aptOn = () => S.scene === 'apt' && webglOK && store.get('flat', '') !== '1';
-const loadApt = () => (aptLoad ||= import('./apartment.js').then((m) => (apt = m.apartment)));
-const STATIONS = [['wardrobe', 'Wardrobe', '👗', 'Pick pieces from your closet'], ['vanity', 'Vanity', '💄', 'Skin, hair, make-up and your avatar'], ['mirror', 'Mirror', '🪞', 'Dress up and see how it looks'], ['bed', 'Bed', '🛏️', 'End the day: log what you wore'], ['desk', 'Desk', '🖥️', 'Plan your week']];
-const aptLook = () => ({ skin: S.skin, hair: S.hair });
-const aptStations = () => STATIONS.map(([type, label, emoji]) => ({ type, label, emoji, thumbs: type === 'wardrobe' ? S.items.slice(-6).map((i) => url(i.id)) : [] }));
-const leaveApt = () => { S.build = null; if (apt?.running) { S.aptPos = apt.where(); apt.stop(); } };
-
-function renderApartment() {
-  if ($('.room.apt')) return updateAptUI();
-  $('#main').innerHTML = `<h2 class="view-title sr-only">Your apartment</h2>
-  <div class="dress aptmode"><div class="dress-left">
-    ${sceneBar()}
-    <div class="room world apt">
-      <div class="stage" id="stage"><p class="muted loading" role="status">Opening your apartment…</p></div>
-      ${gameBarHTML(true)}
-      <progress class="aptbar" id="aptbar" max="100" value="0" aria-label="Loading the apartment"></progress>
-      <p class="world-hint" id="whint" role="status">Drag the stick, or tap the floor, to walk. Step on a glowing circle to use it.</p>
-      <div class="joy" id="joy" aria-hidden="true"><span class="joy-knob"></span></div>
-      <div class="camrot" role="group" aria-label="Look around"><button data-act="camrot" data-v="-1" aria-label="Look left"><span aria-hidden="true">⟲</span></button><button data-act="camrot" data-v="1" aria-label="Look right"><span aria-hidden="true">⟳</span></button></div>
+function wicStrip(cur) {
+  const strip = $('.wic-strip'); if (!strip) return;
+  strip.querySelectorAll('button').forEach((b) => { const on = b.dataset.v === cur; b.classList.toggle('on', on); on ? b.setAttribute('aria-current', 'location') : b.removeAttribute('aria-current'); if (on) b.scrollIntoView?.({ block: 'nearest', inline: 'center' }); });
+}
+/** Lay the panels out for the current screen size (and redraw the pieces). */
+function wicRefresh() {
+  const view = $('.wic-view'); if (!view) return;
+  const W = view.clientWidth, H = view.clientHeight, { at, total } = trackLayout(W, H), cur = wic?.current() || S.wicAt || 'overview', x = wic?.x();
+  view.querySelector('.wic-track').style.width = `${total}px`;
+  view.querySelector('.wic-track').innerHTML = SECTIONS.map((s) => wicPanel(s, W, H, at[s.k].x)).join('');
+  wic = bindCloset(view, { start: cur, startX: wic && W === S.wicW ? x : null, onSection: (k) => { S.wicAt = k; wicStrip(k); } });
+  S.wicW = W; wicChrome();
+}
+function renderWalkIn() {
+  document.body.classList.add('wic-on'); S.lastView = 'tryon';
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Your walk-in closet</h2>
+  <div class="wic">
+    <div class="wic-view" tabindex="0" role="region" aria-label="Walk-in closet. Use the left and right arrow keys, or the sections below, to move.">
+      <div class="wic-zoom"><div class="wic-track"></div></div>
     </div>
-    <div class="buildbar" id="buildbar" hidden></div>
-    <div class="world-jump" role="group" aria-label="Walk to a station"><button class="chip build" data-act="build"><span aria-hidden="true">🔨</span> Build</button>${STATIONS.map(([t, l, e]) => `<button class="chip" aria-pressed="false" data-act="gostation" data-v="${t}"><span aria-hidden="true">${e}</span> ${l}</button>`).join('')}</div>
-  </div></div>`;
-  S.lastView = 'tryon';
-  bindJoystick(); mountApartment();
+    <div class="wic-chrome"></div>
+    <nav class="wic-strip" aria-label="Closet sections">${SECTIONS.map((s) => `<button data-act="wicgo" data-v="${s.k}"><span aria-hidden="true">${s.emoji}</span>${s.label}</button>`).join('')}</nav>
+  </div>`;
+  wic = null; wicRefresh();
 }
+/** An item's card: its photo, tags and "Add to outfit". */
+function wicCard(id) {
+  const it = itemById(id); if (!it) return;
+  const worn = Object.values(S.outfit).includes(id), n = wearCounts()[id] || 0;
+  openModal();
+  paintSheet(`<div class="wic-card"><img src="${url(id)}" alt="${esc(it.name)}">
+    <div class="chips">${[TYPES[it.type]?.label, it.color?.name, SEASONS.find(([k]) => k === it.season)?.[1], ...(it.occasions || [])].filter(Boolean).map((t) => `<span class="chip">${esc(t)}</span>`).join('')}</div>
+    <p class="muted">${n ? `Worn ${n}×` : 'Not worn yet'}${it.brand ? ` · ${esc(it.brand)}` : ''}</p></div>
+    <div class="row" style="margin-top:12px"><button class="ghost" id="wcclose">Close</button><button class="ghost" id="wcedit">Edit</button><button class="primary grow" id="wcadd" ${worn ? 'disabled' : ''}>${worn ? 'In your outfit ✓' : '+ Add to outfit'}</button></div>`, esc(it.name));
+  $('#wcclose').onclick = closeModal;
+  $('#wcedit').onclick = () => { closeModal(); openItemModal(it); };
+  $('#wcadd').onclick = () => {
+    S.outfit = wear(S.outfit, it); S.adjust = id; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); }
+    closeModal(); toast(`${it.name} is in your outfit. See it in the mirror 🪞`); wicRefresh();
+  };
+}
+addEventListener('resize', () => { if (S.view === 'tryon' && S.scene === 'closet') { clearTimeout(S.wicRz); S.wicRz = setTimeout(wicRefresh, 150); } });
 
-async function mountApartment() {
-  const el = $('#stage'); if (!el) return;
-  let engine;
-  try { engine = await loadApt(); } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
-  if (!aptOn() || $('#stage') !== el) return;
-  try {
-    await engine.start({ el, stations: aptStations(), look: aptLook(), avatar: S.avatar, pos: S.aptPos, decor: S.game.decor, onNear: aptNear, onEnter: aptEnter, onProgress: (f) => { const b = $('#aptbar'); if (b) b.value = Math.round(f * 100); } });
-  } catch { store.set('flat', '1'); S.scene = 'doll'; return renderTryon(); }
-  if (!aptOn() || !$('#stage')) return engine.stop();
-  engine.setExtras(placedDefs()); $('#aptbar')?.remove(); refreshGame(); engine.setLabel('Your apartment. Use the stick or the arrow keys to walk, or the buttons below to go to a station.');
-  S.aptSig = S.items.map((i) => i.id).join();
-  if (S.station) engine.setPaused(true);
-}
-function aptNear(type) {
-  const h = $('#whint'); if (h) h.textContent = type ? `${STATIONS.find((x) => x[0] === type)[1]}: ${STATIONS.find((x) => x[0] === type)[3]}` : 'Drag the stick, or tap the floor, to walk. Step on a glowing circle to use it.';
-  document.querySelectorAll('.world-jump button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === type)));
-}
-function aptEnter(type) {
-  if (type === 'mirror') { leaveApt(); S.scene = 'doll'; store.set('scene', 'doll'); return renderTryon(); }
-  if (type === 'desk') { leaveApt(); return go('plan'); }
-  openStation(type);
-}
-function updateAptUI() {
-  refreshGame();
-  if (S.station) refreshStation();
-  apt?.setLook(aptLook());
-}
+function renderTryon() { ensureDay(); if (S.scene === 'closet') return renderWalkIn(); document.body.classList.remove('wic-on'); return renderMirror(); }
 
-/* the full-screen screens you reach by walking up to a station */
-function openStation(type) {
-  S.station = type; apt?.setPaused(true);
-  lastFocus = document.activeElement;
-  const ui = $('#stationui'); ui.hidden = false;
-  document.querySelectorAll('header, main, #nav').forEach((e) => (e.inert = true));
-  refreshStation(true);
+/** The header's and the bottom bar's heights, for the phone layout (the model fits between them and an open sheet). */
+function layoutVars() {
+  const r = document.documentElement.style, h = document.querySelector('header.top')?.getBoundingClientRect().height || 64, n = $('#nav')?.getBoundingClientRect().height || 80;
+  r.setProperty('--top-h', `${Math.round(h)}px`); r.setProperty('--nav-h', `${Math.round(n)}px`);
 }
-function closeStation() {
-  S.station = ''; const ui = $('#stationui'); ui.hidden = true; ui.innerHTML = '';
-  document.querySelectorAll('header, main, #nav').forEach((e) => (e.inert = false));
-  apt?.setPaused(false); apt?.rearm();
-  const cv = $('#stage canvas'); (cv || lastFocus)?.focus?.({ preventScroll: true });
-}
-function refreshStation(focusTitle = false) {
-  const ui = $('#stationui'), st = STATIONS.find((x) => x[0] === S.station); if (!ui || !st) return;
-  const keep = ui.querySelector('.st-body')?.scrollTop || 0, focus = document.activeElement?.dataset;
-  const worn = outfitItems(S.outfit);
-  const small = dollOn() || dollPack ? dollSVG({ pack: dollPack, look: { skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, eyes: S.eyes, lips: S.lips }, items: worn, urls: S.urls, cls: 'mini' }) : '';
-  let body = '';
-  if (S.station === 'wardrobe') {
-    if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type;
-    const list = S.items.filter((i) => i.type === S.tab), counts = wearCounts();
-    body = `<div class="st-two"><div class="st-doll" aria-hidden="false">${small}</div><div class="st-main">
-      <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
-      ${S.items.length ? `<div class="st-grid">${list.length ? list.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
-      <div class="row" style="margin-top:12px"><button class="primary grow" data-act="stgo" data-v="mirror"><span aria-hidden="true">🪞</span> See it on the doll</button><button class="ghost" data-act="styleme"><span aria-hidden="true">🎲</span> Style me</button></div></div></div>`;
-  } else if (S.station === 'vanity') {
-    body = `<div class="st-two"><div class="st-doll">${small}</div><div class="st-main">${casHTML().replace(/<button data-act="casclose"[^>]*>.*?<\/button>/, '')}</div></div>`;
-  } else if (S.station === 'bed') {
-    const d = S.game.day, stk = streakNow();
-    const lead = d.phase === 'done' ? 'Day done. Sweet dreams, see you tomorrow! 🌙' : !Object.keys(worn).length ? 'Dress the doll first (Wardrobe station), then come back to end the day.' : d.stars ? `You scored ${d.stars}★ today. Ready to end the day?` : 'Rate your look at the mirror first for coins, or end the day now.';
-    body = `<div class="st-two"><div class="st-doll">${small}</div><div class="st-main">
-      <p class="st-lead">${lead}</p>
-      <p class="muted" role="status"><span aria-hidden="true">🪙</span> ${S.game.coins} coins${stk ? ` · <span aria-hidden="true">🔥</span> ${stk}-day streak` : ''} · <span aria-hidden="true">⚡</span> energy ${d.energy}</p>${weatherLine()}
-      <div class="row"><button class="primary grow" data-act="endday" ${d.phase === 'done' || !Object.keys(worn).length ? 'disabled' : ''}><span aria-hidden="true">🌙</span> End the day (log this outfit)</button><button class="ghost" data-act="stgo" data-v="mirror">Back to the mirror</button></div></div></div>`;
-  }
-  ui.innerHTML = `<div class="st-card" role="dialog" aria-modal="true" aria-labelledby="sttitle"><header class="st-head"><h2 id="sttitle" tabindex="-1"><span aria-hidden="true">${st[2]}</span> ${st[1]}</h2><button class="ghost st-close" data-act="stclose" aria-label="Back to the apartment">✕ Back</button></header><div class="st-body">${body}</div></div>`;
-  const sb = ui.querySelector('.st-body'); if (sb) sb.scrollTop = keep;
-  if (focusTitle) $('#sttitle', ui).focus(); else if (focus?.act) ui.querySelector(`[data-act="${focus.act}"]${focus.id ? `[data-id="${focus.id}"]` : focus.v ? `[data-v="${focus.v}"]` : ''}`)?.focus({ preventScroll: true });
-}
-
-function renderTryon() { ensureDay(); if (aptOn()) return renderApartment(); leaveApt(); return renderMirror(); }
+addEventListener('resize', () => layoutVars());
 
 function renderMirror() {
   if (dollOn() && S.drawer === 'fit') S.drawer = 'looks'; // the doll's fit controls sit right under it instead
   if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
   const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
   const worn = outfitItems(S.outfit);
-  const roomKey = S.room === 'auto' || !ROOMS[S.room] ? seasonRoom(new Date().getMonth()) : S.room;
   const stk = wearStreak(S.wears, iso(new Date()));
   const m = outfitMeters(worn, S.mood, wearCounts());
   const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
@@ -1107,13 +1116,12 @@ function renderMirror() {
     <div class="dress-left">
       ${sceneBar()}
       ${dollOn() ? gameBarHTML(false) : ''}
-      <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''} theme-${roomKey}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
-        <div class="wall" aria-hidden="true"><div class="window"></div><div class="art"></div><div class="plant">${ROOMS[roomKey][1]}</div></div>
-        <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
+      <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
+        ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
         ${S.cas ? casHTML() : ''}
         ${dollOn() ? dollBarHTML(fit) : ''}
       </div>
@@ -1135,7 +1143,7 @@ function renderMirror() {
     <div class="dress-right">
       <section class="tray" aria-label="Wardrobe">
         <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
-        ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
+        ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${S.outfit[slotOf(i.type)] === i.id ? 'on' : ''} ${starter.isStarter(i) ? 'is-starter' : ''}" aria-pressed="${S.outfit[slotOf(i.type)] === i.id}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
       </section>
       <section class="drawer" aria-label="Outfit options">
         <div class="seg" role="group" aria-label="Options">${DRAWERS.filter(([k]) => !(dollOn() && k === 'fit')).map(([k, l]) => `<button class="${S.drawer === k ? 'on' : ''}" aria-pressed="${S.drawer === k}" data-act="drawer" data-v="${k}">${l}</button>`).join('')}</div>
@@ -1143,6 +1151,9 @@ function renderMirror() {
       </section>
     </div></div>`;
   S.lastTab = S.tab; S.lastView = 'tryon';
+  // on a phone, Hair / Anchors / Fit open as a bottom sheet and the model shrinks to fit above it (never cropped)
+  document.body.classList.toggle('dsheet', !!(dollOn() && (S.cas || (S.fitOpen && fit))));
+  layoutVars();
   mountStage(); restoreCachedRender();
   if (dollOn()) bindDollGestures($('#stage'));
   const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
@@ -1176,7 +1187,8 @@ function dollBarHTML(fit) {
   const f = fitOf(fit, dollPack), worn = outfitItems(S.outfit);
   const b = (act, v, label, aria) => `<button type="button" class="fb" data-act="${act}" data-v="${v}" data-hold aria-label="${aria}"><span aria-hidden="true">${label}</span></button>`;
   return `<div id="dollbar" class="dollbar" role="group" aria-label="Fit ${esc(fit.name)}">
-    <div class="dbname"><span>Fitting <b>${esc(fit.name)}</b> · drag it on the doll</span><button type="button" class="fb done" data-act="dfitdone" aria-label="Done fitting">✓ Done</button></div>
+    <div class="dbname"><img class="dbthumb" src="${url(fit.id)}" alt=""><span>${SLOT_LABEL[slotOf(fit.type)]}: <b>${esc(fit.name)}</b> · drag it on the model, or nudge</span><button type="button" class="fb done" data-act="dfitdone" aria-label="Done fitting">✓ Done</button></div>
+    ${Object.keys(worn).length > 1 ? `<div class="chips dbpieces" role="group" aria-label="Piece to fit">${SLOTS.filter((x) => worn[x]).map((x) => `<button type="button" class="chip ${fit.id === worn[x].id ? 'on' : ''}" aria-pressed="${fit.id === worn[x].id}" data-act="fit" data-id="${worn[x].id}">${SLOT_LABEL[x]}: ${esc(worn[x].name)}</button>`).join('')}</div>` : ''}
     <div class="dbrow">${b('dnudge', 'x:-3', '◀', 'Move left')}${b('dnudge', 'x:3', '▶', 'Move right')}${b('dnudge', 'y:-3', '▲', 'Move up')}${b('dnudge', 'y:3', '▼', 'Move down')}${b('dsize', '-0.03', '−', 'Smaller')}${b('dsize', '0.03', '+', 'Bigger')}${b('drot', '-2', '⟲', 'Rotate left')}${b('drot', '2', '⟳', 'Rotate right')}
       ${isTuckable(fit, dollPack) && worn.bottom ? `<button type="button" class="fb wide" data-act="dtuck" aria-pressed="${f.tuck}">${f.tuck ? 'Tucked in' : 'Untucked'}</button>` : ''}<button type="button" class="fb wide" data-act="dreset">↺ Reset</button></div></div>`;
 }
@@ -1193,6 +1205,26 @@ function refreshDollFit() {
   if (chips) chips.outerHTML = dollFitHTML(worn, fit);
   $('.dolltoggle')?.setAttribute('aria-expanded', String(!!S.fitOpen));
   $('#stage')?.classList.toggle('fitting', !!fit && !!S.fitOpen);
+  document.body.classList.toggle('dsheet', !!(dollOn() && (S.cas || (S.fitOpen && fit)))); // (on a phone the Fit controls are a bottom sheet)
+}
+
+/** The piece you actually touched: the topmost garment with a visible pixel under the finger (not just a box that happens to cover it). */
+function garmentAt(stage, x, y) {
+  const svg = stage.querySelector('svg.doll'); if (!svg || !dollPack) return null;
+  for (const g of [...svg.querySelectorAll('.gar')].reverse()) { // topmost first
+    const it = itemById(g.dataset.id), a = it && dollPack.anchors[it.type], m = g.getScreenCTM(); if (!a || !m) continue;
+    const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const p = pt.matrixTransform(m.inverse()), meta = S.meta.get(it.id), fm = S.fitMask.get(it.id);
+    if (fm && g.querySelector('image')?.getAttribute('width') == dollPack.size[0]) { // a fitted piece: look at its picture on the body
+      const cx = Math.floor(p.x / dollPack.size[0] * fm.w), cy = Math.floor(p.y / dollPack.size[1] * fm.h);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Y = cy + dy; if (X >= 0 && Y >= 0 && X < fm.w && Y < fm.h && fm.data[Y * fm.w + X]) return g; }
+      continue;
+    }
+    if (!meta?.mask) { if (p.x >= 0 && p.x <= a.w && p.y >= 0 && p.y <= a.h) return g; continue; } // not analysed yet: the whole box is the best guess
+    const r = imageRect(a, meta), u = (p.x - r.x) / r.w, v = (p.y - r.y) / r.h; if (u < 0 || u > 1 || v < 0 || v > 1) continue;
+    const N = meta.N, cx = Math.min(N - 1, Math.floor(u * N)), cy = Math.min(N - 1, Math.floor(v * N));
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const X = cx + dx, Y = cy + dy; if (X >= 0 && Y >= 0 && X < N && Y < N && meta.mask[Y * N + X]) return g; }
+  }
+  return null;
 }
 
 /** Drag the selected piece on the doll; pinch (two fingers) to resize and turn it. */
@@ -1206,7 +1238,7 @@ function bindDollGestures(stage) {
     g = { it, f, cx: b ? (a.x + b.x) / 2 : a.x, cy: b ? (a.y + b.y) / 2 : a.y, d: b ? Math.hypot(b.x - a.x, b.y - a.y) : 0, ang: b ? Math.atan2(b.y - a.y, b.x - a.x) : 0 };
   };
   stage.onpointerdown = (e) => {
-    const gar = e.target.closest?.('.gar');
+    const gar = garmentAt(stage, e.clientX, e.clientY);
     if (gar && (gar.dataset.id !== S.adjust || !S.fitOpen)) { S.adjust = gar.dataset.id; S.fitOpen = true; stage.innerHTML = stageHTML(); refreshDollFit(); }
     if (!selectedItem() || !S.fitOpen) return;
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); stage.setPointerCapture(e.pointerId); start();
@@ -1270,11 +1302,14 @@ async function logWear(date, occasion = '', note = '') {
 async function dollCanvas() {
   if (!dollOn() || !dollPack) return null;
   const items = outfitItems(S.outfit), urls = new Map();
-  for (const it of Object.values(items)) urls.set(it.id, await blobToData(it.cutout));
-  const svg = dollSVG({ pack: dollPack, look: { skin: S.skin, hair: S.hair, hairStyle: S.hairStyle, eyes: S.eyes, lips: S.lips }, items, urls });
+  const fits = new Map();
+  for (const it of Object.values(items)) { urls.set(it.id, await blobToData(it.cutout)); if (S.fitBlobs.has(it.id)) fits.set(it.id, await blobToData(S.fitBlobs.get(it.id))); }
+  const bodyFile = dollPack.layers.body, baseData = await blobToData(await (await fetch(baseFor(items) || dollPack.files[bodyFile])).blob()); // an SVG drawn as an image can't fetch files either
+  let hair = myHair(); if (hair) hair = { ...hair, href: await blobToData(await (await fetch(hair.href)).blob()) }; // (an SVG drawn as an image can't fetch files)
+  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits, hair });
   const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   try { await img.decode(); } catch { return null; }
-  const [, , w, h] = dollPack.view, c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  const [, , w, h] = dollPack.view, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
   return c;
 }
 
@@ -1312,7 +1347,7 @@ function renderPlanner() {
     const d = new Date(start); d.setDate(start.getDate() + n);
     const k = iso(d), ws = S.wears.filter((w) => w.date === k);
     const last = ws[ws.length - 1];
-    return `<button class="day ${d.getMonth() !== mo ? 'off' : ''} ${k === S.date ? 'sel' : ''} ${k === today ? 'today' : ''}" aria-pressed="${k === S.date}" aria-label="${d.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}${ws.length ? `, ${ws.length} outfit${ws.length > 1 ? 's' : ''} logged` : ''}${k === today ? ', today' : ''}" data-act="pickday" data-v="${k}"><b aria-hidden="true">${d.getDate()}</b>${last ? (last.render ? `<img class="render" src="${url('render:' + last.id, last.render)}" alt="">` : mannequin(last.itemIds, 'mini')) : ''}</button>`;
+    return `<button class="day ${d.getMonth() !== mo ? 'off' : ''} ${k === S.date ? 'sel' : ''} ${k === today ? 'today' : ''}" aria-pressed="${k === S.date}" aria-label="${d.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}${ws.length ? `, ${ws.length} outfit${ws.length > 1 ? 's' : ''} logged` : ''}${k === today ? ', today' : ''}" data-act="pickday" data-v="${k}"><b aria-hidden="true">${d.getDate()}</b>${last ? (last.render ? `<img class="render" src="${url('render:' + last.id, last.render)}" alt="">` : figure(last.itemIds, 'mini')) : ''}</button>`;
   }).join('');
   const dayWears = S.wears.filter((w) => w.date === S.date);
   const counts = wearCounts();
@@ -1396,7 +1431,7 @@ function showMatch() {
   d.picks = Object.fromEntries(Object.entries(picks).map(([s, p]) => [s, p.item.id]));
   const rows = SLOTS.filter((s) => picks[s]).map((s) => `<div class="match"><img src="${url(picks[s].item.id)}" alt=""><div><b>${esc(picks[s].item.name)}</b><div class="muted">${SLOT_LABEL[s]} · ${esc(picks[s].item.color?.name || '')}</div></div><span class="score" aria-label="${picks[s].color} percent colour match">${picks[s].color}%</span></div>`).join('');
   el.innerHTML = `<div class="row" style="align-items:flex-start;gap:20px">
-    <div style="flex:0 0 220px"><div class="stage">${mannequin(d.picks)}</div></div>
+    <div style="flex:0 0 220px"><div class="stage">${figure(d.picks)}</div></div>
     <div class="grow" style="min-width:240px"><h3>Inspo palette</h3>
       <div class="pal">${d.palette.map((p) => `<span style="background:${p.hex};flex:${Math.max(p.share, .08)}">${colorName(p.hex)}</span>`).join('')}</div>
       <h3>Your closest look</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
@@ -1413,32 +1448,34 @@ document.addEventListener('click', async (e) => {
   const { act, id, v } = el.dataset;
   if (el.tagName !== 'INPUT') e.preventDefault(); // let checkboxes toggle
   switch (act) {
-    case 'add': return openItemModal();
-    case 'samples': return loadSamples();
+    case 'add': return openItemModal(undefined, TYPES[v] ? { type: v } : {});
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
-    case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = dollPack ? 'doll' : 'mirror'; return go('tryon'); }
+    case 'fsrc': S.filter.src = v; return renderCloset();
+    case 'rmstarterreview': { const bad = S.starterReview || []; if (!bad.length || !confirm(`Delete ${bad.length} starter piece${bad.length === 1 ? '' : 's'} that need review? You can make them again from Starter closet.`)) return; for (const b of bad) await del('items', b.id); S.starterReview = []; render(); return toast(`Deleted ${bad.length} ✓`); }
+    case 'starterbatch': return openStarterBatch(v);
+    case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
+    case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'doll'; return go('tryon'); }
     case 'dnudge': case 'dsize': case 'drot': if (e.detail === 0) doFitAction(act, v); return; // a mouse/touch press is handled on pointerdown (so holding repeats); this is the keyboard
     case 'dfit': S.fitOpen = !S.fitOpen; if (S.fitOpen && !selectedItem()) S.adjust = Object.values(S.outfit)[0] || null; $('#stage').innerHTML = stageHTML(); refreshDollFit(); return;
     case 'dfitdone': S.fitOpen = false; $('#stage').innerHTML = stageHTML(); refreshDollFit(); return;
     case 'dtuck': { const it = selectedItem(); if (!it) return; setFit(it, { tuck: !fitOf(it, dollPack).tuck }); await put('items', it); return renderTryon(); }
     case 'dreset': { const it = selectedItem(); if (!it) return; const rest = { ...(it.fit || {}) }; delete rest[dollPack.id]; it.fit = rest; await put('items', it); return renderTryon(); }
     case 'tab': S.tab = v; return renderTryon();
-    case 'scene': S.scene = v; store.set('scene', v); S.cas = false; return renderTryon();
-    case 'gostation': apt?.walkToStation(v); $('#stage canvas')?.focus({ preventScroll: true }); return;
-    case 'camrot': apt?.rotateCam(+v); return;
-    case 'avatar': S.avatar = v; store.set('avatar', v); apt?.setAvatar(v, aptLook()); return refreshStation();
-    case 'stclose': return closeStation();
-    case 'stgo': { closeStation(); if (v === 'mirror') return aptEnter('mirror'); apt?.walkToStation(v); return; }
+    case 'scene': S.scene = v; store.set('scene', v); S.cas = false; renderTryon(); window.scrollTo(0, 0); return;
+    case 'wicgo': return wic?.glide(v, !!el.dataset.hot);
+    case 'wicitem': return wicCard(id);
+    case 'wicmirror': S.scene = 'doll'; store.set('scene', 'doll'); renderTryon(); window.scrollTo(0, 0); return;
+    case 'wicpill': S.wicPill = !S.wicPill; return wicChrome();
+    case 'wictip': store.set('wictip', '1'); return $('.wic-tip')?.remove();
     case 'cas': S.casTab = v; return renderTryon();
     case 'casclose': S.cas = false; return renderTryon();
+    case 'hairfit': return openHairFit(v);
+    case 'gbpill': S.gbOpen = !S.gbOpen; return refreshGame();
+    case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
+    case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
-    case 'eyes': S.eyes = v; store.set('eyes', v); return renderTryon();
-    case 'lips': S.lips = v; store.set('lips', v); return renderTryon();
-    case 'room': S.room = v; store.set('room', v); return renderTryon();
-    case 'hairstyle': if (!owns(S.game, `hair:${v}`)) return showShop('hair'); S.hairStyle = v; store.set('hairstyle', v); return renderTryon();
-    case 'bodytype': await setShape({ ...BODY_TYPES[v] }, v); return renderTryon();
-    case 'resetlook': S.skin = SKIN[2]; S.hair = HAIR[1]; S.hairStyle = 'long'; S.shape = null; S.shapeName = ''; S.eyes = EYES[0]; S.lips = LIPS[0]; S.room = 'auto'; ['skin', 'hair', 'hairstyle', 'shape', 'shapename', 'eyes', 'lips', 'room'].forEach((k) => store.set(k, '')); return renderTryon();
+    case 'dbgpts': S.dbgPts = !S.dbgPts; store.set('dbgpts', S.dbgPts ? '1' : ''); if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
     case 'syncconnect': { const k = $('#synckey').value; if (!k.trim()) return toast('Enter your sync key first'); syncConnect(k); if (!(await runSync())) { syncDisconnect(); render(); } return; }
@@ -1460,10 +1497,8 @@ document.addEventListener('click', async (e) => {
     case 'airefresh': return runAIRender(true);
     case 'aicancel': return S.aiAbort?.abort();
     case 'aiclear': S.ai = null; return renderTryon();
-    case 'display': S.profile.display = v; await put('profile', S.profile); return renderTryon();
+    case 'display': if (S.profile) { S.profile.display = v; await put('profile', S.profile); } return renderTryon();
     case 'setup': return openModelModal();
-    case 'skin': S.skin = v; store.set('skin', v); return renderTryon();
-    case 'hair': S.hair = v; store.set('hair', v); return renderTryon();
     case 'clear': S.outfit = {}; return renderTryon();
     case 'styleme': {
       const o = S.mood;
@@ -1485,16 +1520,10 @@ document.addEventListener('click', async (e) => {
     case 'shoptab': return showShop(v);
     case 'shopbuy': return shopBuy(v);
     case 'shopuse': return shopUse(v);
-    case 'build': return S.build ? endBuild() : startBuild();
-    case 'bdone': return endBuild();
-    case 'bplace': return buildPlace(v);
-    case 'bnudge': return buildNudge(v);
-    case 'bturn': { const p = S.build?.sel && S.game.placed.find((x) => x.uid === S.build.sel); return p && buildMove(p.uid, { ry: p.ry + 1 }); }
-    case 'bstore': { if (!S.build?.sel) return; S.game = putAway(S.game, S.build.sel); saveGame(); S.build.sel = ''; return buildSync(); }
     case 'endday': {
       if (!hasOutfit()) return toast('Dress the doll first');
       S.date = iso(new Date()); S.month = new Date(); if (!S.wears.some((w) => w.date === S.date)) await logWear(S.date, S.mood);
-      S.game = endDay(S.game); saveGame(); refreshGame(); return refreshStation();
+      S.game = endDay(S.game); saveGame(); refreshGame(); return;
     }
     case 'savelook': {
       if (!Object.keys(S.outfit).length) return toast('Dress the mannequin first');
@@ -1528,18 +1557,14 @@ document.addEventListener('click', async (e) => {
         return setInspoFile(new File([blob], 'pin.jpg', { type: blob.type }), { link });
       } catch (e) { msg.textContent = e.message; return; }
     }
-    case 'tryinspo': S.outfit = { ...S.inspo.picks }; S.scene = dollPack ? 'doll' : 'mirror'; return go('tryon');
+    case 'tryinspo': S.outfit = { ...S.inspo.picks }; S.scene = 'doll'; return go('tryon');
     default: if (planActs[act]) return planActs[act](ctx, el);
   }
 });
 
 document.addEventListener('input', (e) => {
   const t = e.target;
-  if (/^custom-(skin|hair|eyes|lips)$/.test(t.id)) { const k = t.id.slice(7); S[k] = t.value; store.set(k, t.value); mountStage(); }
-  if (t.dataset?.shape) { // live: reshape the model while dragging, save when released
-    S.shape = { ...(S.shape || BODY_TYPES.Average), [t.dataset.shape]: +t.value }; S.shapeName = 'Custom';
-    store.set('shape', JSON.stringify(S.shape)); store.set('shapename', 'Custom'); mountStage();
-  }
+  if (/^custom-(skin|hair)$/.test(t.id)) { const k = t.id.slice(7); S[k] = t.value; store.set(k, t.value); mountStage(); }
 });
 document.addEventListener('change', (e) => {
   if (e.target.id === 'aibudget') { store.set('budget', String(Math.max(0, parseFloat(e.target.value) || 0))); renderTryon(); return; }
@@ -1552,7 +1577,7 @@ document.addEventListener('paste', (e) => {
   if (f) setInspoFile(f);
 });
 $('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (!$('#modal').hidden) closeModal(); else if (S.station) closeStation(); });
+document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (!$('#modal').hidden) closeModal();  });
 
 /** /?add=paste|link|photo (from an iOS Shortcut) or /?add=shared (a file or link shared into the installed app). */
 async function openFromLink() {
@@ -1568,14 +1593,14 @@ async function openFromLink() {
 }
 
 // helpers handed to the Plan tab
-const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, mannequin, wearCounts, go, wearIds, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
+const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure, wearCounts, go, wearIds, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
 
 (async () => {
   await load();
   loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); }); // so "Style me" and the weather chip know today's weather
   render();
   window.__closet = S; // handy for debugging
-  Object.defineProperty(window, '__apt', { get: () => apt });
+  Object.defineProperty(window, '__wic', { get: () => wic });
   try { const m = sessionStorage.getItem('synced'); if (m) { sessionStorage.removeItem('synced'); syncMsg = m; toast(m); } } catch { /* private mode */ }
   if (syncState().on) runSync(); // pick up changes from other devices
   openFromLink();

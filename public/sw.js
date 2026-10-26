@@ -1,13 +1,11 @@
 // Service worker: lets the app install on a phone and open offline.
-// App code/styles are network-first (so updates show up right away); the big, never-changing 3D/pose files are cache-first.
-const CACHE = 'closet-v1';
-const HEAVY = ['/vendor/', '/models/', '/assets/'];
+// App code/styles are network-first (so updates show up right away); the big, never-changing pictures and libraries are cache-first.
+const CACHE = 'closet-v2'; // raise to drop every cached file on the next visit
+const HEAVY = ['/vendor/', '/assets/'];
 
 // The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
-const SHELL = ['/', '/styles.css', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
-  '/js/app.js', '/js/aitryon.js', '/js/body.js', '/js/color.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/mannequin.js', '/js/meters.js',
-  '/js/insights.js', '/js/game.js', '/js/gfx.js', '/js/mirror.js', '/js/apartment.js', '/js/avatar.js', '/js/doll.js', '/js/browsercut.js', '/js/intake.js', '/js/plan.js', '/js/planner.js', '/js/photo.js', '/js/pose.js', '/js/sample.js', '/js/sharecard.js', '/js/stylist.js', '/js/sync.js', '/js/weather.js', '/js/webgl.js', '/vendor/three/three.module.min.js', '/vendor/three/GLTFLoader.js', '/vendor/three/BufferGeometryUtils.js', '/vendor/three/SkeletonUtils.js', '/vendor/three/meshopt_decoder.module.js',
-  '/dolls/studio/body.svg', '/dolls/studio/defs.svg', '/dolls/studio/face.svg', '/dolls/studio/hair-back-bob.svg', '/dolls/studio/hair-back-bun.svg', '/dolls/studio/hair-back-curly.svg', '/dolls/studio/hair-back-long.svg', '/dolls/studio/hair-back-pixie.svg', '/dolls/studio/hair-back-pony.svg', '/dolls/studio/hair-front-bob.svg', '/dolls/studio/hair-front-bun.svg', '/dolls/studio/hair-front-curly.svg', '/dolls/studio/hair-front-long.svg', '/dolls/studio/hair-front-pixie.svg', '/dolls/studio/hair-front-pony.svg', '/dolls/studio/pack.json', '/dolls/studio/shadow.svg'];
+const SHELL = ['/', '/styles.css', '/starter/items.js', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
+  '/js/aitryon.js', '/js/app.js', '/js/bodymap.js', '/js/closet.js', '/js/color.js', '/js/cutmask.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/doll.js', '/js/editor.js', '/js/fitting.js', '/js/game.js', '/js/garment.js', '/js/insights.js', '/js/intake.js', '/js/landmarks.js', '/js/meters.js', '/js/photo.js', '/js/plan.js', '/js/planner.js', '/js/segment.js', '/js/sharecard.js', '/js/starter.js', '/js/stylist.js', '/js/sync.js', '/js/warp.js', '/js/weather.js'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -32,7 +30,7 @@ self.addEventListener('fetch', (e) => {
   const r = e.request, u = new URL(r.url);
   if (r.method === 'POST' && u.origin === location.origin && u.pathname === '/share') { e.respondWith(takeShare(r)); return; }
   if (r.method !== 'GET' || u.origin !== location.origin || u.pathname.startsWith('/api/')) return; // never cache the AI endpoint
-  const heavy = HEAVY.some((p) => u.pathname.startsWith(p));
+  const heavy = HEAVY.some((p) => u.pathname.startsWith(p)) && !u.pathname.endsWith('.json'); // (settings files like config.json always come fresh when online)
   e.respondWith((async () => {
     const cache = await caches.open(CACHE);
     if (heavy) { const hit = await cache.match(r); if (hit) return hit; }

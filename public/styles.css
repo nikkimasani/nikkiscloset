@@ -418,8 +418,7 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .cswatch { width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
 .cswatch.on { outline: 3px solid var(--accent); outline-offset: 2px; }
 .scenebar { flex-wrap: wrap; }
-.room.dollroom { border: 0; border-radius: 30px; background: radial-gradient(120% 80% at 50% 0%, #fff7fb 0%, #ffe3ef 55%, #ffd0e3 100%); box-shadow: var(--shadow), inset 0 -80px 80px -60px #ff9cc455; }
-.room.dollroom::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 13%; z-index: 1; background: linear-gradient(#ffc1d8, #ff9fc4); box-shadow: 0 -4px 0 #fff8; }
+.room.dollroom { border: 0; border-radius: 30px; background: #e9d3c6 url(/assets/closet/mirror.jpg) center 62% / cover no-repeat; box-shadow: var(--shadow); } /* the mannequin stands in front of the closet's three-way mirror */
 .room.dollroom .stage { inset: 3% 0 5% 0; align-items: flex-end; }
 .room.dollroom .stage .doll { height: 100%; width: auto; max-width: 100%; display: block; filter: drop-shadow(0 6px 10px #7a1d4a30); }
 .room.dollroom .stage.fitting { touch-action: none; cursor: grab; }
@@ -564,3 +563,220 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .lb img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; display: block; }
 .logrow .lb { width: 54px; flex: 0 0 auto; }
 .lbbig { display: block; max-width: 100%; max-height: 62vh; margin: 0 auto; border-radius: 14px; }
+
+/* the base picture: clothes sit on it with their own soft shadow */
+.doll .gar { pointer-events: none; }
+.dbthumb { width: 34px; height: 34px; object-fit: contain; border-radius: 8px; background: #ffffff22; flex: 0 0 auto; }
+.dbname { display: flex; align-items: center; gap: 8px; }
+.myphoto { display: block; max-width: 100%; max-height: 60vh; margin: 0 auto; border-radius: 14px; }
+.anchors .ptlist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px 14px; font-size: 13px; }
+.anchors .ptlist li { display: flex; justify-content: space-between; border-bottom: 1px solid #ffffff22; }
+.anchors code { font-size: 12px; }
+
+.dbgchip { position: absolute; left: 10px; top: 10px; z-index: 6; min-height: 36px; padding: 4px 12px; border-radius: 999px; border: 1px solid #ffffff66; background: #0b1b33cc; color: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+
+/* ── cut-out editor: one step per screen, fits the phone (no scrolling sideways) ── */
+.cuted { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; height: 100dvh; background: #fbf4f1; color: #3b2730; overflow: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); --line: #e7cfd6; --muted: #7d6570; }
+.cuted .muted { color: var(--muted); }
+.cuthead { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+.cuthead h2 { margin: 0; font-size: 18px; }
+.cuted .ghost { min-height: 44px; padding: 6px 14px; border-radius: 22px; border: 1px solid var(--line); background: #fff; color: #3b2730; font-weight: 700; }
+.cuted .primary { min-height: 52px; border-radius: 26px; border: 0; background: #b5517a; color: #fff; font-weight: 800; font-size: 16px; }
+.cutsteps { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0 12px 6px; font-size: 12px; color: var(--muted); }
+.cutsteps li { flex: 1; padding: 3px 0; border-bottom: 3px solid var(--line); text-align: center; }
+.cutsteps li.on { color: #3b2730; border-color: #b5517a; font-weight: 800; }
+.cutsteps li.done { border-color: #e2a3bb; }
+.cutbody { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 4px 12px; }
+.cuthint { margin: 0; font-size: 14px; }
+.cutstatus { margin: 0; min-height: 1.4em; font-size: 13px; }
+.cutstage { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 14px; }
+.cutstage canvas { display: block; border-radius: 10px; touch-action: none; background: #eadde1; }
+.zoomwrap { touch-action: none; background: #efe3e7; }
+.zoomwrap canvas { transform-origin: center; }
+.cutrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cutrow input[type=range] { flex: 1; min-width: 120px; height: 44px; }
+.cutrow select { flex: 1; min-height: 44px; min-width: 0; border-radius: 12px; border: 1px solid var(--line); padding: 0 10px; background: #fff; color: #3b2730; font-size: 15px; }
+.seg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 2px solid var(--line); border-radius: 26px; overflow: hidden; }
+.seg2 button { min-height: 48px; border: 0; background: #fff; color: #3b2730; font-weight: 800; font-size: 16px; }
+.seg2 .keep.on { background: #16a34a; color: #fff; }
+.seg2 .rem.on { background: #dc2626; color: #fff; }
+.cutfoot { padding: 8px 12px calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; }
+.cutfoot .primary { flex: 1; }
+.marksplit { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: 1.25fr 1fr; gap: 8px; }
+.marksplit .cutstage { height: 100%; }
+.chk { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.chk input { width: 22px; height: 22px; }
+/* step 1 of adding a piece */
+.addsrc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.addsrc .srcbtn { min-height: 64px; font-size: 16px; flex-direction: column; gap: 2px; }
+.addsrc .srcbtn span { font-size: 24px; }
+.modechips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.modechips button { min-height: 52px; border-radius: 14px; border: 1px solid var(--line); background: #ffffff12; color: inherit; font-weight: 700; font-size: 13px; padding: 4px; }
+.modechips button.on { border-color: var(--accent); background: #5ad1ff22; }
+.modechips small { display: block; color: var(--accent); font-weight: 700; }
+.tipbox { padding: 8px 12px; border: 1px solid var(--line); border-radius: 14px; font-size: 14px; }
+.tipbox h3 { margin: 0 0 4px; font-size: 14px; }
+.tipbox ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.cutprev { display: flex; gap: 12px; align-items: center; }
+.cutprev img { width: 120px; height: 150px; object-fit: contain; border-radius: 12px; background: var(--check); }
+.cutprev .col { display: grid; gap: 8px; flex: 1; }
+.anchors .chip { scroll-margin-top: 90px; }
+
+/* ── the walk-in closet: full screen, photographed backgrounds, a thin top bar and a section strip ── */
+body.wic-on header.top, body.wic-on #nav { display: none; }
+body.wic-on { overflow: hidden; }
+.wic { position: fixed; inset: 0; z-index: 20; height: 100dvh; display: flex; flex-direction: column; background: #2b1d1a; color: #3b2730; }
+.wic-view { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; touch-action: pan-y; outline-offset: -3px; }
+.wic-zoom { position: absolute; inset: 0; transform-origin: center; transition: transform .2s; }
+.wic-track { position: absolute; top: 0; bottom: 0; left: 0; will-change: transform; }
+.wic-panel { position: absolute; top: 0; bottom: 0; overflow: hidden; }
+.wic-art { position: absolute; background-size: 100% 100%; }
+.wic-item { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(0 6px 8px #3b1f2a55); transition: transform .15s; }
+.wic-item img { width: 100%; height: 100%; object-fit: contain; object-position: top center; pointer-events: none; }
+.wic-item:active { transform: scale(.97); }
+.wic-item.worn { filter: drop-shadow(0 0 6px #fff) drop-shadow(0 6px 8px #3b1f2a55); }
+.wic-item:focus-visible { outline: 3px solid #b5517a; outline-offset: 2px; }
+.wic-hanger { position: absolute; width: 22px; height: 18px; margin-left: -11px; border: 2px solid #c9a24a; border-bottom: 0; border-radius: 11px 11px 0 0; pointer-events: none; }
+.wic-hanger::before { content: ''; position: absolute; left: 50%; top: -9px; width: 6px; height: 9px; margin-left: -3px; border: 2px solid #c9a24a; border-bottom: 0; border-radius: 4px 4px 0 0; }
+.wic-hot { position: absolute; transform: translate(-50%, -50%); min-height: 44px; padding: 6px 12px; border-radius: 22px; border: 1px solid #fff9; background: #fff8f4e6; color: #3b2730; font-weight: 800; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 14px #3b1f2a33; }
+.wic-hot small { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 10px; background: #b5517a; color: #fff; font-size: 11px; }
+.wic-label { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 6px 14px; border-radius: 18px; background: #fff8f4e6; font-size: 14px; white-space: nowrap; box-shadow: 0 4px 14px #3b1f2a33; pointer-events: none; }
+.wic-empty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: min(78%, 300px); padding: 14px; border-radius: 18px; background: #fff8f4ee; text-align: center; box-shadow: 0 6px 20px #3b1f2a33; }
+.wic-empty.low { top: auto; bottom: 56px; transform: translateX(-50%); }
+.wic-empty p { margin: 0 0 8px; font-size: 14px; color: #6b5560; }
+.wic-btn { min-height: 44px; padding: 6px 18px; border-radius: 22px; border: 0; background: #b5517a; color: #fff; font-weight: 800; font-size: 15px; }
+.wic-mirrorfig { position: absolute; left: 33%; top: 33%; width: 34%; height: 52%; padding: 0; border: 0; background: none; }
+.wic-mirrorfig svg { width: 100%; height: 100%; }
+/* the chrome sits over the top of the scene: a thin bar, the challenge pill, the tip (together well under 15% of it) */
+.wic-chrome { position: absolute; left: 0; right: 0; top: 0; z-index: 3; padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); pointer-events: none; }
+.wic-chrome > * { pointer-events: auto; }
+.wic-top { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+.wic-round { min-width: 44px; min-height: 44px; border-radius: 22px; border: 0; background: #fff8f4e6; color: #3b2730; font-size: 18px; font-weight: 800; box-shadow: 0 2px 10px #3b1f2a33; }
+.wic-round.wide { margin-left: auto; padding: 0 14px; font-size: 14px; }
+.wic-coins { min-height: 36px; display: inline-flex; align-items: center; gap: 4px; padding: 0 12px; border-radius: 18px; background: #fff8f4e6; font-weight: 800; box-shadow: 0 2px 10px #3b1f2a33; }
+.wic-pillbox { display: inline-grid; gap: 6px; max-width: min(320px, 90%); }
+.wic-pill { justify-self: start; min-height: 36px; padding: 4px 14px; border-radius: 18px; border: 0; background: #b5517ae6; color: #fff; font-weight: 800; font-size: 14px; box-shadow: 0 2px 10px #3b1f2a44; }
+.wic-pill[aria-expanded=true] { background: #8f3a5d; }
+.wic-pillcard { padding: 10px 12px; border-radius: 14px; background: #fff8f4f2; font-size: 13px; box-shadow: 0 6px 18px #3b1f2a44; }
+.wic-pillcard p { margin: 0 0 8px; }
+.wic-tip { position: absolute; right: max(10px, env(safe-area-inset-right)); top: calc(env(safe-area-inset-top) + 56px); max-width: 230px; padding: 8px 34px 8px 10px; border-radius: 12px; background: #3b2730e6; color: #fff; font-size: 12.5px; }
+.wic-x { position: absolute; right: 0; top: 0; width: 44px; height: 44px; border: 0; background: none; color: #fff; font-size: 16px; }
+.wic-strip { flex: 0 0 auto; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: #fff8f4; border-top: 1px solid #ecd6d0; scroll-snap-type: x proximity; }
+.wic-strip::-webkit-scrollbar { display: none; }
+.wic-strip button { flex: 0 0 auto; min-width: 60px; min-height: 52px; display: grid; place-items: center; gap: 0; padding: 4px 6px; border: 0; border-radius: 14px; background: none; color: #7d6570; font-size: 11.5px; font-weight: 700; scroll-snap-align: center; }
+.wic-strip button span { font-size: 20px; line-height: 1.1; }
+.wic-strip button.on { background: #f6dde5; color: #3b2730; box-shadow: inset 0 0 0 2px #b5517a; }
+.wic-card img { display: block; width: 100%; max-height: 46vh; object-fit: contain; border-radius: 14px; background: var(--check); }
+.wic-card .chips { margin-top: 10px; }
+
+/* hairstyle and hair colour picker (customizer and vanity) */
+.hairpick { display: grid; gap: 6px; min-width: 0; flex: 1 1 auto; }
+.hairpick .opt-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.hairchip, .hairsw { flex: 0 0 auto; display: grid; justify-items: center; gap: 2px; min-width: 68px; min-height: 44px; padding: 3px; border: 2px solid transparent; border-radius: 14px; background: none; font: inherit; color: inherit; cursor: pointer; }
+.hairchip.on, .hairsw.on { border-color: #c2185b; background: #fff0f5; }
+.hairchip small, .hairsw small { font-size: 11px; font-weight: 700; line-height: 1.1; max-width: 72px; text-align: center; }
+.hairchip .th { position: relative; display: block; width: 60px; height: 60px; overflow: hidden; border-radius: 12px; background: #f3e3da; }
+.hairchip .th img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+.hairchip .th.none { display: grid; place-items: center; font-size: 22px; color: #8a6b78; }
+.hairsw { min-width: 58px; }
+.hairsw i { display: block; width: 30px; height: 30px; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px #0002; }
+.hairsw:disabled { opacity: .4; cursor: default; }
+.wic-vanity { width: min(92%, 360px); }
+.wic-vanity .hairpick { margin-bottom: 8px; text-align: left; }
+
+/* starter closet */
+.starterbadge { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 2px 7px; border-radius: 999px; background: #3b2a22e6; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .02em; pointer-events: none; }
+.starterbadge.inline { position: static; display: inline-block; vertical-align: 1px; }
+.piece.is-starter { position: relative; }
+.wic-item.is-starter::after, .pick.is-starter::after { content: 'Starter'; position: absolute; top: 2px; left: 2px; padding: 1px 5px; border-radius: 999px; background: #3b2a22d9; color: #fff; font-size: 9px; font-weight: 800; pointer-events: none; }
+.pick.is-starter { position: relative; }
+.starterbatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
+.starterbatches button { min-height: 44px; display: grid; justify-items: start; text-align: left; }
+.starterbatches small { font-size: 11px; opacity: .75; }
+.startergrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: 62vh; overflow-y: auto; }
+.startertile { color: #3b2a22; position: relative; display: grid; grid-template-rows: 110px auto; gap: 4px; padding: 6px; border: 1px solid #0001; border-radius: 14px; background: #fff; font: inherit; cursor: pointer; min-height: 44px; }
+.startertile img { width: 100%; height: 110px; object-fit: contain; }
+.startertile .spin { display: grid; place-items: center; height: 110px; font-size: 24px; }
+.startertile.run .spin { animation: pulse 1s ease-in-out infinite alternate; }
+.startertile small { font-size: 11px; font-weight: 700; line-height: 1.15; }
+.startertile em { font-size: 10px; color: #b4233c; font-style: normal; }
+.startertile.err { border-color: #b4233c66; }
+@keyframes pulse { to { opacity: .35; } }
+label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
+.limitnote { margin: 0 0 8px; padding: 10px 12px; border-radius: 12px; background: #fff3d6; color: #5c4210; font-size: 14px; }
+.startertile.wait .spin { opacity: .6; }
+.nowrap { white-space: nowrap; }
+.startertile b { font-size: 11px; } .startertile b.ok { color: #1f7a3a; } .startertile b.rev { color: #a1461a; }
+.startertile.review { border-color: #e0a06a; } .startertile.ready { border-color: #7cc49155; }
+.starterlog { margin-top: 10px; font-size: 12px; } .starterlog ol { max-height: 30vh; overflow: auto; padding-left: 20px; } .starterlog small { color: #8b7a82; word-break: break-word; }
+.starterready { margin: 8px 0; }
+
+/* ── Dress up on a phone: the model gets most of the screen, head to feet; Hair / Anchors / Fit open as a bottom sheet ── */
+.gb-pill, .gb-pillrow { display: none; }
+.room.dollroom .stage:not(.fitting) .selbox { display: none; } /* the dashed outline only while fitting */
+.rate-fab { display: none; }
+.hairchip.on, .hairsw.on { color: #3b1f2a; } /* (dark text on the light highlight) */
+.hairchip.on small, .hairsw.on small { color: #3b1f2a; }
+@media (max-width: 919px) {
+  .dress.dollmode .room.dollroom { height: max(60dvh, 380px); }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + max(60dvh, 380px) + 12px); }
+  .dress.dollmode .dress-right { order: 1; } /* the clothes strip sits right under the model */
+  .dress.dollmode .tools, .dress.dollmode .meters, .dress.dollmode .moods, .dress.dollmode .wxline { order: 3; }
+  /* the challenge collapses into a pill; Rate my look floats on the model */
+  .dress.dollmode .gamebar:not(.big) { padding: 0; background: none; border: 0; box-shadow: none; }
+  .dress.dollmode .gamebar:not(.big) .gb-pillrow .gb-pill { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 6px 14px; border-radius: 99px; border: 1px solid #ffffff30; background: #2a1440d9; color: #fff; font-weight: 700; font-size: 14px; text-align: left; }
+  .gb-pill .gb-coins { margin-left: auto; font-weight: 800; } .gb-pill .gb-caret { transition: transform .2s; } .gamebar.open .gb-caret { transform: rotate(180deg); }
+  .dress.dollmode .gamebar.open:not(.big) { padding: 0 0 10px; }
+  .dress.dollmode .gamebar.open:not(.big) .gb-rate { display: none; }
+  .rate-fab { display: inline-flex; align-items: center; gap: 6px; position: absolute; left: 12px; bottom: 12px; z-index: 7; min-height: 44px; padding: 6px 16px; border-radius: 99px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 14px; box-shadow: 0 6px 18px #0005; }
+  .rate-fab:disabled { opacity: .55; }
+  /* a sheet open: the model is pinned between the header and the sheet, scaled to fit (never cropped) */
+  body.dsheet .dress.dollmode .room.dollroom { position: fixed; z-index: 30; top: calc(var(--top-h, 64px) + 6px); left: 12px; right: 12px; height: calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - var(--sheet-h, 40dvh) - 12px); min-height: 0; border-radius: 22px; }
+  body.dsheet { --sheet-h: 40dvh; }
+  body.dsheet .rate-fab, body.dsheet .dress.dollmode .room .streakbadge { display: none; }
+  body.dsheet .dress.dollmode .room .cas, body.dsheet .dress.dollmode .room .dollbar { position: fixed; z-index: 31; left: 0; right: 0; bottom: var(--nav-h, 80px); height: var(--sheet-h); max-height: var(--sheet-h); overflow-y: auto; border-radius: 20px 20px 0 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom) * 0); box-shadow: 0 -10px 30px #0006; }
+  body.dsheet .dress.dollmode .room .cas .cas-opts { flex-wrap: wrap; overflow-x: visible; }
+  body.dsheet .dress.dollmode .room .cas .hairpick { width: 100%; }
+  body.dsheet .dress.dollmode .room .cas .hairpick .opt-row { flex-wrap: wrap; overflow-x: visible; }
+  body.dsheet .dress.dollmode .room .dollbar .dbrow { flex-wrap: wrap; }
+  body.dsheet .dress.dollmode .room .stage { inset: 2% 0 2% 0; }
+}
+@media (max-width: 919px) { body.dsheet .dress.dollmode::before { content: ''; position: fixed; inset: 0; z-index: 29; background: #071a2c; } }
+.dbpieces { flex-wrap: nowrap; overflow-x: auto; } .dbpieces .chip { flex: 0 0 auto; color: #fff; } .dbpieces .chip.on { color: var(--accent-ink); }
+/* phone: one screen holds the challenge row, the scene and the whole item strip (nothing slides under the model) */
+@media (max-width: 919px) {
+  .dress.dollmode > .scenebar, .dress.dollmode .dress-left > .scenebar { display: none; }
+  .dress.dollmode .gamebar:not(.big) .gb-pillrow { display: flex; gap: 6px; }
+  .gb-pillrow .gb-pill { flex: 1; min-width: 0; } .gb-pillrow .gb-pill > :first-child + * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gb-ratebtn, .gb-closet { flex: 0 0 auto; min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 99px; border: 0; font-weight: 800; font-size: 14px; }
+  .gb-ratebtn { background: var(--accent); color: var(--accent-ink); } .gb-ratebtn:disabled { opacity: .5; }
+  .gb-closet { background: #2a1440d9; color: #fff; border: 1px solid #ffffff30; padding: 0; }
+  .dress.dollmode .gamebar:not(.big):not(.open) > :not(.gb-pillrow) { display: none; }
+  .dress.dollmode .room.dollroom { position: relative; top: auto; height: max(400px, calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - 64px - 176px)); }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 8px); }
+  .dress.dollmode .tray { padding: 6px 8px; }
+  .dress.dollmode .tabs { padding-bottom: 4px; } .dress.dollmode .tabs .tab { min-height: 36px; padding: 2px 10px; font-size: 12px; }
+  .dress.dollmode .tray-row { padding: 2px 2px 6px; } .dress.dollmode .pick { flex-basis: 92px; padding: 4px; } .dress.dollmode .pick img { height: 72px; }
+}
+@media (max-width: 919px) {
+  .dress.dollmode .dollfit, .dress.dollmode .dollhint { display: none; } /* (the pieces on the model are listed in the Fit sheet) */
+  .dress.dollmode .tabs .tab { display: inline-flex; flex-direction: row; align-items: center; gap: 4px; white-space: nowrap; }
+  .dress.dollmode .tabs .tab > [aria-hidden] { font-size: 16px; }
+}
+@media (max-width: 919px) {
+  .dress.dollmode .pick { flex-basis: 84px; gap: 0; } .dress.dollmode .pick img { height: 60px; }
+  .dress.dollmode .pick span { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .dress.dollmode .pick small { display: none; }
+  .dress.dollmode .room.dollroom { height: max(400px, calc(100dvh - var(--top-h, 64px) - var(--nav-h, 80px) - 60px - 170px)); }
+}
+/* hairstyle "Adjust fit" */
+.hairadjust { justify-self: start; min-height: 40px; }
+.hairfit { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
+.hfpic { position: relative; background: repeating-conic-gradient(#efe7e2 0 25%, #fff 0 50%) 0 0 / 16px 16px; border-radius: 14px; touch-action: none; }
+.hfpic img { width: 100%; height: 100%; display: block; }
+.hfdot { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 3px solid #fff; background: #c2185b; box-shadow: 0 2px 6px #0006; padding: 0; touch-action: none; cursor: grab; }
+.hfdot.crown { background: #7c3aed; } .hfdot.hairline { background: #e11d48; } .hfdot.templeL, .hfdot.templeR { background: #0891b2; }
+.hfdot span { position: absolute; top: 30px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 800; color: #fff; background: #000a; padding: 0 4px; border-radius: 4px; white-space: nowrap; }
+.hfprev { background: #e9d3c6 url(/assets/closet/mirror.jpg) center 20% / cover; border-radius: 14px; overflow: hidden; }
+.hfprev svg { width: 100%; height: auto; display: block; }
+@media (max-width: 520px) { .hairfit { grid-template-columns: 1fr 1fr; } }
