@@ -3,9 +3,10 @@
 //  • Each garment photo is a cutout wrapped around the body as a curved shell (projected front-on, alpha-clipped to the
 //    garment's silhouette). It gives depth, lighting and a full turn-around, but not real cloth folds or drape.
 import * as THREE from '../vendor/three/three.module.min.js';
-import { measures, place } from './body.js';
+import { place } from './body.js';
 import { webglOK } from './webgl.js';
-import { buildWorld, toonGradient } from './world.js';
+import { buildWorld } from './world.js';
+import { buildBody } from './character.js';
 
 const webgl = webglOK;
 
@@ -35,7 +36,7 @@ function ensure() {
   cv.addEventListener('pointerdown', (e) => { S.drag = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0 }; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', (e) => {
     if (!S.drag) return;
-    if (S.world) { S.drag.moved += Math.abs(e.clientX - S.drag.x) + Math.abs(e.clientY - S.drag.y); S.world.yaw = Math.max(-1.1, Math.min(1.1, S.world.yaw - (e.clientX - S.drag.x) * 0.008)); S.drag.x = e.clientX; S.drag.y = e.clientY; return; } // drag to look around
+    if (S.world) { S.drag.moved += Math.abs(e.clientX - S.drag.x) + Math.abs(e.clientY - S.drag.y); S.world.yawGoal -= (e.clientX - S.drag.x) * 0.009; S.drag.x = e.clientX; S.drag.y = e.clientY; return; } // drag to look around
     S.target += (e.clientX - S.drag.x) * 0.012; S.rot = S.target; S.drag.x = e.clientX; request();
   });
   const end = (e) => { const d = S.drag; S.drag = null; if (S.world && d && e.type === 'pointerup' && d.moved < 10 && performance.now() - d.t < 450) tapWorld(e); };
@@ -80,126 +81,6 @@ function dispose(group) {
 }
 
 /* ───────── body ───────── */
-function loft(sections, seg = 48) {
-  const pos = [], idx = [];
-  sections.forEach((s) => { for (let k = 0; k <= seg; k++) { const t = (k / seg) * Math.PI * 2; pos.push((s.x || 0) + s.a * Math.cos(t), s.y, s.d * Math.sin(t)); } });
-  for (let i = 0; i < sections.length - 1; i++) for (let k = 0; k < seg; k++) {
-    const a = i * (seg + 1) + k, b = a + seg + 1;
-    idx.push(a, a + 1, b, a + 1, b + 1, b);
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  return g;
-}
-
-function limb(a, b, r1, r2, mat) {
-  const g = new THREE.Group(), len = a.distanceTo(b);
-  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, len, 28, 1, true), mat);
-  cyl.position.copy(a).add(b).multiplyScalar(0.5);
-  cyl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
-  g.add(cyl);
-  for (const [p, r] of [[a, r1], [b, r2]]) { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 28, 18), mat); s.position.copy(p); g.add(s); }
-  return g;
-}
-
-function buildBody(body, skin, hair, style = 'long', face = {}) {
-  const { pts: p } = body, m = measures(body), { sw, T, L, headH } = m, bf = body.build || 1;
-  const gy = Math.max(p.anL[1], p.anR[1]) + 0.04 * L, cx = m.sm[0];
-  const V = (x, y, z = 0) => new THREE.Vector3(x - cx, gy - y, z);
-  const skinM = new THREE.MeshToonMaterial({ color: skin, gradientMap: toonGradient(), side: THREE.DoubleSide });
-  const hairM = new THREE.MeshToonMaterial({ color: hair, gradientMap: toonGradient() });
-  const g = new THREE.Group();
-
-  // torso: shoulders -> chest -> waist -> hips -> crotch (elliptical sections)
-  const shY = m.sm[1], hipY = m.hm[1], waistY = hipY - 0.3 * T;
-  const sec = (y, a, d) => ({ y: gy - y, a: a * bf, d: d * bf });
-  g.add(new THREE.Mesh(loft([
-    sec(shY - 0.07 * T, 0.16 * sw, 0.12 * sw), sec(shY + 0.0 * T, 0.5 * sw, 0.15 * sw), sec(shY + 0.22 * T, 0.45 * sw, 0.19 * sw),
-    sec(waistY, 0.33 * sw, 0.15 * sw), sec(hipY - 0.05 * T, 0.43 * sw, 0.19 * sw), sec(hipY + 0.1 * T, 0.46 * sw, 0.2 * sw), sec(hipY + 0.2 * T, 0.38 * sw, 0.17 * sw),
-  ]), skinM));
-
-  // plain basics under everything, so the model is never bare (clothes sit over these)
-  const baseM = new THREE.MeshToonMaterial({ color: 0xf6f1f7, gradientMap: toonGradient(), side: THREE.DoubleSide });
-  const basic = (y, a, d, h, rTop, rBot) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, h, 28, 1, true), baseM); o.scale.set(a * bf * 1.03, 1, d * bf * 1.03); o.position.set(0, gy - y, 0); g.add(o); };
-  basic(shY + 0.22 * T, 0.45 * sw, 0.19 * sw, 0.1 * T, 0.97, 1);
-  basic(hipY + 0.07 * T, 0.46 * sw, 0.2 * sw, 0.15 * T, 0.88, 0.97);
-
-  // neck + head + hair
-  const hc = V(p.headTop[0], p.headTop[1] + headH / 2);
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.075 * sw + headH * 0.04, 0.09 * sw + headH * 0.04, headH * 0.7, 16), skinM);
-  neck.position.set(hc.x, hc.y - headH * 0.55, 0); g.add(neck);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(headH / 2, 32, 24), skinM);
-  head.scale.set(0.8, 1.04, 0.86); head.position.copy(hc); g.add(head);
-  // hair: a cap over the crown + style-specific back/top pieces
-  const sph = (r, sx, sy, sz, x, y, z) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), hairM); o.scale.set(sx, sy, sz); o.position.set(x, y, z); g.add(o); return o; };
-  const capScale = style === 'curly' ? 1.18 : 1;
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(headH / 2, 36, 20, 0, Math.PI * 2, 0, Math.PI * (style === 'pixie' ? 0.45 : 0.48)), hairM);
-  cap.scale.set(0.84 * capScale, 1.1 * capScale, 0.92); cap.position.set(hc.x, hc.y + headH * 0.02, -headH * 0.02); cap.rotation.x = 0.12; g.add(cap);
-  if (style !== 'pixie') sph(headH / 2, 0.77, 1.0, 0.78, hc.x, hc.y + headH * 0.03, -headH * 0.17);
-  const tube = (rTop, rBot, len, x, y, z, sz = 0.7) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, len, 24, 1, true), hairM); o.position.set(x, y, z); o.scale.z = sz; g.add(o); return o; };
-  if (style === 'long') tube(headH * 0.36, headH * 0.3, headH * 1.1, hc.x, hc.y - headH * 0.5, -headH * 0.2);
-  if (style === 'bob') tube(headH * 0.37, headH * 0.4, headH * 0.55, hc.x, hc.y - headH * 0.28, -headH * 0.12, 0.85);
-  if (style === 'bun') sph(headH * 0.2, 1, 1, 1, hc.x, hc.y + headH * 0.58, -headH * 0.1);
-  if (style === 'pony') { const t = tube(headH * 0.12, headH * 0.04, headH * 1.1, hc.x, hc.y - headH * 0.35, -headH * 0.55, 1); t.rotation.x = -0.25; }
-  if (style === 'curly') for (let i = 0; i < 9; i++) { const a = (i / 9) * Math.PI * 2; sph(headH * 0.2, 1, 1, 1, hc.x + Math.cos(a) * headH * 0.4, hc.y + Math.sin(a) * headH * 0.42 + headH * 0.05, -headH * 0.12); }
-  const white = new THREE.MeshBasicMaterial({ color: 0xffffff }), iris = new THREE.MeshBasicMaterial({ color: face.eyes || '#2b1d17' }), ink = new THREE.MeshBasicMaterial({ color: 0x20141a });
-  const blushM = new THREE.MeshBasicMaterial({ color: 0xff8fa8, transparent: true, opacity: 0.38, depthWrite: false }), browM = new THREE.MeshToonMaterial({ color: new THREE.Color(hair).multiplyScalar(0.75), gradientMap: toonGradient() });
-  const eyes = [];
-  for (const sd of [-1, 1]) {
-    const eye = new THREE.Group(); eye.position.set(hc.x + sd * headH * 0.16, hc.y - headH * 0.07, headH * 0.385);
-    const w = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.075, 20, 14), white); w.scale.set(1, 1.18, 0.4); eye.add(w);
-    const ir = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.05, 20, 14), iris); ir.scale.set(1, 1.15, 0.4); ir.position.set(0, -0.006 * headH, headH * 0.02); eye.add(ir);
-    const pu = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.026, 14, 10), ink); pu.scale.set(1, 1.15, 0.4); pu.position.set(0, -0.006 * headH, headH * 0.035); eye.add(pu);
-    const hl = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.016, 10, 8), white); hl.position.set(headH * 0.018, headH * 0.03, headH * 0.045); eye.add(hl);
-    const lash = new THREE.Mesh(new THREE.TorusGeometry(headH * 0.07, headH * 0.008, 6, 20, Math.PI), ink); lash.position.set(0, headH * 0.012, headH * 0.012); lash.scale.set(1, 0.9, 0.5); eye.add(lash);
-    g.add(eye); eyes.push(eye);
-    const brow = new THREE.Mesh(new THREE.CapsuleGeometry(headH * 0.008, headH * 0.1, 4, 8), browM); brow.rotation.z = Math.PI / 2 + sd * 0.14;
-    brow.position.set(hc.x + sd * headH * 0.165, hc.y + headH * 0.06, headH * 0.4); g.add(brow);
-    const blush = new THREE.Mesh(new THREE.CircleGeometry(headH * 0.06, 20), blushM); blush.scale.set(1.3, 0.8, 1); blush.position.set(hc.x + sd * headH * 0.25, hc.y - headH * 0.17, headH * 0.34); blush.rotation.y = sd * 0.5; g.add(blush);
-  }
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.022, 10, 8), skinM); nose.scale.set(1, 0.9, 0.9); nose.position.set(hc.x, hc.y - headH * 0.15, headH * 0.425); g.add(nose);
-  const mouth = new THREE.Mesh(new THREE.SphereGeometry(headH * 0.03, 10, 8), new THREE.MeshBasicMaterial({ color: face.lips || '#c4505f' }));
-  mouth.scale.set(2.2, .7, .6); mouth.position.set(hc.x, hc.y - headH * 0.27, headH * 0.42); g.add(mouth);
-
-  // arms + hands, each hanging from a pivot at the shoulder so they can swing
-  const rig = { legs: [], arms: [] };
-  for (const [s, w, side] of [[p.shL, p.wrL, -1], [p.shR, p.wrR, 1]]) {
-    const sh = V(s[0] - side * 0.02 * sw, s[1] + 0.05 * T), wr = V(w[0], w[1]);
-    const el = V((s[0] + w[0]) / 2 + side * sw * 0.07, (s[1] + w[1]) / 2);
-    const piv = new THREE.Group(); piv.position.copy(sh);
-    const rel = (v) => v.clone().sub(sh);
-    piv.add(limb(rel(sh), rel(el), 0.125 * sw * bf, 0.1 * sw * bf, skinM), limb(rel(el), rel(wr), 0.1 * sw * bf, 0.07 * sw * bf, skinM));
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.085 * sw, 18, 12), skinM);
-    hand.scale.set(0.8, 1.35, 0.6); hand.position.set(wr.x - sh.x, wr.y - 0.09 * sw - sh.y, 0); piv.add(hand);
-    g.add(piv); rig.arms.push({ piv, x: sh.x, y: sh.y });
-  }
-  // legs + feet, hanging from the hips
-  for (const [h, k, a] of [[p.hipL, p.knL, p.anL], [p.hipR, p.knR, p.anR]]) {
-    const hp = V(h[0], h[1] + 0.04 * T), kn = V(k[0], k[1]), an = V(a[0], a[1]);
-    const piv = new THREE.Group(); piv.position.copy(hp);
-    const rel = (v) => v.clone().sub(hp);
-    piv.add(limb(rel(hp), rel(kn), 0.25 * sw * bf, 0.155 * sw * bf, skinM), limb(rel(kn), rel(an), 0.155 * sw * bf, 0.09 * sw * bf, skinM));
-    const foot = new THREE.Mesh(new THREE.SphereGeometry(0.1 * sw, 18, 12), skinM);
-    foot.scale.set(0.85, 0.5, 2.1); foot.position.set(an.x - hp.x, an.y - 0.02 * L - hp.y, 0.1 * sw); piv.add(foot);
-    g.add(piv); rig.legs.push({ piv, x: hp.x, y: hp.y });
-  }
-  rig.legs.sort((p1, p2) => p1.x - p2.x); rig.arms.sort((p1, p2) => p1.x - p2.x); // [0] is the one at smaller x
-  rig.eyes = eyes;
-  // numbers the clothes' vertex shader needs to swing with the limbs
-  rig.hip = new THREE.Vector4(rig.legs[0].x, (rig.legs[0].y + rig.legs[1].y) / 2, rig.legs[1].x, 0.35 * T);
-  rig.sh = new THREE.Vector4(rig.arms[0].x, (rig.arms[0].y + rig.arms[1].y) / 2, rig.arms[1].x, 0.42 * sw * bf);
-
-  // a dark outline around the skin (inverted hull) and soft shadows: the "game character" look
-  const outlineM = new THREE.MeshBasicMaterial({ color: 0x6a3d57, side: THREE.BackSide }), thick = 0.02 * sw;
-  outlineM.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `vec3 transformed = position + normal * ${thick.toFixed(3)};`); };
-  const outlined = []; g.traverse((o) => { if (o.isMesh) { o.castShadow = true; if (o.material === skinM) outlined.push(o); } });
-  outlined.forEach((o) => { const ol = new THREE.Mesh(o.geometry, outlineM); ol.userData.outline = true; o.add(ol); });
-  const skinMeshes = []; // what clothes are fitted around (not hair or the head)
-  g.traverse((o) => { if (o.isMesh && o.material === skinM && o !== head && o !== neck) skinMeshes.push(o); });
-  const top = gy - p.headTop[1], halfW = Math.max(sw * 1.6, Math.abs(p.wrR[0] - cx) + sw * 0.7);
-  return { group: g, ctx: { cx, gy, H: top * 1.08, halfW, m, body, skinMeshes, rig } };
-}
-
 /* ───────── garments ───────── */
 /** Per-photo "mask": which cells are garment, and how far each is from the outline (in cells). Cached with the texture. */
 function maskGrid(e) {
@@ -396,7 +277,7 @@ function buildGarments() {
     const group = new THREE.Group(), mode = SWING[it.type] || { leg: 0, arm: 0 }, Mat = (o) => swingy(new THREE.MeshLambertMaterial(o), mode);
     group.add(new THREE.Mesh(front, Mat({ map: e.tex, alphaTest: 0.5, alphaToCoverage: true })));
     group.add(new THREE.Mesh(back, Mat({ map: backTex || e.tex, alphaTest: 0.5, alphaToCoverage: true, color: backTex ? 0xffffff : 0xd9d9d9 }))); // no back photo: the front photo, a little darker
-    group.add(new THREE.Mesh(wall, Mat({ color: new THREE.Color(it.color?.hex || '#888888').multiplyScalar(0.8), side: THREE.DoubleSide }))); // solid fabric edge: always visible, never clipped by the photo's soft outline
+    if (it.type !== 'bags' && it.type !== 'accessories') group.add(new THREE.Mesh(wall, Mat({ color: new THREE.Color(it.color?.hex || '#888888').multiplyScalar(0.8), side: THREE.DoubleSide }))); // solid fabric edge: always visible, never clipped by the photo's soft outline
     if (box.rot) group.rotation.z = -box.rot * 0.6; // follow the shoulder tilt a little
     group.userData.slot = it.type;
     S.figure.add(group); S.shells.push(group);
@@ -413,6 +294,8 @@ function worldTick(now) {
   let ix = w.move.x + ((k.has('d') || k.has('arrowright') ? 1 : 0) - (k.has('a') || k.has('arrowleft') ? 1 : 0));
   let iy = w.move.y + ((k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0));
   const il = Math.hypot(ix, iy); if (il > 1) { ix /= il; iy /= il; }
+  if (k.has('q')) w.yawGoal += dt * 1.8; if (k.has('e')) w.yawGoal -= dt * 1.8;
+  w.yaw += (w.yawGoal - w.yaw) * Math.min(1, dt * 12);
   const sy = Math.sin(w.yaw), cy = Math.cos(w.yaw);
   let vx = 0, vz = 0;
   if (il > 0.12) { w.target = null; vx = ix * cy - iy * sy; vz = -ix * sy - iy * cy; } // stick/keys are relative to the camera
@@ -443,12 +326,22 @@ function worldTick(now) {
   for (const eye of S.ctx.rig.eyes) eye.scale.y = 1 - 0.92 * blink;
   const f = S.figure;
   f.scale.y = 1 + Math.sin(w.t * 2.1) * 0.004;
-  f.position.set(w.pos.x, Math.abs(Math.sin(w.phase)) * 0.018 * U * amt, w.pos.z);
+  w.hop = Math.max(0, w.hop - dt * 3.2);
+  f.position.set(w.pos.x, Math.abs(Math.sin(w.phase)) * 0.018 * U * amt + Math.sin((1 - w.hop) * Math.PI) * 0.09 * U * (w.hop > 0 ? 1 : 0), w.pos.z);
+  for (let n = w.bursts.length - 1; n >= 0; n--) {
+    const b = w.bursts[n]; b.age += dt; const a = b.pts.geometry.attributes.position;
+    for (let q = 0; q < b.vel.length; q++) { b.vel[q][1] -= 1.6 * U * dt; a.setXYZ(q, a.getX(q) + b.vel[q][0] * dt, a.getY(q) + b.vel[q][1] * dt, a.getZ(q) + b.vel[q][2] * dt); }
+    a.needsUpdate = true; b.pts.material.opacity = Math.max(0, 1 - b.age / 0.95);
+    if (b.age > 0.95) { S.scene.remove(b.pts); b.pts.geometry.dispose(); b.pts.material.dispose(); w.bursts.splice(n, 1); }
+  }
   f.rotation.y = w.face; f.rotation.x = 0.07 * amt; f.rotation.z = Math.sin(w.phase) * 0.03 * amt;
   // follow camera
   w.shift += (w.shiftTo - w.shift) * Math.min(1, dt * 6); // lift the avatar up the screen while a rail is open below
-  const d = (2.15 + 1.4 * w.shift) * U, camWant = new THREE.Vector3(w.pos.x + sy * d, (0.78 + 0.12 * w.shift) * U, w.pos.z + cy * d);
-  camWant.x = Math.max(-2.45 * U, Math.min(2.45 * U, camWant.x)); camWant.z = Math.max(-2.3 * U, Math.min(3.3 * U, camWant.z)); // never poke the camera through the walls or racks
+  // orbit camera on a spring arm: it shortens (and rises a little) before it would go through a wall or rack
+  const d = (2.15 + 1.4 * w.shift) * U; let arm = d;
+  const lim = (dir, pos, lo, hi) => (dir > 1e-4 ? (hi - pos) / dir : dir < -1e-4 ? (lo - pos) / dir : Infinity);
+  arm = Math.max(0.6 * U, Math.min(arm, lim(sy, w.pos.x, -2.7 * U, 2.7 * U), lim(cy, w.pos.z, -2.8 * U, 3.2 * U)));
+  const camWant = new THREE.Vector3(w.pos.x + sy * arm, (0.78 + 0.12 * w.shift) * U + (d - arm) * 0.22, w.pos.z + cy * arm);
   S.camera.position.lerp(camWant, 1 - Math.exp(-dt * 7));
   S.camera.lookAt(w.pos.x, (0.5 - 0.65 * w.shift) * U, w.pos.z); // with a rail open, pull back so the avatar sits in the visible top half
   if (S.shadow) S.shadow.position.set(w.pos.x, 0.5, w.pos.z);
@@ -530,7 +423,8 @@ export const stage3d = {
     const s = ensure(); if (!s.ctx) return;
     const old = keep && s.world ? { pos: s.world.pos.clone(), face: s.world.face, yaw: s.world.yaw } : null;
     this.exitWorld();
-    const U = s.ctx.H, room = buildWorld(U, stations, theme), cv = s.renderer.domElement;
+    const U = s.ctx.H, room = buildWorld(U, stations, theme, s.renderer), cv = s.renderer.domElement;
+    if (room.env) s.scene.environment = room.env.texture;
     const sun = new THREE.DirectionalLight(0xfff0e0, 1.6); sun.position.set(-1.6 * U, 3.8 * U, 2.6 * U); sun.target.position.set(0, 0, -0.3 * U);
     sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.003 * U;
     Object.assign(sun.shadow.camera, { left: -3.6 * U, right: 3.6 * U, top: 3.6 * U, bottom: -3.6 * U, near: 0.5 * U, far: 10 * U }); sun.shadow.camera.updateProjectionMatrix();
@@ -539,7 +433,7 @@ export const stage3d = {
     s.scene.add(room.group); s.scene.background = new THREE.Color(0xffe3ee); s.scene.fog = new THREE.Fog(0xffe3ee, 8 * U, 15 * U);
     s.camera.fov = 42; s.camera.updateProjectionMatrix();
     const start = new THREE.Vector3(0, 0, 1.7 * U);
-    s.world = { U, room, move: { x: 0, y: 0 }, keys: new Set(), yaw: 0, pos: start.clone(), face: Math.PI, target: null, near: null, dir: { x: 0, z: -1 }, speed: 0, phase: 0, onNear, last: performance.now(), t: 0, raf: 0, down: onKey(true), up: onKey(false), clear: () => s.world?.keys.clear() };
+    s.world = { U, room, move: { x: 0, y: 0 }, keys: new Set(), yaw: 0, pos: start.clone(), face: Math.PI, target: null, near: null, dir: { x: 0, z: -1 }, speed: 0, phase: 0, yawGoal: 0, hop: 0, bursts: [], onNear, last: performance.now(), t: 0, raf: 0, down: onKey(true), up: onKey(false), clear: () => s.world?.keys.clear() };
     if (old) { s.world.pos.copy(old.pos); s.world.face = old.face; s.world.yaw = old.yaw; }
     s.world.shift = 0; s.world.shiftTo = 0;
     s.camera.position.set(s.world.pos.x + Math.sin(s.world.yaw) * 2.15 * U, 0.78 * U, s.world.pos.z + Math.cos(s.world.yaw) * 2.15 * U);
@@ -556,7 +450,7 @@ export const stage3d = {
     cv.style.touchAction = 'pan-y'; cv.removeAttribute('tabindex');
     S.scene.remove(w.room.group, w.room.sun, w.room.sun.target); w.room.sun.dispose?.(); w.room.dispose();
     [S.lights.hemi.intensity, S.lights.key.intensity, S.lights.rim.intensity] = S.lights.base;
-    S.scene.background = null; S.scene.fog = null; S.camera.fov = 26; S.camera.updateProjectionMatrix();
+    S.scene.background = null; S.scene.fog = null; S.scene.environment = null; S.camera.fov = 26; S.camera.updateProjectionMatrix();
     S.world = null; S.figure.position.set(0, 0, 0); S.figure.rotation.set(0, 0, 0); S.figure.rotation.order = 'XYZ'; S.figure.scale.set(1, 1, 1); S.rot = S.target = 0;
     for (const l of [...(S.ctx?.rig.legs || []), ...(S.ctx?.rig.arms || [])]) l.piv.rotation.x = 0;
     for (const u of Object.values(S.sw)) u.value = 0;
@@ -566,6 +460,19 @@ export const stage3d = {
   /** Joystick: x right, y forward, each -1..1 relative to the camera. */
   setMove(x, y) { if (S?.world) S.world.move = { x, y }; },
   setFraming(open) { if (S?.world) S.world.shiftTo = open ? 1 : 0; },
+  /** Look around by 45° steps (for the on-screen buttons). */
+  rotateCam(dir) { if (S?.world) S.world.yawGoal += dir * Math.PI / 4; },
+  /** A hop and a burst of sparkles (when you grab something). */
+  pop() {
+    const w = S?.world; if (!w) return;
+    w.hop = 1;
+    const N = 26, pos = new Float32Array(N * 3), vel = [], U = w.U;
+    for (let i = 0; i < N; i++) { const a = Math.random() * 6.28, sp = (0.5 + Math.random() * 0.9) * U; pos.set([0, 0, 0], i * 3); vel.push([Math.cos(a) * sp * 0.6, (0.8 + Math.random()) * U, Math.sin(a) * sp * 0.6]); }
+    const g = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    for (let i = 0; i < N; i++) g.attributes.position.setXYZ(i, w.pos.x, 0.55 * U, w.pos.z);
+    const pts = new THREE.Points(g, new THREE.PointsMaterial({ map: w.room.starTex, size: 0.09 * U, color: 0xffe8a0, transparent: true, depthWrite: false })); pts.frustumCulled = false;
+    S.scene.add(pts); w.bursts.push({ pts, vel, age: 0 });
+  },
   walkToStation(type) { const st = S?.world?.room.stations.find((x) => x.type === type); if (st) S.world.target = st.padPos.clone(); },
   get inWorld() { return !!S?.world; },
 

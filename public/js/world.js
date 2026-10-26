@@ -78,7 +78,7 @@ function rack(U, st, loader) {
   const inner = slab(0.8 * U, 1.3 * U, 0.06 * U, 0.06 * U, pale, true); inner.position.set(0, 0.05 * U, -0.1 * U); g.add(inner);   // pale panel
   for (const sx of [-1, 1]) { const post = slab(0.05 * U, 1.05 * U, 0.12 * U, 0.025 * U, tint); post.position.set(sx * 0.44 * U, 0, -0.04 * U); g.add(post); }
   const base = slab(1.0 * U, 0.1 * U, 0.34 * U, 0.04 * U, tint); base.position.set(0, 0, -0.02 * U); g.add(base);
-  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.016 * U, 0.016 * U, 0.86 * U, 14), toon(0xeef1f8)); rail.castShadow = true;
+  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.016 * U, 0.016 * U, 0.86 * U, 14), new THREE.MeshStandardMaterial({ color: 0xf2f4fa, metalness: 0.9, roughness: 0.22 })); rail.castShadow = true;
   rail.rotation.z = Math.PI / 2; rail.position.set(0, 1.0 * U, 0.02 * U); g.add(rail);
   // your real pieces, hanging from the rail (flat photo cutouts, like paper dolls)
   const n = Math.min(5, st.thumbs.length), step = 0.82 * U / Math.max(n, 1);
@@ -107,14 +107,50 @@ function mirror(U, st) {
   });
   const pane = new THREE.Mesh(new THREE.CircleGeometry(0.36 * U, 48), new THREE.MeshBasicMaterial({ map: glass }));
   pane.scale.set(1, 1.55, 1); pane.position.set(0, 0.95 * U, -0.1 * U);
-  const frame = new THREE.Mesh(new THREE.RingGeometry(0.36 * U, 0.44 * U, 48), toon(0xe3bf62, { side: THREE.DoubleSide }));
+  const frame = new THREE.Mesh(new THREE.RingGeometry(0.36 * U, 0.44 * U, 48), new THREE.MeshStandardMaterial({ color: 0xe8c25a, metalness: 0.85, roughness: 0.28, side: THREE.DoubleSide }));
   frame.scale.set(1, 1.55, 1); frame.position.set(0, 0.95 * U, -0.095 * U);
-  const stand = slab(0.7 * U, 0.08 * U, 0.3 * U, 0.03 * U, 0xe3bf62); stand.position.set(0, 0, -0.02 * U);
+  const stand = slab(0.7 * U, 0.08 * U, 0.3 * U, 0.03 * U, 0xe3bf62); stand.material = new THREE.MeshStandardMaterial({ color: 0xe8c25a, metalness: 0.85, roughness: 0.3 }); stand.position.set(0, 0, -0.02 * U);
   g.add(pane, frame, stand);
   const plate = sign(U, st.emoji, st.label, st.color); plate.position.set(0, 1.95 * U, 0.05 * U); g.add(plate);
   const shadow = blob(U, 1.0 * U, 0.7 * U); shadow.position.z = 0.15 * U; g.add(shadow);
   const p = pad(U, new THREE.Color(st.color)); p.position.set(0, 0, 0.62 * U); g.add(p);
   g.userData = { type: st.type, pad: p };
+  return g;
+}
+
+/** A soft pink studio "sky" with bright window panels, used only for reflections on glossy things. */
+export function roomEnvironment(renderer) {
+  const sc = new THREE.Scene();
+  const sky = canvasTexture(8, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#ffe3f0'); gr.addColorStop(0.5, '#ffffff'); gr.addColorStop(1, '#f2b8d2'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  sc.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), new THREE.MeshBasicMaterial({ map: sky, side: THREE.BackSide })));
+  for (const [x, y, z, w, h] of [[0, 4, -8, 6, 3], [-8, 3, 0, 5, 3], [8, 3, 2, 5, 3], [0, 8, 0, 6, 6]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 4.6, 4.8), side: THREE.DoubleSide }));
+    m.position.set(x, y, z); m.lookAt(0, 0, 0); sc.add(m);
+  }
+  const pm = new THREE.PMREMGenerator(renderer), rt = pm.fromScene(sc, 0.04); pm.dispose();
+  return rt;
+}
+
+/** The window wall behind the camera, with curtains, a sofa and poufs, so every angle has something to look at. */
+function frontWall(U, W, z, wallH, wallMat) {
+  const g = new THREE.Group();
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(2 * W, wallH), wallMat); wall.rotation.y = Math.PI; wall.position.set(0, wallH / 2, z); g.add(wall);
+  const sky = canvasTexture(64, 256, (c, w, h) => { const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#8fd3ff'); gr.addColorStop(1, '#e8f7ff'); c.fillStyle = gr; c.fillRect(0, 0, w, h); });
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.7 * U, 1.3 * U), new THREE.MeshBasicMaterial({ map: sky })); glass.rotation.y = Math.PI; glass.position.set(0, 1.6 * U, z - 0.01 * U); g.add(glass);
+  const fr = slab(1.9 * U, 1.5 * U, 0.08 * U, 0.12 * U, 0xffffff, true); fr.rotation.y = Math.PI; fr.position.set(0, 0.9 * U, z - 0.04 * U); g.add(fr);
+  for (const sx of [-1, 1]) { const cur = slab(0.42 * U, 1.7 * U, 0.1 * U, 0.1 * U, 0xff8fbb); cur.rotation.y = Math.PI; cur.position.set(sx * 1.2 * U, 0.7 * U, z - 0.07 * U); g.add(cur); }
+  // sofa
+  const sofa = new THREE.Group();
+  const seat = slab(1.8 * U, 0.34 * U, 0.62 * U, 0.12 * U, 0xff9ec7); seat.position.set(0, 0.08 * U, 0); sofa.add(seat);
+  const backrest = slab(1.8 * U, 0.78 * U, 0.22 * U, 0.14 * U, 0xff86b8); backrest.position.set(0, 0.1 * U, -0.3 * U); sofa.add(backrest);
+  for (const sx of [-1, 1]) { const arm = slab(0.22 * U, 0.55 * U, 0.66 * U, 0.1 * U, 0xff86b8); arm.position.set(sx * 0.92 * U, 0.06 * U, 0); sofa.add(arm); }
+  for (const sx of [-0.45, 0.45]) { const cushion = slab(0.7 * U, 0.2 * U, 0.5 * U, 0.08 * U, 0xffc2dc); cushion.position.set(sx * U, 0.4 * U, 0.04 * U); sofa.add(cushion); }
+  sofa.position.set(0, 0, z - 0.45 * U); sofa.rotation.y = Math.PI; g.add(sofa);
+  for (const [px, c] of [[-1.55, 0xc9b3ff], [1.55, 0xffd27a]]) {
+    const pouf = new THREE.Mesh(new THREE.CylinderGeometry(0.24 * U, 0.26 * U, 0.3 * U, 28), toon(c)); pouf.position.set(px * U, 0.15 * U, z - 0.6 * U); pouf.castShadow = true; g.add(pouf);
+  }
+  const lampPole = new THREE.Mesh(new THREE.CylinderGeometry(0.018 * U, 0.018 * U, 1.5 * U, 10), new THREE.MeshStandardMaterial({ color: 0xe8c25a, metalness: 0.8, roughness: 0.3 })); lampPole.position.set(2.3 * U, 0.75 * U, z - 0.4 * U); g.add(lampPole);
+  const shade = new THREE.Mesh(new THREE.CylinderGeometry(0.16 * U, 0.24 * U, 0.26 * U, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff1c9, side: THREE.DoubleSide })); shade.position.set(2.3 * U, 1.55 * U, z - 0.4 * U); g.add(shade);
   return g;
 }
 
@@ -135,7 +171,7 @@ function plant(U, x, z) {
  * Builds the room. Returns { group, stations: [{ type, group, padPos }], bounds, update(t) }.
  * U = the avatar's height in world units; the room is sized from it.
  */
-export function buildWorld(U, stations, theme = {}) {
+export function buildWorld(U, stations, theme = {}, renderer = null) {
   const group = new THREE.Group(), loader = new THREE.TextureLoader();
   const W = 3 * U, D0 = -3.2 * U, D1 = 3.4 * U, wallH = 2.9 * U;
 
@@ -146,7 +182,7 @@ export function buildWorld(U, stations, theme = {}) {
     g.strokeStyle = '#ffffffaa'; g.lineWidth = 3; g.strokeRect(0, 0, w, h); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke();
     g.fillStyle = '#ffffff55'; for (const [x, y] of [[40, 40], [200, 60], [90, 190], [220, 220], [150, 120]]) { g.beginPath(); g.ellipse(x, y, 18, 6, -0.6, 0, Math.PI * 2); g.fill(); }
   }, [(2 * W) / (1.2 * U), (D1 - D0) / (1.2 * U)]);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2 * W, D1 - D0), new THREE.MeshLambertMaterial({ map: floorTex }));
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2 * W, D1 - D0), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.5, metalness: 0, envMapIntensity: 0.18 }));
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, (D0 + D1) / 2); floor.receiveShadow = true; group.add(floor);
 
   // wallpaper: soft lattice with little hearts, white wainscot below
@@ -187,6 +223,8 @@ export function buildWorld(U, stations, theme = {}) {
   const rug = new THREE.Mesh(new THREE.CircleGeometry(1.25 * U, 64), new THREE.MeshLambertMaterial({ map: rugTex, transparent: true }));
   rug.rotation.x = -Math.PI / 2; rug.position.set(0, 0.003 * U, 0.2 * U); rug.receiveShadow = true; group.add(rug);
 
+  group.add(frontWall(U, W, D1, wallH, wallMat));
+  // keep the side walls closed up to the window wall
   group.add(plant(U, -2.62 * U, 1.7 * U), plant(U, 2.62 * U, 1.7 * U));
 
   // string lights draped along the back wall
@@ -219,8 +257,8 @@ export function buildWorld(U, stations, theme = {}) {
   });
 
   return {
-    group, stations: built,
-    bounds: { x: 2.55 * U, zMin: -2.6 * U, zMax: 2.4 * U },
+    group, stations: built, starTex,
+    bounds: { x: 2.55 * U, zMin: -2.6 * U, zMax: 2.55 * U }, env: renderer ? roomEnvironment(renderer) : null,
     update(t) { // pads breathe, bulbs twinkle, sparkles drift
       for (const s of built) { const k = 1 + Math.sin(t * 3) * 0.05; s.pad.scale.set(k, 1, k); }
       bulbs.forEach((b, i) => { b.scale.setScalar(1 + Math.sin(t * 3 + i) * 0.12); });
@@ -230,6 +268,7 @@ export function buildWorld(U, stations, theme = {}) {
     },
     dispose() {
       group.traverse((o) => { o.geometry?.dispose(); const m = o.material; if (m) { m.map?.dispose(); m.dispose(); } });
+      this.env?.dispose();
     },
   };
 }

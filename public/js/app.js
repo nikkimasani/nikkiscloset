@@ -592,7 +592,7 @@ const stage3d = {
   attach: (el) => engine?.attach(el), setModel: (m) => engine?.setModel(m), setOutfit: (i, u) => engine?.setOutfit(i, u),
   turn: (d) => engine?.turn(d), setLabel: (t) => engine?.setLabel(t), setRole: () => engine?.setRole(),
   snapshot: () => engine?.snapshot() ?? null, debug: () => engine?.debug(),
-  enterWorld: (o) => engine?.enterWorld(o), exitWorld: () => engine?.exitWorld(), setMove: (x, y) => engine?.setMove(x, y), setFraming: (o) => engine?.setFraming(o), walkToStation: (t) => engine?.walkToStation(t),
+  enterWorld: (o) => engine?.enterWorld(o), exitWorld: () => engine?.exitWorld(), setMove: (x, y) => engine?.setMove(x, y), setFraming: (o) => engine?.setFraming(o), rotateCam: (d) => engine?.rotateCam(d), pop: () => engine?.pop(), walkToStation: (t) => engine?.walkToStation(t),
 };
 
 // 3D when the device supports WebGL (and the user hasn't chosen flat); the 2D SVG mannequin is the fallback.
@@ -809,6 +809,7 @@ function renderWorld() {
         <div class="closet-hud"></div>
         <p class="world-hint" id="whint" role="status"></p>
         <div class="joy" id="joy" aria-hidden="true"><span class="joy-knob"></span></div>
+        <div class="camrot" role="group" aria-label="Look around"><button data-act="camrot" data-v="-1" aria-label="Look left"><span aria-hidden="true">⟲</span></button><button data-act="camrot" data-v="1" aria-label="Look right"><span aria-hidden="true">⟳</span></button></div>
         <div class="world-rail" id="wrail" hidden></div>
       </div>
       <div class="world-jump" role="group" aria-label="Walk to a wardrobe">${[...SECTION_TYPES, 'mirror'].map((t) => `<button class="chip" aria-pressed="false" data-act="gostation" data-v="${t}"><span aria-hidden="true">${t === 'mirror' ? '🪞' : TYPES[t].emoji}</span> ${t === 'mirror' ? 'Mirror' : TYPES[t].label}</button>`).join('')}</div>
@@ -883,19 +884,19 @@ function renderMirror() {
         <div class="floor" aria-hidden="true"></div><div class="rug" aria-hidden="true"></div>
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
-        ${metersHTML(worn)}
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${use3D() ? `<div class="turnbar" role="group" aria-label="Turn the model"><button data-act="turn" data-v="-1" aria-label="Turn left"><span aria-hidden="true">◀</span></button><button data-act="turn" data-v="0">Front</button><button data-act="turn" data-v="1" aria-label="Turn right"><span aria-hidden="true">▶</span></button></div>` : ''}
-        <div class="tools" role="group" aria-label="Quick actions">
-          <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
-          <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
-          <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
-          <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
-          <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
-        </div>
         ${S.cas ? casHTML() : ''}
       </div>
-      <div class="moods" role="group" aria-label="Mood": what’s the occasion?">
+      <div class="tools" role="group" aria-label="Quick actions">
+        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
+        <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
+        <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
+        <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
+        <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
+      </div>
+      ${metersHTML(worn)}
+      <div class="moods" role="group" aria-label="Mood: what’s the occasion?">
         ${OCCASIONS.map((o) => `<button class="chip ${S.mood === o ? 'on' : ''}" aria-pressed="${S.mood === o}" data-act="mood" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}</button>`).join('')}
       </div>
       ${weatherLine()}
@@ -1093,7 +1094,8 @@ document.addEventListener('click', async (e) => {
     case 'hall': if (worldOn()) { S.dismiss = S.rail; S.rail = ''; return updateWorldUI(); } S.rail = ''; return renderWalkIn();
     case 'gostation': S.dismiss = ''; stage3d.walkToStation(v); return;
     case 'railnav': { const k = SECTION_TYPES.length, next = SECTION_TYPES[(SECTION_TYPES.indexOf(S.rail) + (+v) + k) % k]; if (worldOn()) { S.dismiss = ''; stage3d.walkToStation(next); return; } S.rail = next; S.hallType = next; return renderWalkIn(); }
-    case 'grab': S.basket = S.basket.includes(id) ? S.basket.filter((x) => x !== id) : [...S.basket, id]; return renderWalkIn();
+    case 'camrot': stage3d.rotateCam(+v); return;
+    case 'grab': { const adding = !S.basket.includes(id); S.basket = adding ? [...S.basket, id] : S.basket.filter((x) => x !== id); if (adding && worldOn()) stage3d.pop(); return renderWalkIn(); }
     case 'ungrab': S.basket = S.basket.filter((x) => x !== id); return renderWalkIn();
     case 'clearbasket': S.basket = []; return renderWalkIn();
     case 'tryon': {
