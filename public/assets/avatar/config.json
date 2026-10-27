@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 7,
   "id": "base",
   "name": "Base model",
   "about": "base.png is shown exactly as it is, at its own proportions. Nothing here draws the body. The numbers below are only coordinates laid over the picture, in the picture's own pixels (896 x 1776), so clothes know where to go. Turn on the debug overlay (Customize > Anchors) to see them on the picture, then edit them here. The armpit, crotch, waistband and arm points are where a garment's matching landmarks (neckline, armpits, crotch, hems, sleeve ends) are warped to; the body's outline for the 'widen to the body' pass is read from base.png's own transparency.",
@@ -432,7 +432,7 @@
   },
   "versionAbout": "Raise 'version' whenever base.png is replaced, so phones fetch the new picture instead of a cached copy.",
   "hair": {
-    "about": "Nikki's own hairstyle pictures (background made see-through, cropped). Each style has four landmarks in its own pixels: crown (top of the hair over the skull), hairline (top edge of the face opening) and temples (the opening's edges at temple height). The hair is scaled and placed so they land on the head points of the same names; adjust them in Customize > Hair > Adjust fit. Hair below the jaw inside the neck column is drawn behind the body, the rest in front.",
+    "about": "Nikki's own hairstyle pictures (background made see-through, cropped). Each style has four landmarks in its own pixels: crown (top of the hair over the skull), hairline (top edge of the face opening) and temples (the opening's edges at temple height). The hair is scaled and placed so they land on the head points of the same names; adjust them in Customize > Hair > Adjust fit. A filled copy of each style (<id>-fill.png: the hair with its face opening closed, down to her jaw) is drawn behind the head in the hair colour, so the background never shows between face and hair. Hair below the jaw inside the neck column is drawn behind the body, the rest in front.",
     "styles": [
       {
         "id": "none",
@@ -464,7 +464,7 @@
           ]
         },
         "tone": "#2d221c",
-        "backfill": "full"
+        "fill": true
       },
       {
         "id": "layered",
@@ -492,7 +492,7 @@
           ]
         },
         "tone": "#2b1d14",
-        "backfill": "full"
+        "fill": true
       },
       {
         "id": "sleek",
@@ -520,7 +520,7 @@
           ]
         },
         "tone": "#22160d",
-        "backfill": "full"
+        "fill": true
       },
       {
         "id": "bob",
@@ -548,7 +548,7 @@
           ]
         },
         "tone": "#20140c",
-        "backfill": "full"
+        "fill": true
       },
       {
         "id": "curly",
@@ -576,7 +576,7 @@
           ]
         },
         "tone": "#2a1c0f",
-        "backfill": "full"
+        "fill": true
       },
       {
         "id": "ponytail",
@@ -604,7 +604,7 @@
           ]
         },
         "tone": "#251a16",
-        "backfill": "top"
+        "fill": true
       },
       {
         "id": "bun",
@@ -632,7 +632,7 @@
           ]
         },
         "tone": "#1f170e",
-        "backfill": "top"
+        "fill": true
       }
     ],
     "colors": [

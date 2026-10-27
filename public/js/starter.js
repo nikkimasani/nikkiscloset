@@ -151,7 +151,7 @@ export function checkPicture(img, it) {
     const bw = x1 - x0 + 1, cx = (x0 + x1) / 2, thin = (yy, f) => { const r = runs(fg, w, yy); return r.length === 1 && r[0][1] - r[0][0] + 1 < bw * f && Math.abs((r[0][0] + r[0][1]) / 2 - cx) < bw * 0.1; };
     const band = (a, b, f) => { let t = 0, all = 0; for (let yy = a; yy <= b; yy++) { all++; if (thin(yy, f)) t++; } return all && t / all > 0.7; };
     const bh = y1 - y0 + 1;
-    if (band(y0, y0 + Math.round(bh * 0.07), 0.15)) reasons.push('a neck stand above the item (a dress form?)');
+    if (!/halter|turtleneck|one-shoulder/i.test(`${it.name} ${it.detail}`) && band(y0, y0 + Math.round(bh * 0.07), 0.25)) reasons.push('a neck stand above the item (a dress form?)'); // (a halter's neck strap or a turtleneck's collar is the piece itself)
     // a stand's pole is very thin; a bodysuit's crotch, a skirt's hem or a dress's slit are not
     if (band(y1 - Math.round(bh * 0.1), y1, 0.06) && it.type !== 'bodysuits') reasons.push('a pole under the item (a dress form stand?)');
   }
@@ -217,7 +217,7 @@ async function finish(cut, check) {
 export const sleevesOf = (it) => (/sleeveless|strapless|tube|cami|tank|halter|corset|vest|one-shoulder|thin straps/i.test(`${it.name} ${it.detail}`) ? false
   : /sleeve|sweater|turtleneck|button-down|blouse|tee|t-shirt|cardigan|blazer|coat|jacket|duster|puffer|shirt/i.test(`${it.name} ${it.detail}`) ? true : undefined);
 /** Starter pieces checked by an older version are checked again (the check keeps getting stricter). */
-export const CHECK_VERSION = 3;
+export const CHECK_VERSION = 4;
 export const toItem = (it, done, original) => ({
   checkVersion: CHECK_VERSION, ...(sleevesOf(it) !== undefined && ['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses'].includes(it.type) && { sleeves: sleevesOf(it) }),
   id: uid(), starterId: it.id, source: 'starter', ready: !!done.ready, review: done.ready ? undefined : done.why, ...(it.acc && { acc: it.acc }), name: it.name, type: it.type, occasions: [...it.occasions], season: it.season, brand: '',

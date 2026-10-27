@@ -25,7 +25,7 @@ const spanAt = (body, y) => { const o = body.outlineAt(Math.round(y)); return o 
 /** A strapless piece (corset, tube top, bustier): sits on the bust and waist, not on the shoulders. */
 export const isStrapless = (name = '') => /corset|tube|bustier|strapless|bandeau/i.test(name);
 
-export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
+export function plan(type, marks, cut, pack, body, { strapless = false, sleeveless = false } = {}) {
   const g = groupOf(type); if (!g) return null;
   const P = pack.points, arms = pack.arms, cx = body.cx, ease = easeOf(type);
   const pt = (n) => (marks[n] ? [marks[n][0] * cut.width, marks[n][1] * cut.height] : null);
@@ -94,9 +94,14 @@ export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
 
   // tops, outerwear and dresses
   const shL = pt('shoulderL'), shR = pt('shoulderR'); if (!shL || !shR) return null;
-  const bodySh = P.shoulderR[0] - P.shoulderL[0], k = type === 'outerwear' ? 1.08 : 1.02, s = bodySh / Math.max(8, dist(shL, shR)), gShY = (shL[1] + shR[1]) / 2;
+  const apL0 = pt('armpitL'), apR0 = pt('armpitR'), gcx0 = (shL[0] + shR[0]) / 2;
+  const bodySh = P.shoulderR[0] - P.shoulderL[0], k = type === 'outerwear' ? 1.08 : 1.02, gShY = (shL[1] + shR[1]) / 2;
+  // a sleeveless top's "shoulders" are its straps: it's sized by its armpits and keeps its own strap spacing (not stretched to her shoulder tips)
+  const strap = sleeveless && g === 'top' && apL0 && apR0;
+  const s = strap ? ((P.armpitR[0] - P.armpitL[0]) * 1.04) / Math.max(8, dist(apL0, apR0)) : bodySh / Math.max(8, dist(shL, shR));
   const SHY = (P.shoulderL[1] + P.shoulderR[1]) / 2 - 14, halfSh = bodySh / 2 * k;
-  add('shoulderL', shL, [cx - halfSh, SHY]); add('shoulderR', shR, [cx + halfSh, SHY]);
+  if (strap) { add('shoulderL', shL, [cx - Math.min(halfSh, (gcx0 - shL[0]) * s), SHY + 4]); add('shoulderR', shR, [cx + Math.min(halfSh, (shR[0] - gcx0) * s), SHY + 4]); }
+  else { add('shoulderL', shL, [cx - halfSh, SHY]); add('shoulderR', shR, [cx + halfSh, SHY]); }
   const nk = pt('neck'); if (nk) add('neck', nk, [cx, Math.max(SHY - 8, SHY + (nk[1] - gShY) * s)]);
   const apL = pt('armpitL'), apR = pt('armpitR'), ak = type === 'outerwear' ? 1.12 : 1.04;
   // a loose piece keeps its own width (scaled); a fitted one sits on the body with a little ease
@@ -117,7 +122,7 @@ export function plan(type, marks, cut, pack, body, { strapless = false } = {}) {
     const wl = pt('waistL'), wr = pt('waistR');
     if (wl && wr) { const e = spanAt(body, waistY), c = 1 + ease * 0.6; add('waistL', wl, [cx - (cx - e.l) * c, waistY]); add('waistR', wr, [cx + (e.r - cx) * c, waistY]); }
     widen = { y0: Math.round(waistY), y1: Math.round(hemY) + 4, hang: { y: hipY, y1: hemY + 4 } };
-  } else widen = { y0: Math.round((P.bustL[1] + P.bustR[1]) / 2 - 40), y1: Math.round(waistY), top: true }; // a top hugs the body down to the waist; below it, it keeps its own width
+  } else widen = { y0: Math.round((P.armpitL[1] + P.armpitR[1]) / 2 - 40), y1: Math.round(hemY) + 40, top: true }; // a top is made at least as wide as her (no skin at its sides), with only a little ease: it never flares like a skirt
   return { ctl, widen, s };
 }
 
@@ -156,8 +161,8 @@ function sleeveControls(q, pl, pack, body, cut) {
  * The garment cutout fitted to the body: a canvas the size of the base picture, ready to be drawn at 0,0.
  * `marks` may be null (then they are suggested). Resolves to { canvas, ctl } or null when the piece has no landmarks to warp.
  */
-export function fitGarment(cut, type, marks, pack, body, { ease = easeOf(type), rows = true, debug = null, strapless = false } = {}) {
-  const pl = plan(type, marks, cut, pack, body, { strapless }); if (!pl || pl.ctl.length < 3) return null;
+export function fitGarment(cut, type, marks, pack, body, { ease = easeOf(type), rows = true, debug = null, strapless = false, sleeveless = false } = {}) {
+  const pl = plan(type, marks, cut, pack, body, { strapless, sleeveless }); if (!pl || pl.ctl.length < 3) return null;
   const [W, H] = pack.size;
   /** Thin-plate-spline warp of `img` through the given controls; a global affine fit pins the far corners so the margins stay sane. */
   const warpWith = (img, ctl) => {
@@ -197,8 +202,16 @@ export function fitGarment(cut, type, marks, pack, body, { ease = easeOf(type), 
     if (pl.seam) { out = widenRows(out, outline, { y0: w.y0, y1: Math.floor(body.crotchY) - 1, ease, debug }); out = widenRows(out, (y) => body.runs(y), { y0: Math.ceil(body.crotchY), y1, ease, debug }); }
     else if (w.top) { // above the armpits base.png's outline includes the arms, so the bust points give the width there
       const P = pack.points, apY = (P.armpitL[1] + P.armpitR[1]) / 2;
-      const torso = (y) => (y < apY + 12 ? [[P.bustL[0], P.bustR[0]]] : outline(y));
-      out = widenRows(out, torso, { y0: w.y0, y1: w.y1, ease: 0.04, debug });
+      // her width on a row, from the bust, waist and hip points (base.png's own outline still includes the arms down to the waist), never wider
+      // than the outline itself; one span across both legs below the crotch (a top covers them as one piece)
+      const lerpW = (y, a, b) => { const t = Math.max(0, Math.min(1, (y - a[0]) / (b[0] - a[0]))); return a[1] + (b[1] - a[1]) * t; };
+      const stops = [[(P.bustL[1] + P.bustR[1]) / 2, (P.bustR[0] - P.bustL[0]) / 2], [(P.waistL[1] + P.waistR[1]) / 2, (P.waistR[0] - P.waistL[0]) / 2], [(P.hipL[1] + P.hipR[1]) / 2, (P.hipR[0] - P.hipL[0]) / 2]];
+      const torso = (y) => {
+        const half = y <= stops[0][0] ? stops[0][1] : y <= stops[1][0] ? lerpW(y, stops[0], stops[1]) : lerpW(y, stops[1], stops[2]);
+        const o = body.outlineAt(Math.round(y)), l = o && y >= apY + 12 ? Math.max(o.l, body.cx - half) : body.cx - half, r = o && y >= apY + 12 ? Math.min(o.r, body.cx + half) : body.cx + half;
+        return [[l, r]];
+      };
+      out = widenRows(out, torso, { y0: w.y0, y1: w.y1, ease: 0.03, maxStretch: 1.8, debug }); // (a knit top stretches over the hips)
     } else out = widenRows(out, outline, { y0: w.y0, y1, ease, hang: w.hang, debug });
   }
   if (sleeves.length) { // each sleeve along its arm: shoulder -> elbow -> wrist, at least as wide as the arm so no skin shows past a long sleeve
