@@ -44,7 +44,7 @@ const mock = createServer((req, res) => {
   }
   else if (req.method === 'POST' && req.url === '/rest/v1/rpc/starter_usage_today') send(cf.used);
   else if (req.method === 'POST' && req.url === '/rest/v1/rpc/starter_usage_add') { let b = ''; req.on('data', (d) => (b += d)).on('end', () => { cf.used = Math.round((cf.used + JSON.parse(b).n) * 10) / 10; send(cf.used); }); }
-  else if (req.method === 'POST' && req.url === '/client/v4/accounts/acct1/ai/run/@cf/black-forest-labs/flux-1-schnell') {
+  else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/black-forest-labs/flux-1-schnell') {
     let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
       const body = JSON.parse(b); cf.calls.push({ auth: req.headers.authorization, ...body });
       if (cf.calls.length > cf.limitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
@@ -63,7 +63,7 @@ const mock = createServer((req, res) => {
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else send({ detail: 'nope' }, 404);
 }).listen(FAL);
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: 'acct1', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}`, USAGE_SUPABASE_URL: `http://localhost:${FAL}` }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: ' https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/home/ai ', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}`, USAGE_SUPABASE_URL: `http://localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });

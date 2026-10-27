@@ -780,3 +780,4 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .hfprev { background: #e9d3c6 url(/assets/closet/mirror.jpg) center 20% / cover; border-radius: 14px; overflow: hidden; }
 .hfprev svg { width: 100%; height: auto; display: block; }
 @media (max-width: 520px) { .hairfit { grid-template-columns: 1fr 1fr; } }
+.startergrid > * { min-width: 0; } .startertile em, .startertile small { overflow-wrap: anywhere; word-break: break-word; } .startertile em { display: block; max-height: 4.6em; overflow: hidden; }
