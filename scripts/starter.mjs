@@ -46,7 +46,7 @@ async function one(it) {
     const u = (await r.json()).images?.[0]?.url; if (!u) throw new Error('no picture');
     return Buffer.from(await (await fetch(u)).arrayBuffer());
   }
-  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`, { method: 'POST', headers: { authorization: `Bearer ${process.env.CF_API_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ prompt: promptFor(it), steps: 4, seed }) });
+  const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${process.env.CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`, { method: 'POST', headers: { authorization: `Bearer ${process.env.CF_API_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ prompt: promptFor(it), steps: 4 }) }); // (no seed: Cloudflare's FLUX.1 schnell refuses one)
   const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch { /* not JSON */ }
   if (r.status === 429 || /neuron|daily free allocation|4006/i.test(t)) throw new Limit();
   if (!r.ok || !j?.success || !j.result?.image) throw new Error(`Cloudflare said ${r.status}: ${t.slice(0, 200)}`);

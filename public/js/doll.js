@@ -28,7 +28,7 @@ export function hairOf(pack, style, color, overrides = {}) {
   const h = pack?.hair, st = h?.styles.find((s) => s.id === style);
   if (!st || st.id === 'none' || !st.size) return null;
   const v = pack.version ? `?v=${pack.version}` : '';
-  return { id: st.id, href: `${pack.base}hair/${st.id}.png${v}`, size: st.size, marks: { ...st.marks, ...(overrides[st.id] || {}) }, m: h.colors.find((c) => c.id === color)?.m || null, tone: st.tone || '#2a1c12' };
+  return { id: st.id, href: `${pack.base}hair/${st.id}.png${v}`, fill: st.fill ? `${pack.base}hair/${st.id}-fill.png${v}` : '', size: st.size, marks: { ...st.marks, ...(overrides[st.id] || {}) }, m: h.colors.find((c) => c.id === color)?.m || null, tone: st.tone || '#2a1c12' };
 }
 /** Where a hairstyle goes: scaled so its temples span her temples, placed so its hairline sits on hers, and stretched up or down (a little)
  *  so its crown sits on her crown. Returns [sx, sy, tx, ty] for matrix(sx 0 0 sy tx ty). */
@@ -149,11 +149,10 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <filter id="hairfx-${n}" x="-10%" y="-10%" width="120%" height="125%" color-interpolation-filters="sRGB">${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0" result="c"/>` : '<feOffset dx="0" dy="0" result="c"/>'}
         <feGaussianBlur in="SourceAlpha" stdDeviation="3"/><feOffset dy="3" result="b"/><feFlood flood-color="#1a0d06" flood-opacity=".35"/><feComposite in2="b" operator="in" result="sh"/>
         <feMerge><feMergeNode in="sh"/><feMergeNode in="c"/></feMerge></filter>
-      <filter id="hairgap-${n}" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="7"/>${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/>` : ''}</filter>`;
-    const st = pack.hair.styles.find((s) => s.id === hair.id), full = st?.backfill !== 'top';
-    // the back of her head, in the hair's colour: fills any gap between the skull and the hair's crown, and (for hair worn down) what shows beside the face
-    const fill = full ? { cy: (P.crown[1] + ny + 60) / 2 + 10, rx: tw * 1.22, ry: (ny + 60 - P.crown[1]) / 2 - 6 } : { cy: P.crown[1] + (P.hairline[1] - P.crown[1]) * 0.75, rx: tw * 0.95, ry: (P.hairline[1] - P.crown[1]) * 0.7 };
-    hairBack = `<g class="hairback"><ellipse cx="${P.crown[0]}" cy="${num(fill.cy)}" rx="${num(fill.rx)}" ry="${num(fill.ry)}" fill="${hair.tone}" opacity=".92" filter="url(#hairgap-${n})"/>
+ <filter id="hairgap-${n}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/><feFlood flood-color="${hair.tone}"/><feComposite in2="b" operator="in"/>${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/>` : ''}</filter>`;
+    // the back of her head, in the hair's colour: the style with its face opening filled in down to her jaw, so nothing shows between face and hair
+    const fillPic = hair.fill ? `<image href="${hair.fill}" width="${hair.size[0]}" height="${hair.size[1]}" transform="matrix(${num(sx)} 0 0 ${num(sy)} ${num(tx)} ${num(ty)})" filter="url(#hairgap-${n})"/>` : '';
+    hairBack = `<g class="hairback">${fillPic}
       <g mask="url(#hairback-${n})"><g filter="url(#hairfx-${n})">${img}</g></g></g>`;
     hairFront = `<g class="hairfront" mask="url(#hairfront-${n})"><g filter="url(#hairfx-${n})">${img}</g></g>`;
   }

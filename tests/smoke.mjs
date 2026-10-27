@@ -44,9 +44,10 @@ const mock = createServer((req, res) => {
   }
   else if (req.method === 'POST' && req.url === '/rest/v1/rpc/starter_usage_today') send(cf.used);
   else if (req.method === 'POST' && req.url === '/rest/v1/rpc/starter_usage_add') { let b = ''; req.on('data', (d) => (b += d)).on('end', () => { cf.used = Math.round((cf.used + JSON.parse(b).n) * 10) / 10; send(cf.used); }); }
-  else if (req.method === 'POST' && req.url === '/client/v4/accounts/acct1/ai/run/@cf/black-forest-labs/flux-1-schnell') {
+  else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/black-forest-labs/flux-1-schnell') {
     let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
       const body = JSON.parse(b); cf.calls.push({ auth: req.headers.authorization, ...body });
+      if (Object.keys(body).some((k) => k !== 'prompt' && k !== 'steps')) return send({ success: false, errors: [{ code: 5006, message: "AiError: Bad input: Error: Additional or unevaluated properties at '/' not allowed" }] }, 400); // (like the real one)
       if (cf.calls.length > cf.limitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
       const it = SITEMS.find((i) => sPrompt(i) === body.prompt), n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1);
       const pic = n <= (BAD[it.id] || 0) ? readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)) : WHITE[SITEMS.filter((i) => i.batch === it.batch).indexOf(it) % WHITE.length];
@@ -63,7 +64,7 @@ const mock = createServer((req, res) => {
   else if (req.url === '/media/out.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(RED_PNG); }
   else send({ detail: 'nope' }, 404);
 }).listen(FAL);
-const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: 'acct1', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}`, USAGE_SUPABASE_URL: `http://localhost:${FAL}` }, stdio: 'ignore' });
+const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_KEY: 'test-key', APP_PASSCODE: 'letmein', FAL_QUEUE_BASE: `http://localhost:${FAL}`, FAL_RUN_BASE: `http://localhost:${FAL}`, PIN_ALLOW_HOSTS: `localhost:${FAL}`, PRODUCT_ALLOW_HOSTS: `localhost:${FAL}`, CF_ACCOUNT_ID: ' https://dash.cloudflare.com/0123456789abcdef0123456789abcdef/home/ai ', CF_API_TOKEN: 'cf-token', CF_API_BASE: `http://localhost:${FAL}`, USAGE_SUPABASE_URL: `http://localhost:${FAL}` }, stdio: 'ignore' });
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
@@ -827,7 +828,7 @@ try {
     await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
     ok(cf.calls.length === 24 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && /plain pure white background, soft even lighting/.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures)`);
     const tops = SITEMS.filter((i) => i.batch === 'tops');
-    ok(tops.every((it, k) => cf.calls.find((c) => c.prompt === sPrompt(it)).seed === 110000 + k), 'each piece starts from a stable seed for its category (tops 110000 + its place)');
+    ok(cf.calls.every((c) => !('seed' in c) && Object.keys(c).sort().join() === 'auth,prompt,steps'), 'Cloudflare gets only a prompt and steps (its FLUX.1 schnell refuses a seed)');
     ok(cf.tries['starter-cream-crochet-cami'] === 3 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a picture that fails the check (not a white background) is remade automatically and passes on its 3rd try');
     ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes and an automatic clean-up a failing picture is shown as Needs review, with the reason');
     ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
@@ -842,7 +843,7 @@ try {
     writeFileSync(join(out, '40-starter-log.txt'), logText);
     await pS.screenshot({ path: join(out, '40-starter-review.png') });
     await pS.click('.startertile >> nth=3'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20);
-    ok(cf.calls.length === 25 && cf.calls[24].seed !== cf.calls[3].seed, 'tapping a picture makes it again, with the next seed');
+    ok(cf.calls.length === 25, 'tapping a picture makes it again');
     await pS.click('#sbok'); await pS.waitForFunction((n) => window.__closet.items.length === n, nReady);
     ok(cf.used === 1440, `the day's neurons are counted on the server (${cf.used})`);
     const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => ({ s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready }))));

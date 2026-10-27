@@ -30,7 +30,8 @@ export async function fitItem(item, pack) {
   if (!groupOf(item.type) || !item.cutout) return null;
   const [body, cut] = await Promise.all([bodyOf(pack), cutoutCanvas(item.cutout)]);
   const marks = item.marks || suggestFor(item.type, cut, { sleeves: item.sleeves ?? sleevesFromName(item.type, item.name) });
-  const res = fitGarment(cut, item.type, marks, pack, body, { strapless: isStrapless(item.name) }); if (!res) return null;
+  const sleeveless = (item.sleeves ?? sleevesFromName(item.type, item.name)) === false;
+  const res = fitGarment(cut, item.type, marks, pack, body, { strapless: isStrapless(item.name), sleeveless }); if (!res) return null;
   const blob = await new Promise((r) => res.canvas.toBlob(r, 'image/png'));
   return { url: URL.createObjectURL(blob), blob, marks };
 }

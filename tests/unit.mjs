@@ -517,3 +517,12 @@ test('a corset or tube top sits on the bust line, its sides on the bust and wais
   assert.ok(Math.abs(at('topR')[0] - at('topL')[0] - (P.bustR[0] - P.bustL[0]) * 1.05) < 1, 'as wide as the bust (plus a little ease)');
   assert.ok(!pl.ctl.some((c) => c.name.startsWith('shoulder')), 'nothing pinned to the shoulders');
 });
+test('the Cloudflare account ID is found even when a dashboard address or spaces were pasted', async () => {
+  const { cfAccount, handleStarter } = await import('../lib/ai.js');
+  const id = '0123456789abcdef0123456789abcdef';
+  assert.equal(cfAccount(id), id); assert.equal(cfAccount(` ${id}\n`), id);
+  assert.equal(cfAccount(`https://dash.cloudflare.com/${id}/home/ai/workers-ai`), id);
+  assert.equal(cfAccount('my-account'), '');
+  const r = await handleStarter(new Request('http://x/api/starter', { method: 'POST', headers: { 'x-app-passcode': 'pw', 'content-type': 'application/json' }, body: JSON.stringify({ id: 'starter-black-fitted-tee' }) }), { CF_ACCOUNT_ID: 'home/ai', CF_API_TOKEN: 't', APP_PASSCODE: 'pw', USAGE_DISABLED: '1' });
+  assert.equal(r.status, 503); assert.match((await r.json()).error, /32 letters and numbers/);
+});

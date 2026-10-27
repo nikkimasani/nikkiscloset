@@ -292,7 +292,7 @@ export function openCutEditor(o) {
         clearTimeout(ftimer); ftimer = setTimeout(() => {
           if (!pack || !body || !baseImg) return; const my = ++ftoken, msg = root.querySelector('#fitmsg');
           try {
-            const res = fitGarment(cut, S.type, S.marks, pack, body, { strapless: isStrapless(o.name) }); if (my !== ftoken) return;
+            const res = fitGarment(cut, S.type, S.marks, pack, body, { strapless: isStrapless(o.name), sleeveless: (S.sleeves ?? sleevesFromName(S.type, o.name)) === false }); if (my !== ftoken) return;
             pg.clearRect(0, 0, prev.width, prev.height); pg.fillStyle = '#f6e9ee'; pg.fillRect(0, 0, prev.width, prev.height); pg.drawImage(baseImg, 0, 0, prev.width, prev.height);
             if (res) { pg.drawImage(res.canvas, 0, 0, prev.width, prev.height); msg.textContent = ''; } else msg.textContent = 'Some landmarks are missing, so it can’t be fitted yet.';
           } catch { msg.textContent = 'Couldn’t fit it with these landmarks.'; }

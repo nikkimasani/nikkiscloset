@@ -96,7 +96,7 @@ const dilate = (a, k) => a.map((_, i) => { let m = null; for (let j = Math.max(0
  * y >= hang.y the garment never gets narrower than the widest point above it, so a skirt falls straight down from the hip instead of following the legs.
  *   body: (y) => [[x0, x1], ...] body runs for that row.  Returns a new canvas.
  */
-export function widenRows(src, body, { y0, y1, ease = 0.05, hang = null, debug = null } = {}) {
+export function widenRows(src, body, { y0, y1, ease = 0.05, hang = null, debug = null, maxStretch = 1.45 } = {}) {
   const w = src.width, h = src.height, data = src.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h).data;
   const out = document.createElement('canvas'); out.width = w; out.height = h;
   const g = out.getContext('2d'); g.drawImage(src, 0, 0);
@@ -135,7 +135,7 @@ export function widenRows(src, body, { y0, y1, ease = 0.05, hang = null, debug =
     }
     // the garment's own edges are ragged, so the stretch is smoothed over rows: scale about the run's centre, plus a shift
     const wid = col.map((c) => (c ? c.g[1] - c.g[0] : 0)), med = (i) => { const a = []; for (let j = Math.max(0, i - 14); j < i; j++) if (wid[j]) a.push(wid[j]); a.sort((p, q) => p - q); return a.length ? a[a.length >> 1] : 0; };
-    const ok = col.map((c, i) => (c && tr[i] - tl[i] <= 1.45 * (c.g[1] - c.g[0]) && wid[i] >= 0.8 * (med(i) || wid[i]) ? 1 : 0));
+    const ok = col.map((c, i) => (c && tr[i] - tl[i] <= maxStretch * (c.g[1] - c.g[0]) && wid[i] >= 0.8 * (med(i) || wid[i]) ? 1 : 0));
     const ratio = boxBlur(col.map((c, i) => (ok[i] ? (tr[i] - tl[i]) / (c.g[1] - c.g[0]) : null)), R);
     const shift = boxBlur(col.map((c, i) => (ok[i] ? (tl[i] + tr[i]) / 2 - (c.g[0] + c.g[1]) / 2 : null)), R);
     const capL = boxBlur(dilate(col.map((c, i) => (c ? Math.max(0, c.g[0] - tl[i]) : null)), R), R), capR = boxBlur(dilate(col.map((c, i) => (c ? Math.max(0, tr[i] - c.g[1]) : null)), R), R);
