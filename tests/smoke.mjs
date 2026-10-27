@@ -12,7 +12,7 @@ const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-co
 const PORT = 5199, FAL = 5198;
 // Mock of fal's queue API so the whole AI try-on path runs offline (field names per fal's public docs).
 const { readFileSync } = await import('node:fs');
-const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], limitAt: Infinity, sent: {}, tries: {}, used: 0 };
+const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], looks: [], limitAt: Infinity, sent: {}, tries: {}, used: 0 };
 // The fake Cloudflare answers each piece with its own picture (one of seven real cutouts on white, by its place in the list), so the
 // review grid can be checked tile by tile. Two pieces come back bad at first: one passes on its 3rd try, one never does.
 const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/items.js');
@@ -52,6 +52,14 @@ const mock = createServer((req, res) => {
       const it = SITEMS.find((i) => sPrompt(i) === body.prompt), n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1);
       const pic = n <= (BAD[it.id] || 0) ? readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)) : WHITE[SITEMS.filter((i) => i.batch === it.batch).indexOf(it) % WHITE.length];
       cf.sent[it.id] = pic.length; send({ success: true, result: { image: pic.toString('base64') } });
+    });
+  }
+  else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/google/gemma-4-26b-a4b-it') { // the AI look
+    let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
+      const body = JSON.parse(b), parts = body.messages?.[0]?.content || [], img = parts.find((p) => p.type === 'image_url')?.image_url?.url, text = parts.find((p) => p.type === 'text')?.text || '';
+      const it = SITEMS.find((i) => text.includes(`"${i.name}"`)); cf.looks.push({ auth: req.headers.authorization, id: it?.id, img: /^data:image\/jpeg;base64,/.test(img || ''), thinking: body.chat_template_kwargs?.enable_thinking });
+      const form = it?.id === 'starter-ivory-satin-cami' && cf.looks.filter((l) => l.id === it.id).length === 1; // its first picture is on a white dress form
+      send({ success: true, result: { response: `{"form": ${form}, "person": false, "item": true, "note": "${form ? 'cami on a white dress form' : 'flat lay'}"}`, usage: { prompt_tokens: 1100, completion_tokens: 25 } } });
     });
   }
   else if (req.url === '/media/starter.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(WHITE[0]); }
@@ -826,26 +834,29 @@ try {
     ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
     await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
-    ok(cf.calls.length === 24 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && /plain pure white background, soft even lighting/.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures)`);
+    ok(cf.calls.length === 25 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && /plain pure white background, soft even lighting/.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures + 1 for the cami the AI saw on a dress form)`);
+    ok(cf.looks.length >= 20 && cf.looks.every((l) => l.auth === 'Bearer cf-token' && l.img && l.thinking === false && l.id), `every picture that passes the pixel checks gets an AI look (Gemma 4 on Cloudflare, a small JPEG; ${cf.looks.length} looks)`);
+    ok(cf.tries['starter-ivory-satin-cami'] === 2 && await pS.locator('.startertile.ready[data-id=starter-ivory-satin-cami]').count() === 1, 'a picture the AI sees on a dress form is remade automatically, and the remake is Ready');
     const tops = SITEMS.filter((i) => i.batch === 'tops');
     ok(cf.calls.every((c) => !('seed' in c) && Object.keys(c).sort().join() === 'auth,prompt,steps'), 'Cloudflare gets only a prompt and steps (its FLUX.1 schnell refuses a seed)');
     ok(cf.tries['starter-cream-crochet-cami'] === 3 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a picture that fails the check (not a white background) is remade automatically and passes on its 3rd try');
     ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes and an automatic clean-up a failing picture is shown as Needs review, with the reason');
     ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
-    ok(/Neurons used today: 1,382 of 10,000/.test(await pS.locator('.sheet').innerText()), 'neurons used today are tracked');
+    const spent = () => cf.calls.length * 57.6 + cf.looks.length * 10.7; // (a look here: 1100 tokens in, 25 out)
+    ok(new RegExp(`Neurons used today: ${Math.round(spent()).toLocaleString('en-US')} of 10,000`).test(await pS.locator('.sheet').innerText()), `neurons used today are tracked, pictures and AI looks (${Math.round(spent())})`);
     const srcs = await pS.locator('.startertile img').evaluateAll((im) => im.map((i) => i.src));
     ok(srcs.length === 20 && new Set(srcs).size === 20, 'twenty tiles, twenty different pictures');
     const nReady = await pS.locator('.startertile.ready').count();
     ok(nReady >= 15 && /\d+ ready/.test(await pS.locator('.sheet .muted').first().innerText()), `${nReady} of 20 pass the check and fit the mannequin`);
     await pS.click('.starterlog summary');
     const logText = await pS.locator('.starterlog').innerText();
-    ok((logText.match(/HTTP 200/g) || []).length === 24 && /saved as \/starter-draft\/starter-black-strapless-tube-top/.test(logText) && /Flat lay product photo/.test(logText) && /navy-halter-top try 3 · seed \d+ · cutout cleaned/.test(logText), 'the log lists every call (prompt, HTTP status, size, where it was saved) and the clean-up');
+    ok((logText.match(/HTTP 200/g) || []).length === 25 && /AI check: a mannequin or dress form in the picture \(cami on a white dress form\)/.test(logText) && /saved as \/starter-draft\/starter-black-strapless-tube-top/.test(logText) && /Flat lay product photo/.test(logText) && /navy-halter-top try 3 · seed \d+ · cutout cleaned/.test(logText), 'the log lists every call (prompt, HTTP status, size, where it was saved) and the clean-up');
     writeFileSync(join(out, '40-starter-log.txt'), logText);
     await pS.screenshot({ path: join(out, '40-starter-review.png') });
     await pS.click('.startertile >> nth=3'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20);
-    ok(cf.calls.length === 25, 'tapping a picture makes it again');
+    ok(cf.calls.length === 26, 'tapping a picture makes it again');
     await pS.click('#sbok'); await pS.waitForFunction((n) => window.__closet.items.length === n, nReady);
-    ok(cf.used === 1440, `the day's neurons are counted on the server (${cf.used})`);
+    ok(Math.abs(cf.used - spent()) < 0.5, `the day's neurons are counted on the server (${cf.used})`);
     const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => ({ s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready }))));
     ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id) && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions and source Starter');
     ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare sent for it (no mix-ups between pieces)');

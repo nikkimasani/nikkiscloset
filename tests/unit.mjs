@@ -526,3 +526,16 @@ test('the Cloudflare account ID is found even when a dashboard address or spaces
   const r = await handleStarter(new Request('http://x/api/starter', { method: 'POST', headers: { 'x-app-passcode': 'pw', 'content-type': 'application/json' }, body: JSON.stringify({ id: 'starter-black-fitted-tee' }) }), { CF_ACCOUNT_ID: 'home/ai', CF_API_TOKEN: 't', APP_PASSCODE: 'pw', USAGE_DISABLED: '1' });
   assert.equal(r.status, 503); assert.match((await r.json()).error, /32 letters and numbers/);
 });
+test('the AI look: the model’s answer is read, a failed look is skipped (never guessed), bad pictures are refused', async () => {
+  const { parseLook, lookPrompt, handleStarter } = await import('../lib/ai.js');
+  assert.deepEqual(parseLook('Sure: {"form": true, "person": false, "item": true, "note": "white dress form"}'), { form: true, person: false, item: true, note: 'white dress form' });
+  assert.deepEqual(parseLook('```json\n{"form":false,"person":false,"item":false,"note":"a dress"}\n```'), { form: false, person: false, item: false, note: 'a dress' });
+  assert.equal(parseLook('I cannot tell'), null); assert.equal(parseLook('{not json}'), null);
+  assert.match(lookPrompt({ name: 'Ivory satin cami', detail: 'thin straps' }), /"Ivory satin cami" \(thin straps\).*dress form/s);
+  const env = { CF_ACCOUNT_ID: '0123456789abcdef0123456789abcdef', CF_API_TOKEN: 't', APP_PASSCODE: 'pw', USAGE_DISABLED: '1', CF_API_BASE: 'http://127.0.0.1:9' }; // (nothing listens there)
+  const call = (body, e = env) => handleStarter(new Request('http://x/api/starter', { method: 'POST', headers: { 'x-app-passcode': 'pw', 'content-type': 'application/json' }, body: JSON.stringify(body) }), e);
+  const img = 'data:image/jpeg;base64,' + 'A'.repeat(100);
+  let r = await call({ id: 'starter-ivory-satin-cami', look: true, image: img }); assert.equal(r.status, 200); assert.ok((await r.json()).skipped, 'Cloudflare unreachable: skipped');
+  r = await call({ id: 'starter-ivory-satin-cami', look: true, image: 'https://example.com/x.jpg' }); assert.equal(r.status, 400);
+  r = await call({ id: 'starter-ivory-satin-cami', look: true, image: img }, { APP_PASSCODE: 'pw', USAGE_DISABLED: '1' }); assert.ok((await r.json()).skipped, 'not set up: skipped');
+});
