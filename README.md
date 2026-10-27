@@ -119,7 +119,7 @@ Backup/restore, accounts + sync, a serverless generative virtual-try-on endpoint
 ## Starter closet
 
 A set of 140 generated product photos (7 categories × 20) so the app is useful before your own clothes are in. The list, tags and the
-shared prompt (fixed style suffix, a stable seed per category) are in `public/starter/items.js`; add a row there to add a piece.
+shared prompt (fixed style suffix; a stable seed per category, used by fal; Cloudflare's FLUX.1 schnell takes no seed) are in `public/starter/items.js`; add a row there to add a piece.
 
 - **Engine:** Cloudflare Workers AI, `@cf/black-forest-labs/flux-1-schnell` at 4 steps, through `/api/starter`. Set `CF_ACCOUNT_ID`
   and `CF_API_TOKEN` (a token with Workers AI permission) in Vercel. fal (`FAL_KEY`) is only an optional fallback.
