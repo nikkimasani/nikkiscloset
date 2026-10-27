@@ -49,6 +49,27 @@ export async function generate(it, pass, { attempt = 0, engine } = {}) {
   return { blob, info: { attempt, seed, status: r.status, engine: j.engine, bytes: blob.size, key: key(it.id), ms: Date.now() - t0, prompt: j.prompt || '' } };
 }
 
+/** The AI look (a Cloudflare vision model, about 12 neurons): { form, person, item, note } or null when it was skipped or couldn't run.
+    It catches what the pixel checks can't tell apart, such as a white piece on a white dress form. */
+export async function look(src, it, pass) {
+  try {
+    let c = src; if (!(src instanceof HTMLCanvasElement)) { const { img, url } = await loadImage(src); URL.revokeObjectURL(url); c = toCanvas(img, 512); }
+    const k = Math.min(1, 512 / Math.max(c.width, c.height));
+    const sm = document.createElement('canvas'); sm.width = Math.round(c.width * k); sm.height = Math.round(c.height * k);
+    const g = sm.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, sm.width, sm.height); g.drawImage(c, 0, 0, sm.width, sm.height); // (a cutout goes on white, like the photo)
+    const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ id: it.id, look: true, image: sm.toDataURL('image/jpeg', 0.85) }) });
+    const j = await r.json().catch(() => ({}));
+    if (Number.isFinite(j.used)) setUsed(j.used); else if (j.neurons) addUsed(j.neurons);
+    return r.ok && j.look ? j.look : null;
+  } catch { return null; }
+}
+/** What the AI look found wrong, as check reasons. */
+export const lookReasons = (l) => (!l ? [] : [
+  ...(l.form ? [`AI check: a mannequin or dress form in the picture${l.note ? ` (${l.note})` : ''}`] : []),
+  ...(l.person ? [`AI check: a person in the picture${l.note ? ` (${l.note})` : ''}`] : []),
+  ...(!l.item ? [`AI check: doesn’t look like this piece${l.note ? ` (${l.note})` : ''}`] : []),
+]);
+
 /* ── the automatic check: plain white background, the whole item in frame, nothing else in the picture ── */
 const WARM = /nude|beige|camel|tan|brown|cognac|oatmeal|taupe|champagne|gold|butter|cream|ivory|chocolate|straw|tortoise/;
 const LIGHT = /white|cream|ivory|oatmeal|beige|champagne|grey|clear|nude|butter|taupe/;
