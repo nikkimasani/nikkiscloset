@@ -20,13 +20,14 @@ export const cutoutCanvas = async (blob) => {
 };
 
 /** What decides whether a worn picture is still current. */
-export const fitSignature = (item, pack) => JSON.stringify([item.type, item.marks || null, item.sleeves ?? null, pack.id, item.cutout?.size]);
+export const fitSignature = (item, pack) => JSON.stringify([item.type, item.marks || null, item.sleeves ?? null, pack.id, item.cutout?.size, item.worn?.size || 0]);
 
 /**
  * The item fitted to the body. Resolves to { url, marks } (marks are suggested the first time and should be saved on the item),
  * or null for pieces that aren't warped (shoes, bags, accessories) or have no usable landmarks.
  */
 export async function fitItem(item, pack) {
+  if (item.worn?.size) return { url: URL.createObjectURL(item.worn), blob: item.worn, marks: null }; // made on the model: it already lines up with her
   if (!groupOf(item.type) || !item.cutout) return null;
   const [body, cut] = await Promise.all([bodyOf(pack), cutoutCanvas(item.cutout)]);
   const marks = item.marks || suggestFor(item.type, cut, { sleeves: item.sleeves ?? sleevesFromName(item.type, item.name) });

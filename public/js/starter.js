@@ -6,12 +6,15 @@ import { ITEMS, seedFor, onGrey } from '../starter/items.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName, hexDist } from './color.js';
 import { uid } from './db.js';
+import { isWornType } from './wear.js';
 
 /** Cloudflare Workers AI, FLUX.1 schnell at 4 steps: 4 tiles x 4.8 + 4 steps x 9.6 neurons a picture; 10,000 free a day (resets 00:00 UTC). */
 export const NEURONS_EACH = 57.6, DAILY_FREE = 10000, BUDGET = 9800; // (stops a little under the limit)
 export const isStarter = (i) => i?.source === 'starter';
 /** Pieces of a batch not yet in your closet (approved ones are skipped, so a batch can be topped up later). */
-export const missingIn = (batch, items) => { const have = new Set(items.map((i) => i.starterId).filter(Boolean)); return ITEMS.filter((i) => i.batch === batch && !have.has(i.id)); };
+/** The pieces of a batch not in the closet yet. A flat-lay piece made before pieces were drawn on the model counts as missing, so it's
+ *  made again on her (approving the new one replaces it). */
+export const missingIn = (batch, items) => { const have = new Set(items.filter((i) => i.worn || !isWornType(i.type)).map((i) => i.starterId).filter(Boolean)); return ITEMS.filter((i) => i.batch === batch && !have.has(i.id)); };
 
 const today = () => new Date().toISOString().slice(0, 10); // (a UTC day, like Cloudflare's allowance)
 export const nextReset = (now = Date.now()) => { const d = new Date(now); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
@@ -264,6 +267,6 @@ export const CHECK_VERSION = 5;
 export const toItem = (it, done, original) => ({
   checkVersion: CHECK_VERSION, ...(sleevesOf(it) !== undefined && ['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses'].includes(it.type) && { sleeves: sleevesOf(it) }),
   id: uid(), starterId: it.id, source: 'starter', ready: !!done.ready, review: done.ready ? undefined : done.why, ...(it.acc && { acc: it.acc }), name: it.name, type: it.type, occasions: [...it.occasions], season: it.season, brand: '',
-  color: done.color, colors: done.colors, tags: { colors: it.colors }, cutout: done.cutout, original, adj: { scale: 1, dx: 0, dy: 0 },
+  color: done.color, colors: done.colors, tags: { colors: it.colors }, cutout: done.cutout, ...(done.worn && { worn: done.worn, made: 'model' }), original, adj: { scale: 1, dx: 0, dy: 0 },
   createdAt: Date.now(), updatedAt: Date.now(),
 });

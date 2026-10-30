@@ -15,6 +15,7 @@ import { fitItem, fitSignature, baseUnder } from './fitting.js';
 import { openCutEditor, MODES } from './editor.js';
 import { groupOf } from './landmarks.js';
 import * as starter from './starter.js';
+import * as wearAI from './wear.js';
 import { BATCHES as STARTER_BATCHES, ITEMS as STARTER_ITEMS, seedFor } from '../starter/items.js';
 import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
@@ -158,7 +159,7 @@ async function maskFromBlob(blob) {
 
 /** Fit a worn piece to the body in the background (landmarks are suggested the first time and kept on the piece); the figure redraws when it's ready. */
 function queueFit(item) {
-  if (!dollPack || !groupOf(item.type) || !item.cutout) return;
+  if (!dollPack || !(groupOf(item.type) || item.worn) || !item.cutout) return;
   const sig = fitSignature(item, dollPack), key = item.id + sig;
   if (S.fitSig.get(item.id) === sig || S.fitPending.has(key)) return;
   S.fitPending.add(key);
@@ -167,7 +168,7 @@ function queueFit(item) {
     if (!r) return;
     const old = S.fits.get(item.id); if (old) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one)
     const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
-    if (!item.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
+    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
     clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
   }).catch(() => S.fitPending.delete(key));
 }
@@ -382,9 +383,10 @@ function openItemModal(existing, preset = {}) {
     if (!pass) { d.linkOpen = true; d.link = link; paint(); say('Enter your passcode to fetch links.'); $('#lpass')?.focus(); return; }
     store.set('aipass', pass); d.link = link; say('Opening the page…'); const seq = modalSeq;
     try {
-      if (/(^|\.)pinterest\.[a-z.]+$|^pin\.it$/i.test(new URL(link).hostname)) { // a pin: the server fetches the pin's picture
+      if (/(^|\.)pinterest\.[a-z.]+$|^pin\.it$/i.test(new URL(link).hostname)) { // a pin is inspiration, not a piece: it opens in Inspo, where its pieces can be made for the model
         const image = await pinAI(link, pass); if (seq !== modalSeq) return;
-        d.linkOpen = false; return fromData(image, {});
+        const blob = await (await fetch(image)).blob(); closeModal(); go('inspo');
+        toast('Pins are inspiration: make pieces like these for your model here'); return setInspoFile(new File([blob], 'pin.jpg', { type: blob.type }), { link });
       }
       const r = await productAI(link, pass);
       if (seq !== modalSeq) return;
@@ -529,7 +531,7 @@ function starterPanel() {
   const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
   return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
-    <p class="muted">Product photos made from your style profile (chic neutral casual + polished workwear), so outfits work before your own clothes are in. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it. Style me prefers your own pieces when they fit.</p>
+    <p class="muted">A wardrobe made for your model from your style profile (chic neutral casual + polished workwear). Clothes and shoes are drawn on her, wearing them, so they fit her exactly and swap in and out in Dress Up; bags and accessories are product photos. Pieces made earlier as flat photos are remade on her when you open their category. For more ideas, open a pin in <b>Inspo</b> and make the pieces in it. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it.</p>
     <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
     <div class="starterbatches">${STARTER_BATCHES.map(([k, l, e]) => { const left = starter.missingIn(k, S.items).length, n = STARTER_ITEMS.filter((i) => i.batch === k).length;
       return `<button class="ghost" data-act="starterbatch" data-v="${k}" ${left && !hidden ? '' : 'disabled'}><span aria-hidden="true">${e}</span> ${l} <small>${left ? `${left} to make · ~${fmt(left * each)} neurons` : `all ${n} in`}</small></button>`; }).join('')}</div>
@@ -539,6 +541,7 @@ function starterPanel() {
 
 /** Does a starter piece go on the mannequin? Clothing must warp onto the body; shoes need the feet box, bags and accessories a body point. */
 async function starterFits(it, done) {
+  if (done.worn) return { ok: true }; // made on the model
   const pack = dollPack || await loadPack(); if (!pack) return { ok: false };
   if (groupOf(it.type)) { const r = await fitItem({ id: it.id, type: it.type, name: it.name, cutout: done.cutout }, pack).catch(() => null); if (r) URL.revokeObjectURL(r.url); return { ok: !!r, marks: r?.marks }; }
   return { ok: it.type === 'shoes' ? !!pack.anchors?.shoes : !!(it.acc && pack.accRules?.[it.acc]) };
@@ -566,21 +569,43 @@ async function openStarterBatch(batch) {
     if (closed()) return clearTimeout(timer);
     const T = [...tiles.values()], made = T.filter((t) => t.state === 'ok'), ready = made.filter((t) => t.done.ready).length, busy = T.some((t) => t.state === 'run' || (t.state === 'wait' && !resetAt));
     const status = resetAt ? `<p class="limitnote" role="status">⏸ Today’s free Cloudflare allowance is used up. ${made.length} of ${tiles.size} made and saved; the rest carry on after 00:00 UTC (in ${left(resetAt - Date.now())}). You can approve these now or leave this open.</p>` : '';
-    paintSheet(`${status}<p class="muted">${busy ? `Making ${label.toLowerCase()}… ` : ''}<b>${ready} ready</b>, ${made.length - ready} need review, ${T.length - made.length} to go. Each is checked (white background, whole item in frame, nothing else in the picture, plus an AI look for mannequins and dress forms) and tried on the mannequin. Tap a picture to make it again. Only <b>ready</b> pieces are added when you approve; the rest stay here to remake. <span class="nowrap">Neurons used today: ${Math.round(starter.usedToday()).toLocaleString('en-US')} of ${starter.DAILY_FREE.toLocaleString('en-US')}.</span></p>
+    paintSheet(`${status}<p class="muted">${busy ? `Making ${label.toLowerCase()}… ` : ''}<b>${ready} ready</b>, ${made.length - ready} need review, ${T.length - made.length} to go. Clothes and shoes are drawn on your model, wearing them, and only the piece is kept, so it fits her exactly; bags and accessories are product photos (checked for a plain background and an AI look for mannequins). Tap a picture to make it again. Only <b>ready</b> pieces are added when you approve; the rest stay here to remake. <span class="nowrap">Neurons used today: ${Math.round(starter.usedToday()).toLocaleString('en-US')} of ${starter.DAILY_FREE.toLocaleString('en-US')}.</span></p>
       <div class="startergrid">${T.map(tile).join('')}</div>
       <details class="starterlog"><summary>Log (${log.length})</summary><ol>${log.map((l) => `<li><code>${esc(l.piece)}</code> try ${l.attempt + 1} · seed ${l.seed} · ${l.from === 'saved' ? 'saved picture reused' : l.from === 'cleaned' ? 'cutout cleaned (skin, form and stray parts removed)' : `HTTP ${l.status}${l.bytes ? ` · ${Math.round(l.bytes / 1024)} KB` : ''}${l.ms ? ` · ${(l.ms / 1000).toFixed(1)}s` : ''}`}${l.key ? ` · saved as <code>${esc(l.key)}</code>` : ''} · ${l.error ? `error: ${esc(l.error)}` : l.check ? (l.check.ok ? 'check passed' : 'check failed: ' + esc(l.check.reasons.join('; '))) : ''}${l.fits === undefined ? '' : l.fits ? ' · fits' : ' · does not fit'}${l.prompt ? `<br><small>${esc(l.prompt)}</small>` : ''}</li>`).join('')}</ol></details>
       <div class="row" style="margin-top:14px;justify-content:flex-end"><button class="ghost" id="sbcancel">${made.length ? 'Later' : 'Cancel'}</button><button class="primary" id="sbok" ${ready && !T.some((t) => t.state === 'run') ? '' : 'disabled'}>Approve · add ${ready} ready</button></div>`, `Starter ${label.toLowerCase()}`);
     $('#sbcancel').onclick = () => closeModal();
     $('#sbok').onclick = async () => {
       const add = [...tiles.values()].filter((t) => t.state === 'ok' && t.done.ready); closeModal(); clearTimeout(timer); // pieces that need review stay out (their pictures are kept: open the batch again to remake them)
-      for (const t of add) { const item = { ...starter.toItem(t.it, t.done, t.original), ...(t.done.marks && { marks: t.done.marks }), placedFromAnchors: 1 }; await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); starter.dropDraft(t.it.id); }
+      for (const t of add) { const item = { ...starter.toItem(t.it, t.done, t.original), ...(t.done.marks && { marks: t.done.marks }), placedFromAnchors: 1 }; await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); starter.dropDraft(t.it.id); starter.dropDraft('wear:' + t.it.id); }
+      const older = S.items.filter((i) => starter.isStarter(i) && !i.worn && add.some((t) => t.done.worn && t.it.id === i.starterId)); // flat-lay versions made before pieces were drawn on the model
+      for (const o of older) { await del('items', o.id); S.items = S.items.filter((x) => x.id !== o.id); for (const k of Object.keys(S.outfit)) if (S.outfit[k] === o.id) delete S.outfit[k]; }
       const replaced = (S.starterReview || []).filter((r) => add.some((t) => t.it.id === r.starterId)); // the earlier versions that needed review
       for (const r of replaced) await del('items', r.id); S.starterReview = (S.starterReview || []).filter((r) => !replaced.includes(r));
       S.filter.src = 'starter'; render(); toast(`Added ${add.length} starter ${label.toLowerCase()} ✓`);
     };
     $('#modal').querySelectorAll('.startertile').forEach((b) => (b.onclick = () => { const t = tiles.get(b.dataset.id); if (t.state === 'wait' || t.state === 'run') return; if (t.state === 'ok') t.attempt++; t.state = 'wait'; t.fresh = true; queue.push(t); pump(); paint(); }));
   };
+  const makeWorn = async (t) => { // clothing and shoes: drawn on the model, the piece kept, remade at most twice automatically
+    const pack = dollPack || await loadPack(); if (!pack) throw new Error('The model picture didn’t load. Try again.');
+    for (let auto = 0; ; auto++) {
+      let blob = !t.fresh && await starter.draftOf('wear:' + t.it.id), info;
+      if (blob) info = { attempt: t.attempt, seed: 0, from: 'saved', key: `/starter-draft/wear:${t.it.id}` };
+      else {
+        if (!starter.canGenerate()) throw new starter.DailyLimit(starter.nextReset());
+        ({ blob, info } = await wearAI.drawWorn(t.it, pass, pack).catch((e) => { if (e.limit) { starter.setUsed(e.used ?? starter.DAILY_FREE); throw new starter.DailyLimit(e.resetAt || starter.nextReset()); } note(t, { attempt: t.attempt, seed: 0, ...(e.info || {}), error: e.message }); throw e; }));
+        info = { ...info, attempt: t.attempt, seed: 0, key: `/starter-draft/wear:${t.it.id}` }; if (Number.isFinite(info.used)) starter.setUsed(info.used);
+        await starter.saveDraft('wear:' + t.it.id, blob);
+      }
+      const done = await wearAI.extractWorn(blob, t.it, pack);
+      if (!done.check.ok && auto < 2) { note(t, { ...info, check: done.check }); t.attempt++; t.fresh = true; paint(); continue; }
+      done.ready = done.check.ok && !!done.worn; done.why = done.check.reasons;
+      if (!done.worn) throw new Error(done.check.reasons.join('; ') || 'The piece couldn’t be found in the picture. Tap to try again.');
+      note(t, { ...info, check: done.check });
+      return { blob, done };
+    }
+  };
   const make = async (t) => { // one piece: its own picture, checked, remade at most twice automatically, then tried on the mannequin
+    if (wearAI.isWornType(t.it.type)) return makeWorn(t);
     for (let auto = 0; ; auto++) {
       let blob = !t.fresh && await starter.draftOf(t.it.id), info;
       if (blob) info = { attempt: t.attempt, seed: seedFor(t.it, t.attempt), from: 'saved', key: `/starter-draft/${t.it.id}` };
@@ -1416,6 +1441,32 @@ function renderInspo() {
   if (d) showMatch();
 }
 
+/** Inspo: the pieces an AI sees in the picture, each with a button that draws it on the model and adds it to the closet. */
+function ideasHTML(d) {
+  if (!d.ideas) return `<p class="muted">An AI lists the pieces in this picture; tap one to have it made for your model (about ${Math.round(wearAI.WEAR_NEURONS + 12)} neurons each, free tier). The pin’s own picture is never put on her.</p><button class="ghost" data-act="inspoideas">✨ What’s in this look?</button>`;
+  if (d.ideas.busy) return '<p class="muted" role="status">Looking at the picture…</p>';
+  if (d.ideas.error) return `<p class="muted" role="alert">${esc(d.ideas.error)}</p><button class="ghost" data-act="inspoideas">Try again</button>`;
+  if (!d.ideas.length) return '<p class="muted">No pieces found in this picture.</p>';
+  return `<div class="ideas">${d.ideas.map((p, k) => `<div class="idea"><div><b>${esc(p.name)}</b><div class="muted">${esc(SLOT_LABEL[slotOf(p.type)] || p.type)} · ${esc(p.detail)}</div>${p.error ? `<div class="muted" role="alert">${esc(p.error)}</div>` : ''}</div>
+    ${p.made ? '<b class="ok">✓ In your closet</b>' : `<button class="ghost" data-act="makeidea" data-v="${k}" ${p.busy ? 'disabled' : ''}>${p.busy ? 'Making…' : 'Make it for the model'}</button>`}</div>`).join('')}</div>`;
+}
+const paintIdeas = () => { const el = $('#ideas'); if (el && S.inspo) el.innerHTML = ideasHTML(S.inspo); };
+/** One piece drawn on the model and added to the closet (remade up to twice if the piece can't be found in the picture). */
+async function makePieceForModel(piece, pass, { occasion = '' } = {}) {
+  const pack = dollPack || await loadPack(); if (!pack) throw new Error('The model picture didn’t load. Try again.');
+  let last;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { blob, info } = await wearAI.drawWorn(piece, pass, pack); if (Number.isFinite(info.used)) starter.setUsed(info.used);
+    const done = await wearAI.extractWorn(blob, piece, pack); last = done;
+    if (!done.check.ok || !done.worn) continue;
+    const item = { id: uid(), source: 'starter', starterId: `inspo-${uid()}`, made: 'model', ready: true, name: piece.name, type: piece.type, occasions: occasion ? [occasion] : [], season: 'all', brand: '',
+      color: done.color, colors: done.colors, tags: { colors: piece.colors }, cutout: done.cutout, worn: done.worn, original: blob, adj: { scale: 1, dx: 0, dy: 0 }, checkVersion: starter.CHECK_VERSION, createdAt: Date.now(), updatedAt: Date.now() };
+    await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item);
+    return item;
+  }
+  throw new Error(`It didn’t come out right (${(last?.check.reasons || []).join('; ')}). Try again.`);
+}
+
 async function setInspoFile(file, extra = {}) {
   try {
     const { img, url: u } = await loadImage(file);
@@ -1437,6 +1488,8 @@ function showMatch() {
     <div class="grow" style="min-width:240px"><h3>Inspo palette</h3>
       <div class="pal">${d.palette.map((p) => `<span style="background:${p.hex};flex:${Math.max(p.share, .08)}">${colorName(p.hex)}</span>`).join('')}</div>
       <h3>Your closest look</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
+      <h3>Make pieces like these</h3>
+      <div id="ideas">${ideasHTML(d)}</div>
       ${gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>. <button class="chip" data-act="wishgap" data-slot="${g.slot}" data-hex="${g.hex}">+ Wishlist</button></div>`).join('')}
       <div class="row" style="margin-top:12px"><button class="primary" data-act="tryinspo" ${rows ? '' : 'disabled'}>Try this on</button></div>
     </div></div>`;
@@ -1541,6 +1594,27 @@ document.addEventListener('click', async (e) => {
     case 'pickday': S.date = v; return renderPlanner();
     case 'logday': await logWear(S.date, $('#wocc').value, $('#wnote').value.trim()); return renderPlanner();
     case 'delwear': await del('wears', id); S.wears = S.wears.filter((w) => w.id !== id); return renderPlanner();
+    case 'inspoideas': {
+      const d = S.inspo; if (!d) return;
+      const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim(); if (!pass) return; store.set('aipass', pass);
+      d.ideas = { busy: true }; paintIdeas();
+      try {
+        const c = toCanvas((await loadImage(d.blob)).img, 512), img = c.toDataURL('image/jpeg', 0.85);
+        const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ describe: true, image: img }) });
+        const j = await r.json().catch(() => ({})); if (Number.isFinite(j.used)) starter.setUsed(j.used);
+        if (!r.ok) throw new Error(j.error || `Failed (${r.status})`);
+        d.ideas = j.pieces || [];
+      } catch (e) { d.ideas = { error: e.message }; if (/passcode/i.test(e.message)) store.set('aipass', ''); }
+      return paintIdeas();
+    }
+    case 'makeidea': {
+      const d = S.inspo, p = d?.ideas?.[+v]; if (!p || p.busy) return;
+      const pass = store.get('aipass', ''); if (!pass) return;
+      p.busy = true; p.error = ''; paintIdeas();
+      try { await makePieceForModel(p, pass, { occasion: d.occasion }); p.made = true; toast(`${p.name} added to your closet ✓`); }
+      catch (e) { p.error = e.message; }
+      p.busy = false; return paintIdeas();
+    }
     case 'saveinspo': {
       const d = S.inspo; if (!d) return;
       const link = /^https?:\/\//i.test(d.link) ? d.link : '';

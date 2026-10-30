@@ -12,7 +12,7 @@ const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-co
 const PORT = 5199, FAL = 5198;
 // Mock of fal's queue API so the whole AI try-on path runs offline (field names per fal's public docs).
 const { readFileSync } = await import('node:fs');
-const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], looks: [], limitAt: Infinity, sent: {}, tries: {}, used: 0 };
+const falCalls = [], aiCalls = [], starterCalls = [], cf = { calls: [], looks: [], wears: [], limitAt: Infinity, wearLimitAt: Infinity, sent: {}, tries: {}, used: 0 };
 // The fake Cloudflare answers each piece with its own picture (one of seven real cutouts on white, by its place in the list), so the
 // review grid can be checked tile by tile. Two pieces come back bad at first: one passes on its 3rd try, one never does.
 const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/items.js');
@@ -20,7 +20,11 @@ const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/it
 // (no stripes: white stripes reaching the edge read like a form's scraps)
 const WHITE = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
 const GREY = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/grey/${n}.png`, import.meta.url))); // (light pieces are made on grey)
-const BAD = { 'starter-cream-crochet-cami': 2, 'starter-navy-halter-top': 99 };
+const BAD = { 'starter-white-shoulder-bag': 2, 'starter-black-clutch': 99 }; // flat-lay pictures that fail their check (bags are still product photos)
+const BAD_WORN = { 'starter-cream-crochet-cami': 1, 'starter-navy-halter-top': 99 }; // drawings where she isn't wearing the piece
+const WORN_FX = Object.fromEntries(['none', 'top', 'bottom', 'skirt', 'dress', 'outer', 'shoes'].flatMap((n) => ['green', 'magenta'].map((k) => [`${n}-${k}`, readFileSync(new URL(`./fixtures/worn/${n}-${k}.png`, import.meta.url))])));
+const wornGroup = (t) => ({ tops: 'top', tanks: 'top', bodysuits: 'top', bottoms: 'bottom', skirts: 'skirt', dresses: 'dress', outerwear: 'outer', shoes: 'shoes' }[t]);
+const { wearPrompt } = await import('../lib/ai.js');
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
 const polls = {};
@@ -58,9 +62,21 @@ const mock = createServer((req, res) => {
   else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/google/gemma-4-26b-a4b-it') { // the AI look
     let b = ''; req.on('data', (d) => (b += d)).on('end', () => {
       const body = JSON.parse(b), parts = body.messages?.[0]?.content || [], img = parts.find((p) => p.type === 'image_url')?.image_url?.url, text = parts.find((p) => p.type === 'text')?.text || '';
+      if (/List the clothing pieces/.test(text)) { cf.describes = (cf.describes || 0) + 1; return send({ success: true, result: { response: '{"pieces": [{"name": "Camel wrap coat", "type": "outerwear", "colors": ["camel"], "detail": "belted wool wrap coat, knee length"}, {"name": "Black wide-leg trousers", "type": "bottoms", "colors": ["black"], "detail": "high-waisted wide-leg trousers"}, {"name": "Gold hoops", "type": "jewelry", "colors": ["gold"]}]}', usage: { prompt_tokens: 1200, completion_tokens: 80 } } }); } // (an inspo picture's pieces; the hoops aren't a kind it can make, so they're dropped)
       const it = SITEMS.find((i) => text.includes(`"${i.name}"`)); cf.looks.push({ auth: req.headers.authorization, id: it?.id, img: /^data:image\/jpeg;base64,/.test(img || ''), thinking: body.chat_template_kwargs?.enable_thinking });
-      const form = it?.id === 'starter-ivory-satin-cami' && cf.looks.filter((l) => l.id === it.id).length === 1; // its first picture is on a white dress form
-      send({ success: true, result: { response: `{"form": ${form}, "person": false, "item": true, "note": "${form ? 'cami on a white dress form' : 'flat lay'}"}`, usage: { prompt_tokens: 1100, completion_tokens: 25 } } });
+      const form = it?.id === 'starter-cream-baguette-bag' && cf.looks.filter((l) => l.id === it.id).length === 1; // its first picture is on a white dress form
+      send({ success: true, result: { response: `{"form": ${form}, "person": false, "item": true, "note": "${form ? 'bag on a white display form' : 'flat lay'}"}`, usage: { prompt_tokens: 1100, completion_tokens: 25 } } });
+    });
+  }
+  else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/black-forest-labs/flux-2-klein-4b') { // the model wearing a piece
+    const parts = []; req.on('data', (d) => parts.push(d)).on('end', async () => {
+      const fd = await new Request('http://x/', { method: 'POST', headers: { 'content-type': req.headers['content-type'] }, body: Buffer.concat(parts) }).formData();
+      const prompt = fd.get('prompt'), img = Buffer.from(await fd.get('input_image_0').arrayBuffer()), key = /painted flat magenta/.test(prompt) ? 'magenta' : 'green';
+      const it = SITEMS.find((i) => wearPrompt(i, key) === prompt) || { id: 'inspo:' + (prompt.match(/Dress her in (?:a |an )?([^;.]+)/)?.[1] || ''), type: /coat/.test(prompt) ? 'outerwear' : 'bottoms' };
+      cf.wears.push({ auth: req.headers.authorization, prompt, png: img.slice(1, 4).toString() === 'PNG', size: [fd.get('width'), fd.get('height')], fields: [...fd.keys()].sort().join(), id: it?.id, key });
+      if (cf.wears.length > cf.wearLimitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
+      const n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1), pic = WORN_FX[`${n <= (BAD_WORN[it.id] || 0) ? 'none' : wornGroup(it.type)}-${key}`];
+      cf.sent[it.id] = pic.length; send({ success: true, result: { image: pic.toString('base64') } });
     });
   }
   else if (req.url === '/media/starter.png') { res.writeHead(200, { 'content-type': 'image/png' }); res.end(WHITE[0]); }
@@ -828,56 +844,70 @@ try {
     await cE.close();
   }
 
-  // the starter closet: a batch is generated (mock Cloudflare), reviewed, approved, then marked, filtered, owned and hidden
+  // the starter closet: clothes are drawn on the model (mock Cloudflare FLUX.2 klein) and only the piece is kept; bags are product photos
   {
     const pS = await mk(); await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
     ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
     await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
-    ok(cf.calls.length === 25 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && (/medium grey background/.test(c.prompt) ? /white|cream|ivory|oatmeal|beige|champagne|butter/.test(c.prompt) : /plain pure white background, soft even lighting/.test(c.prompt)) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures + 1 for the cami the AI saw on a dress form)`);
-    ok(cf.looks.length >= 20 && cf.looks.every((l) => l.auth === 'Bearer cf-token' && l.img && l.thinking === false && l.id), `every picture that passes the pixel checks gets an AI look (Gemma 4 on Cloudflare, a small JPEG; ${cf.looks.length} looks)`);
-    ok(cf.tries['starter-ivory-satin-cami'] === 2 && await pS.locator('.startertile.ready[data-id=starter-ivory-satin-cami]').count() === 1, 'a picture the AI sees on a dress form is remade automatically, and the remake is Ready');
-    const tops = SITEMS.filter((i) => i.batch === 'tops');
-    ok(cf.calls.every((c) => !('seed' in c) && Object.keys(c).sort().join() === 'auth,prompt,steps'), 'Cloudflare gets only a prompt and steps (its FLUX.1 schnell refuses a seed)');
-    ok(cf.tries['starter-cream-crochet-cami'] === 3 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a picture that fails the check (not a white background) is remade automatically and passes on its 3rd try');
-    ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes and an automatic clean-up a failing picture is shown as Needs review, with the reason');
+    ok(cf.wears.length === 23 && !cf.calls.length && !starterCalls.length && cf.wears.every((c) => c.auth === 'Bearer cf-token' && c.png && c.size.join() === '512,1008' && c.fields === 'height,input_image_0,prompt,width' && c.id && /^This is a fashion figure whose body is painted flat (green|magenta) from the neck down/.test(c.prompt) && !/mannequin|dress form/i.test(c.prompt)),
+      `tops are drawn on the model by FLUX.2 klein (her picture plus a prompt, 512 x 1008), not made as flat lays (${cf.wears.length} calls: 20 + 1 remake + 2 for the one that keeps failing)`);
+    ok(cf.wears.find((c) => c.id === 'starter-olive-scoop-tank')?.key === 'magenta' && cf.wears.find((c) => c.id === 'starter-black-fitted-tee')?.key === 'green', 'a green piece is drawn on a magenta body, everything else on green (so the piece never matches the key)');
+    ok(cf.tries['starter-cream-crochet-cami'] === 2 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a drawing where she isn’t wearing the piece is remade automatically, and the remake is Ready');
+    ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes a piece that still can’t be found is shown as Needs review, with the reason');
     ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
-    const spent = () => cf.calls.length * 57.6 + cf.looks.length * 10.7; // (a look here: 1100 tokens in, 25 out)
-    ok(new RegExp(`Neurons used today: ${Math.round(spent()).toLocaleString('en-US')} of 10,000`).test(await pS.locator('.sheet').innerText()), `neurons used today are tracked, pictures and AI looks (${Math.round(spent())})`);
+    const spent = () => cf.wears.length * 57.5 + cf.calls.length * 57.6 + cf.looks.length * 10.7;
+    ok(new RegExp(`Neurons used today: ${Math.round(spent()).toLocaleString('en-US')} of 10,000`).test(await pS.locator('.sheet').innerText()), `neurons used today are tracked (${Math.round(spent())})`);
     const srcs = await pS.locator('.startertile img').evaluateAll((im) => im.map((i) => i.src));
     ok(srcs.length === 20 && new Set(srcs).size === 20, 'twenty tiles, twenty different pictures');
     const nReady = await pS.locator('.startertile.ready').count();
-    ok(nReady >= 15 && /\d+ ready/.test(await pS.locator('.sheet .muted').first().innerText()), `${nReady} of 20 pass the check and fit the mannequin`);
+    ok(nReady === 19, `${nReady} of 20 are Ready`);
     await pS.click('.starterlog summary');
     const logText = await pS.locator('.starterlog').innerText();
-    ok((logText.match(/HTTP 200/g) || []).length === 25 && /AI check: a mannequin or dress form in the picture \(cami on a white dress form\)/.test(logText) && /saved as \/starter-draft\/starter-black-strapless-tube-top/.test(logText) && /Flat lay product photo/.test(logText) && /navy-halter-top try 3 · seed \d+ · cutout cleaned/.test(logText), 'the log lists every call (prompt, HTTP status, size, where it was saved) and the clean-up');
+    ok((logText.match(/HTTP 200/g) || []).length === 23 && /the piece barely shows/.test(logText) && /saved as \/starter-draft\/wear:starter-black-strapless-tube-top/.test(logText) && /painted flat green/.test(logText), 'the log lists every call (prompt, HTTP status, size, where it was saved) and why a drawing was remade');
     writeFileSync(join(out, '40-starter-log.txt'), logText);
     await pS.screenshot({ path: join(out, '40-starter-review.png') });
     await pS.click('.startertile >> nth=3'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20);
-    ok(cf.calls.length === 26, 'tapping a picture makes it again');
+    ok(cf.wears.length === 24, 'tapping a picture makes it again');
     await pS.click('#sbok'); await pS.waitForFunction((n) => window.__closet.items.length === n, nReady);
     ok(Math.abs(cf.used - spent()) < 0.5, `the day's neurons are counted on the server (${cf.used})`);
-    const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => ({ s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready }))));
-    ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id) && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions and source Starter');
-    ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare sent for it (no mix-ups between pieces)');
+    const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => { const b = i.worn && await createImageBitmap(i.worn); return { s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready, made: i.made, worn: b ? [b.width, b.height] : null }; })));
+    ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id && i.made === 'model' && i.worn?.join() === '896,1776') && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions, source Starter and the worn picture the size of the model');
+    ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare drew for it (no mix-ups between pieces)');
     ok(its.length === nReady && its.every((i) => i.ready) && !its.some((i) => i.id === 'starter-navy-halter-top'), 'only Ready pieces are added: one that needs review never reaches the closet or the model');
     ok(new RegExp(`${nReady} of 140 ready · 0 need review .* · ${140 - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
     ok(await pS.locator('.piece .starterbadge').count() === nReady, 'each one carries a Starter badge');
     ok(/1 to make/.test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'the tops batch has only the piece that needed review left to make');
     await pS.screenshot({ path: join(out, '41-starter-closet.png') });
+    // on the model: the worn picture is drawn as it is, over her, lined up (no warping)
+    const tee = await pS.evaluate(() => window.__closet.items.find((i) => i.starterId === 'starter-black-fitted-tee').id);
+    await pS.evaluate((id) => { window.__closet.outfit = { top: id }; }, tee); await pS.click('[data-view=tryon]');
+    await pS.waitForFunction((id) => document.querySelector(`.gar[data-id="${id}"] image[width="896"][height="1776"]`), tee, { timeout: 15000 });
+    ok(true, 'a piece made on the model is drawn over her at full size, exactly where it was drawn');
+    await pS.screenshot({ path: join(out, '43-worn-top.png') });
+    await pS.click('[data-view=closet]');
     // the daily limit: Cloudflare stops after 8 more; progress is kept and the rest carry on after the reset
-    cf.limitAt = cf.calls.length + 8;
+    cf.wearLimitAt = cf.wears.length + 8;
     await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForSelector('.limitnote');
     await pS.waitForFunction(() => !document.querySelector('.startertile.run'));
     const okN = await pS.locator('.startertile.ok').count();
     ok(okN === 8 && /carry on after 00:00 UTC \(in (\d+h )?\d+m\)/.test(await pS.locator('.limitnote').innerText()), `at the daily limit the batch pauses with ${okN} made and says when it resumes`);
     await pS.screenshot({ path: join(out, '42-starter-limit.png') });
     await pS.click('#sbcancel');
-    ok(cf.used >= 10000, `at the limit the server records the day as used up (${cf.used}; an AI look already under way may add a little)`);
-    cf.limitAt = Infinity; cf.used = 0; const before = cf.calls.length; await pS.evaluate(() => localStorage.removeItem('starter_neurons')); // a new day
+    ok(cf.used >= 10000, `at the limit the server records the day as used up (${cf.used})`);
+    cf.wearLimitAt = Infinity; cf.used = 0; const before = cf.wears.length; await pS.evaluate(() => localStorage.removeItem('starter_neurons')); // a new day
     await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
-    ok(cf.calls.length - before === 12, `after the reset only the missing 12 are made; the 8 saved earlier are reused (made ${cf.calls.length - before})`);
+    ok(cf.wears.length - before === 12, `after the reset only the missing 12 are made; the 8 saved earlier are reused (made ${cf.wears.length - before})`);
+    await pS.click('#sbcancel');
+    // bags are still product photos: FLUX.1 schnell flat lays, checked (pixels and an AI look), remade when they fail
+    cf.used = 0; await pS.evaluate(() => localStorage.removeItem('starter_neurons'));
+    await pS.click('[data-act=starterbatch][data-v=bags]'); await pS.waitForSelector('.startertile[data-id=starter-black-clutch]');
+    await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
+    ok(cf.calls.length === 25 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Product photo of /.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && cf.calls.every((c) => !('seed' in c) && Object.keys(c).sort().join() === 'auth,prompt,steps'),
+      `bags are made as product photos on FLUX.1 schnell, with only a prompt and steps (${cf.calls.length} calls: 20 + 2 remakes for each of two bad pictures + 1 for the bag the AI saw on a form)`);
+    ok(cf.looks.length >= 18 && cf.looks.every((l) => l.auth === 'Bearer cf-token' && l.img && l.thinking === false && l.id), `every product photo that passes the pixel checks gets an AI look (${cf.looks.length})`);
+    ok(cf.tries['starter-cream-baguette-bag'] === 2 && cf.tries['starter-white-shoulder-bag'] === 3 && cf.tries['starter-black-clutch'] === 3 && /Needs review/.test(await pS.locator('.startertile[data-id=starter-black-clutch]').innerText()), 'a product photo that fails (pixels or the AI look) is remade; one that keeps failing needs review');
     await pS.click('#sbcancel');
     await pS.click('.piece.is-starter .edit >> nth=0'); await pS.click('#ownit');
     await pS.click('[data-act=fsrc][data-v=mine]'); ok(await pS.locator('.piece').count() === 1, 'I own this makes it yours: the Mine filter shows it');
@@ -887,6 +917,21 @@ try {
     await pS.click('[data-act=hidestarter]'); await pS.waitForFunction(() => window.__closet && window.__closet.items.length === 1);
     ok(await pS.evaluate(() => window.__closet.items.every((i) => i.source !== 'starter')), 'hiding starter pieces leaves only yours everywhere');
     await pS.context().close();
+  }
+
+  // Inspo: a pin is inspiration only; the pieces in it are listed and made for the model (never the pin's picture itself)
+  {
+    const pI = await mk(); await pI.evaluate(() => localStorage.setItem('aipass', 'letmein'));
+    await pI.click('[data-view=inspo]'); await pI.setInputFiles('#ifile', new URL('./fixtures/shot_dress.png', import.meta.url).pathname);
+    await pI.waitForSelector('[data-act=inspoideas]'); const w0 = cf.wears.length;
+    await pI.click('[data-act=inspoideas]'); await pI.waitForSelector('.idea');
+    ok(await pI.locator('.idea').count() === 2 && /Camel wrap coat/.test(await pI.locator('.ideas').innerText()), 'an AI lists the pieces in an inspo picture (only kinds it can make for the model)');
+    await pI.click('[data-act=makeidea][data-v="0"]'); await pI.waitForSelector('.idea b.ok', { timeout: 30000 });
+    const made = await pI.evaluate(() => window.__closet.items.map((i) => ({ n: i.name, t: i.type, made: i.made, worn: !!i.worn?.size })));
+    ok(cf.wears.length === w0 + 1 && /Dress her in a camel belted wool wrap coat, knee length, worn open/.test(cf.wears.at(-1).prompt) && made.length === 1 && made[0].n === 'Camel wrap coat' && made[0].made === 'model' && made[0].worn,
+      `a piece from the pin is drawn on the model and added to the closet (${JSON.stringify(made)})`);
+    await pI.screenshot({ path: join(out, '44-inspo-ideas.png') });
+    await pI.context().close();
   }
 
   // a starter piece approved by the older check is checked again on load: one with dress-form scraps or the wrong colour leaves the closet

@@ -781,3 +781,8 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .hfprev svg { width: 100%; height: auto; display: block; }
 @media (max-width: 520px) { .hairfit { grid-template-columns: 1fr 1fr; } }
 .startergrid > * { min-width: 0; } .startertile em, .startertile small { overflow-wrap: anywhere; word-break: break-word; } .startertile em { display: block; max-height: 4.6em; overflow: hidden; }
+/* Inspo: pieces to make for the model */
+.ideas { display: grid; gap: 8px; margin: 6px 0 10px; }
+.idea { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; font-size: 13px; }
+.idea > div { min-width: 0; overflow-wrap: anywhere; }
+.idea button { flex: 0 0 auto; }
