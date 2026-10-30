@@ -539,3 +539,13 @@ test('the AI look: the model’s answer is read, a failed look is skipped (never
   r = await call({ id: 'starter-ivory-satin-cami', look: true, image: 'https://example.com/x.jpg' }); assert.equal(r.status, 400);
   r = await call({ id: 'starter-ivory-satin-cami', look: true, image: img }, { APP_PASSCODE: 'pw', USAGE_DISABLED: '1' }); assert.ok((await r.json()).skipped, 'not set up: skipped');
 });
+test('light pieces are made on grey; lingerie-sounding words are left out of prompts; a refused prompt is retried plainly', async () => {
+  const { starterItem, promptFor, onGrey } = await import('../public/starter/items.js');
+  const { plainPrompt, isRefusal } = await import('../lib/ai.js');
+  const tank = starterItem('starter-white-ribbed-tank'), tee = starterItem('starter-black-fitted-tee'), maxi = starterItem('starter-champagne-satin-slip-maxi');
+  assert.ok(onGrey(tank) && !onGrey(tee));
+  assert.match(promptFor(tank), /plain solid medium grey background/); assert.match(promptFor(tee), /plain pure white background/);
+  assert.doesNotMatch(promptFor(maxi), /\bslip\b/i); assert.match(promptFor(maxi), /champagne satin maxi dress with spaghetti straps/);
+  assert.match(plainPrompt(maxi), /^Flat lay product photo of champagne dress,/);
+  assert.ok(isRefusal('8007 AiError: AiError: Input prompt contains NSFW content.')); assert.ok(!isRefusal('3040 Capacity temporarily exceeded'));
+});

@@ -189,11 +189,18 @@ export const sizeFor = (it) => (SMALL.has(it.type) ? { width: 1024, height: 1024
 /** The fixed style every picture ends with, so the set looks consistent. FLUX schnell tends to draw whatever a prompt names, even after
  *  "no", so the prompt only describes what we want: words like mannequin, model, person or dress form never appear (a test checks this). */
 export const STYLE_SUFFIX = 'centered, entire item visible with margin on all sides, plain pure white background, soft even lighting, sharp focus, true-to-life colour';
+/** White, cream and other light pieces are made on plain grey instead: on white their edges can't be told from the background, so the
+ *  cut-out came out shredded. (Grey pieces stay on white.) */
+export const LIGHT_COLOURS = /white|cream|ivory|oatmeal|beige|champagne|clear|nude|butter|taupe|straw|silver|pearl/;
+export const onGrey = (it) => it.colors.some((c) => LIGHT_COLOURS.test(c)) && !it.colors.some((c) => /grey|gray/.test(c));
+const suffix = (it) => (onGrey(it) ? STYLE_SUFFIX.replace('plain pure white background', 'plain solid medium grey background') : STYLE_SUFFIX);
+/** Cloudflare's filter can refuse a prompt for lingerie-sounding words ("slip"), so the prompt describes those pieces without them. */
+export const tame = (t) => t.replace(/\bslip (midi |maxi |mini )?dress\b/gi, (m, l) => `${l || ''}dress`).replace(/\bslip skirt\b/gi, 'skirt').replace(/\bslip\b ?/gi, '').replace(/thin straps/gi, 'spaghetti straps').replace(/\s+/g, ' ').trim();
 /** Pieces that need to hold their shape in a flat lay (corsets, tube tops, bustiers). */
 export const structured = (it) => /corset|tube|bustier|strapless/i.test(`${it.name} ${it.detail}`);
 export function promptFor(it) {
-  const what = `${it.colors.join(' and ')} ${it.detail}`;
-  if (SMALL.has(it.type)) return `Product photo of ${what}, viewed from the front at a slight angle, ${STYLE_SUFFIX}`;
-  return `Flat lay product photo of ${what}, laid flat and neatly arranged, viewed from directly above${structured(it) ? ', flat lay, front view, structured shape' : ''}, ${STYLE_SUFFIX}`;
+  const what = tame(`${it.colors.join(' and ')} ${it.detail}`);
+  if (SMALL.has(it.type)) return `Product photo of ${what}, viewed from the front at a slight angle, ${suffix(it)}`;
+  return `Flat lay product photo of ${what}, laid flat and neatly arranged, viewed from directly above${structured(it) ? ', flat lay, front view, structured shape' : ''}, ${suffix(it)}`;
 }
 export const FORBIDDEN_WORDS = /mannequin|\bmodel\b|person|dress form|hanger/i;

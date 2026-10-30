@@ -2,7 +2,7 @@
 // fal only as a fallback), then goes
 // through the normal pipeline here: white background removed, colours read, tags from the list. Landmarks are suggested the first time
 // the piece is fitted, like any other. Nothing is saved until you approve the batch.
-import { ITEMS, seedFor } from '../starter/items.js';
+import { ITEMS, seedFor, onGrey } from '../starter/items.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName, hexDist } from './color.js';
 import { uid } from './db.js';
@@ -103,19 +103,24 @@ function edgeLightMask(d, w, h, inItem, itemArea, minFrac = 0.004) {
 /** Runs of item pixels in one row of a mask: [[x0, x1], ...]. */
 const runs = (fg, w, y) => { const out = []; let st = -1; for (let x = 0; x <= w; x++) { const on = x < w && fg[y * w + x]; if (on && st < 0) st = x; if (!on && st >= 0) { out.push([st, x - 1]); st = -1; } } return out; };
 
-/** The picture on white at check size: { w, h, d (RGBA), fg (item mask: everything not reached by white from the edges) }. */
+/** The picture at check size: { w, h, d (RGBA), fg (item mask: everything not reached by the background from the edges), grey }.
+ *  The background is white, or plain grey for a light piece (its border tells which). */
 function analyse(img) {
   const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height, s = Math.min(1, 256 / Math.max(W, H)), w = Math.round(W * s), h = Math.round(H * s);
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
   g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.drawImage(img, 0, 0, w, h); // (a cutout's see-through background counts as white)
   const d = g.getImageData(0, 0, w, h).data, fg = new Uint8Array(w * h).fill(1);
-  const white = (o) => Math.min(d[o], d[o + 1], d[o + 2]) >= 244 && Math.max(d[o], d[o + 1], d[o + 2]) - Math.min(d[o], d[o + 1], d[o + 2]) <= 10;
+  const border = []; for (let x = 0; x < w; x++) border.push(x, (h - 1) * w + x); for (let y = 0; y < h; y++) border.push(y * w, y * w + w - 1);
+  const med = (c) => border.map((i) => d[i * 4 + c]).sort((a, b) => a - b)[border.length >> 1], bg = [med(0), med(1), med(2)];
+  const grey = Math.max(...bg) < 200 && Math.max(...bg) - Math.min(...bg) < 18; // a plain grey backdrop (light pieces are made on one)
+  const white = grey ? (o) => Math.hypot(d[o] - bg[0], d[o + 1] - bg[1], d[o + 2] - bg[2]) <= 26
+    : (o) => Math.min(d[o], d[o + 1], d[o + 2]) >= 244 && Math.max(d[o], d[o + 1], d[o + 2]) - Math.min(d[o], d[o + 1], d[o + 2]) <= 10;
   // the background is the white reached from the picture's edges, so a white or cream piece (outlined by its own seams and shading) stays whole
   const q = new Int32Array(w * h); let qh = 0, qt = 0;
   const seed = (i) => { if (fg[i] && white(i * 4)) { fg[i] = 0; q[qt++] = i; } };
   for (let x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x); } for (let y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1); }
   while (qh < qt) { const p = q[qh++], x = p % w; for (const k of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (k >= 0 && k < w * h && fg[k] && white(k * 4)) { fg[k] = 0; q[qt++] = k; } }
-  return { w, h, d, fg };
+  return { w, h, d, fg, grey };
 }
 
 /** Look at a picture (a generated photo or a cleaned cutout): { ok, reasons[] }. Pixel checks only: white border, margin on every side,
@@ -137,7 +142,7 @@ function colourMatches(d, w, h, fg, it) {
 }
 
 export function checkPicture(img, it) {
-  const { w, h, d, fg } = analyse(img), reasons = [];
+  const { w, h, d, fg, grey } = analyse(img), reasons = [];
   let ring = 0, ringWhite = 0, skin = 0, form = 0, n = 0, x0 = w, y0 = h, x1 = -1, y1 = -1;
   const m = Math.max(2, Math.round(Math.min(w, h) * 0.02));
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
@@ -146,7 +151,9 @@ export function checkPicture(img, it) {
     if (fg[i]) { n++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
       if (isSkin(d[o], d[o + 1], d[o + 2])) skin++; }
   }
-  if (ringWhite / ring < 0.97) reasons.push('background is not plain white');
+  if (ringWhite / ring < 0.97) reasons.push(grey ? 'background is not plain' : 'background is not plain white');
+  // a white or cream piece on a white background: its edges can't be found, so the cut-out comes out in shreds (they're made on grey now)
+  if (onGrey(it) && !grey && !img.cutoutCheck) reasons.push('a light piece on a white background (it can’t be cut out cleanly)');
   if (n && (x0 < 2 || y0 < 2 || x1 > w - 3 || y1 > h - 3)) reasons.push('item runs off the edge');
   const area = n / (w * h);
   if (area < 0.03) reasons.push('item is missing or tiny'); else if ((x1 - x0) * (y1 - y0) > 0.92 * w * h) reasons.push('item fills the whole picture');
@@ -209,20 +216,33 @@ export async function process(blob, it) {
   const first = checkPicture(img, it);
   // every cutout is tidied (stray fragments, skin, form scraps at the edges), and the tidy cutout is checked again: Ready needs both to pass
   const formish = first.reasons.some((r) => /form|neck|pole|skin|white patch/.test(r)); // light parts of a print (leopard) are only touched when a form was seen
-  const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it, { forms: formish }), after = checkPicture(padded(cut), it); // (a pure white studio background; kept tight so white and cream pieces keep their edges)
+  const cut = cleanUp(cutOut(img, it), it, { forms: formish }), after = checkCut(cut, it); // (a pure white studio background; kept tight so white and cream pieces keep their edges)
   return finish(cut, { ok: first.ok && after.ok, reasons: [...new Set([...first.reasons, ...after.reasons.map((r) => `after clean-up: ${r}`)])] });
 }
-/** A cutout on white with a margin, so it's checked like a photo. */
-function padded(cut) {
-  const pad = document.createElement('canvas'); pad.width = Math.round(cut.width * 1.2) + 4; pad.height = Math.round(cut.height * 1.2) + 4;
-  const pg = pad.getContext('2d'); pg.fillStyle = '#fff'; pg.fillRect(0, 0, pad.width, pad.height); pg.drawImage(cut, (pad.width - cut.width) / 2, (pad.height - cut.height) / 2);
+/** The background off: tight on white (white and cream edges survive), looser on grey (its soft shading); background-coloured gaps the
+ *  edges can't reach (between a sleeve and the body) go too, except on prints and stripes, whose light parts look the same. */
+const PATTERNED = /stripe|print|leopard|plaid|polka|floral|check|houndstooth|crochet|lace|eyelet|tortoise/i;
+function cutOut(img, it) {
+  const src = toCanvas(img, 1000), out = removeBackground(src, { tolerance: onGrey(it) ? 30 : 18, holes: PATTERNED.test(`${it.name} ${it.detail}`) ? 0 : 0.002 });
+  if (out !== src) src.width = src.height = 0; // (iPhones cap the memory all canvases share)
+  return out;
+}
+/** Check a cutout on its padding, then let the padding go. */
+function checkCut(cut, it) { const p = padded(cut, it), r = checkPicture(p, it); p.width = p.height = 0; return r; }
+/** A cutout on white with a margin (grey for a light piece), so it's checked like a photo. */
+function padded(cut, it) {
+  const pad = document.createElement('canvas'); pad.width = Math.round(cut.width * 1.2) + 4; pad.height = Math.round(cut.height * 1.2) + 4; pad.cutoutCheck = true;
+  const pg = pad.getContext('2d'); pg.fillStyle = it && onGrey(it) ? '#8c8c8c' : '#fff'; // (a light piece is checked on grey, as it was made)
+  pg.fillRect(0, 0, pad.width, pad.height); pg.drawImage(cut, (pad.width - cut.width) / 2, (pad.height - cut.height) / 2);
   return pad;
 }
 /** The last resort for a picture that failed its check after the automatic remakes: clean the cutout, then check the clean cutout. */
 export async function processCleaned(blob, it, firstCheck) {
   const { img, url } = await loadImage(blob); URL.revokeObjectURL(url);
-  const cut = cleanUp(removeBackground(toCanvas(img, 1000), { tolerance: 18 }), it);
-  const check = checkPicture(padded(cut), it);
+  const cut = cleanUp(cutOut(img, it), it);
+  const check = checkCut(cut, it);
+  if (firstCheck?.reasons.some((r) => /light piece on a white background/.test(r))) // its cut-out is in shreds already: only a remake on grey helps
+    check.ok = false, check.reasons = [...check.reasons, 'a light piece on a white background (it can’t be cut out cleanly)'];
   if (LIGHT.test(it.colors.join(' ')) && firstCheck?.reasons.some((r) => /dress form|neck stand|pole|body form/.test(r))) // a white or cream piece on a white form: the two can't be told apart by colour
     check.ok = false, check.reasons = [...check.reasons, 'a light piece on a form: the form could not be removed automatically'];
   return { ...(await finish(cut, check)), cleaned: true };
@@ -230,7 +250,9 @@ export async function processCleaned(blob, it, firstCheck) {
 async function finish(cut, check) {
   const pal = palette(cut).filter((c) => c.share > 0.04);
   const main = pal[0]?.hex || '#cccccc';
-  return { check, canvas: cut, cutout: await canvasToBlob(cut, 'image/webp', 0.92), color: { hex: main, name: colorName(main) }, colors: pal.map((c) => c.hex) };
+  const cutout = cut.width && cut.height ? (await canvasToBlob(cut, 'image/webp', 0.92)) || (await canvasToBlob(cut, 'image/png')) : null;
+  if (!cutout?.size) throw new Error('The picture couldn’t be saved (the phone may be low on memory). Tap to try again.'); // (iPhones refuse new canvases when too many are open)
+  return { check, canvas: cut, cutout, color: { hex: main, name: colorName(main) }, colors: pal.map((c) => c.hex) };
 }
 
 /** A closet item for an approved starter piece. */
@@ -238,7 +260,7 @@ async function finish(cut, check) {
 export const sleevesOf = (it) => (/sleeveless|strapless|tube|cami|tank|halter|corset|vest|one-shoulder|thin straps/i.test(`${it.name} ${it.detail}`) ? false
   : /sleeve|sweater|turtleneck|button-down|blouse|tee|t-shirt|cardigan|blazer|coat|jacket|duster|puffer|shirt/i.test(`${it.name} ${it.detail}`) ? true : undefined);
 /** Starter pieces checked by an older version are checked again (the check keeps getting stricter). */
-export const CHECK_VERSION = 4;
+export const CHECK_VERSION = 5;
 export const toItem = (it, done, original) => ({
   checkVersion: CHECK_VERSION, ...(sleevesOf(it) !== undefined && ['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses'].includes(it.type) && { sleeves: sleevesOf(it) }),
   id: uid(), starterId: it.id, source: 'starter', ready: !!done.ready, review: done.ready ? undefined : done.why, ...(it.acc && { acc: it.acc }), name: it.name, type: it.type, occasions: [...it.occasions], season: it.season, brand: '',
