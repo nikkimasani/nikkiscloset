@@ -1,0 +1,49 @@
+name: preload wardrobe
+# Makes the preloaded wardrobe (scripts/preload.mjs) with the Cloudflare keys kept in this repository's secrets, and opens a pull request
+# with the pieces and contact sheets (review/) to check before they go live. Start it from Actions > preload wardrobe > Run workflow.
+# It also runs every day at 00:40 UTC (just after Cloudflare's free allowance resets) until every piece is made, then does nothing.
+on:
+  workflow_dispatch:
+    inputs:
+      redo:
+        description: 'Pieces to make again (ids, comma-separated; empty = make what is missing)'
+        required: false
+        default: ''
+  schedule:
+    - cron: '40 0 * * *'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency: { group: preload-wardrobe, cancel-in-progress: false }
+jobs:
+  preload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Carry on from the wardrobe branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git fetch origin preload-wardrobe; then git checkout -B preload-wardrobe origin/preload-wardrobe && git merge --no-edit origin/main; else git checkout -b preload-wardrobe; fi
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Make the pieces
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          REDO: ${{ github.event.inputs.redo }}
+        run: node scripts/preload.mjs ${REDO:+--redo "$REDO"}
+      - name: Save them and open the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git add public/starter/made review
+          if git diff --cached --quiet; then echo 'Nothing new.'; exit 0; fi
+          git commit -m "Preloaded wardrobe: $(head -1 review/summary.txt)"
+          git push origin preload-wardrobe
+          gh pr view preload-wardrobe --json state -q .state 2>/dev/null | grep -q OPEN || gh pr create --base main --head preload-wardrobe --draft \
+            --title 'Preloaded wardrobe' --body 'Pieces made by the preload wardrobe workflow. Contact sheets are in review/ (one per category); failed pieces and why are in review/summary.txt. Check them before merging.'

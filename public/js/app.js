@@ -92,6 +92,34 @@ async function load() {
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
   Promise.all(S.items.map(analyseItem)).then(() => { if (S.view === 'tryon' && dollPack) mountStage(); });
   recheckStarters(); // the dashed selection box and tap-to-select need each cutout's real bounds
+  importPreloaded();
+}
+
+/** The preloaded wardrobe (public/starter/made/, made once by the preload workflow): pieces this closet doesn't have yet are added as
+ *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
+async function importPreloaded() {
+  if (store.get('hidestarter', '') === '1') return;
+  let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
+  if (!idx?.pieces || String(idx.version) === store.get('preloaded', '')) return;
+  let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
+  const pack = dollPack || await loadPack(); if (!pack) return;
+  let added = 0;
+  for (const [sid, p] of Object.entries(idx.pieces)) {
+    const it = STARTER_ITEMS.find((x) => x.id === sid); if (!it || removed.has(sid)) continue;
+    if (S.items.some((i) => i.starterId === sid && (i.worn || p.kind !== 'worn' || !starter.isStarter(i)))) continue; // (already here, or one you own)
+    try {
+      const cutout = await (await fetch(`/starter/made/${sid}.webp?v=${idx.version}`)).blob(); let worn;
+      if (p.kind === 'worn') { // where it sits on her: the piece drawn at its place on a picture the size of the model
+        const { img, url: u } = await loadImage(cutout), c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
+        c.getContext('2d').drawImage(img, p.box.x, p.box.y, p.box.w, p.box.h); URL.revokeObjectURL(u); worn = await canvasToBlob(c, 'image/png'); c.width = 0;
+      }
+      const older = S.items.filter((i) => i.starterId === sid && starter.isStarter(i)); if (older.length) await removeItems(older.map((i) => i.id));
+      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true };
+      await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++;
+    } catch { /* this one is tried again next time */ return; }
+  }
+  store.set('preloaded', String(idx.version));
+  if (added) { render(); toast(`${added} starter piece${added === 1 ? '' : 's'} added to your closet ✓`); }
 }
 
 /** Starter pieces approved by an older, looser check are checked again with today's (dress-form scraps, wrong colour) and get their
@@ -478,7 +506,7 @@ function openItemModal(existing, preset = {}) {
     };
     if ($('#rm')) $('#rm').onclick = async () => {
       if (!confirm(`Delete “${existing.name}” from your closet?`)) return;
-      await removeItems([existing.id]);
+      await removeItems([existing.id], { byYou: true });
       closeModal(); render();
     };
     const save = async (again) => {
@@ -511,8 +539,12 @@ function openItemModal(existing, preset = {}) {
 }
 
 /** Delete pieces everywhere they're referenced: closet, current outfit, saved looks, and cached images. */
-async function removeItems(ids) {
+async function removeItems(ids, { byYou = false } = {}) {
   const gone = new Set(ids);
+  if (byYou) { // a preloaded piece you remove stays removed
+    let removed; try { removed = JSON.parse(store.get('starter_removed', '[]')); } catch { removed = []; }
+    const sids = S.items.filter((i) => gone.has(i.id) && i.starterId).map((i) => i.starterId); if (sids.length) store.set('starter_removed', JSON.stringify([...new Set([...removed, ...sids])]));
+  }
   for (const id of ids) { await del('items', id); for (const key of [id, id + ':back']) { const u = S.urls.get(key); if (u) { URL.revokeObjectURL(u); S.urls.delete(key); } } }
   S.items = S.items.filter((i) => !gone.has(i.id));
     for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
@@ -531,7 +563,7 @@ function starterPanel() {
   const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
   return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
-    <p class="muted">A wardrobe made for your model from your style profile (chic neutral casual + polished workwear). Clothes and shoes are drawn on her, wearing them, so they fit her exactly and swap in and out in Dress Up; bags and accessories are product photos. Pieces made earlier as flat photos are remade on her when you open their category. For more ideas, open a pin in <b>Inspo</b> and make the pieces in it. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it.</p>
+    <p class="muted">A wardrobe made for your model from your style profile (chic neutral casual + polished workwear). Clothes and shoes are drawn on her, wearing them, so they fit her exactly and swap in and out in Dress Up; bags and accessories are product photos. The whole wardrobe comes preloaded once it’s made (pieces are added automatically, no neurons used on your phone); the buttons below remake a category or fill gaps. Pieces made earlier as flat photos are remade on her when you open their category. For more ideas, open a pin in <b>Inspo</b> and make the pieces in it. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it.</p>
     <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
     <div class="starterbatches">${STARTER_BATCHES.map(([k, l, e]) => { const left = starter.missingIn(k, S.items).length, n = STARTER_ITEMS.filter((i) => i.batch === k).length;
       return `<button class="ghost" data-act="starterbatch" data-v="${k}" ${left && !hidden ? '' : 'disabled'}><span aria-hidden="true">${e}</span> ${l} <small>${left ? `${left} to make · ~${fmt(left * each)} neurons` : `all ${n} in`}</small></button>`; }).join('')}</div>

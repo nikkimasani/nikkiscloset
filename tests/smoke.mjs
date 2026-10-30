@@ -934,6 +934,23 @@ try {
     await pI.context().close();
   }
 
+  // the preloaded wardrobe: pieces made once by the preload workflow are added on first open, with no generating; removed ones stay removed
+  {
+    const pP = await mk(); let ver = 1;
+    const box = { x: 220, y: 240, w: 460, h: 760 }, pic = readFileSync(new URL('./fixtures/white/blazer.png', import.meta.url));
+    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
+    await pP.context().route('**/starter/made/*.webp*', (r) => r.fulfill({ contentType: 'image/png', body: pic }));
+    const w0 = cf.wears.length, c0 = cf.calls.length;
+    await pP.reload(); await pP.waitForFunction(() => window.__closet?.items.length === 2, null, { timeout: 20000 });
+    const got = await pP.evaluate(() => Promise.all(window.__closet.items.map(async (i) => { const b = i.worn && await createImageBitmap(i.worn); return { id: i.id, sid: i.starterId, ready: i.ready, src: i.source, worn: b ? [b.width, b.height] : null }; })));
+    ok(cf.wears.length === w0 && cf.calls.length === c0 && got.some((i) => i.id === 'pre-starter-black-fitted-tee' && i.worn?.join() === '896,1776' && i.ready && i.src === 'starter') && got.some((i) => i.id === 'pre-starter-black-clutch' && !i.worn),
+      `the preloaded wardrobe is added on first open without generating anything (${JSON.stringify(got)})`);
+    await pP.click('[data-view=closet]'); await pP.click('.piece.is-starter .edit >> nth=0'); await pP.click('#rm');
+    await pP.waitForFunction(() => window.__closet.items.length === 1); ver = 2; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items, null, { timeout: 20000 }); await pP.waitForTimeout(1500);
+    ok(await pP.evaluate(() => window.__closet.items.length) === 1, 'a preloaded piece you removed stays removed when the wardrobe is updated');
+    await pP.context().close();
+  }
+
   // a starter piece approved by the older check is checked again on load: one with dress-form scraps or the wrong colour leaves the closet
   {
     const pR = await mk();
