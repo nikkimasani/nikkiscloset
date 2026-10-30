@@ -565,3 +565,9 @@ test('pieces made for the model: prompts, the key colour, cleaning a described p
   assert.deepEqual(parseDescribe('no idea'), []);
   assert.match(describePrompt, /"type": one of \["tops"/);
 });
+test('wardrobe ideas: with all kinds, bags and accessories are kept too', async () => {
+  const { parseDescribe } = await import('../lib/ai.js');
+  const text = '{"pieces":[{"name":"Black blazer","type":"outerwear","colors":["black"],"detail":"oversized"},{"name":"Tan tote","type":"bags","colors":["tan"],"detail":"leather"},{"name":"Gold hoops","type":"accessories","colors":["gold"],"detail":"small"}]}';
+  assert.deepEqual(parseDescribe(text).map((p) => p.name), ['Black blazer']);
+  assert.deepEqual(parseDescribe(text, { all: true }).map((p) => p.name), ['Black blazer', 'Tan tote', 'Gold hoops']);
+});
