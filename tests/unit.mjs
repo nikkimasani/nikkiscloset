@@ -549,3 +549,17 @@ test('light pieces are made on grey; lingerie-sounding words are left out of pro
   assert.match(plainPrompt(maxi), /^Flat lay product photo of champagne dress,/);
   assert.ok(isRefusal('8007 AiError: AiError: Input prompt contains NSFW content.')); assert.ok(!isRefusal('3040 Capacity temporarily exceeded'));
 });
+test('pieces made for the model: prompts, the key colour, cleaning a described piece, reading the pieces in a pin', async () => {
+  const { wearPrompt, cleanPiece, parseDescribe, describePrompt } = await import('../lib/ai.js');
+  const { starterItem } = await import('../public/starter/items.js');
+  const tee = starterItem('starter-black-fitted-tee'), maxi = starterItem('starter-champagne-satin-slip-maxi');
+  assert.match(wearPrompt(tee), /^This is a fashion figure whose body is painted flat green from the neck down, standing on a plain blue background\. Dress her in a black .*; her legs stay bare green\. Keep the green body/);
+  assert.match(wearPrompt(tee, 'magenta'), /painted flat magenta/);
+  assert.doesNotMatch(wearPrompt(maxi), /\bslip\b|mannequin|dress form/i);
+  assert.deepEqual(cleanPiece({ name: ' Camel <b>coat</b> ', type: 'outerwear', colors: 'camel', detail: 'wrap; belted' }), { name: 'Camel b coat /b', type: 'outerwear', colors: ['camel'], detail: 'wrap belted' });
+  assert.equal(cleanPiece({ name: 'Gold hoops', type: 'jewelry', colors: ['gold'] }), null, 'only kinds it can draw on her');
+  assert.equal(cleanPiece({ name: 'Coat', type: 'outerwear', colors: [] }), null, 'a colour is needed');
+  assert.deepEqual(parseDescribe('Here: {"pieces":[{"name":"Black tee","type":"tops","colors":["black"],"detail":"crew neck"},{"name":"x","type":"hats","colors":["red"]}]}'), [{ name: 'Black tee', type: 'tops', colors: ['black'], detail: 'crew neck' }]);
+  assert.deepEqual(parseDescribe('no idea'), []);
+  assert.match(describePrompt, /"type": one of \["tops"/);
+});
