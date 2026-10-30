@@ -103,23 +103,35 @@ async function importPreloaded() {
   if (!idx?.pieces || String(idx.version) === store.get('preloaded', '')) return;
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
   const pack = dollPack || await loadPack(); if (!pack) return;
-  let added = 0;
+  let added = 0, updated = 0;
+  const pictures = async (sid, p) => { // the closet picture, and for a piece drawn on her, the piece placed on a picture the size of the model
+    const cutout = await (await fetch(`/starter/made/${sid}.webp?v=${p.t || idx.version}`)).blob(); let worn;
+    if (p.kind === 'worn') {
+      const { img, url: u } = await loadImage(cutout), c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
+      c.getContext('2d').drawImage(img, p.box.x, p.box.y, p.box.w, p.box.h); URL.revokeObjectURL(u); worn = await canvasToBlob(c, 'image/png'); c.width = 0;
+    }
+    return { cutout, worn };
+  };
   for (const [sid, p] of Object.entries(idx.pieces)) {
     const it = STARTER_ITEMS.find((x) => x.id === sid); if (!it || removed.has(sid)) continue;
-    if (S.items.some((i) => i.starterId === sid && (i.worn || p.kind !== 'worn' || !starter.isStarter(i)))) continue; // (already here, or one you own)
     try {
-      const cutout = await (await fetch(`/starter/made/${sid}.webp?v=${idx.version}`)).blob(); let worn;
-      if (p.kind === 'worn') { // where it sits on her: the piece drawn at its place on a picture the size of the model
-        const { img, url: u } = await loadImage(cutout), c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
-        c.getContext('2d').drawImage(img, p.box.x, p.box.y, p.box.w, p.box.h); URL.revokeObjectURL(u); worn = await canvasToBlob(c, 'image/png'); c.width = 0;
+      const mine = S.items.find((i) => i.id === `pre-${sid}`);
+      if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
+        if (!starter.isStarter(mine) || (mine.preloadT || 0) === (p.t || 0)) continue;
+        const { cutout, worn } = await pictures(sid, p);
+        Object.assign(mine, { cutout, worn, color: p.color, colors: p.colors, preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
+        URL.revokeObjectURL(S.urls.get(mine.id) || ''); S.urls.delete(mine.id); url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++;
+        continue;
       }
+      if (S.items.some((i) => i.starterId === sid && (i.worn || p.kind !== 'worn' || !starter.isStarter(i)))) continue; // (already here, or one you own)
+      const { cutout, worn } = await pictures(sid, p);
       const older = S.items.filter((i) => i.starterId === sid && starter.isStarter(i)); if (older.length) await removeItems(older.map((i) => i.id));
-      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true };
+      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
       await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++;
     } catch { /* this one is tried again next time */ return; }
   }
   store.set('preloaded', String(idx.version));
-  if (added) { render(); toast(`${added} starter piece${added === 1 ? '' : 's'} added to your closet ✓`); }
+  if (added || updated) { render(); toast([added && `${added} starter piece${added === 1 ? '' : 's'} added`, updated && `${updated} updated`].filter(Boolean).join(', ') + ' ✓'); }
 }
 
 /** Starter pieces approved by an older, looser check are checked again with today's (dress-form scraps, wrong colour) and get their

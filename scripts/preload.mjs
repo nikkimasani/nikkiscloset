@@ -76,7 +76,7 @@ for (const it of todo) {
   if (r.limit) { stopped = 'the day’s free Cloudflare allowance is used up'; break; }
   if (r.ok) {
     writeFileSync(`${DIR}/${it.id}.webp`, Buffer.from(r.data.split(',')[1], 'base64'));
-    index.pieces[it.id] = { kind: r.kind, ...(r.box && { box: r.box, v: WEAR_VERSION }), color: r.color, colors: r.colors }; delete index.failed[it.id]; made++;
+    index.pieces[it.id] = { kind: r.kind, ...(r.box && { box: r.box, v: WEAR_VERSION }), color: r.color, colors: r.colors, t: Date.now() }; // (t: phones swap in a remade piece) delete index.failed[it.id]; made++;
     console.log(`✓ ${it.id} (${r.kind}, try ${r.tries})`);
   } else { index.failed[it.id] = r.reasons; console.log(`✗ ${it.id}: ${r.reasons.join('; ')}`); }
   save();
