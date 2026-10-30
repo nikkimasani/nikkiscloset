@@ -6,9 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       redo:
-        description: 'Pieces to make again (ids, comma-separated; empty = make what is missing)'
+        description: 'Pieces to make again (ids, comma-separated, or "worn" for every piece drawn on the model; empty = make what is missing)'
         required: false
         default: ''
+      reextract:
+        description: 'Only cut the pieces out again from the drawings already made (no Cloudflare, no neurons)'
+        type: boolean
+        default: false
   schedule:
     - cron: '40 0 * * *'
 permissions:
@@ -36,14 +40,16 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           REDO: ${{ github.event.inputs.redo }}
-        run: node scripts/preload.mjs ${REDO:+--redo "$REDO"}
+          REEXTRACT: ${{ github.event.inputs.reextract }}
+        run: node scripts/preload.mjs ${REDO:+--redo "$REDO"} $([ "$REEXTRACT" = true ] && echo --reextract)
       - name: Save them and open the pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          git add public/starter/made review
+          git add public/starter/made review $(ls starter-raw/*.jpg >/dev/null 2>&1 && echo starter-raw)
           if git diff --cached --quiet; then echo 'Nothing new.'; exit 0; fi
           git commit -m "Preloaded wardrobe: $(head -1 review/summary.txt)"
           git push origin preload-wardrobe
           gh pr view preload-wardrobe --json state -q .state 2>/dev/null | grep -q OPEN || gh pr create --base main --head preload-wardrobe --draft \
-            --title 'Preloaded wardrobe' --body 'Pieces made by the preload wardrobe workflow. Contact sheets are in review/ (one per category); failed pieces and why are in review/summary.txt. Check them before merging.'
+            --title 'Preloaded wardrobe' --body 'Pieces made by the preload wardrobe workflow. Contact sheets are in review/ (one per category); failed pieces and why are in review/summary.txt. Check them before merging.' \
+            || echo "::notice::Pieces saved on the preload-wardrobe branch (open the pull request from there): https://github.com/${{ github.repository }}/compare/main...preload-wardrobe"

@@ -553,7 +553,9 @@ test('pieces made for the model: prompts, the key colour, cleaning a described p
   const { wearPrompt, cleanPiece, parseDescribe, describePrompt } = await import('../lib/ai.js');
   const { starterItem } = await import('../public/starter/items.js');
   const tee = starterItem('starter-black-fitted-tee'), maxi = starterItem('starter-champagne-satin-slip-maxi');
-  assert.match(wearPrompt(tee), /^This is a fashion figure whose body is painted flat green from the neck down, standing on a plain blue background\. Dress her in a black .*; her legs stay bare green\. Keep the green body/);
+  assert.match(wearPrompt(tee), /^This is a fashion figure whose body is painted flat green from the neck down, standing on a plain blue background\. Dress her in a black [^.]*\. Nothing else: no other clothing, and everything from the waist down \(no shorts, no trousers, no skirt\) stay bare green, with no marks\. Keep the green body/);
+  assert.match(wearPrompt(starterItem('starter-light-wash-wide-leg-jeans'), 'green', 'magenta'), /standing on a plain magenta background\. Dress her in light denim .*no top, no bra.* the magenta background exactly the same/);
+  assert.match(wearPrompt(starterItem('starter-camel-wool-coat')), /Dress her in only a camel .*worn open\. Nothing else: .*no trousers/);
   assert.match(wearPrompt(tee, 'magenta'), /painted flat magenta/);
   assert.doesNotMatch(wearPrompt(maxi), /\bslip\b|mannequin|dress form/i);
   assert.deepEqual(cleanPiece({ name: ' Camel <b>coat</b> ', type: 'outerwear', colors: 'camel', detail: 'wrap; belted' }), { name: 'Camel b coat /b', type: 'outerwear', colors: ['camel'], detail: 'wrap belted' });

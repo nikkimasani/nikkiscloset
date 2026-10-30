@@ -631,7 +631,7 @@ async function openStarterBatch(batch) {
       const done = await wearAI.extractWorn(blob, t.it, pack);
       if (!done.check.ok && auto < 2) { note(t, { ...info, check: done.check }); t.attempt++; t.fresh = true; paint(); continue; }
       done.ready = done.check.ok && !!done.worn; done.why = done.check.reasons;
-      if (!done.worn) throw new Error(done.check.reasons.join('; ') || 'The piece couldn’t be found in the picture. Tap to try again.');
+      if (!done.worn) Object.assign(done, { cutout: blob, colors: [], color: null }); // (nothing to keep: the tile shows what was drawn, to remake)
       note(t, { ...info, check: done.check });
       return { blob, done };
     }
