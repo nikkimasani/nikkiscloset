@@ -19,6 +19,7 @@ const { ITEMS: SITEMS, promptFor: sPrompt } = await import('../public/starter/it
 // (tie.png is a blouse on a dress form: the check rightly fails it, so it isn't a stand-in for a good picture)
 // (no stripes: white stripes reaching the edge read like a form's scraps)
 const WHITE = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/white/${n}.png`, import.meta.url)));
+const GREY = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/grey/${n}.png`, import.meta.url))); // (light pieces are made on grey)
 const BAD = { 'starter-cream-crochet-cami': 2, 'starter-navy-halter-top': 99 };
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
 const { createServer } = await import('node:http');
@@ -50,7 +51,7 @@ const mock = createServer((req, res) => {
       if (Object.keys(body).some((k) => k !== 'prompt' && k !== 'steps')) return send({ success: false, errors: [{ code: 5006, message: "AiError: Bad input: Error: Additional or unevaluated properties at '/' not allowed" }] }, 400); // (like the real one)
       if (cf.calls.length > cf.limitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
       const it = SITEMS.find((i) => sPrompt(i) === body.prompt), n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1);
-      const pic = n <= (BAD[it.id] || 0) ? readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)) : WHITE[SITEMS.filter((i) => i.batch === it.batch).indexOf(it) % WHITE.length];
+      const pic = n <= (BAD[it.id] || 0) ? readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)) : (/medium grey background/.test(body.prompt) ? GREY : WHITE)[SITEMS.filter((i) => i.batch === it.batch).indexOf(it) % WHITE.length];
       cf.sent[it.id] = pic.length; send({ success: true, result: { image: pic.toString('base64') } });
     });
   }
@@ -834,7 +835,7 @@ try {
     ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
     await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
-    ok(cf.calls.length === 25 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && /plain pure white background, soft even lighting/.test(c.prompt) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures + 1 for the cami the AI saw on a dress form)`);
+    ok(cf.calls.length === 25 && cf.calls.every((c) => c.auth === 'Bearer cf-token' && c.steps === 4 && /^Flat lay product photo of .*laid flat and neatly arranged, viewed from directly above/.test(c.prompt) && (/medium grey background/.test(c.prompt) ? /white|cream|ivory|oatmeal|beige|champagne|butter/.test(c.prompt) : /plain pure white background, soft even lighting/.test(c.prompt)) && !/mannequin|\bmodel\b|person|dress form/i.test(c.prompt)) && !starterCalls.length, `tops made on Cloudflare (FLUX.1 schnell, 4 steps) as flat lays, never naming a mannequin, model, person or dress form; fal not used (${cf.calls.length} calls: 20 + 2 automatic remakes for each of the two bad pictures + 1 for the cami the AI saw on a dress form)`);
     ok(cf.looks.length >= 20 && cf.looks.every((l) => l.auth === 'Bearer cf-token' && l.img && l.thinking === false && l.id), `every picture that passes the pixel checks gets an AI look (Gemma 4 on Cloudflare, a small JPEG; ${cf.looks.length} looks)`);
     ok(cf.tries['starter-ivory-satin-cami'] === 2 && await pS.locator('.startertile.ready[data-id=starter-ivory-satin-cami]').count() === 1, 'a picture the AI sees on a dress form is remade automatically, and the remake is Ready');
     const tops = SITEMS.filter((i) => i.batch === 'tops');
@@ -873,7 +874,7 @@ try {
     ok(okN === 8 && /carry on after 00:00 UTC \(in (\d+h )?\d+m\)/.test(await pS.locator('.limitnote').innerText()), `at the daily limit the batch pauses with ${okN} made and says when it resumes`);
     await pS.screenshot({ path: join(out, '42-starter-limit.png') });
     await pS.click('#sbcancel');
-    ok(cf.used === 10000, 'at the limit the server records the day as used up');
+    ok(cf.used >= 10000, `at the limit the server records the day as used up (${cf.used}; an AI look already under way may add a little)`);
     cf.limitAt = Infinity; cf.used = 0; const before = cf.calls.length; await pS.evaluate(() => localStorage.removeItem('starter_neurons')); // a new day
     await pS.click('[data-act=starterbatch][data-v=bottoms]'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
     ok(cf.calls.length - before === 12, `after the reset only the missing 12 are made; the 8 saved earlier are reused (made ${cf.calls.length - before})`);

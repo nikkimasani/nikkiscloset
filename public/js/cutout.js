@@ -19,7 +19,7 @@ export function toCanvas(img, maxSize = 900) {
 }
 
 /** @param {HTMLCanvasElement} src @param {{tolerance:number}} opts @returns {HTMLCanvasElement} */
-export function removeBackground(src, { tolerance = 42 } = {}) {
+export function removeBackground(src, { tolerance = 42, holes = 0 } = {}) {
   const { width: w, height: h } = src;
   const ctx = src.getContext('2d', { willReadFrequently: true });
   const img = ctx.getImageData(0, 0, w, h);
@@ -54,6 +54,17 @@ export function removeBackground(src, { tolerance = 42 } = {}) {
     if (p >= w) push(p - w);
     if (p < w * (h - 1)) push(p + w);
   }
+  // holes: background-coloured patches the flood can't reach (between a sleeve and the body, inside a strap) go too, if they're at least
+  // `holes` of the picture (smaller ones are buttons, eyelets or the light part of the fabric)
+  if (holes) {
+    const lab = new Uint8Array(w * h), q = new Int32Array(w * h), min = holes * w * h;
+    for (let i = 0; i < w * h; i++) {
+      if (isBg[i] || lab[i] || !near(i)) continue;
+      let hd = 0, tl = 0; q[tl++] = i; lab[i] = 1;
+      while (hd < tl) { const p = q[hd++], x = p % w; for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (j >= 0 && j < w * h && !isBg[j] && !lab[j] && near(j)) { lab[j] = 1; q[tl++] = j; } }
+      if (tl >= min) for (let t = 0; t < tl; t++) isBg[q[t]] = 1;
+    }
+  }
   return crop(src, img, isBg);
 }
 
@@ -83,6 +94,7 @@ function crop(src, img, isBg) {
   const res = document.createElement('canvas');
   res.width = x1 - x0 + 1; res.height = y1 - y0 + 1;
   res.getContext('2d').drawImage(full, x0, y0, res.width, res.height, 0, 0, res.width, res.height);
+  full.width = full.height = 0; // (iPhones cap the memory all canvases share: let it go now)
   return res;
 }
 
