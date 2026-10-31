@@ -6,7 +6,7 @@ import { palette, colorName } from './color.js';
 
 /** The kinds of pieces drawn on the model. */
 /** Raised whenever the way pieces are drawn or cut out changes: the preload job remakes pieces made by an older version. */
-export const WEAR_VERSION = 4;
+export const WEAR_VERSION = 5;
 export const WORN_TYPES = ['tops', 'tanks', 'bodysuits', 'bottoms', 'skirts', 'dresses', 'outerwear', 'shoes'];
 export const isWornType = (type) => WORN_TYPES.includes(type);
 export const WEAR_NEURONS = 57.5; // (FLUX.2 klein 4B: 5.37 per input tile + 26.05 per output tile; one input tile, two output tiles)
@@ -182,7 +182,7 @@ export async function extractWorn(blob, piece, pack) {
     if (garment.length && skin.length) {
       const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);
       for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!raw[i]) continue; const o = i * 4, p = toLab(A[o], A[o + 1], A[o + 2]), dG = near(p, garment);
-        if (dG > 64 && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
+        if (dG > 64 && near(p, her) * (skinish ? 4 : 2) < dG) raw[i] = 2; } // (a skin-toned piece only loses what is very clearly her) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
       // a patch the piece closes around is the piece (a shiny fold, a print), however skin-like: her arms, neck and legs reach the outside
       const seen = new Uint8Array(w * h), st = [];
       for (let i = y0 * w; i < y1 * w; i++) { if (raw[i] === 1 || seen[i]) continue; let open = false, tl = 0; st.length = 0; st.push(i); seen[i] = 1;
@@ -204,7 +204,20 @@ export async function extractWorn(blob, piece, pack) {
     while (hd < tl) { const p = q[hd++], x = p % w; for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (j >= 0 && j < w * h && m[j] && !lab[j]) { lab[j] = id; q[tl++] = j; } }
     comps.push(tl); }
   const biggest = Math.max(0, ...comps), keepId = new Set(comps.map((n, c) => (n >= Math.max(40, biggest * (type === 'shoes' ? 0.25 : 0.12)) ? c + 1 : 0)).filter(Boolean)); // (marks drawn on her skin go; a shoe's pair stays)
+  if (['tops', 'tanks', 'bodysuits', 'outerwear'].includes(type)) { // bits of trousers or legs it drew that start below the crotch, apart from the piece, go
+    const top = new Float64Array(comps.length + 1).fill(Infinity); for (let i = 0; i < w * h; i++) if (lab[i] && i / w < top[lab[i]]) top[lab[i]] = Math.floor(i / w);
+    for (const c of [...keepId]) if (top[c] * k > pack.points.crotch[1]) keepId.delete(c);
+  }
   for (let i = 0; i < w * h; i++) m[i] = keepId.has(lab[i]) ? 1 : 0;
+  if (type === 'outerwear' && !/coat|trench|duster|longline|cape|coatigan|maxi|knee/i.test(`${piece.name} ${piece.detail || ''}`)) { // a jacket, blazer or cardigan ends at the hips: trousers or legs it drew below go
+    const cut = Math.round((pack.points.crotch[1] + 40) / k); m.fill(0, cut * w);
+  }
+  if (type !== 'shoes') { // her hands are never the piece (FLUX often draws them in her own skin, or over a pocket)
+    const P = pack.points, r = 54 / k;
+    for (const [hp, wp] of [[P.handL, P.wristL], [P.handR, P.wristR]]) { const hx = hp[0] / k, hy = hp[1] / k;
+      for (let y = Math.max(0, Math.floor(wp[1] / k)); y < Math.min(h, Math.ceil(hy + r)); y++) for (let x = Math.max(0, Math.floor(hx - r)); x < Math.min(w, Math.ceil(hx + r)); x++)
+        if (y < hy || (x - hx) ** 2 + (y - hy) ** 2 < r * r) m[y * w + x] = 0; }
+  }
   if (type === 'tops' || type === 'tanks') { // shorts or trousers it added: below the crotch, two separate legs with nothing between them
     const P = pack.points, cx = Math.round(P.crotch[0] / k), from = Math.round(P.crotch[1] / k) + 6;
     for (let y = from; y < y1; y++) { let mid = 0, L = 0, Rr = 0; for (let x = cx - 6; x <= cx + 6; x++) mid += m[y * w + x]; for (let x = cx - 60; x < cx - 14; x++) L += m[y * w + x]; for (let x = cx + 14; x < cx + 60; x++) Rr += m[y * w + x];

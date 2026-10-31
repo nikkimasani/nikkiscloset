@@ -257,6 +257,13 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
+test('a bodysuit goes under the bottoms by default (no trim at the waist), and can be untucked', () => {
+  const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
+  const svg = dollSVG({ pack, items, urls });
+  assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.doesNotMatch(svg, /clip-path="url\(#tuckclip-\d+\)"/);
+  assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['bottom', 'top']);
+});
+
 test('each piece remembers a small fit for this picture only', () => {
   const it = mkItem('t', 'tops', { fit: { base: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
   assert.equal(fitOf(it, { id: 'base' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);

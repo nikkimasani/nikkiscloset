@@ -96,6 +96,8 @@ export const NO_FIT = { scale: 1, dx: 0, dy: 0, rot: 0, tuck: false };
 /** The remembered fit of an item for this picture (a different base picture keeps its own, because proportions differ). */
 export const fitOf = (item, pack) => ({ ...NO_FIT, ...(item?.fit?.[pack.id] || {}) });
 export const isTuckable = (item, pack) => !!item && pack.tuckable.includes(item.type);
+/** Is a top tucked into the bottoms? A bodysuit is, unless you untuck it (it is worn under them); other tops only when you tuck them. */
+export const tuckOf = (item, pack) => (item?.type === 'bodysuits' ? item.fit?.[pack.id]?.tuck ?? true : fitOf(item, pack).tuck);
 
 /** The SVG transform that puts an item's picture on its box, then applies the remembered nudge. */
 export function garmentTransform(anchor, fit) {
@@ -111,7 +113,7 @@ let uidN = 0;
 export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
-  const tucked = !!(top && bottom && isTuckable(top, pack) && fitOf(top, pack).tuck);
+  const tucked = !!(top && bottom && isTuckable(top, pack) && tuckOf(top, pack)), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
   const order = tucked ? pack.tuckedOrder : pack.clothesOrder;
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';
@@ -122,11 +124,11 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
       const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
       const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}"><image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
-      return slot === 'top' && tucked ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
+      return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
     }
     const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${garmentTransform(a, f)}">
       <image href="${href}" width="${a.w}" height="${a.h}" preserveAspectRatio="${a.align} meet" filter="url(#gfx-${n})"/>${selected === it.id ? `<rect class="selbox" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="6" fill="none"/>` : ''}</g>`;
-    return slot === 'top' && tucked ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
+    return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
   };
   const accPiece = (it, r, f, sel) => {
     const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean), pair = pts.length === 2;
