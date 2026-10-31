@@ -1,13 +1,4 @@
-0 made this run · 127 of 140 in the wardrobe · 24 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
-starter-navy-halter-top: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-medium-wash-straight-jeans: she moved or changed shape in the picture it drew (it couldn’t be lined up); the piece barely shows (it may not have dressed her)
-starter-dark-wash-wide-leg-jeans: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-distressed-skinny-jeans: she moved or changed shape in the picture it drew (it couldn’t be lined up); the piece barely shows (it may not have dressed her)
-starter-dark-denim-maxi-skirt: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-navy-halter-midi-dress: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-white-strapless-corset-mini: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (949dc8ee-933f-4c15-9dcb-a9949d03195e)
-starter-black-knee-high-boots: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-black-ankle-boots: she moved or changed shape in the picture it drew (it couldn’t be lined up)
+61 made this run · 122 of 140 in the wardrobe · 20 failed
 starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -23,3 +14,8 @@ starter-black-leather-belt: a white or grey body shape (a dress form?)
 starter-tortoiseshell-claw-clip: a white or grey body shape (a dress form?)
 starter-gold-rings-set: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-beige-bucket-hat: a light piece on a white background (it can’t be cut out cleanly)
+starter-black-strapless-tube-top: it added shorts or trousers to the top
+starter-brown-leopard-corset-top: it added shorts or trousers to the top
+starter-camel-ribbed-turtleneck: it added shorts or trousers to the top
+starter-black-fitted-tee: it added shorts or trousers to the top
+starter-chocolate-ribbed-tank: it added shorts or trousers to the top
