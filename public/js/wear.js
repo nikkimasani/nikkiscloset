@@ -6,7 +6,7 @@ import { palette, colorName } from './color.js';
 
 /** The kinds of pieces drawn on the model. */
 /** Raised whenever the way pieces are drawn or cut out changes: the preload job remakes pieces made by an older version. */
-export const WEAR_VERSION = 3;
+export const WEAR_VERSION = 4;
 export const WORN_TYPES = ['tops', 'tanks', 'bodysuits', 'bottoms', 'skirts', 'dresses', 'outerwear', 'shoes'];
 export const isWornType = (type) => WORN_TYPES.includes(type);
 export const WEAR_NEURONS = 57.5; // (FLUX.2 klein 4B: 5.37 per input tile + 26.05 per output tile; one input tile, two output tiles)
@@ -22,7 +22,9 @@ export const keyFor = (piece) => {
   const words = `${(piece.colors || []).join(' ')} ${piece.name || ''} ${piece.detail || ''}`;
   const body = /green|olive|emerald|sage|mint|khaki|lime|teal/i.test(words) ? { name: 'magenta', rgb: [225, 40, 215], hues: [258, 352] }
     : { name: 'green', rgb: [40, 200, 70], hues: [54, 200], warm: /beige|taupe|oatmeal|camel|tan|cream|ivory|gold|butter|mustard|champagne|nude|straw/i.test(words) };
-  return { ...body, bg: body.name === 'green' && /blue|navy|denim|wash|indigo|cobalt|chambray/i.test(words) ? MAGENTA_BG : BLUE }; // (a piece both green and blue keeps the blue backdrop)
+  const blue = /blue|navy|denim|wash|indigo|cobalt|chambray/i.test(words);
+  if (body.name === 'green' && blue) body.hues = [54, 170]; // (pale denim reaches cyan; the painted body never does)
+  return { ...body, bg: body.name === 'green' && blue ? MAGENTA_BG : BLUE }; // (a piece both green and blue keeps the blue backdrop)
 };
 export const BACKDROP = BLUE.rgb; // (the usual one)
 /** Hue (0-360), saturation and value (0-1) of a pixel. */
@@ -47,6 +49,33 @@ export const isKeyed = (r, g, b, key) => {
 };
 
 /** Where each kind of piece may be (in base.png pixels, from config.json's points): never her face, hair or hands. */
+/** CIE Lab (D65) of an sRGB colour, for colour distances that match the eye. */
+export function toLab(r, g, b) {
+  const f = (c) => { c /= 255; return c > 0.04045 ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92; }, R = f(r), G = f(g), B = f(b);
+  const t = (v) => (v > 0.008856 ? Math.cbrt(v) : 7.787 * v + 16 / 116);
+  const X = t((R * 0.4124 + G * 0.3576 + B * 0.1805) / 0.95047), Y = t(R * 0.2126 + G * 0.7152 + B * 0.0722), Z = t((R * 0.0193 + G * 0.1192 + B * 0.9505) / 1.08883);
+  return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
+}
+const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+/** A few representative colours of a set of Lab colours (k-means, deterministic start); clusters under 6% of the samples are dropped. */
+export function clusters(list, k) {
+  if (!list.length) return [];
+  const sorted = [...list].sort((a, b) => a[0] - b[0]); let c = Array.from({ length: Math.min(k, list.length) }, (_, i) => sorted[Math.floor((i + 0.5) * sorted.length / Math.min(k, list.length))]);
+  let n = [];
+  for (let it = 0; it < 8; it++) {
+    const sum = c.map(() => [0, 0, 0]); n = c.map(() => 0);
+    for (const p of list) { let bi = 0, bd = Infinity; c.forEach((q, j) => { const d = d2(p, q); if (d < bd) { bd = d; bi = j; } }); n[bi]++; sum[bi][0] += p[0]; sum[bi][1] += p[1]; sum[bi][2] += p[2]; }
+    c = c.map((q, j) => (n[j] ? sum[j].map((v) => v / n[j]) : q));
+  }
+  return c.filter((_, j) => n[j] >= list.length * 0.06);
+}
+/** Where a piece surely is on her, for learning its colours: the sides of the torso (upper-body pieces) or of the hips (bottoms). */
+export function coreBoxes(type, P) {
+  if (['tops', 'tanks', 'bodysuits', 'dresses', 'outerwear'].includes(type)) { const y0 = P.bustL[1] - 10, y1 = P.waistL[1] - 10; return [[P.bustL[0] + 10, y0, P.bustL[0] + 80, y1], [P.bustR[0] - 80, y0, P.bustR[0] - 10, y1]]; }
+  if (type === 'bottoms' || type === 'skirts') return [[P.crotch[0] - 120, P.belt[1] + 40, P.crotch[0] + 120, P.crotch[1] - 20]]; // (the front of the hips)
+  return [];
+}
+
 export function regionFor(type, pack) {
   const P = pack.points, top = P.nape[1] - 20, ankle = Math.min(P.ankleL[1], P.ankleR[1]);
   if (type === 'shoes') return { y0: ankle - 50, y1: pack.size[1] }; // (from just above the ankle: no socks or leggings)
@@ -137,6 +166,31 @@ export async function extractWorn(blob, piece, pack) {
     const i = y * w + x, o = i * 4; if (isKeyed(A[o], A[o + 1], A[o + 2], key)) continue;
     if (NB && NB[o + 3] > 200 && Math.abs(A[o] - NB[o]) + Math.abs(A[o + 1] - NB[o + 1]) + Math.abs(A[o + 2] - NB[o + 2]) < 60) continue;
     raw[i] = 1;
+  }
+  { // FLUX often leaves her arms, neck or feet in her own skin, or fades skin into the key colour, instead of painting them flat. So learn the
+    // piece's colours where it surely is (coreBoxes) and hers from her face (and base.png's arms), and drop what is nearer hers, the key's,
+    // or a blend of the two, than the piece's
+    const P = pack.points, at = (x, y) => (Math.round(y / k) * w + Math.round(x / k)) * 4, box = (D, [xa, ya, xb, yb], keep) => {
+      const out = []; for (let y = ya; y < yb; y += 2) for (let x = xa; x < xb; x += 2) { const o = at(x, y); if (keep(o)) out.push(toLab(D[o], D[o + 1], D[o + 2])); } return out; };
+    const garment = clusters(coreBoxes(type, P).flatMap((b) => box(A, b, (o) => !isKeyed(A[o], A[o + 1], A[o + 2], key))), 6);
+    const cheeks = [[P.templeL[0] + 14, P.eyes[1] + 22, P.templeL[0] + 34, P.jawL[1] - 18], [P.templeR[0] - 34, P.eyes[1] + 22, P.templeR[0] - 14, P.jawR[1] - 18], [P.templeL[0] + 30, P.hairline[1] + 18, P.templeR[0] - 30, P.templeL[1] + 8]];
+    const forearms = [[P.wristL[0] + 4, P.elbowL[1] + 30, P.elbowL[0] + 26, P.wristL[1] - 30], [P.elbowR[0] - 26, P.elbowR[1] + 30, P.wristR[0] - 4, P.wristR[1] - 30]];
+    const skin = clusters([...cheeks.flatMap((b) => box(A, b, () => true)), ...forearms.flatMap((b) => box(BA, b, (o) => BA[o + 3] > 200))], 4);
+    const paint = []; for (let y = y0; y < y1; y += 3) for (let x = 0; x < w; x += 3) { const o = (y * w + x) * 4; if (isKeyed(A[o], A[o + 1], A[o + 2], key) && !isBackdrop(A[o], A[o + 1], A[o + 2], key)) paint.push(toLab(A[o], A[o + 1], A[o + 2])); }
+    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC];
+    for (const sk of skin) for (const g of keyC) for (const t of [0.3, 0.5, 0.7]) her.push(sk.map((v, j) => v * (1 - t) + g[j] * t));
+    if (garment.length && skin.length) {
+      const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);
+      for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!raw[i]) continue; const o = i * 4, p = toLab(A[o], A[o + 1], A[o + 2]), dG = near(p, garment);
+        if (dG > 64 && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
+      // a patch the piece closes around is the piece (a shiny fold, a print), however skin-like: her arms, neck and legs reach the outside
+      const seen = new Uint8Array(w * h), st = [];
+      for (let i = y0 * w; i < y1 * w; i++) { if (raw[i] === 1 || seen[i]) continue; let open = false, tl = 0; st.length = 0; st.push(i); seen[i] = 1;
+        while (tl < st.length) { const p = st[tl++], x = p % w, y = (p / w) | 0; const o = p * 4; if (x === 0 || x === w - 1 || y <= y0 || y >= y1 - 1 || isBackdrop(A[o], A[o + 1], A[o + 2], key)) open = true;
+          for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (j >= y0 * w && j < y1 * w && raw[j] !== 1 && !seen[j]) { seen[j] = 1; st.push(j); } }
+        for (const p of st) raw[p] = !open && raw[p] === 2 ? 1 : raw[p] === 2 ? 0 : raw[p]; }
+    }
+    for (let i = 0; i < w * h; i++) if (raw[i] === 2) raw[i] = 0;
   }
   { // majority vote over a 5 x 5 neighbourhood: speckles of skin among fabric (and of fabric among skin) go with what's around them
     const I = new Int32Array((w + 1) * (h + 1));

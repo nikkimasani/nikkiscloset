@@ -85,7 +85,7 @@ async function load() {
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
   S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
-  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1')); // (hidden ones stay in the database, backups and sync)
+  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1' && (i.worn || !wearAI.isWornType(i.type)))); // (hidden ones stay in the database, backups and sync; an old flat photo of a piece drawn on her waits for the preloaded one)
   for (const i of S.items) if (starter.isStarter(i) && !i.placedFromAnchors) { delete i.fit; i.adj = { scale: 1, dx: 0, dy: 0 }; i.placedFromAnchors = 1; put('items', i); } // one-time: drop saved drag offsets so starter pieces sit by the body points
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
@@ -216,7 +216,9 @@ const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
 /** Your chosen hairstyle and colour, ready for dollSVG. */
-const hairMarks = () => { try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } }; // your own "Adjust fit" landmarks, per style
+const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped once when the styles' own landmarks are measured again)
+  const v = String(dollPack?.hair?.marksVersion || 1); if (dollPack && store.get('hairmarks_v', '1') !== v) { store.set('hairmarks', '{}'); store.set('hairmarks_v', v); }
+  try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
@@ -266,7 +268,9 @@ function renderCloset() {
       <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
       ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
     </div>
+    ${S.items.length ? `<div class="row pickrow"><button class="ghost" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done choosing' : '☑ Choose several to try on'}</button>${S.picking ? '<span class="muted">Tap pieces, then Try on</span>' : ''}</div>` : ''}
     ${rails || emptyCloset()}
+    ${S.picking ? pickBar() : ''}
     ${addPanel()}
     ${starterPanel()}
     <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
@@ -280,6 +284,10 @@ function renderCloset() {
   $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
 }
 
+/** Wardrobe > Choose several: the bar that puts every chosen piece on her at once (one per slot; a later pick replaces an earlier one there). */
+const pickBar = () => `<div class="pickbar" role="region" aria-label="Chosen pieces"><span><b>${S.pick.length}</b> chosen</span>
+  <button class="ghost" data-act="pickcancel">Cancel</button><button class="primary" data-act="trypicked" ${S.pick.length ? '' : 'disabled'}>Try on${S.pick.length ? ` ${S.pick.length}` : ''}</button></div>`;
+
 function emptyCloset() {
   if (S.items.length) return `<div class="empty"><h2>Nothing here</h2><p class="muted">No pieces match those filters.</p></div>`;
   return `<div class="empty"><h2 class="view-title">Your closet is empty ✨</h2>
@@ -290,9 +298,10 @@ function emptyCloset() {
 
 function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
-  return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''}">${hanger}${starter.isStarter(i) ? '<span class="starterbadge">Starter</span>' : ''}
-    <button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>
-    <button class="img" data-act="tryit" data-id="${i.id}" aria-label="Try on ${esc(i.name)}"><img src="${url(i.id)}" alt=""></button>
+  const picked = S.picking && S.pick.includes(i.id);
+  return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}${starter.isStarter(i) ? '<span class="starterbadge">Starter</span>' : ''}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>`}
+    <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
     ${i.price > 0 ? `<div class="meta price">${worn ? `$${(i.price / worn).toFixed(2)}/wear` : `$${i.price.toFixed(2)} · not worn yet`}</div>` : ''}</article>`;
@@ -1196,6 +1205,7 @@ function renderMirror() {
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
+        ${dollOn() ? '<button class="closetbtn" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>' : ''}
         ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
         ${S.cas ? casHTML() : ''}
@@ -1559,6 +1569,20 @@ document.addEventListener('click', async (e) => {
     case 'rmstarterreview': { const bad = S.starterReview || []; if (!bad.length || !confirm(`Delete ${bad.length} starter piece${bad.length === 1 ? '' : 's'} that need review? You can make them again from Starter closet.`)) return; for (const b of bad) await del('items', b.id); S.starterReview = []; render(); return toast(`Deleted ${bad.length} ✓`); }
     case 'starterbatch': return openStarterBatch(v);
     case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
+    case 'pickmode': S.picking = !S.picking; S.pick = []; return renderCloset();
+    case 'pickcancel': S.picking = false; S.pick = []; return renderCloset();
+    case 'pick': { // (updated in place, so the rails keep their scroll)
+      S.pick = S.pick.includes(id) ? S.pick.filter((x) => x !== id) : [...S.pick, id]; const on = S.pick.includes(id), card = el.closest('.piece');
+      card?.classList.toggle('picked', on); el.setAttribute('aria-pressed', String(on)); const mk = card?.querySelector('.pickmark'); if (mk) mk.textContent = on ? '✓' : '';
+      const bar = $('.pickbar'); if (bar) bar.outerHTML = pickBar(); return;
+    }
+    case 'trypicked': {
+      const list = S.pick.map(itemById).filter(Boolean); if (!list.length) return;
+      for (const it of list) if (!Object.values(S.outfit).includes(it.id)) S.outfit = wear(S.outfit, it); // (wear() toggles: one already on stays on)
+      S.tab = list[list.length - 1].type; S.adjust = null; S.pop = true; S.scene = 'doll'; S.picking = false; S.pick = [];
+      if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); }
+      return go('tryon');
+    }
     case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'doll'; return go('tryon'); }
     case 'dnudge': case 'dsize': case 'drot': if (e.detail === 0) doFitAction(act, v); return; // a mouse/touch press is handled on pointerdown (so holding repeats); this is the keyboard
     case 'dfit': S.fitOpen = !S.fitOpen; if (S.fitOpen && !selectedItem()) S.adjust = Object.values(S.outfit)[0] || null; $('#stage').innerHTML = stageHTML(); refreshDollFit(); return;
