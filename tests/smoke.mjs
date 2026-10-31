@@ -93,8 +93,11 @@ const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_K
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+// every page starts with no preloaded wardrobe (public/starter/made/ holds the real one); the preload section serves its own index
+const rawNewContext = browser.newContext.bind(browser);
+browser.newContext = async (o) => { const c = await rawNewContext(o); await c.route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: '{"version":0,"pieces":{},"failed":{}}' })); return c; };
 const _newContext = browser.newContext.bind(browser); // (kept as an alias: some sections below start from a fresh, raw context on purpose)
-const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+const page = await (await browser.newContext({ viewport: { width: 1200, height: 900 } })).newPage();
 await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing flows exercise the 2D fallback; 3D has its own section below
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
