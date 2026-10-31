@@ -1,0 +1,38 @@
+name: wardrobe ideas
+# Reads the Pinterest boards in wardrobe/boards.txt and lists the pieces in their pins (scripts/wardrobe-ideas.mjs), for choosing the
+# wardrobe's catalog. Saves wardrobe/ideas.json and wardrobe/ideas.txt on the wardrobe-ideas branch. About 12 neurons a pin.
+# Start it from Actions > wardrobe ideas > Run workflow; it also runs at 00:10 UTC (after Cloudflare's allowance resets), skipping pins
+# already looked at.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10 0 * * *'
+permissions:
+  contents: write
+concurrency: { group: wardrobe-ideas, cancel-in-progress: false }
+jobs:
+  ideas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Carry on from the ideas branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git fetch origin wardrobe-ideas; then git checkout -B wardrobe-ideas origin/wardrobe-ideas && git merge --no-edit -X theirs origin/main; else git checkout -b wardrobe-ideas; fi
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Look at the pins
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: node scripts/wardrobe-ideas.mjs
+      - name: Save the list
+        run: |
+          git add wardrobe
+          if git diff --cached --quiet; then echo 'Nothing new.'; exit 0; fi
+          git commit -m "Wardrobe ideas: $(head -1 wardrobe/ideas.txt)"
+          git push origin wardrobe-ideas

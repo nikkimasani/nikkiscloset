@@ -22,7 +22,7 @@ const WHITE = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysui
 const GREY = ['blazer', 'blazer', 'snake', 'flare', 'banana', 'snake', 'bodysuit'].map((n) => readFileSync(new URL(`./fixtures/grey/${n}.png`, import.meta.url))); // (light pieces are made on grey)
 const BAD = { 'starter-white-shoulder-bag': 2, 'starter-black-clutch': 99 }; // flat-lay pictures that fail their check (bags are still product photos)
 const BAD_WORN = { 'starter-cream-crochet-cami': 1, 'starter-navy-halter-top': 99 }; // drawings where she isn't wearing the piece
-const WORN_FX = Object.fromEntries(['none', 'top', 'bottom', 'skirt', 'dress', 'outer', 'shoes'].flatMap((n) => ['green', 'magenta'].map((k) => [`${n}-${k}`, readFileSync(new URL(`./fixtures/worn/${n}-${k}.png`, import.meta.url))])));
+const WORN_FX = Object.fromEntries(['none', 'top', 'bottom', 'skirt', 'dress', 'outer', 'shoes'].flatMap((n) => ['green', 'magenta', 'green-magentabg'].map((k) => [`${n}-${k}`, readFileSync(new URL(`./fixtures/worn/${n}-${k}.png`, import.meta.url))])));
 const wornGroup = (t) => ({ tops: 'top', tanks: 'top', bodysuits: 'top', bottoms: 'bottom', skirts: 'skirt', dresses: 'dress', outerwear: 'outer', shoes: 'shoes' }[t]);
 const { wearPrompt } = await import('../lib/ai.js');
 const RED_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
@@ -71,11 +71,11 @@ const mock = createServer((req, res) => {
   else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/black-forest-labs/flux-2-klein-4b') { // the model wearing a piece
     const parts = []; req.on('data', (d) => parts.push(d)).on('end', async () => {
       const fd = await new Request('http://x/', { method: 'POST', headers: { 'content-type': req.headers['content-type'] }, body: Buffer.concat(parts) }).formData();
-      const prompt = fd.get('prompt'), img = Buffer.from(await fd.get('input_image_0').arrayBuffer()), key = /painted flat magenta/.test(prompt) ? 'magenta' : 'green';
-      const it = SITEMS.find((i) => wearPrompt(i, key) === prompt) || { id: 'inspo:' + (prompt.match(/Dress her in (?:a |an )?([^;.]+)/)?.[1] || ''), type: /coat/.test(prompt) ? 'outerwear' : 'bottoms' };
-      cf.wears.push({ auth: req.headers.authorization, prompt, png: img.slice(1, 4).toString() === 'PNG', size: [fd.get('width'), fd.get('height')], fields: [...fd.keys()].sort().join(), id: it?.id, key });
+      const prompt = fd.get('prompt'), img = Buffer.from(await fd.get('input_image_0').arrayBuffer()), key = /painted flat magenta/.test(prompt) ? 'magenta' : 'green', bg = /plain magenta background/.test(prompt) ? 'magenta' : 'blue';
+      const it = SITEMS.find((i) => wearPrompt(i, key, bg) === prompt) || { id: 'inspo:' + (prompt.match(/Dress her in (?:a |an )?([^;.]+)/)?.[1] || ''), type: /coat/.test(prompt) ? 'outerwear' : 'bottoms' };
+      cf.wears.push({ bg, auth: req.headers.authorization, prompt, png: img.slice(1, 4).toString() === 'PNG', size: [fd.get('width'), fd.get('height')], fields: [...fd.keys()].sort().join(), id: it?.id, key });
       if (cf.wears.length > cf.wearLimitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
-      const n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1), pic = WORN_FX[`${n <= (BAD_WORN[it.id] || 0) ? 'none' : wornGroup(it.type)}-${key}`];
+      const n = (cf.tries[it.id] = (cf.tries[it.id] || 0) + 1), pic = WORN_FX[`${n <= (BAD_WORN[it.id] || 0) ? 'none' : wornGroup(it.type)}-${key}${bg === 'magenta' ? '-magentabg' : ''}`];
       cf.sent[it.id] = pic.length; send({ success: true, result: { image: pic.toString('base64') } });
     });
   }
@@ -928,7 +928,7 @@ try {
     ok(await pI.locator('.idea').count() === 2 && /Camel wrap coat/.test(await pI.locator('.ideas').innerText()), 'an AI lists the pieces in an inspo picture (only kinds it can make for the model)');
     await pI.click('[data-act=makeidea][data-v="0"]'); await pI.waitForSelector('.idea b.ok', { timeout: 30000 });
     const made = await pI.evaluate(() => window.__closet.items.map((i) => ({ n: i.name, t: i.type, made: i.made, worn: !!i.worn?.size })));
-    ok(cf.wears.length === w0 + 1 && /Dress her in a camel belted wool wrap coat, knee length, worn open/.test(cf.wears.at(-1).prompt) && made.length === 1 && made[0].n === 'Camel wrap coat' && made[0].made === 'model' && made[0].worn,
+    ok(cf.wears.length === w0 + 1 && /Dress her in only a camel belted wool wrap coat, knee length, worn open/.test(cf.wears.at(-1).prompt) && made.length === 1 && made[0].n === 'Camel wrap coat' && made[0].made === 'model' && made[0].worn,
       `a piece from the pin is drawn on the model and added to the closet (${JSON.stringify(made)})`);
     await pI.screenshot({ path: join(out, '44-inspo-ideas.png') });
     await pI.context().close();
@@ -938,15 +938,17 @@ try {
   {
     const pP = await mk(); let ver = 1;
     const box = { x: 220, y: 240, w: 460, h: 760 }, pic = readFileSync(new URL('./fixtures/white/blazer.png', import.meta.url));
-    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
+    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, t: ver * 10, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
     await pP.context().route('**/starter/made/*.webp*', (r) => r.fulfill({ contentType: 'image/png', body: pic }));
     const w0 = cf.wears.length, c0 = cf.calls.length;
     await pP.reload(); await pP.waitForFunction(() => window.__closet?.items.length === 2, null, { timeout: 20000 });
     const got = await pP.evaluate(() => Promise.all(window.__closet.items.map(async (i) => { const b = i.worn && await createImageBitmap(i.worn); return { id: i.id, sid: i.starterId, ready: i.ready, src: i.source, worn: b ? [b.width, b.height] : null }; })));
     ok(cf.wears.length === w0 && cf.calls.length === c0 && got.some((i) => i.id === 'pre-starter-black-fitted-tee' && i.worn?.join() === '896,1776' && i.ready && i.src === 'starter') && got.some((i) => i.id === 'pre-starter-black-clutch' && !i.worn),
       `the preloaded wardrobe is added on first open without generating anything (${JSON.stringify(got)})`);
+    ver = 2; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items.find((i) => i.id === 'pre-starter-black-fitted-tee')?.preloadT === 20, null, { timeout: 20000 });
+    ok(await pP.evaluate(() => window.__closet.items.length) === 2, 'a remade preloaded piece replaces the older one in place on the next open (no duplicate)');
     await pP.click('[data-view=closet]'); await pP.click('.piece.is-starter .edit >> nth=0'); await pP.click('#rm');
-    await pP.waitForFunction(() => window.__closet.items.length === 1); ver = 2; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items, null, { timeout: 20000 }); await pP.waitForTimeout(1500);
+    await pP.waitForFunction(() => window.__closet.items.length === 1); ver = 3; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items, null, { timeout: 20000 }); await pP.waitForTimeout(1500);
     ok(await pP.evaluate(() => window.__closet.items.length) === 1, 'a preloaded piece you removed stays removed when the wardrobe is updated');
     await pP.context().close();
   }
