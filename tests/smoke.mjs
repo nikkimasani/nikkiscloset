@@ -850,7 +850,11 @@ try {
 
   // the starter closet: clothes are drawn on the model (mock Cloudflare FLUX.2 klein) and only the piece is kept; bags are product photos
   {
-    const pS = await mk(); await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
+    const pS = await mk();
+    await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[aria-label="Starter closet"]');
+    ok(await pS.locator('[data-act=starterbatch]').count() === 0 && new RegExp(`0 of ${STARTER_ITEMS.length} in your closet`).test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the starter closet only reports progress: the wardrobe arrives preloaded, there is nothing to make on the phone');
+    await pS.evaluate(() => localStorage.setItem('starter_make', '1')); await pS.reload(); await pS.waitForFunction(() => window.__closet); // (making on the phone, kept behind a flag, is tested below)
+    await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
     const nAll = STARTER_ITEMS.length, nTops = STARTER_ITEMS.filter((i) => i.batch === 'tops').length;
     ok(new RegExp(`57\\.6 neurons a picture, 1,152 a batch of 20, ${Math.round(57.6 * nAll).toLocaleString('en-US')} for all ${nAll} \\(free: 10,000 a day\\)`).test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
