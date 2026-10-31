@@ -6,7 +6,7 @@ import { palette, colorName } from './color.js';
 
 /** The kinds of pieces drawn on the model. */
 /** Raised whenever the way pieces are drawn or cut out changes: the preload job remakes pieces made by an older version. */
-export const WEAR_VERSION = 2;
+export const WEAR_VERSION = 3;
 export const WORN_TYPES = ['tops', 'tanks', 'bodysuits', 'bottoms', 'skirts', 'dresses', 'outerwear', 'shoes'];
 export const isWornType = (type) => WORN_TYPES.includes(type);
 export const WEAR_NEURONS = 57.5; // (FLUX.2 klein 4B: 5.37 per input tile + 26.05 per output tile; one input tile, two output tiles)
@@ -20,7 +20,8 @@ const BLUE = { name: 'blue', rgb: [30, 70, 220], hue: 225 }, MAGENTA_BG = { name
  *  navy), which is far from both denim and her skin. */
 export const keyFor = (piece) => {
   const words = `${(piece.colors || []).join(' ')} ${piece.name || ''} ${piece.detail || ''}`;
-  const body = /green|olive|emerald|sage|mint|khaki|lime|teal/i.test(words) ? { name: 'magenta', rgb: [225, 40, 215], hues: [258, 352] } : { name: 'green', rgb: [40, 200, 70], hues: [54, 200] };
+  const body = /green|olive|emerald|sage|mint|khaki|lime|teal/i.test(words) ? { name: 'magenta', rgb: [225, 40, 215], hues: [258, 352] }
+    : { name: 'green', rgb: [40, 200, 70], hues: [54, 200], warm: /beige|taupe|oatmeal|camel|tan|cream|ivory|gold|butter|mustard|champagne|nude|straw/i.test(words) };
   return { ...body, bg: body.name === 'green' && /blue|navy|denim|wash|indigo|cobalt|chambray/i.test(words) ? MAGENTA_BG : BLUE }; // (a piece both green and blue keeps the blue backdrop)
 };
 export const BACKDROP = BLUE.rgb; // (the usual one)
@@ -36,7 +37,14 @@ export const isBackdrop = (r, g, b, key) => { const [h, s, v] = hsv(r, g, b); re
 /** Is this pixel the painted body or the backdrop (so not the piece)? FLUX often draws the painted green body dull olive (hue about
  *  57-70, faintly coloured), so the range runs from just above yellow (butter yellow and gold fabric stay below 54) to cyan; green
  *  pieces are drawn on magenta, so they never fall in it. */
-export const isKeyed = (r, g, b, key) => { const [h, s, v] = hsv(r, g, b); return (s > 0.12 && v > 0.2 && h >= key.hues[0] && h <= key.hues[1]) || isBackdrop(r, g, b, key); }; // (very dark pixels are fabric: black has no hue to trust)
+export const isKeyed = (r, g, b, key) => {
+  const [h, s, v] = hsv(r, g, b);
+  if (isBackdrop(r, g, b, key)) return true;
+  if (v <= 0.2) return false; // (very dark pixels are fabric: black has no hue to trust)
+  if (h >= key.hues[0] && h <= key.hues[1] && s > 0.12 && (s >= 0.2 || v < 0.72 || h >= 70)) return true; // (bright, nearly white pixels with a green cast are cream fabric lit by the body)
+  // FLUX sometimes draws the bare body dull khaki (hue 38-60, middling colour, darkish): beige, camel and gold fabric are warmer or brighter
+  return key.name === 'green' && h >= (key.warm ? 42 : 36) && h < key.hues[0] && s >= 0.22 && s <= 0.6 && v < 0.74;
+};
 
 /** Where each kind of piece may be (in base.png pixels, from config.json's points): never her face, hair or hands. */
 export function regionFor(type, pack) {
@@ -154,6 +162,12 @@ export async function extractWorn(blob, piece, pack) {
     while (hd < tl) { const p = q[hd++], x = p % w, y = (p / w) | 0; if (x === 0 || x === w - 1 || y <= y0 || y >= y1 - 1) open = true;
       for (const j of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (j >= 0 && j < w * h && !m[j] && !seen[j]) { seen[j] = 1; q[tl++] = j; } }
     if (!open && tl < w * h * 0.0006) for (let t = 0; t < tl; t++) out[q[t]] = 1; }
+  if (type === 'tops' || type === 'tanks') { // shorts or trousers it added that don't split into two legs (bike shorts): both thighs covered below the crotch
+    const P = pack.points, cy = Math.round(P.crotch[1] / k), lx = [Math.round(P.kneeL[0] / k) - 30, Math.round(P.crotch[0] / k) - 4], rx = [Math.round(P.crotch[0] / k) + 4, Math.round(P.kneeR[0] / k) + 30];
+    let L = 0, Rr = 0, nL = 0, nR = 0; // (FLUX's shorts end just below the crotch, so look right there)
+    for (let y = cy + 3; y < Math.min(y1, cy + 14); y++) { for (let x = lx[0]; x < lx[1]; x++) { nL++; L += out[y * w + x]; } for (let x = rx[0]; x < rx[1]; x++) { nR++; Rr += out[y * w + x]; } }
+    if (nL && L / nL > 0.5 && Rr / nR > 0.5 && !/tunic|longline|shirt dress|oversized|button-down|(?<!t-)shirt\b/i.test(`${piece.name} ${piece.detail || ''}`)) reasons.push('it added shorts or trousers to the top');
+  }
   let area = 0; for (let i = 0; i < w * h; i++) area += out[i];
   const frac = area / (w * h), [lo, hi] = type === 'shoes' ? [0.004, 0.06] : type === 'dresses' || type === 'outerwear' ? [0.05, 0.5] : [0.02, 0.4];
   if (frac < lo) reasons.push('the piece barely shows (it may not have dressed her)');
