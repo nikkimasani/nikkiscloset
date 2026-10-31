@@ -724,12 +724,13 @@ try {
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
   ok(true, 'the back photo can be removed');
   { // Wardrobe > Choose several to try on: tap pieces, then Try on puts them all on her at once
+    await pB.evaluate(() => { window.__closet.outfit = {}; }); await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .img').click(); // (the tee is on her already)
     await pB.click('[data-view=closet]'); await pB.click('[data-act=pickmode]');
     await pB.locator('.piece:has-text("White tee") .img').click(); await pB.locator('.piece:has-text("Satin midi skirt") .img').click(); await pB.locator('.piece:has-text("Camel blazer") .img').click();
     ok(await pB.locator('.piece.picked').count() === 3 && /3 chosen/.test(await pB.locator('.pickbar').innerText()), 'chosen pieces are marked and counted');
     await pB.click('[data-act=trypicked]'); await pB.waitForFunction(() => document.querySelector('.stage'));
     const on = await pB.evaluate(() => Object.values(window.__closet.outfit).map((id) => window.__closet.items.find((i) => i.id === id)?.name).sort());
-    ok(JSON.stringify(on) === JSON.stringify(['Camel blazer', 'Satin midi skirt', 'White tee']), `Try on puts every chosen piece on her at once (${on.join(', ')})`);
+    ok(JSON.stringify(on) === JSON.stringify(['Camel blazer', 'Satin midi skirt', 'White tee']), `Try on puts every chosen piece on her at once, and one already on stays on (${on.join(', ')})`);
   }
 
   // ── the walk-in closet: no character, swipe / tap to move, your pieces on the rails and shelves ──

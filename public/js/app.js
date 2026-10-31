@@ -1578,7 +1578,7 @@ document.addEventListener('click', async (e) => {
     }
     case 'trypicked': {
       const list = S.pick.map(itemById).filter(Boolean); if (!list.length) return;
-      for (const it of list) S.outfit = wear(S.outfit, it);
+      for (const it of list) if (!Object.values(S.outfit).includes(it.id)) S.outfit = wear(S.outfit, it); // (wear() toggles: one already on stays on)
       S.tab = list[list.length - 1].type; S.adjust = null; S.pop = true; S.scene = 'doll'; S.picking = false; S.pick = [];
       if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); }
       return go('tryon');
