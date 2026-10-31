@@ -257,6 +257,11 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
+test('a tucked top hides below the bottoms\' own waistband, only as wide as the bottoms (sleeves stay)', () => {
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms', { wornBox: { x: 300, y: 690, w: 300, h: 500 } }) }, urls });
+  assert.match(svg, /<clipPath id="tuckclip-\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\d+V\d+H0Z M310 706H590V\d+H310Z"\/>/);
+});
+
 test('a bodysuit goes under the bottoms by default (no trim at the waist), and can be untucked', () => {
   const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
   const svg = dollSVG({ pack, items, urls });

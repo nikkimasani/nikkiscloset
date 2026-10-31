@@ -101,7 +101,12 @@ async function load() {
 async function importPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
   let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
-  if (!idx?.pieces || String(idx.version) === store.get('preloaded', '')) return;
+  if (!idx?.pieces) return;
+  for (const i of S.items.filter((i) => i.preloaded && starter.isStarter(i))) { // (once: where each piece sits on her, for tucking, and its catalogue colour name)
+    const p = idx.pieces[i.starterId], it = STARTER_ITEMS.find((x) => x.id === i.starterId), color = it && starter.namedColor(it, i.color);
+    if ((p?.box && !i.wornBox) || (color && color.name !== i.color?.name)) { Object.assign(i, p?.box && !i.wornBox ? { wornBox: p.box } : {}, color ? { color } : {}); await put('items', i); }
+  }
+  if (String(idx.version) === store.get('preloaded', '')) return;
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
   const pack = dollPack || await loadPack(); if (!pack) return;
   let added = 0, updated = 0;
@@ -120,14 +125,14 @@ async function importPreloaded() {
       if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
         if (!starter.isStarter(mine) || (mine.preloadT || 0) === (p.t || 0)) continue;
         const { cutout, worn } = await pictures(sid, p);
-        Object.assign(mine, { cutout, worn, color: p.color, colors: p.colors, preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
+        Object.assign(mine, { cutout, worn, color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
         URL.revokeObjectURL(S.urls.get(mine.id) || ''); S.urls.delete(mine.id); url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++;
         continue;
       }
       if (S.items.some((i) => i.starterId === sid && (i.worn || p.kind !== 'worn' || !starter.isStarter(i)))) continue; // (already here, or one you own)
       const { cutout, worn } = await pictures(sid, p);
       const older = S.items.filter((i) => i.starterId === sid && starter.isStarter(i)); if (older.length) await removeItems(older.map((i) => i.id));
-      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
+      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn, box: p.box }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
       await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++;
     } catch { /* this one is tried again next time */ return; }
   }
@@ -1522,7 +1527,7 @@ async function makePieceForModel(piece, pass, { occasion = '' } = {}) {
     const done = await wearAI.extractWorn(blob, piece, pack); last = done;
     if (!done.check.ok || !done.worn) continue;
     const item = { id: uid(), source: 'starter', starterId: `inspo-${uid()}`, made: 'model', ready: true, name: piece.name, type: piece.type, occasions: occasion ? [occasion] : [], season: 'all', brand: '',
-      color: done.color, colors: done.colors, tags: { colors: piece.colors }, cutout: done.cutout, worn: done.worn, original: blob, adj: { scale: 1, dx: 0, dy: 0 }, checkVersion: starter.CHECK_VERSION, createdAt: Date.now(), updatedAt: Date.now() };
+      color: done.color, colors: done.colors, tags: { colors: piece.colors }, cutout: done.cutout, worn: done.worn, ...(done.box && { wornBox: done.box }), original: blob, adj: { scale: 1, dx: 0, dy: 0 }, checkVersion: starter.CHECK_VERSION, createdAt: Date.now(), updatedAt: Date.now() };
     await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item);
     return item;
   }

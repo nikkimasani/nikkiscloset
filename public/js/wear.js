@@ -177,7 +177,7 @@ export async function extractWorn(blob, piece, pack) {
     const forearms = [[P.wristL[0] + 4, P.elbowL[1] + 30, P.elbowL[0] + 26, P.wristL[1] - 30], [P.elbowR[0] - 26, P.elbowR[1] + 30, P.wristR[0] - 4, P.wristR[1] - 30]];
     const skin = clusters([...cheeks.flatMap((b) => box(A, b, () => true)), ...forearms.flatMap((b) => box(BA, b, (o) => BA[o + 3] > 200))], 4);
     const paint = []; for (let y = y0; y < y1; y += 3) for (let x = 0; x < w; x += 3) { const o = (y * w + x) * 4; if (isKeyed(A[o], A[o + 1], A[o + 2], key) && !isBackdrop(A[o], A[o + 1], A[o + 2], key)) paint.push(toLab(A[o], A[o + 1], A[o + 2])); }
-    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...(skinish ? [] : skin.map(([L, a, b]) => [L * 0.6, a * 0.85, b * 0.85])), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC, ...(skinish ? [] : keyC.flatMap(([L, a, b]) => [[L * 0.5, a * 0.6, b * 0.6], [L * 0.3, a * 0.4, b * 0.4]]))]; // (the key in deep shadow, between arm and body; not for a skin-toned piece, whose own shadows look alike)
+    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...(skinish ? [] : skin.map(([L, a, b]) => [L * 0.6, a * 0.85, b * 0.85])), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC];
     for (const sk of skin) for (const g of keyC) for (const t of [0.3, 0.5, 0.7]) her.push(sk.map((v, j) => v * (1 - t) + g[j] * t));
     if (garment.length && skin.length) {
       const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);

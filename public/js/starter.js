@@ -264,9 +264,11 @@ export const sleevesOf = (it) => (/sleeveless|strapless|tube|cami|tank|halter|co
   : /sleeve|sweater|turtleneck|button-down|blouse|tee|t-shirt|cardigan|blazer|coat|jacket|duster|puffer|shirt/i.test(`${it.name} ${it.detail}`) ? true : undefined);
 /** Starter pieces checked by an older version are checked again (the check keeps getting stricter). */
 export const CHECK_VERSION = 5;
+/** A starter piece's colour: the shade picked from its picture, named as its catalogue says (a pixel-picked name can be far off: shadows, satin). */
+export const namedColor = (it, color) => (color && it.colors?.[0] ? { ...color, name: it.colors[0].trim().replace(/^./, (c) => c.toUpperCase()) } : color);
 export const toItem = (it, done, original) => ({
   checkVersion: CHECK_VERSION, ...(sleevesOf(it) !== undefined && ['tops', 'tanks', 'bodysuits', 'outerwear', 'dresses'].includes(it.type) && { sleeves: sleevesOf(it) }),
   id: uid(), starterId: it.id, source: 'starter', ready: !!done.ready, review: done.ready ? undefined : done.why, ...(it.acc && { acc: it.acc }), name: it.name, type: it.type, occasions: [...it.occasions], season: it.season, brand: '',
-  color: done.color, colors: done.colors, tags: { colors: it.colors }, cutout: done.cutout, ...(done.worn && { worn: done.worn, made: 'model' }), original, adj: { scale: 1, dx: 0, dy: 0 },
+  color: namedColor(it, done.color), colors: done.colors, tags: { colors: it.colors }, cutout: done.cutout, ...(done.worn && { worn: done.worn, made: 'model', ...(done.box && { wornBox: done.box }) }), original, adj: { scale: 1, dx: 0, dy: 0 },
   createdAt: Date.now(), updatedAt: Date.now(),
 });
