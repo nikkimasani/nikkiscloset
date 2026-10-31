@@ -1,4 +1,4 @@
-100 made this run · 100 of 140 in the wardrobe · 12 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+0 made this run · 127 of 140 in the wardrobe · 24 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-navy-halter-top: she moved or changed shape in the picture it drew (it couldn’t be lined up)
 starter-medium-wash-straight-jeans: she moved or changed shape in the picture it drew (it couldn’t be lined up); the piece barely shows (it may not have dressed her)
 starter-dark-wash-wide-leg-jeans: she moved or changed shape in the picture it drew (it couldn’t be lined up)
@@ -11,3 +11,15 @@ starter-black-ankle-boots: she moved or changed shape in the picture it drew (it
 starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
+starter-cognac-saddle-bag: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-straw-beach-tote: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
+starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
+starter-layered-gold-necklaces: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-gold-pendant-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-tortoiseshell-sunglasses: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-brown-oversized-sunglasses: a white or grey body shape (a dress form?); colour doesn’t look brown
+starter-brown-leather-belt: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-black-leather-belt: a white or grey body shape (a dress form?)
+starter-tortoiseshell-claw-clip: a white or grey body shape (a dress form?)
+starter-gold-rings-set: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-beige-bucket-hat: a light piece on a white background (it can’t be cut out cleanly)
