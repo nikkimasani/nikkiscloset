@@ -464,11 +464,12 @@ test('every hairstyle is fitted by its landmarks: temples on her temples, hairli
 });
 
 /* ── starter closet ── */
-test('the starter list: 20 pieces in each of 7 batches, valid types and occasions, one shared image spec', async () => {
+test('the starter list: over 400 pieces across 7 batches, valid types and occasions, one shared image spec', async () => {
   const { ITEMS, BATCHES, promptFor, sizeFor } = await import('../public/starter/items.js');
   const { TYPES: T, OCCASIONS: O } = await import('../public/js/data.js');
-  assert.equal(ITEMS.length, 140); assert.equal(new Set(ITEMS.map((i) => i.id)).size, 140, 'unique ids');
-  for (const [b] of BATCHES) assert.equal(ITEMS.filter((i) => i.batch === b).length, 20, b);
+  assert.ok(ITEMS.length >= 400, `${ITEMS.length} pieces`); assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length, 'unique ids');
+  for (const [b] of BATCHES) assert.ok(ITEMS.filter((i) => i.batch === b).length >= 40, b);
+  for (const i of ITEMS.filter((i) => i.type === 'bags' || i.type === 'accessories')) assert.ok(i.acc, `${i.id}: snaps to a body point`);
   for (const i of ITEMS) { assert.ok(T[i.type], i.id); assert.ok(i.occasions.length && i.occasions.every((o) => O.includes(o)), i.id); assert.ok(['light', 'all', 'warm'].includes(i.season)); }
   const top = ITEMS.find((i) => i.batch === 'tops'), shoe = ITEMS.find((i) => i.batch === 'shoes');
   assert.match(promptFor(top), /^Flat lay product photo of .*, laid flat and neatly arranged, viewed from directly above, flat lay, front view, structured shape, centered, entire item visible with margin on all sides, plain pure white background, soft even lighting/);

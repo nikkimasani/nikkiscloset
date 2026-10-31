@@ -5,6 +5,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
+import { ITEMS as STARTER_ITEMS } from '../public/starter/items.js';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
@@ -849,9 +850,14 @@ try {
 
   // the starter closet: clothes are drawn on the model (mock Cloudflare FLUX.2 klein) and only the piece is kept; bags are product photos
   {
-    const pS = await mk(); await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
+    const pS = await mk();
+    await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[aria-label="Starter closet"]');
+    ok(await pS.locator('[data-act=starterbatch]').count() === 0 && new RegExp(`0 of ${STARTER_ITEMS.length} in your closet`).test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the starter closet only reports progress: the wardrobe arrives preloaded, there is nothing to make on the phone');
+    await pS.evaluate(() => localStorage.setItem('starter_make', '1')); await pS.reload(); await pS.waitForFunction(() => window.__closet); // (making on the phone, kept behind a flag, is tested below)
+    await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
-    ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
+    const nAll = STARTER_ITEMS.length, nTops = STARTER_ITEMS.filter((i) => i.batch === 'tops').length;
+    ok(new RegExp(`57\\.6 neurons a picture, 1,152 a batch of 20, ${Math.round(57.6 * nAll).toLocaleString('en-US')} for all ${nAll} \\(free: 10,000 a day\\)`).test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
     await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
     ok(cf.wears.length === 23 && !cf.calls.length && !starterCalls.length && cf.wears.every((c) => c.auth === 'Bearer cf-token' && c.png && c.size.join() === '512,1008' && c.fields === 'height,input_image_0,prompt,width' && c.id && /^This is a fashion figure whose body is painted flat (green|magenta) from the neck down/.test(c.prompt) && !/mannequin|dress form/i.test(c.prompt)),
@@ -879,9 +885,9 @@ try {
     ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id && i.made === 'model' && i.worn?.join() === '896,1776') && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions, source Starter and the worn picture the size of the model');
     ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare drew for it (no mix-ups between pieces)');
     ok(its.length === nReady && its.every((i) => i.ready) && !its.some((i) => i.id === 'starter-navy-halter-top'), 'only Ready pieces are added: one that needs review never reaches the closet or the model');
-    ok(new RegExp(`${nReady} of 140 ready · 0 need review .* · ${140 - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
+    ok(new RegExp(`${nReady} of ${nAll} ready · 0 need review .* · ${nAll - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
     ok(await pS.locator('.piece .starterbadge').count() === nReady, 'each one carries a Starter badge');
-    ok(/1 to make/.test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'the tops batch has only the piece that needed review left to make');
+    ok(new RegExp(`\\b${nTops - nReady} to make`).test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'a batch makes 20 at a time; the rest of the tops (and the piece that needed review) are left to make');
     await pS.screenshot({ path: join(out, '41-starter-closet.png') });
     // on the model: the worn picture is drawn as it is, over her, lined up (no warping)
     const tee = await pS.evaluate(() => window.__closet.items.find((i) => i.starterId === 'starter-black-fitted-tee').id);

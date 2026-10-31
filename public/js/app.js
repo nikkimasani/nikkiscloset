@@ -574,6 +574,11 @@ let syncMsg = '';
 function starterPanel() {
   const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  // the wardrobe arrives preloaded (scripts/preload.mjs, nightly); making pieces on the phone is kept behind localStorage starter_make=1
+  if (store.get('starter_make', '') !== '1') return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
+    <p class="muted">A wardrobe of ${STARTER_ITEMS.length} pieces made for your model from your Pinterest boards: work, casual and going-out clothes, blazers, cardigans and coats, shoes, bags and jewellery. It comes preloaded: new pieces are made every night and appear here on their own, nothing to press. For more ideas, open a pin in <b>Inspo</b>.</p>
+    <p class="starterready" role="status"><b>${all} of ${STARTER_ITEMS.length} in your closet</b>${all < STARTER_ITEMS.length ? ' · the rest are on their way' : ''}</p>
+    <label class="check"><input type="checkbox" data-act="hidestarter" ${hidden ? 'checked' : ''}> Hide all starter pieces${all || hidden ? '' : ' (none yet)'}</label></section>`;
   return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
     <p class="muted">A wardrobe made for your model from your style profile (chic neutral casual + polished workwear). Clothes and shoes are drawn on her, wearing them, so they fit her exactly and swap in and out in Dress Up; bags and accessories are product photos. The whole wardrobe comes preloaded once it’s made (pieces are added automatically, no neurons used on your phone); the buttons below remake a category or fill gaps. Pieces made earlier as flat photos are remade on her when you open their category. For more ideas, open a pin in <b>Inspo</b> and make the pieces in it. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it.</p>
     <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
@@ -597,7 +602,7 @@ async function starterFits(it, done) {
 async function openStarterBatch(batch) {
   const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim();
   if (!pass) return; store.set('aipass', pass);
-  const list = starter.missingIn(batch, S.items), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = [];
+  const list = starter.missingIn(batch, S.items).slice(0, 20), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = []; // (20 at a time: a category holds up to 90)
   const tiles = new Map(list.map((it) => [it.id, { it, state: 'wait', url: '', done: null, original: null, err: '', fresh: false, attempt: 0 }]));
   await starter.refreshUsage(pass); // today's count from the server, so a batch never starts past the free allowance
   openModal(); const seq = modalSeq, closed = () => modalSeq !== seq; let resetAt = 0, timer = 0; // (Esc or Cancel closes it; what's made is kept)

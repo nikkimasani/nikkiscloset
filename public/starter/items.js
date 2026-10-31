@@ -1,7 +1,8 @@
 // The starter closet: pieces generated with fal (scripts/starter.mjs or Closet > Starter closet) so the app is useful before your own
 // clothes are added. Style profile from Nikki's Pinterest boards: chic neutral casual + polished workwear. Add a row to add a piece;
 // its id is made from its name, so keep names unique. Each row: [name, type, colours, warmth, occasions, extra detail for the prompt].
-// warmth: light / all / warm. occasions: C casual, W work, D date night, B brunch, E event.
+// warmth: light / all / warm. occasions: C casual, W work, D date night, B brunch, E event. The wider wardrobe is in wardrobe.js.
+import { WARDROBE_ROWS } from './wardrobe.js';
 export const STYLE = 'chic neutral casual and polished workwear; cream, ivory, beige, camel, chocolate brown, black, white, olive, champagne and denim';
 export const OCC = { C: 'Casual Outing', W: 'Work / Office', D: 'Date Night', B: 'Brunch', E: 'Formal / Event' };
 /** A stable seed for each category. */
@@ -175,7 +176,7 @@ export function accKindOf(name, type) {
     [/sunglasses/, 'sunglasses'], [/hat/, 'hat'], [/headband/, 'headband'], [/clip/, 'clip'], [/belt/, 'belt'], [/scarf/, 'scarf']].find(([re]) => re.test(n))?.[1];
 }
 /** Every starter piece: { id, batch, name, type, acc?, colors, season, occasions, detail, seed }. */
-export const ITEMS = Object.entries(ROWS).flatMap(([batch, rows], b) => rows.map(([name, type, colors, season, occ, detail], k) => ({
+export const ITEMS = Object.entries(ROWS).map(([batch, rows]) => [batch, [...rows, ...(WARDROBE_ROWS[batch] || [])]]).flatMap(([batch, rows], b) => rows.map(([name, type, colors, season, occ, detail], k) => ({
   id: 'starter-' + slug(name), batch, name, type, acc: accKindOf(name, type), colors: colors.split(','), season, occasions: [...occ].map((c) => OCC[c]), detail,
   seed: SEEDS[batch] + k, // a stable seed per category (plus the piece's place in it), so a batch looks like one set and remakes are repeatable
 })));
