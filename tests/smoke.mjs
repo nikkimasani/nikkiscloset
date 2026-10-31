@@ -723,6 +723,14 @@ try {
   await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .edit').click(); await pB.click('#backrm'); await pB.click('#save');
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
   ok(true, 'the back photo can be removed');
+  { // Wardrobe > Choose several to try on: tap pieces, then Try on puts them all on her at once
+    await pB.click('[data-view=closet]'); await pB.click('[data-act=pickmode]');
+    await pB.locator('.piece:has-text("White tee") .img').click(); await pB.locator('.piece:has-text("Satin midi skirt") .img').click(); await pB.locator('.piece:has-text("Camel blazer") .img').click();
+    ok(await pB.locator('.piece.picked').count() === 3 && /3 chosen/.test(await pB.locator('.pickbar').innerText()), 'chosen pieces are marked and counted');
+    await pB.click('[data-act=trypicked]'); await pB.waitForFunction(() => document.querySelector('.stage'));
+    const on = await pB.evaluate(() => Object.values(window.__closet.outfit).map((id) => window.__closet.items.find((i) => i.id === id)?.name).sort());
+    ok(JSON.stringify(on) === JSON.stringify(['Camel blazer', 'Satin midi skirt', 'White tee']), `Try on puts every chosen piece on her at once (${on.join(', ')})`);
+  }
 
   // ── the walk-in closet: no character, swipe / tap to move, your pieces on the rails and shelves ──
   {
@@ -730,6 +738,7 @@ try {
     const pw = await cw.newPage(); pw.setDefaultTimeout(60000); pw.on('pageerror', (e) => errors.push(e.message)); pw.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await pw.goto(`http://localhost:${PORT}/`); await pw.waitForFunction(() => window.__closet); await loadFixtures(pw);
     ok(await pw.evaluate(() => !('__apt' in window) && !document.querySelector('#joy, .camrot, .world-jump')), 'the 3D apartment, the walking avatar, the stick and the rotate buttons are gone');
+    ok(await pw.locator('.closetbtn').isVisible() && /Walk-in closet/.test(await pw.locator('.closetbtn').innerText()), 'a labelled Walk-in closet button sits on the model, also on a phone');
     await pw.click('[data-act=scene][data-v=closet] >> visible=true'); // (the scene switch, or the ✨ button in the challenge row on a phone) await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
     ok(await pw.evaluate(() => getComputedStyle(document.querySelector('header.top')).display === 'none' && getComputedStyle(document.querySelector('#nav')).display === 'none'), 'the closet fills the screen: no app header or tabs, just a thin bar');
     ok(await pw.locator('.wic-top [data-act=wicmirror]').count() === 1 && /\d/.test(await pw.locator('.wic-coins').innerText()) && await pw.locator('.wic-top [data-act=shop]').count() === 1, 'the top bar has back, coins and Shop');
@@ -971,9 +980,9 @@ try {
       await put('items', await mkIt('old1', 'starter-navy-halter-top', 'Navy halter top', bad));
       await put('items', await mkIt('old2', 'starter-black-fitted-tee', 'Black fitted tee', good));
     }, [readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)).toString('base64'), readFileSync(new URL('./fixtures/white/dress.png', import.meta.url)).toString('base64')]);
-    await pR.reload(); await pR.waitForFunction(() => window.__closet && (window.__closet.starterReview || []).length >= 1, null, { timeout: 30000 });
-    const st = await pR.evaluate(() => ({ items: window.__closet.items.map((i) => i.name), review: window.__closet.starterReview.map((i) => i.name) }));
-    ok(st.review.includes('Navy halter top') && !st.items.includes('Navy halter top'), `an older starter piece that fails today's check is taken off the closet and the model (${JSON.stringify(st)})`);
+    await pR.reload(); await pR.waitForFunction(() => window.__closet?.items);
+    const st = await pR.evaluate(() => ({ items: window.__closet.items.map((i) => i.name) }));
+    ok(!st.items.includes('Navy halter top') && !st.items.includes('Black fitted tee'), `an old flat photo of a piece drawn on her stays off the closet and the model until the preloaded one arrives (${JSON.stringify(st)})`);
     await pR.context().close();
   }
 

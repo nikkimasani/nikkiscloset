@@ -786,3 +786,11 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .idea { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; font-size: 13px; }
 .idea > div { min-width: 0; overflow-wrap: anywhere; }
 .idea button { flex: 0 0 auto; }
+/* the walk-in closet, from the model; Wardrobe > Choose several to try on */
+.closetbtn { position: absolute; top: 12px; left: 12px; z-index: 5; min-height: 40px; padding: 4px 14px; border-radius: 99px; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-weight: 800; font-size: 13px; }
+.pickrow { margin-top: 12px; }
+.piece.picked { outline: 3px solid var(--accent); outline-offset: -3px; }
+.pickmark { position: absolute; top: 8px; right: 8px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #0005; background: #fffc; display: grid; place-items: center; font-weight: 900; color: var(--accent-ink); }
+.piece.picked .pickmark { background: var(--accent); border-color: var(--accent); }
+.pickbar { position: sticky; bottom: calc(var(--nav-h, 80px) + 10px); z-index: 20; display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 10px 12px; border-radius: 18px; background: #0b1f35f2; box-shadow: 0 6px 20px #0008; }
+.pickbar > span { flex: 1; } .pickbar .primary { min-width: 120px; }

@@ -147,11 +147,14 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <mask id="hairback-${n}" maskUnits="userSpaceOnUse" x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}">${col}</mask>
       <mask id="hairfront-${n}" maskUnits="userSpaceOnUse" x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}"><rect x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}" fill="#fff"/>${col.replace('#fff', '#000')}</mask>
       <filter id="hairfx-${n}" x="-10%" y="-10%" width="120%" height="125%" color-interpolation-filters="sRGB">${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0" result="c"/>` : '<feOffset dx="0" dy="0" result="c"/>'}
-        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/><feOffset dy="3" result="b"/><feFlood flood-color="#1a0d06" flood-opacity=".35"/><feComposite in2="b" operator="in" result="sh"/>
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dy="2" result="b"/><feFlood flood-color="#1a0d06" flood-opacity=".22"/><feComposite in2="b" operator="in" result="sh"/>
         <feMerge><feMergeNode in="sh"/><feMergeNode in="c"/></feMerge></filter>
- <filter id="hairgap-${n}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/><feFlood flood-color="${hair.tone}"/><feComposite in2="b" operator="in"/>${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/>` : ''}</filter>`;
+ <filter id="hairgap-${n}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB"><feMorphology in="SourceAlpha" operator="erode" radius="4" result="e"/><feGaussianBlur in="e" stdDeviation="1.5" result="b"/><feFlood flood-color="${hair.tone}"/><feComposite in2="b" operator="in"/>${hair.m ? `<feColorMatrix type="matrix" values="${hair.m.join(' ')} 0 0 0 1 0"/>` : ''}</filter>`;
     // the back of her head, in the hair's colour: the style with its face opening filled in down to her jaw, so nothing shows between face and hair
-    const fillPic = hair.fill ? `<image href="${hair.fill}" width="${hair.size[0]}" height="${hair.size[1]}" transform="matrix(${num(sx)} 0 0 ${num(sy)} ${num(tx)} ${num(ty)})" filter="url(#hairgap-${n})"/>` : '';
+    // (a little inside the hair's own edge, and never below her jaw, where it would show beside her neck)
+    hairDefs += `<linearGradient id="hairjawg-${n}" gradientUnits="userSpaceOnUse" x1="0" y1="${ny - 45}" x2="0" y2="${ny + 5}"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+      <mask id="hairjaw-${n}" maskUnits="userSpaceOnUse" x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}"><rect x="${-big}" y="${-big}" width="${2 * big}" height="${2 * big}" fill="url(#hairjawg-${n})"/></mask>`;
+    const fillPic = hair.fill ? `<g mask="url(#hairjaw-${n})"><image href="${hair.fill}" width="${hair.size[0]}" height="${hair.size[1]}" transform="matrix(${num(sx)} 0 0 ${num(sy)} ${num(tx)} ${num(ty)})" filter="url(#hairgap-${n})"/></g>` : '';
     hairBack = `<g class="hairback">${fillPic}
       <g mask="url(#hairback-${n})"><g filter="url(#hairfx-${n})">${img}</g></g></g>`;
     hairFront = `<g class="hairfront" mask="url(#hairfront-${n})"><g filter="url(#hairfx-${n})">${img}</g></g>`;
