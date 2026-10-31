@@ -519,3 +519,83 @@ const VARIETY = {
 };
 
 export const WARDROBE_ROWS = Object.fromEntries(Object.keys(BOARDS).map((k) => [k, [...BOARDS[k], ...(VARIETY[k] || [])]]));
+
+// Staples in several colours (Nikki: "multiple colors of the same staple items"): one row per colour, named "<Colour> <staple>". A colour
+// is "colour" or "name label=colour words" (e.g. "light wash=light denim"). items.js skips any whose name a row above already uses.
+const STAPLES = {
+  tops: [
+    ['scoop bodysuit', 'bodysuits', 'light', 'C', 'sleeveless scoop-neck fitted bodysuit', 'black, white, beige, tan, chocolate brown, grey, olive, burgundy, navy, blush pink, cream, red'],
+    ['square-neck bodysuit', 'bodysuits', 'all', 'WC', 'long-sleeve square-neck fitted bodysuit', 'black, white, chocolate brown, burgundy, olive, grey, sage green, blush pink, camel'],
+    ['halter bodysuit', 'bodysuits', 'light', 'D', 'fitted halter-neck bodysuit', 'black, white, beige, chocolate brown, red, burgundy, champagne'],
+    ['strapless bodysuit', 'bodysuits', 'light', 'DE', 'strapless fitted bodysuit with a straight neckline', 'white, beige, chocolate brown, burgundy, red, champagne, navy'],
+    ['ribbed tank', 'tanks', 'light', 'C', 'fitted ribbed scoop-neck tank top', 'white, black, grey, beige, chocolate brown, sage green, blush pink, butter yellow, navy, burgundy, light blue'],
+    ['crop tank', 'tanks', 'light', 'C', 'cropped fitted scoop-neck tank top', 'white, black, grey, beige, chocolate brown, olive, blush pink, light blue'],
+    ['satin cami', 'tanks', 'light', 'DE', 'satin camisole with a V-neckline and thin straps', 'white, ivory, chocolate brown, burgundy, navy, sage green, blush pink, red'],
+    ['fitted tee', 'tops', 'light', 'C', 'fitted crewneck cotton t-shirt, short sleeves', 'black, grey, beige, chocolate brown, navy, olive, blush pink, light blue, burgundy'],
+    ['long-sleeve fitted top', 'tops', 'all', 'CW', 'fitted long-sleeve crew-neck top', 'black, white, cream, beige, chocolate brown, grey, navy, burgundy, olive'],
+    ['button-down shirt', 'tops', 'all', 'WC', 'crisp collared button-down shirt, long sleeves', 'white, cream, beige, pink, sage green, chocolate brown, navy, grey'],
+    ['silk blouse', 'tops', 'all', 'WE', 'silky long-sleeve blouse with a V-neck', 'ivory, black, chocolate brown, champagne, navy, blush pink, burgundy, sage green'],
+    ['fine-knit sweater', 'tops', 'warm', 'WC', 'fitted fine-knit crew-neck sweater, long sleeves', 'cream, grey, navy, chocolate brown, olive, blush pink, light blue, camel'],
+    ['corset top', 'tops', 'light', 'DE', 'sweetheart corset top with thin straps and boning', 'black, white, chocolate brown, burgundy, red, blush pink, sage green, ivory'],
+  ],
+  bottoms: [
+    ['tailored slacks', 'bottoms', 'all', 'W', 'high-waisted straight-leg tailored slacks, full length', 'black, navy, grey, charcoal grey, camel, beige, cream, white, chocolate brown, olive, burgundy, taupe'],
+    ['flared trousers', 'bottoms', 'all', 'WD', 'high-waisted tailored flared trousers', 'cream, beige, camel, chocolate brown, grey, navy, white, burgundy, olive, light blue, blush pink'],
+    ['pleated trousers', 'bottoms', 'all', 'W', 'high-waisted pleated wide-leg trousers', 'black, white, navy, grey, beige, camel, olive, burgundy'],
+    ['wide-leg trousers', 'bottoms', 'all', 'W', 'high-waisted tailored wide-leg trousers, floor length', 'white, cream, camel, grey, chocolate brown, taupe, light blue, blush pink'],
+    ['straight-leg jeans', 'bottoms', 'all', 'C', 'high-waisted straight-leg jeans', 'light wash=light denim, medium wash=medium denim, dark wash=dark denim, black, white, cream, grey'],
+    ['flared jeans', 'bottoms', 'all', 'C', 'high-waisted flared jeans', 'light wash=light denim, medium wash=medium denim, black, white, cream'],
+    ['leggings', 'bottoms', 'all', 'C', 'high-waisted full-length leggings', 'black, grey, chocolate brown, navy, olive'],
+    ['satin midi skirt', 'skirts', 'all', 'DB', 'high-waisted satin midi skirt, bias cut', 'black, white, chocolate brown, navy, blush pink, red'],
+    ['pencil skirt', 'skirts', 'all', 'W', 'high-waisted fitted midi pencil skirt', 'grey, navy, chocolate brown, camel, white, burgundy, red'],
+    ['mini skirt', 'skirts', 'all', 'CD', 'high-waisted A-line mini skirt', 'black, white, chocolate brown, camel, grey, navy, cream'],
+    ['tailored shorts', 'bottoms', 'warm', 'CB', 'high-waisted tailored shorts with pleats', 'black, white, cream, navy, chocolate brown, olive'],
+  ],
+  dresses: [
+    ['satin midi dress', 'dresses', 'all', 'DE', 'satin midi dress with thin straps and a cowl neck', 'black, white, ivory, chocolate brown, sage green, silver grey, light blue, blush pink'],
+    ['bodycon midi dress', 'dresses', 'all', 'DW', 'fitted sleeveless bodycon midi dress', 'black, white, beige, chocolate brown, grey, navy, burgundy, olive, red, blush pink'],
+    ['halter maxi dress', 'dresses', 'all', 'DE', 'flowing halter-neck maxi dress', 'black, chocolate brown, champagne, red, sage green, navy'],
+    ['knit maxi dress', 'dresses', 'all', 'CB', 'fitted ribbed knit maxi dress, sleeveless', 'black, cream, grey, chocolate brown, camel, olive, navy'],
+    ['strapless mini dress', 'dresses', 'all', 'D', 'strapless fitted mini dress with boning', 'black, white, red, chocolate brown, champagne, blush pink, silver'],
+    ['shirt dress', 'dresses', 'all', 'WC', 'belted midi shirt dress, long sleeves', 'white, black, beige, khaki, chocolate brown, blush pink'],
+    ['wrap midi dress', 'dresses', 'all', 'WD', 'wrap midi dress with long sleeves and a V-neck', 'black, ivory, chocolate brown, sage green, blush pink, red, olive'],
+  ],
+  outerwear: [
+    ['tailored blazer', 'outerwear', 'all', 'W', 'tailored single-breasted blazer, structured shoulders', 'black, white, ivory, grey, charcoal grey, beige, light blue, red, taupe, cream'],
+    ['oversized blazer', 'outerwear', 'all', 'WC', 'oversized single-breasted blazer, structured shoulders', 'black, cream, grey, chocolate brown, navy, olive, burgundy, white'],
+    ['V-neck cardigan', 'outerwear', 'all', 'CW', 'button-front V-neck knit cardigan, long sleeves', 'black, white, cream, beige, grey, navy, chocolate brown, olive, burgundy, blush pink, light blue'],
+    ['trench coat', 'outerwear', 'all', 'W', 'belted double-breasted trench coat', 'beige, camel, khaki, white, chocolate brown, navy, olive'],
+    ['tailored wool coat', 'outerwear', 'warm', 'WE', 'long tailored wool coat', 'camel, black, navy, cream, taupe, olive, light grey'],
+    ['leather jacket', 'outerwear', 'all', 'C', 'leather jacket with a collar', 'black, white, tan, olive, chocolate brown'],
+    ['denim jacket', 'outerwear', 'all', 'C', 'classic denim jacket', 'white, dark wash=dark denim, cream'],
+  ],
+  shoes: [
+    ['pointed pumps', 'shoes', 'all', 'WE', 'pointed-toe stiletto pumps', 'grey, chocolate brown, camel, olive, light blue, champagne, gold'],
+    ['strappy heeled sandals', 'shoes', 'all', 'DE', 'heeled sandals with thin straps, open toe', 'black, nude, white, tan, gold, silver, red, chocolate brown, blush pink, champagne'],
+    ['ankle boots', 'shoes', 'warm', 'WC', 'pointed-toe leather ankle boots with a block heel', 'black, chocolate brown, tan, cream, grey, burgundy, taupe'],
+    ['knee-high boots', 'shoes', 'warm', 'CD', 'knee-high leather boots with a heel', 'black, chocolate brown, tan, cream, burgundy, grey'],
+    ['loafers', 'shoes', 'all', 'W', 'leather loafers with a gold bit', 'black, chocolate brown, tan, cream, burgundy, white'],
+    ['leather sneakers', 'shoes', 'all', 'C', 'low-top leather sneakers', 'white, black, grey, cream, navy, blush pink'],
+    ['slingback heels', 'shoes', 'all', 'W', 'pointed-toe slingback heels', 'beige, chocolate brown, cream, red, burgundy, nude'],
+    ['flat slides', 'shoes', 'warm', 'C', 'flat leather slides with a wide strap', 'white, tan, chocolate brown, gold, cream'],
+  ],
+  bags: [
+    ['shoulder bag', 'bags', 'all', 'CW', 'structured leather shoulder bag with gold hardware', 'black, white, cream, beige, tan, chocolate brown, burgundy, navy, olive, blush pink, silver'],
+    ['top-handle bag', 'bags', 'all', 'W', 'structured top-handle leather bag with gold hardware', 'cream, grey, blush pink, light blue, olive, red, camel'],
+    ['tote bag', 'bags', 'all', 'CW', 'large structured leather tote with top handles', 'black, tan, chocolate brown, cream, navy, olive, burgundy'],
+    ['satin clutch', 'bags', 'all', 'E', 'small satin clutch with a gold clasp', 'black, champagne, silver, gold, ivory, burgundy, red'],
+    ['crossbody bag', 'bags', 'all', 'C', 'small leather crossbody bag with a thin strap', 'black, tan, chocolate brown, cream, white, burgundy, olive, navy'],
+  ],
+  accessories: [
+    ['silk scarf', 'accessories', 'all', 'WB', 'silk square scarf', 'navy, burgundy, ivory, chocolate brown, light blue, blush pink, olive'],
+    ['leather belt', 'accessories', 'all', 'WC', 'leather belt with a gold buckle', 'black, chocolate brown, tan, white, burgundy, cream'],
+    ['cat-eye sunglasses', 'accessories', 'warm', 'CB', 'cat-eye sunglasses with dark lenses', 'black, red, cream, chocolate brown'],
+    ['claw clip', 'accessories', 'all', 'C', 'large hair claw clip', 'tortoiseshell=brown, cream, white, blush pink, gold'],
+    ['headband', 'accessories', 'all', 'B', 'padded headband', 'black, chocolate brown, navy, burgundy, blush pink, olive'],
+    ['beret hat', 'accessories', 'warm', 'C', 'wool beret hat', 'black, chocolate brown, burgundy, camel, navy'],
+    ['baseball hat', 'accessories', 'all', 'C', 'cotton baseball cap', 'black, white, navy, beige'],
+  ],
+};
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+export const STAPLE_ROWS = Object.fromEntries(Object.entries(STAPLES).map(([batch, list]) => [batch, list.flatMap(([what, type, season, occ, detail, colours]) =>
+  colours.split(', ').map((c) => { const [label, colour = label] = c.split('='); return [`${cap(label)} ${what}`, type, colour, season, occ, detail]; }))]));
