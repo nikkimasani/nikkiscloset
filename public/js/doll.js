@@ -105,6 +105,13 @@ export function garmentTransform(anchor, fit) {
   return `translate(${num(cx)} ${num(cy)}) rotate(${num(fit.rot)}) scale(${num(fit.scale * 1000) / 1000}) translate(${-anchor.w / 2} ${-anchor.h / 2})`;
 }
 
+/** Tucked in: the top hides below the bottoms' own waistband (where the piece starts on her), across her hips only, so sleeves and hands stay. */
+function tuckClip(pack, bottom, n) {
+  const P = pack.points, [W, H] = pack.size, bx = bottom?.wornBox, cut = Math.round((bx?.y ?? P.belt?.[1] ?? pack.waistY) + 16);
+  const x0 = bx ? bx.x + 10 : (P.waistbandL?.[0] ?? 0), x1 = bx ? bx.x + bx.w - 10 : (P.waistbandR?.[0] ?? W); // (as wide as the bottoms themselves)
+  return `<clipPath id="tuckclip-${n}" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H${W}V${H}H0Z M${x0} ${cut}H${x1}V${H}H${x0}Z"/></clipPath>`;
+}
+
 let uidN = 0;
 /**
  * @param {{pack:object, items:Record<string,object>, urls:Map<string,string>, meta?:Map<string,object>, selected?:string, cls?:string, label?:string, debug?:boolean}} o
@@ -173,7 +180,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hairDefs}<clipPath id="tuckclip-${n}"><rect x="0" y="0" width="${pack.size[0]}" height="${pack.waistY + 12}"/></clipPath></defs>
+    <defs>${fx}${hairDefs}${clipTop ? tuckClip(pack, bottom, n) : ''}</defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 
