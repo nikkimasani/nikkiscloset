@@ -572,3 +572,17 @@ test('wardrobe ideas: with all kinds, bags and accessories are kept too', async 
   assert.deepEqual(parseDescribe(text).map((p) => p.name), ['Black blazer']);
   assert.deepEqual(parseDescribe(text, { all: true }).map((p) => p.name), ['Black blazer', 'Tan tote', 'Gold hoops']);
 });
+test('the green-screen key: what FLUX draws of the body is keyed, fabric is not (colours measured on real drawings)', async () => {
+  const { isKeyed, keyFor } = await import('../public/js/wear.js');
+  const hsvRgb = (h, s, v) => { const f = (n) => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; };
+  const green = keyFor({ name: 'Black mini dress', colors: ['black'] }), warm = keyFor({ name: 'Butter-yellow corset top', colors: ['butter yellow'] });
+  assert.ok(isKeyed(...hsvRgb(120, 0.7, 0.75), green), 'bright green body');
+  assert.ok(isKeyed(...hsvRgb(62, 0.3, 0.55), green), 'dull olive body');
+  assert.ok(isKeyed(...hsvRgb(49, 0.36, 0.55), green), 'khaki legs');
+  assert.ok(isKeyed(...hsvRgb(225, 0.8, 0.85), green), 'blue backdrop');
+  assert.ok(!isKeyed(...hsvRgb(52, 0.13, 0.89), green), 'cream fabric with a green cast');
+  assert.ok(!isKeyed(...hsvRgb(47, 0.38, 0.92), warm), 'butter-yellow satin');
+  assert.ok(!isKeyed(...hsvRgb(30, 0.5, 0.7), green), 'camel');
+  assert.ok(!isKeyed(10, 10, 12, green), 'black (no hue to trust)');
+  assert.equal(keyFor({ name: 'Light denim maxi skirt', colors: ['light denim'] }).bg.name, 'magenta', 'denim gets a magenta backdrop');
+});
