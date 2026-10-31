@@ -30,11 +30,11 @@ if (!reextract && (!process.env.CF_ACCOUNT_ID || !process.env.CF_API_TOKEN)) { c
 mkdirSync(DIR, { recursive: true }); mkdirSync('review', { recursive: true });
 const index = existsSync(INDEX) ? JSON.parse(readFileSync(INDEX, 'utf8')) : { version: 0, pieces: {}, failed: {} };
 for (const id of redo) { delete index.pieces[id]; rmSync(`${DIR}/${id}.webp`, { force: true }); }
-// what to make: missing pieces first, then pieces drawn on the model by an older version of wear.js (remade, so they all match)
+// what to make: pieces already in the closet but drawn by an older version of wear.js first (they're what you see today), then missing ones
 const outdated = (i) => index.pieces[i.id]?.kind === 'worn' && (index.pieces[i.id].v || 1) < WEAR_VERSION;
 const inScope = (i) => !onlyBatch || i.batch === onlyBatch;
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
-  : [...ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id))), ...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i))];
+  : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id)))];
 console.log(`${Object.keys(index.pieces).length} of ${ITEMS.length} made; ${todo.length} to make this run`);
 if (!todo.length) process.exit(0);
 
