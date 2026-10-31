@@ -503,20 +503,20 @@
         ],
         "marks": {
           "crown": [
-            244.0,
-            87.2
+            275.5,
+            78.9
           ],
           "hairline": [
-            244.0,
-            135.9
+            275.5,
+            120
           ],
           "templeL": [
-            159.8,
-            184.6
+            202.2,
+            161.1
           ],
           "templeR": [
-            333.4,
-            184.6
+            348.8,
+            161.1
           ]
         },
         "tone": "#22160d",
@@ -531,20 +531,20 @@
         ],
         "marks": {
           "crown": [
-            213.0,
-            115.2
+            251.0,
+            94.9
           ],
           "hairline": [
-            213.0,
-            163.9
+            251.0,
+            145
           ],
           "templeL": [
-            128.8,
-            212.6
+            161.7,
+            195.1
           ],
           "templeR": [
-            302.4,
-            212.6
+            340.3,
+            195.1
           ]
         },
         "tone": "#20140c",
@@ -559,20 +559,20 @@
         ],
         "marks": {
           "crown": [
-            258.0,
-            76.2
+            266.0,
+            67.3
           ],
           "hairline": [
-            258.0,
-            124.9
+            266.0,
+            107
           ],
           "templeL": [
-            173.8,
-            173.6
+            195.1,
+            146.7
           ],
           "templeR": [
-            347.4,
-            173.6
+            336.9,
+            146.7
           ]
         },
         "tone": "#2a1c0f",
@@ -587,20 +587,20 @@
         ],
         "marks": {
           "crown": [
-            125.0,
-            131.8
+            124.0,
+            109.8
           ],
           "hairline": [
-            125.0,
-            180.4
+            124.0,
+            162
           ],
           "templeL": [
-            40.8,
-            229.1
+            30.8,
+            214.2
           ],
           "templeR": [
-            214.4,
-            229.1
+            217.2,
+            214.2
           ]
         },
         "tone": "#251a16",
@@ -615,20 +615,20 @@
         ],
         "marks": {
           "crown": [
-            179.5,
-            258.4
+            179.0,
+            226.4
           ],
           "hairline": [
-            179.5,
-            324.5
+            179.0,
+            302
           ],
           "templeL": [
-            65.2,
-            390.6
+            44.1,
+            377.6
           ],
           "templeR": [
-            300.9,
-            390.6
+            313.9,
+            377.6
           ]
         },
         "tone": "#1f170e",
@@ -755,7 +755,8 @@
     "neck": [
       402,
       494
-    ]
+    ],
+    "marksVersion": 2
   },
   "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules.",
   "accRules": {

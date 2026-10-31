@@ -257,6 +257,13 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
+test('a bodysuit goes under the bottoms by default (no trim at the waist), and can be untucked', () => {
+  const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
+  const svg = dollSVG({ pack, items, urls });
+  assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.doesNotMatch(svg, /clip-path="url\(#tuckclip-\d+\)"/);
+  assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['bottom', 'top']);
+});
+
 test('each piece remembers a small fit for this picture only', () => {
   const it = mkItem('t', 'tops', { fit: { base: { dx: 12, scale: 1.2 }, other: { dx: -5 } } });
   assert.equal(fitOf(it, { id: 'base' }).dx, 12); assert.equal(fitOf(it, { id: 'other' }).dx, -5); assert.equal(fitOf(it, { id: 'new' }).dx, 0);
@@ -464,11 +471,12 @@ test('every hairstyle is fitted by its landmarks: temples on her temples, hairli
 });
 
 /* ── starter closet ── */
-test('the starter list: 20 pieces in each of 7 batches, valid types and occasions, one shared image spec', async () => {
+test('the starter list: over 1,000 pieces across 7 batches, valid types and occasions, one shared image spec', async () => {
   const { ITEMS, BATCHES, promptFor, sizeFor } = await import('../public/starter/items.js');
   const { TYPES: T, OCCASIONS: O } = await import('../public/js/data.js');
-  assert.equal(ITEMS.length, 140); assert.equal(new Set(ITEMS.map((i) => i.id)).size, 140, 'unique ids');
-  for (const [b] of BATCHES) assert.equal(ITEMS.filter((i) => i.batch === b).length, 20, b);
+  assert.ok(ITEMS.length >= 1000, `${ITEMS.length} pieces`); assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length, 'unique ids');
+  for (const [b] of BATCHES) assert.ok(ITEMS.filter((i) => i.batch === b).length >= 40, b);
+  for (const i of ITEMS.filter((i) => i.type === 'bags' || i.type === 'accessories')) assert.ok(i.acc, `${i.id}: snaps to a body point`);
   for (const i of ITEMS) { assert.ok(T[i.type], i.id); assert.ok(i.occasions.length && i.occasions.every((o) => O.includes(o)), i.id); assert.ok(['light', 'all', 'warm'].includes(i.season)); }
   const top = ITEMS.find((i) => i.batch === 'tops'), shoe = ITEMS.find((i) => i.batch === 'shoes');
   assert.match(promptFor(top), /^Flat lay product photo of .*, laid flat and neatly arranged, viewed from directly above, flat lay, front view, structured shape, centered, entire item visible with margin on all sides, plain pure white background, soft even lighting/);
@@ -570,4 +578,18 @@ test('wardrobe ideas: with all kinds, bags and accessories are kept too', async 
   const text = '{"pieces":[{"name":"Black blazer","type":"outerwear","colors":["black"],"detail":"oversized"},{"name":"Tan tote","type":"bags","colors":["tan"],"detail":"leather"},{"name":"Gold hoops","type":"accessories","colors":["gold"],"detail":"small"}]}';
   assert.deepEqual(parseDescribe(text).map((p) => p.name), ['Black blazer']);
   assert.deepEqual(parseDescribe(text, { all: true }).map((p) => p.name), ['Black blazer', 'Tan tote', 'Gold hoops']);
+});
+test('the green-screen key: what FLUX draws of the body is keyed, fabric is not (colours measured on real drawings)', async () => {
+  const { isKeyed, keyFor } = await import('../public/js/wear.js');
+  const hsvRgb = (h, s, v) => { const f = (n) => { const k = (n + h / 60) % 6; return Math.round(255 * (v - v * s * Math.max(0, Math.min(k, 4 - k, 1)))); }; return [f(5), f(3), f(1)]; };
+  const green = keyFor({ name: 'Black mini dress', colors: ['black'] }), warm = keyFor({ name: 'Butter-yellow corset top', colors: ['butter yellow'] });
+  assert.ok(isKeyed(...hsvRgb(120, 0.7, 0.75), green), 'bright green body');
+  assert.ok(isKeyed(...hsvRgb(62, 0.3, 0.55), green), 'dull olive body');
+  assert.ok(isKeyed(...hsvRgb(49, 0.36, 0.55), green), 'khaki legs');
+  assert.ok(isKeyed(...hsvRgb(225, 0.8, 0.85), green), 'blue backdrop');
+  assert.ok(!isKeyed(...hsvRgb(52, 0.13, 0.89), green), 'cream fabric with a green cast');
+  assert.ok(!isKeyed(...hsvRgb(47, 0.38, 0.92), warm), 'butter-yellow satin');
+  assert.ok(!isKeyed(...hsvRgb(30, 0.5, 0.7), green), 'camel');
+  assert.ok(!isKeyed(10, 10, 12, green), 'black (no hue to trust)');
+  assert.equal(keyFor({ name: 'Light denim maxi skirt', colors: ['light denim'] }).bg.name, 'magenta', 'denim gets a magenta backdrop');
 });

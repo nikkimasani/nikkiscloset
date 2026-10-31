@@ -17,7 +17,7 @@ import { groupOf } from './landmarks.js';
 import * as starter from './starter.js';
 import * as wearAI from './wear.js';
 import { BATCHES as STARTER_BATCHES, ITEMS as STARTER_ITEMS, seedFor } from '../starter/items.js';
-import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, imageRect } from './doll.js';
+import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, tuckOf, imageRect } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, usePhoto } from './game.js';
 import { BACKGROUNDS, POSES, composePhoto, photoBlob } from './photo.js';
@@ -39,6 +39,7 @@ const S = {
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
   events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '', src: 'all' },
+  picking: false, pick: [],          // choosing several pieces to try on at once (Wardrobe or the walk-in closet)
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
   tab: 'tops', adjust: null,        // try-on picker tab, item being fitted
   month: new Date(), date: iso(new Date()),
@@ -85,7 +86,7 @@ async function load() {
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
   S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
-  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1')); // (hidden ones stay in the database, backups and sync)
+  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1' && (i.worn || !wearAI.isWornType(i.type)))); // (hidden ones stay in the database, backups and sync; an old flat photo of a piece drawn on her waits for the preloaded one)
   for (const i of S.items) if (starter.isStarter(i) && !i.placedFromAnchors) { delete i.fit; i.adj = { scale: 1, dx: 0, dy: 0 }; i.placedFromAnchors = 1; put('items', i); } // one-time: drop saved drag offsets so starter pieces sit by the body points
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
@@ -216,7 +217,9 @@ const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
 /** Your chosen hairstyle and colour, ready for dollSVG. */
-const hairMarks = () => { try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } }; // your own "Adjust fit" landmarks, per style
+const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped once when the styles' own landmarks are measured again)
+  const v = String(dollPack?.hair?.marksVersion || 1); if (dollPack && store.get('hairmarks_v', '1') !== v) { store.set('hairmarks', '{}'); store.set('hairmarks_v', v); }
+  try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
@@ -256,7 +259,8 @@ function renderCloset() {
 
   $('#main').innerHTML = `
     <h2 class="view-title sr-only">Your closet</h2>
-    <div class="row">
+    ${S.items.length ? `<div class="row pickrow"><button class="${S.picking ? 'ghost' : 'primary'}" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done choosing' : '☑ Choose several to try on'}</button>${S.picking ? '<span class="muted">Tap pieces, then Try on</span>' : ''}</div>` : ''}
+    <div class="row" style="margin-top:12px">
       <input type="search" id="q" class="grow" aria-label="Search your closet" placeholder="Search your closet…" value="${esc(q)}" style="max-width:300px">
       <select id="occ" aria-label="Filter by occasion" style="width:auto"><option value="all">All occasions</option>${OCCASIONS.map((o) => `<option ${o === occ ? 'selected' : ''}>${o}</option>`).join('')}</select>
       <span class="muted">${S.items.length} pieces</span>
@@ -267,6 +271,7 @@ function renderCloset() {
       ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
     </div>
     ${rails || emptyCloset()}
+    ${S.picking ? pickBar() : ''}
     ${addPanel()}
     ${starterPanel()}
     <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
@@ -280,6 +285,10 @@ function renderCloset() {
   $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
 }
 
+/** Wardrobe > Choose several: the bar that puts every chosen piece on her at once (one per slot; a later pick replaces an earlier one there). */
+const pickBar = () => `<div class="pickbar" role="region" aria-label="Chosen pieces"><span><b>${S.pick.length}</b> chosen</span>
+  <button class="ghost" data-act="pickcancel">Cancel</button><button class="primary" data-act="trypicked" ${S.pick.length ? '' : 'disabled'}>Try on${S.pick.length ? ` ${S.pick.length}` : ''}</button></div>`;
+
 function emptyCloset() {
   if (S.items.length) return `<div class="empty"><h2>Nothing here</h2><p class="muted">No pieces match those filters.</p></div>`;
   return `<div class="empty"><h2 class="view-title">Your closet is empty ✨</h2>
@@ -290,9 +299,10 @@ function emptyCloset() {
 
 function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
-  return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''}">${hanger}${starter.isStarter(i) ? '<span class="starterbadge">Starter</span>' : ''}
-    <button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>
-    <button class="img" data-act="tryit" data-id="${i.id}" aria-label="Try on ${esc(i.name)}"><img src="${url(i.id)}" alt=""></button>
+  const picked = S.picking && S.pick.includes(i.id);
+  return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>`}
+    <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
     ${i.price > 0 ? `<div class="meta price">${worn ? `$${(i.price / worn).toFixed(2)}/wear` : `$${i.price.toFixed(2)} · not worn yet`}</div>` : ''}</article>`;
@@ -574,6 +584,11 @@ let syncMsg = '';
 function starterPanel() {
   const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  // the wardrobe arrives preloaded (scripts/preload.mjs, nightly); making pieces on the phone is kept behind localStorage starter_make=1
+  if (store.get('starter_make', '') !== '1') return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
+    <p class="muted">A wardrobe of ${STARTER_ITEMS.length} pieces made for your model from your Pinterest boards: work, casual and going-out clothes, blazers, cardigans and coats, shoes, bags and jewellery. It comes preloaded: new pieces are made every night and appear here on their own, nothing to press. For more ideas, open a pin in <b>Inspo</b>.</p>
+    <p class="starterready" role="status"><b>${all} of ${STARTER_ITEMS.length} in your closet</b>${all < STARTER_ITEMS.length ? ' · the rest are on their way' : ''}</p>
+    <label class="check"><input type="checkbox" data-act="hidestarter" ${hidden ? 'checked' : ''}> Hide all starter pieces${all || hidden ? '' : ' (none yet)'}</label></section>`;
   return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
     <p class="muted">A wardrobe made for your model from your style profile (chic neutral casual + polished workwear). Clothes and shoes are drawn on her, wearing them, so they fit her exactly and swap in and out in Dress Up; bags and accessories are product photos. The whole wardrobe comes preloaded once it’s made (pieces are added automatically, no neurons used on your phone); the buttons below remake a category or fill gaps. Pieces made earlier as flat photos are remade on her when you open their category. For more ideas, open a pin in <b>Inspo</b> and make the pieces in it. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it.</p>
     <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
@@ -597,7 +612,7 @@ async function starterFits(it, done) {
 async function openStarterBatch(batch) {
   const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim();
   if (!pass) return; store.set('aipass', pass);
-  const list = starter.missingIn(batch, S.items), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = [];
+  const list = starter.missingIn(batch, S.items).slice(0, 20), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = []; // (20 at a time: a category holds up to 90)
   const tiles = new Map(list.map((it) => [it.id, { it, state: 'wait', url: '', done: null, original: null, err: '', fresh: false, attempt: 0 }]));
   await starter.refreshUsage(pass); // today's count from the server, so a batch never starts past the free allowance
   openModal(); const seq = modalSeq, closed = () => modalSeq !== seq; let resetAt = 0, timer = 0; // (Esc or Cancel closes it; what's made is kept)
@@ -1097,7 +1112,7 @@ function wicPanel(sec, W, H, x) {
       return `<button class="wic-hot" style="left:${pct(hx, iw)};top:${pct(hy, ih)}" data-act="wicgo" data-v="${k}"><span aria-hidden="true">${t.emoji}</span> ${t.label}${t.types ? ` <small>${n}</small>` : ''}</button>`; }).join('');
   } else if (sec.types) {
     inner = layoutSection(sec, list.map((i) => ({ id: i.id, ar: itemRatio(i) }))).map((p) => { const it = itemById(p.id);
-      return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
+      return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${S.picking && S.pick.includes(it.id) ? 'picked' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
   } else if (sec.k === 'mirror') {
     const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
     inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to dress up">${fig}</button>`;
@@ -1116,7 +1131,9 @@ function wicChrome() {
   const d = S.game.day, open = !!S.wicPill;
   bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to dress up"><span aria-hidden="true">←</span></button>
       <span class="wic-coins" role="status"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span>
+      <button class="wic-round wide" data-act="wicpickmode" aria-pressed="${!!S.picking}">${S.picking ? '✓ Done' : '☑ Choose'}</button>
       <button class="wic-round wide" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button></div>
+    ${S.picking ? `<div class="wic-pickbar">${pickBar()}</div>` : ''}
     ${d ? `<div class="wic-pillbox"><button class="wic-pill" data-act="wicpill" aria-expanded="${open}" aria-controls="wicpillcard">${esc(themeLine(d.theme))}</button>
       ${open ? `<div class="wic-pillcard" id="wicpillcard"><p>Today’s challenge: <b>${esc(d.theme.title)}</b>. ${d.stars ? `You scored ${d.stars}★.` : hasOutfit() ? 'Rate your look in the mirror.' : 'Pick pieces, then rate the look in the mirror.'}</p><button class="wic-btn" data-act="wicmirror">🪞 To the mirror</button></div>` : ''}</div>` : ''}
     ${store.get('wictip', '') ? '' : '<div class="wic-tip" role="status">Swipe to move along the walls, or tap a section. Pinch to look closer. <button class="wic-x" data-act="wictip" aria-label="Got it">✕</button></div>'}`;
@@ -1191,6 +1208,7 @@ function renderMirror() {
         <div class="gem" aria-hidden="true"></div>
         <div class="stage" id="stage">${stageHTML()}</div>
         ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
+        ${dollOn() ? '<button class="closetbtn" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>' : ''}
         ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
         ${S.cas ? casHTML() : ''}
@@ -1242,7 +1260,7 @@ const clampN = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 let fitTimer = 0;
 /** Change how one piece sits on the doll (remembered per art pack), moving it on screen straight away. */
 function setFit(item, patch) {
-  const f = { ...fitOf(item, dollPack), ...patch };
+  const f = { ...fitOf(item, dollPack), tuck: tuckOf(item, dollPack), ...patch }; // (a nudge keeps a bodysuit tucked)
   f.scale = clampN(f.scale, 0.4, 2.2); f.rot = clampN(f.rot, -45, 45); f.dx = clampN(f.dx, -260, 260); f.dy = clampN(f.dy, -300, 300);
   item.fit = { ...(item.fit || {}), [dollPack.id]: f };
   const g = $(`#stage .gar[data-id="${item.id}"]`);
@@ -1261,7 +1279,7 @@ function dollBarHTML(fit) {
     <div class="dbname"><img class="dbthumb" src="${url(fit.id)}" alt=""><span>${SLOT_LABEL[slotOf(fit.type)]}: <b>${esc(fit.name)}</b> · drag it on the model, or nudge</span><button type="button" class="fb done" data-act="dfitdone" aria-label="Done fitting">✓ Done</button></div>
     ${Object.keys(worn).length > 1 ? `<div class="chips dbpieces" role="group" aria-label="Piece to fit">${SLOTS.filter((x) => worn[x]).map((x) => `<button type="button" class="chip ${fit.id === worn[x].id ? 'on' : ''}" aria-pressed="${fit.id === worn[x].id}" data-act="fit" data-id="${worn[x].id}">${SLOT_LABEL[x]}: ${esc(worn[x].name)}</button>`).join('')}</div>` : ''}
     <div class="dbrow">${b('dnudge', 'x:-3', '◀', 'Move left')}${b('dnudge', 'x:3', '▶', 'Move right')}${b('dnudge', 'y:-3', '▲', 'Move up')}${b('dnudge', 'y:3', '▼', 'Move down')}${b('dsize', '-0.03', '−', 'Smaller')}${b('dsize', '0.03', '+', 'Bigger')}${b('drot', '-2', '⟲', 'Rotate left')}${b('drot', '2', '⟳', 'Rotate right')}
-      ${isTuckable(fit, dollPack) && worn.bottom ? `<button type="button" class="fb wide" data-act="dtuck" aria-pressed="${f.tuck}">${f.tuck ? 'Tucked in' : 'Untucked'}</button>` : ''}<button type="button" class="fb wide" data-act="dreset">↺ Reset</button></div></div>`;
+      ${isTuckable(fit, dollPack) && worn.bottom ? `<button type="button" class="fb wide" data-act="dtuck" aria-pressed="${tuckOf(fit, dollPack)}">${tuckOf(fit, dollPack) ? 'Tucked in' : 'Untucked'}</button>` : ''}<button type="button" class="fb wide" data-act="dreset">↺ Reset</button></div></div>`;
 }
 /** Which piece you're fitting: one chip per piece on the doll. */
 function dollFitHTML(worn, fit) {
@@ -1554,16 +1572,32 @@ document.addEventListener('click', async (e) => {
     case 'rmstarterreview': { const bad = S.starterReview || []; if (!bad.length || !confirm(`Delete ${bad.length} starter piece${bad.length === 1 ? '' : 's'} that need review? You can make them again from Starter closet.`)) return; for (const b of bad) await del('items', b.id); S.starterReview = []; render(); return toast(`Deleted ${bad.length} ✓`); }
     case 'starterbatch': return openStarterBatch(v);
     case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
+    case 'pickmode': S.picking = !S.picking; S.pick = []; return renderCloset();
+    case 'pickcancel': S.picking = false; S.pick = []; return S.view === 'tryon' && S.scene === 'closet' ? wicRefresh() : renderCloset();
+    case 'pick': { // (updated in place, so the rails keep their scroll)
+      S.pick = S.pick.includes(id) ? S.pick.filter((x) => x !== id) : [...S.pick, id]; const on = S.pick.includes(id), card = el.closest('.piece');
+      card?.classList.toggle('picked', on); el.setAttribute('aria-pressed', String(on)); const mk = card?.querySelector('.pickmark'); if (mk) mk.textContent = on ? '✓' : '';
+      const bar = $('.pickbar'); if (bar) bar.outerHTML = pickBar(); return;
+    }
+    case 'trypicked': {
+      const list = S.pick.map(itemById).filter(Boolean); if (!list.length) return;
+      for (const it of list) if (!Object.values(S.outfit).includes(it.id)) S.outfit = wear(S.outfit, it); // (wear() toggles: one already on stays on)
+      S.tab = list[list.length - 1].type; S.adjust = null; S.pop = true; S.scene = 'doll'; S.picking = false; S.pick = [];
+      if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); }
+      return go('tryon');
+    }
     case 'tryit': { const it = itemById(id); S.outfit = wear(S.outfit, it); S.tab = it.type; S.adjust = it.id; S.pop = true; S.scene = 'doll'; return go('tryon'); }
     case 'dnudge': case 'dsize': case 'drot': if (e.detail === 0) doFitAction(act, v); return; // a mouse/touch press is handled on pointerdown (so holding repeats); this is the keyboard
     case 'dfit': S.fitOpen = !S.fitOpen; if (S.fitOpen && !selectedItem()) S.adjust = Object.values(S.outfit)[0] || null; $('#stage').innerHTML = stageHTML(); refreshDollFit(); return;
     case 'dfitdone': S.fitOpen = false; $('#stage').innerHTML = stageHTML(); refreshDollFit(); return;
-    case 'dtuck': { const it = selectedItem(); if (!it) return; setFit(it, { tuck: !fitOf(it, dollPack).tuck }); await put('items', it); return renderTryon(); }
+    case 'dtuck': { const it = selectedItem(); if (!it) return; setFit(it, { tuck: !tuckOf(it, dollPack) }); await put('items', it); return renderTryon(); }
     case 'dreset': { const it = selectedItem(); if (!it) return; const rest = { ...(it.fit || {}) }; delete rest[dollPack.id]; it.fit = rest; await put('items', it); return renderTryon(); }
     case 'tab': S.tab = v; return renderTryon();
     case 'scene': S.scene = v; store.set('scene', v); S.cas = false; renderTryon(); window.scrollTo(0, 0); return;
     case 'wicgo': return wic?.glide(v, !!el.dataset.hot);
-    case 'wicitem': return wicCard(id);
+    case 'wicitem': if (!S.picking) return wicCard(id); // choosing several: a tap checks the piece (updated in place, so the closet doesn't move)
+      S.pick = S.pick.includes(id) ? S.pick.filter((x) => x !== id) : [...S.pick, id]; el.classList.toggle('picked', S.pick.includes(id)); return wicChrome();
+    case 'wicpickmode': S.picking = !S.picking; S.pick = []; return wicRefresh();
     case 'wicmirror': S.scene = 'doll'; store.set('scene', 'doll'); renderTryon(); window.scrollTo(0, 0); return;
     case 'wicpill': S.wicPill = !S.wicPill; return wicChrome();
     case 'wictip': store.set('wictip', '1'); return $('.wic-tip')?.remove();

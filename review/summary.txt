@@ -1,0 +1,27 @@
+61 made this run · 115 of 1005 in the wardrobe · 26 failed
+starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
+starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
+starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
+starter-cognac-saddle-bag: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-straw-beach-tote: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
+starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
+starter-layered-gold-necklaces: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-gold-pendant-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-tortoiseshell-sunglasses: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-brown-oversized-sunglasses: a white or grey body shape (a dress form?); colour doesn’t look brown
+starter-brown-leather-belt: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-black-leather-belt: a white or grey body shape (a dress form?)
+starter-tortoiseshell-claw-clip: a white or grey body shape (a dress form?)
+starter-gold-rings-set: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-beige-bucket-hat: a light piece on a white background (it can’t be cut out cleanly)
+starter-black-strapless-tube-top: it added shorts or trousers to the top
+starter-brown-leopard-corset-top: it added shorts or trousers to the top
+starter-camel-ribbed-turtleneck: it added shorts or trousers to the top
+starter-black-fitted-tee: it added shorts or trousers to the top
+starter-chocolate-ribbed-tank: it added shorts or trousers to the top
+starter-olive-hobo-bag: cut-out not clean enough (left out by review)
+starter-white-woven-clutch: cut-out not clean enough (left out by review)
+starter-brown-belt-bag: cut-out not clean enough (left out by review)
+starter-gold-anklet: cut-out not clean enough (left out by review)
+starter-brown-crescent-bag: cut-out not clean enough (left out by review)
+starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
