@@ -21,7 +21,7 @@ const BLUE = { name: 'blue', rgb: [30, 70, 220], hue: 225 }, MAGENTA_BG = { name
 export const keyFor = (piece) => {
   const words = `${(piece.colors || []).join(' ')} ${piece.name || ''} ${piece.detail || ''}`;
   const body = /green|olive|emerald|sage|mint|khaki|lime|teal/i.test(words) ? { name: 'magenta', rgb: [225, 40, 215], hues: [258, 352] }
-    : { name: 'green', rgb: [40, 200, 70], hues: [54, 200], warm: /beige|taupe|oatmeal|camel|tan|cream|ivory|gold|butter|mustard|champagne|nude|straw/i.test(words) };
+    : { name: 'green', rgb: [40, 200, 70], hues: [54, 200], warm: /\b(beige|taupe|oatmeal|camel|tan|cream|ivory|gold|butter|mustard|champagne|nude|straw)\b/i.test(words) };
   const blue = /blue|navy|denim|wash|indigo|cobalt|chambray/i.test(words);
   if (body.name === 'green' && blue) body.hues = [54, 170]; // (pale denim reaches cyan; the painted body never does)
   return { ...body, bg: body.name === 'green' && blue ? MAGENTA_BG : BLUE }; // (a piece both green and blue keeps the blue backdrop)
@@ -159,7 +159,7 @@ export async function extractWorn(blob, piece, pack) {
   const R = regionFor(type, pack), y0 = Math.max(0, Math.floor(R.y0 / k)), y1 = Math.min(h, Math.ceil(R.y1 / k)), m = new Uint8Array(w * h);
   // sometimes FLUX draws bits of her in her own skin instead of the key colour: where the piece isn't skin-coloured itself, a pixel that
   // matches base.png's own skin there is her, not the piece
-  const skinish = /nude|camel|tan|beige|brown|cognac|taupe|chocolate|caramel|oatmeal|champagne|blush|peach/i.test(`${(piece.colors || []).join(' ')} ${piece.name || ''}`);
+  const skinish = /\b(nude|camel|tan|beige|brown|cognac|taupe|chocolate|caramel|oatmeal|champagne|blush|peach)\b/i.test(`${(piece.colors || []).join(' ')} ${piece.name || ''}`);
   const NB = skinish ? null : (() => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g2 = c.getContext('2d', { willReadFrequently: true }); g2.drawImage(bimg, 0, 0, w, h); const d = g2.getImageData(0, 0, w, h).data; c.width = 0; return d; })();
   const raw = new Uint8Array(w * h);
   for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) {
@@ -177,12 +177,12 @@ export async function extractWorn(blob, piece, pack) {
     const forearms = [[P.wristL[0] + 4, P.elbowL[1] + 30, P.elbowL[0] + 26, P.wristL[1] - 30], [P.elbowR[0] - 26, P.elbowR[1] + 30, P.wristR[0] - 4, P.wristR[1] - 30]];
     const skin = clusters([...cheeks.flatMap((b) => box(A, b, () => true)), ...forearms.flatMap((b) => box(BA, b, (o) => BA[o + 3] > 200))], 4);
     const paint = []; for (let y = y0; y < y1; y += 3) for (let x = 0; x < w; x += 3) { const o = (y * w + x) * 4; if (isKeyed(A[o], A[o + 1], A[o + 2], key) && !isBackdrop(A[o], A[o + 1], A[o + 2], key)) paint.push(toLab(A[o], A[o + 1], A[o + 2])); }
-    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC];
+    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...(skinish ? [] : skin.map(([L, a, b]) => [L * 0.6, a * 0.85, b * 0.85])), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC, ...(skinish ? [] : keyC.flatMap(([L, a, b]) => [[L * 0.5, a * 0.6, b * 0.6], [L * 0.3, a * 0.4, b * 0.4]]))]; // (the key in deep shadow, between arm and body; not for a skin-toned piece, whose own shadows look alike)
     for (const sk of skin) for (const g of keyC) for (const t of [0.3, 0.5, 0.7]) her.push(sk.map((v, j) => v * (1 - t) + g[j] * t));
     if (garment.length && skin.length) {
       const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);
       for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!raw[i]) continue; const o = i * 4, p = toLab(A[o], A[o + 1], A[o + 2]), dG = near(p, garment);
-        if (dG > 64 && near(p, her) * (skinish ? 4 : 2) < dG) raw[i] = 2; } // (a skin-toned piece only loses what is very clearly her) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
+        if (dG > 64 && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
       // a patch the piece closes around is the piece (a shiny fold, a print), however skin-like: her arms, neck and legs reach the outside
       const seen = new Uint8Array(w * h), st = [];
       for (let i = y0 * w; i < y1 * w; i++) { if (raw[i] === 1 || seen[i]) continue; let open = false, tl = 0; st.length = 0; st.push(i); seen[i] = 1;
