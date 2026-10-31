@@ -760,6 +760,16 @@ try {
     ok(await pw.evaluate(() => window.__closet.wicAt === 'shoes'), 'the arrow keys move along the walls too');
     await pw.screenshot({ path: join(out, '22-closet-shoes.png') });
     await pw.click('.wic-strip [data-v=dresses]'); await pw.waitForTimeout(800);
+    { // ☑ Choose: tap pieces on the rails, then Try on puts them all on her
+      await pw.click('[data-act=wicpickmode]'); await pw.click('.wic-strip [data-act=wicgo][data-v=tops]'); await pw.waitForTimeout(700);
+      await pw.locator('.wic-panel[data-k=tops] .wic-item').first().click(); await pw.click('.wic-strip [data-act=wicgo][data-v=bottoms]'); await pw.waitForTimeout(700);
+      await pw.locator('.wic-panel[data-k=bottoms] .wic-item').first().click();
+      ok(await pw.locator('.wic-item.picked').count() === 2 && /2 chosen/.test(await pw.locator('.wic-pickbar').innerText()), 'in the walk-in closet, Choose checks pieces instead of opening their card');
+      await pw.click('.wic-pickbar [data-act=trypicked]'); await pw.waitForSelector('.stage');
+      ok(await pw.evaluate(() => ['top', 'bottom'].every((k) => window.__closet.outfit[k])), 'Try on puts the chosen top and bottom on her and goes to the mirror');
+      await pw.evaluate(() => { window.__closet.outfit = {}; }); await pw.click('[data-act=scene][data-v=closet] >> visible=true'); await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
+    }
+    await pw.click('.wic-strip [data-act=wicgo][data-v=dresses]'); await pw.waitForTimeout(700);
     await pw.click('.wic-panel[data-k=dresses] .wic-item'); await pw.waitForSelector('.wic-card');
     ok(/Dinner/.test(await pw.locator('.wic-card').innerText()), 'tapping a piece opens its card with its tags');
     await pw.evaluate(axeSource);
@@ -896,7 +906,7 @@ try {
     ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare drew for it (no mix-ups between pieces)');
     ok(its.length === nReady && its.every((i) => i.ready) && !its.some((i) => i.id === 'starter-navy-halter-top'), 'only Ready pieces are added: one that needs review never reaches the closet or the model');
     ok(new RegExp(`${nReady} of ${nAll} ready · 0 need review .* · ${nAll - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
-    ok(await pS.locator('.piece .starterbadge').count() === nReady, 'each one carries a Starter badge');
+    ok(await pS.locator('.piece.is-starter').count() === nReady && !(await pS.locator('.piece').first().innerText()).includes('Starter'), 'the pieces carry no Starter label');
     ok(new RegExp(`\\b${nTops - nReady} to make`).test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'a batch makes 20 at a time; the rest of the tops (and the piece that needed review) are left to make');
     await pS.screenshot({ path: join(out, '41-starter-closet.png') });
     // on the model: the worn picture is drawn as it is, over her, lined up (no warping)
