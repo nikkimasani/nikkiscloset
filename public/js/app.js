@@ -597,7 +597,7 @@ async function starterFits(it, done) {
 async function openStarterBatch(batch) {
   const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim();
   if (!pass) return; store.set('aipass', pass);
-  const list = starter.missingIn(batch, S.items), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = [];
+  const list = starter.missingIn(batch, S.items).slice(0, 20), label = STARTER_BATCHES.find(([k]) => k === batch)?.[1] || batch, log = []; // (20 at a time: a category holds up to 90)
   const tiles = new Map(list.map((it) => [it.id, { it, state: 'wait', url: '', done: null, original: null, err: '', fresh: false, attempt: 0 }]));
   await starter.refreshUsage(pass); // today's count from the server, so a batch never starts past the free allowance
   openModal(); const seq = modalSeq, closed = () => modalSeq !== seq; let resetAt = 0, timer = 0; // (Esc or Cancel closes it; what's made is kept)
