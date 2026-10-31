@@ -1,0 +1,4435 @@
+{
+ "boards": {
+  "https://pin.it/SBKc7aZ8u": {
+   "user": "nikkimasani",
+   "board": "stylish-corporate-outfit",
+   "url": "https://www.pinterest.com/nikkimasani/stylish-corporate-outfit/?invite_code=4bbb9cbcdd2449aab4b4c14b81e3af92&sender=1407581041984586",
+   "pins": 2
+  },
+  "https://pin.it/3UMKY5QgE": {
+   "user": "nikkimasani",
+   "board": "outfits",
+   "url": "https://www.pinterest.com/nikkimasani/outfits/?invite_code=69c1e24e63324cf2810de150953a1751&board_collab_inviter=True&inviter_user_id=1407581041984586",
+   "pins": 31
+  },
+  "https://pin.it/9wZQPgbIc": {
+   "user": "nikkimasani",
+   "board": "statement",
+   "url": "https://www.pinterest.com/nikkimasani/statement/?invite_code=4a9bd517998b4a8fbf82da24a2a539df&board_collab_inviter=True&inviter_user_id=1407581041984586",
+   "pins": 50
+  }
+ },
+ "pins": {
+  "1407443631418659": {
+   "board": "nikkimasani/stylish-corporate-outfit",
+   "image": "https://i.pinimg.com/564x/8e/db/26/8edb26ad8ab79600bd10887105ba1d56.jpg",
+   "text": "A timeless everyday look with wide-leg trousers, a soft beige blazer, and a simple white tank top. Neutral tones, clean lines, and subtle accessories create an effortless chic aesthetic perfect for city days, coffee dates, or casual workwear. Minimal, elegant, and endlessly wearable. #neutraloutfit #effortlesschic #minimalstyle #everydayfashion #capsulewardrobe #modernwoman #cleanlook #beigeaesthetic #widelegpants #casualchic #pinterestfashion #minimaloutfit #timelessstyle #streetstyleinspo",
+   "pieces": [
+    {
+     "name": "Tan oversized blazer",
+     "type": "outerwear",
+     "colors": [
+      "tan"
+     ],
+     "detail": "long sleeve, single breasted, structured shoulders"
+    },
+    {
+     "name": "White ribbed tank top",
+     "type": "tanks",
+     "colors": [
+      "white"
+     ],
+     "detail": "scoop neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Dark brown wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "dark brown"
+     ],
+     "detail": "high waisted, pleated, floor length"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "gold logo buckle"
+    },
+    {
+     "name": "Taupe quilted handbag",
+     "type": "bags",
+     "colors": [
+      "taupe"
+     ],
+     "detail": "quilted texture, gold chain strap"
+    },
+    {
+     "name": "Dark brown pointed boots",
+     "type": "shoes",
+     "colors": [
+      "dark brown"
+     ],
+     "detail": "pointed toe"
+    },
+    {
+     "name": "Gold necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "layered delicate chains"
+    },
+    {
+     "name": "Oversized sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "large square frames"
+    }
+   ]
+  },
+  "1407443631408493": {
+   "board": "nikkimasani/stylish-corporate-outfit",
+   "image": "https://i.pinimg.com/564x/29/e8/eb/29e8ebd2b30330a3f3904508c355b353.jpg",
+   "text": "Looking for stylish corporate outfit ideas for women? for a sophisticated workwear style. Perfect for the office, business meetings, interviews, presentations, and professional events.  As an Amazon Associate, I earn from qualifying purchases. This means I may earn a small commission if you purchase through my Amazon affiliate links, at no extra cost to you.   #WorkwearStyle #BossLady #OfficeOutfit #ProfessionalStyle #WorkChic #CareerWomen #PowerDressing",
+   "pieces": [
+    {
+     "name": "Light blue button-down shirt",
+     "type": "tops",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "long sleeve, collared, button-up"
+    },
+    {
+     "name": "Navy wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "navy"
+     ],
+     "detail": "high-waisted, pleated, long length"
+    },
+    {
+     "name": "Black leather belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "gold buckle, slim width"
+    },
+    {
+     "name": "Black leather tote bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured, top handle"
+    },
+    {
+     "name": "Black sunglasses",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "cat-eye shape"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metal link band"
+    },
+    {
+     "name": "Black pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "stiletto heel, patent leather"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain with pendant"
+    }
+   ]
+  },
+  "1407443631418673": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/8c/32/9f/8c329f8107e8dfba547b91159424400d.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Taupe oversized blazer",
+     "type": "outerwear",
+     "colors": [
+      "taupe"
+     ],
+     "detail": "long sleeve, single breasted, structured shoulders"
+    },
+    {
+     "name": "White scoop neck tank top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "ribbed fabric, sleeveless, scoop neckline"
+    },
+    {
+     "name": "Blue straight leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "denim, high waisted, full length"
+    },
+    {
+     "name": "Brown leather shoulder bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "small, leather, gold hardware strap"
+    },
+    {
+     "name": "White sneakers",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "low top, casual"
+    },
+    {
+     "name": "Gold pendant necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with small pendant"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "small, circular"
+    },
+    {
+     "name": "Black smartphone",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "held in hand"
+    }
+   ]
+  },
+  "1407443631418662": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/48/ff/89/48ff89ea49cd41e2d87c274db2552bdb.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Tan corset top",
+     "type": "tops",
+     "colors": [
+      "tan"
+     ],
+     "detail": "strapless, sweetheart neckline, structured bodice"
+    },
+    {
+     "name": "Blue straight-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high-waisted, denim, full length"
+    },
+    {
+     "name": "Tan strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "heeled, thin straps, open toe"
+    },
+    {
+     "name": "Black shoulder bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "small, leather, thin strap"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate, thin chain"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin, delicate band"
+    }
+   ]
+  },
+  "1407443631408487": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/90/9a/b3/909ab323206165cb49d5c3ed76ecbbf9.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Grey sleeveless knit sweater",
+     "type": "tops",
+     "colors": [
+      "grey"
+     ],
+     "detail": "crew neck, sleeveless, knit fabric, cropped length"
+    },
+    {
+     "name": "Light blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, wide-leg, denim fabric"
+    },
+    {
+     "name": "White sneakers",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "low-top, chunky sole, leather-like material"
+    },
+    {
+     "name": "Dark brown woven bag",
+     "type": "bags",
+     "colors": [
+      "dark brown"
+     ],
+     "detail": "hobo style, woven texture, shoulder bag"
+    },
+    {
+     "name": "Gold teardrop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "teardrop shape, chunky metal"
+    },
+    {
+     "name": "Gold chain necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "link chain with pendant"
+    }
+   ]
+  },
+  "1407443631408485": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/e2/86/c4/e286c426a7292d0705104de128619fcd.jpg",
+   "text": "Elevate your everyday fashion game with this effortlessly chic mirror selfie outfit featuring a soft yellow corset top, light wash ripped jeans, and strappy heels. Perfect for casual date nights, brunch looks, feminine street style, and trendy Pinterest outfit inspiration. This modern glam aesthetic blends classy casual wear with flattering denim fashion, making it ideal for women seeking stylish everyday outfit ideas with a clean and elegant vibe.",
+   "pieces": [
+    {
+     "name": "Yellow corset top",
+     "type": "tops",
+     "colors": [
+      "yellow"
+     ],
+     "detail": "bustier style, sweetheart neckline, sleeveless, structured"
+    },
+    {
+     "name": "Light blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, straight leg, distressed knee cutouts"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "stiletto heel, thin straps, open toe"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain style"
+    }
+   ]
+  },
+  "1407443631369646": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/fd/88/78/fd8878d2500a02eae66599aaab71d2eb.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White crochet crop top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "sleeveless, scoop neckline, cropped length, crochet knit"
+    },
+    {
+     "name": "Blue denim maxi skirt",
+     "type": "skirts",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high-waisted, long length, front slit, denim fabric"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "thin, buckle closure"
+    },
+    {
+     "name": "Brown woven bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "tote style, woven texture, with tassels"
+    },
+    {
+     "name": "Brown strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "flat, thin straps"
+    },
+    {
+     "name": "Gold earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large, dangling style"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate, thin chain"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin, delicate"
+    }
+   ]
+  },
+  "1407443631369645": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/66/35/56/663556ab48cdd4bd40450b705f176c48.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black strapless bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "strapless, tight fit, tube neckline"
+    },
+    {
+     "name": "Light blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, wide-leg, denim"
+    },
+    {
+     "name": "Black belt with gold buckle",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "thin, leather, gold H-shaped buckle"
+    },
+    {
+     "name": "Black shoulder bag",
+     "type": "bags",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "structured, leather, gold H-shaped hardware"
+    },
+    {
+     "name": "Black sunglasses",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "dark lenses, cat-eye shape"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "medium size, metallic"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic, wrist strap"
+    },
+    {
+     "name": "Black pointed boots",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "pointed toe, leather"
+    }
+   ]
+  },
+  "1407443631369644": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/2e/2b/57/2e2b57a7de796af5dff937537d91a92e.jpg",
+   "text": "Discover 30+ Wide Leg Jeans Outfit Ideas featuring stylish combinations with crop tops, fitted tees, blazers, sweaters, button-down shirts, sneakers, boots, and trendy accessories. From casual everyday looks to chic work outfits, brunch styles, date-night outfits, and streetwear-inspired looks, find easy ways to style wide-leg denim for any occasion. Save this pin for wide leg jeans outfits, wide leg jeans outfit ideas, jeans outfits, denim outfits, casual outfits, trendy outfits, street style, and women's fashion inspiration popular across the USA.  &#10024; This pin contains affiliate links, which means I may earn a small commission if you shop through them&#8212;at no extra cost to you.",
+   "pieces": [
+    {
+     "name": "Beige tank bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "beige"
+     ],
+     "detail": "scoop neckline, sleeveless, tight fit"
+    },
+    {
+     "name": "Blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high-waisted, wide-leg, denim"
+    },
+    {
+     "name": "Cream pointed-toe heels",
+     "type": "shoes",
+     "colors": [
+      "cream"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    },
+    {
+     "name": "Tan straw handbag",
+     "type": "bags",
+     "colors": [
+      "tan"
+     ],
+     "detail": "woven straw, small top handle"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin bangle"
+    }
+   ]
+  },
+  "1407443631369642": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/94/dd/90/94dd908b866ac96ad2150c3ecdac9497.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White sleeveless tank top",
+     "type": "tanks",
+     "colors": [
+      "white"
+     ],
+     "detail": "crew neckline, slim fit"
+    },
+    {
+     "name": "Dark blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "dark blue"
+     ],
+     "detail": "high-waisted, long length, denim fabric"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "with gold buckle"
+    },
+    {
+     "name": "Black shoulder bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "small leather bag with strap"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with small pendant"
+    },
+    {
+     "name": "Black sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "open toe, minimalist strap"
+    }
+   ]
+  },
+  "1407443631009723": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/40/f6/e3/40f6e3b850195fa41246b8c1ed5ea8fc.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Olive green tank top",
+     "type": "tanks",
+     "colors": [
+      "olive green"
+     ],
+     "detail": "scoop neckline, sleeveless, cropped fit"
+    },
+    {
+     "name": "Cream wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "cream"
+     ],
+     "detail": "high-waisted, wide-leg, denim fabric"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "slim width, metal buckle"
+    },
+    {
+     "name": "Olive green shoulder bag",
+     "type": "bags",
+     "colors": [
+      "olive green"
+     ],
+     "detail": "small shoulder bag, minimalist design"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain, delicate"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin bangle"
+    },
+    {
+     "name": "Tan sandals",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "open toe, flat"
+    }
+   ]
+  },
+  "1407443630918467": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/44/49/9a/44499a0c8287dbe82cc490bf9301f4bb.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Cream sleeveless cutout top",
+     "type": "tops",
+     "colors": [
+      "cream"
+     ],
+     "detail": "sleeveless, v-neckline, cutout front, ribbed fabric"
+    },
+    {
+     "name": "Light blue straight jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, straight leg, denim"
+    },
+    {
+     "name": "Brown leather crescent bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "crescent shape, shoulder bag, leather"
+    },
+    {
+     "name": "Gold heart pendant necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "chunky chain, heart-shaped charm"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large thick hoops"
+    },
+    {
+     "name": "White pointed-toe heels",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "pointed toe, stiletto heel, slingback"
+    },
+    {
+     "name": "Gold mesh watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "oval face, mesh strap"
+    }
+   ]
+  },
+  "1407443630918435": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/8f/6d/c6/8f6dc613ecab9e5a3d07c6c3fd12b11f.jpg",
+   "text": "Serving effortless baddie vibes with this chic summer look &#128133; A black crop top paired with ripped denim shorts and an oversized shirt creates the perfect mix of casual and glam. Styled with gold jewelry, mini shoulder bag, and sleek sunglasses for that confident, street-style aesthetic.  Perfect outfit inspo for summer days, coffee runs, or Instagram pics &#9749;&#10024; Save this look for your next glow-up fit &#128150;",
+   "pieces": [
+    {
+     "name": "Black ribbed crop top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, scoop neckline, cropped length"
+    },
+    {
+     "name": "Beige button-down shirt",
+     "type": "outerwear",
+     "colors": [
+      "beige"
+     ],
+     "detail": "long sleeves, oversized fit, button-up"
+    },
+    {
+     "name": "Light blue denim shorts",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, distressed, frayed hem"
+    },
+    {
+     "name": "Black leather belt",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "gold GG buckle"
+    },
+    {
+     "name": "Black quilted handbag",
+     "type": "bags",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "shoulder bag with chain strap and gold hardware"
+    },
+    {
+     "name": "Gold layered necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "multiple chains with small pendants"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large thin hoops"
+    },
+    {
+     "name": "Black sunglasses",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "cat-eye shape"
+    }
+   ]
+  },
+  "1407443630918410": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/f9/2d/b7/f92db79fd3a9ffc0fecda75c5bcd1f44.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Cream ribbed short sleeve top",
+     "type": "tops",
+     "colors": [
+      "cream"
+     ],
+     "detail": "ribbed knit, short sleeves, crew neck, pocket detail"
+    },
+    {
+     "name": "Champagne satin midi skirt",
+     "type": "skirts",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "satin fabric, midi length, slim fit, flared hem"
+    },
+    {
+     "name": "White strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "strappy design, open toe, flat or low heel"
+    },
+    {
+     "name": "White quilted handbag",
+     "type": "bags",
+     "colors": [
+      "white"
+     ],
+     "detail": "quilted pattern, gold chain strap, structured shape"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain, minimalist style"
+    }
+   ]
+  },
+  "1407443630719162": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/0b/99/b8/0b99b87260984430a3b068b02f80214b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Multicolor floral corset bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "multicolor"
+     ],
+     "detail": "sweetheart neckline, sleeveless, floral print"
+    },
+    {
+     "name": "Olive green wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "olive green"
+     ],
+     "detail": "high-waisted, wide-leg, tailored"
+    },
+    {
+     "name": "Brown leather handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "structured, top handle"
+    },
+    {
+     "name": "Clear strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "clear"
+     ],
+     "detail": "open toe, high heel"
+    }
+   ]
+  },
+  "1407443630330344": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/35/e8/b5/35e8b5319abd4898131b91f0329eee5e.jpg",
+   "text": "Look polished for Bbq nights, Cinema dates, or a stroll To School with Business Casual Outfit Ideas for the Summer of 2025. These looks merge Fashion-forward vibes, Women in 30s Simple Fashion elegance, and Daily practicality while offering chic Travel Fashion outfits for the modern Woman.",
+   "pieces": [
+    {
+     "name": "White long sleeve blouse",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "v-neck, long sleeves, lightweight fabric"
+    },
+    {
+     "name": "Olive green midi skirt",
+     "type": "skirts",
+     "colors": [
+      "olive green"
+     ],
+     "detail": "high-waisted, wrap style, midi length, front slit"
+    },
+    {
+     "name": "Tan leather handbag",
+     "type": "bags",
+     "colors": [
+      "tan"
+     ],
+     "detail": "structured top handle bag with gold hardware"
+    },
+    {
+     "name": "Tan strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "heeled, minimalist straps"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large hoop style"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin bangle on left wrist"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "elegant wrist watch"
+    }
+   ]
+  },
+  "1407443630330340": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/5d/8e/40/5d8e406af1717f5f3ab4a21f99f45d8b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black halter bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, high neck, form-fitting"
+    },
+    {
+     "name": "Black leather midi skirt",
+     "type": "skirts",
+     "colors": [
+      "black"
+     ],
+     "detail": "high-waisted, midi length, front slit, leather fabric"
+    },
+    {
+     "name": "Black leather belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "thin, gold buckle"
+    },
+    {
+     "name": "Black quilted handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "small, quilted texture, gold hardware"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate, wrist wear"
+    },
+    {
+     "name": "Black strappy heels",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "stiletto, thin straps"
+    }
+   ]
+  },
+  "1407443630006414": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/df/06/95/df0695b523ba742db39a60a16c1b05fd.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige sleeveless knit top",
+     "type": "tops",
+     "colors": [
+      "beige"
+     ],
+     "detail": "sleeveless, crew neck, knit, cropped length"
+    },
+    {
+     "name": "Light blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, wide-leg, denim, cuffed hem"
+    },
+    {
+     "name": "Brown suede handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "shoulder bag, suede fabric, structured"
+    },
+    {
+     "name": "Brown leather slides",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "flat sandals, leather, wide strap"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "oval face, metal link strap"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thick hoop style, metal"
+    },
+    {
+     "name": "Brown sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "cat-eye shape, tinted lenses"
+    }
+   ]
+  },
+  "1407443630006413": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/d3/61/f3/d361f3c2002dc91e20cd51f9360d9f25.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black sleeveless top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, crew neck, fitted"
+    },
+    {
+     "name": "Blue denim maxi skirt",
+     "type": "skirts",
+     "colors": [
+      "blue"
+     ],
+     "detail": "denim, maxi length, front slit"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "leather, gold buckle"
+    },
+    {
+     "name": "Brown shoulder bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "leather, small shoulder bag"
+    },
+    {
+     "name": "Black strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "stiletto heel, thin straps"
+    }
+   ]
+  },
+  "1407443630006412": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/e8/8c/5a/e88c5a873422a74eca86aebdef07300b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White strapless corset top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "strapless, corset style, cropped"
+    },
+    {
+     "name": "Blue high-waisted jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high-waisted, straight leg, denim"
+    },
+    {
+     "name": "Black belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "thin, with silver buckle"
+    },
+    {
+     "name": "Black bucket bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "textured, small, with top handle"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "heeled, thin straps"
+    },
+    {
+     "name": "Dark sunglasses",
+     "type": "accessories",
+     "colors": [
+      "dark brown"
+     ],
+     "detail": "large, square frame"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "medium sized, hoop"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin, delicate chain"
+    }
+   ]
+  },
+  "1407443629996714": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/75/11/29/7511295cd12bcf02140247b9b8b9aa0c.jpg",
+   "text": "Killing 'Em Softly Side Split Jean - Medium Blue Wash, Jeans | Fashion Nova",
+   "pieces": [
+    {
+     "name": "Black sheer corset bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "sheer fabric, corset style, sweetheart neckline, sleeveless"
+    },
+    {
+     "name": "Blue high-waisted jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "denim fabric, high-waisted, straight leg with side slits"
+    },
+    {
+     "name": "Black strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "stiletto heel, strappy design"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain"
+    },
+    {
+     "name": "Silver bracelet",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "thin band on wrist"
+    }
+   ]
+  },
+  "1407443629910285": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/1c/23/fb/1c23fba4291527be50e93a70bc9fed2f.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black tank top",
+     "type": "tanks",
+     "colors": [
+      "black"
+     ],
+     "detail": "scoop neckline, sleeveless, cropped length"
+    },
+    {
+     "name": "Light blue jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high waisted, wide leg, denim"
+    },
+    {
+     "name": "Black heeled mules",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "square toe, stiletto heel, knotted strap"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured top handle, gold hardware"
+    },
+    {
+     "name": "Black belt",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "slim leather with gold buckle"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metal link bracelet"
+    },
+    {
+     "name": "Gold earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thick hoop style"
+    }
+   ]
+  },
+  "1407443629910284": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/4a/87/14/4a87147e63160737a2c95ec0a3086a5c.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black strapless sweetheart bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "strapless, sweetheart neckline, fitted"
+    },
+    {
+     "name": "Cream satin midi skirt",
+     "type": "skirts",
+     "colors": [
+      "cream"
+     ],
+     "detail": "satin fabric, midi length, high waisted"
+    },
+    {
+     "name": "Cream strappy heeled sandals",
+     "type": "shoes",
+     "colors": [
+      "cream"
+     ],
+     "detail": "strappy, open toe, high heel"
+    },
+    {
+     "name": "Brown patterned tote bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "tote style, logo print, leather handles"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain"
+    }
+   ]
+  },
+  "1407443629910273": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/f9/2d/b7/f92db79fd3a9ffc0fecda75c5bcd1f44.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Cream ribbed short sleeve top",
+     "type": "tops",
+     "colors": [
+      "cream"
+     ],
+     "detail": "ribbed knit, short sleeves, crew neck, pocket detail"
+    },
+    {
+     "name": "Champagne satin midi skirt",
+     "type": "skirts",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "satin fabric, midi length, slim fit, flared hem"
+    },
+    {
+     "name": "White strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "strappy design, open toe, flat or low heel"
+    },
+    {
+     "name": "White quilted handbag",
+     "type": "bags",
+     "colors": [
+      "white"
+     ],
+     "detail": "quilted pattern, gold chain strap, structured shape"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain, minimalist style"
+    }
+   ]
+  },
+  "1407443629910272": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/c3/1f/a2/c31fa22af657f7a48d6772b9ae7268ba.jpg",
+   "text": "Discover the perfect charming lady outfit for any occasion with this elegant classy and stylish design Find the best casual classy and beautiful Indian party wear styles that are perfect for any event Ideal for those seeking a sophisticated and stylish look Perfect for adding a touch of elegance to your wardrobe",
+   "pieces": [
+    {
+     "name": "Pink blazer",
+     "type": "outerwear",
+     "colors": [
+      "pink"
+     ],
+     "detail": "single-breasted, long sleeves, notched lapel"
+    },
+    {
+     "name": "White tank top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "v-neck, sleeveless"
+    },
+    {
+     "name": "White skinny pants",
+     "type": "bottoms",
+     "colors": [
+      "white"
+     ],
+     "detail": "high-waisted, slim fit, ankle length"
+    },
+    {
+     "name": "White high heel sandals",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "stiletto heel, ankle strap, open toe"
+    },
+    {
+     "name": "White handbag",
+     "type": "bags",
+     "colors": [
+      "white"
+     ],
+     "detail": "structured top handle bag with gold hardware"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain style"
+    },
+    {
+     "name": "Gold earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "drop style"
+    }
+   ]
+  },
+  "1407443629896096": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/87/a8/30/87a830f0ae5467d536239582c6bca2b2.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Cream satin waistcoat",
+     "type": "tops",
+     "colors": [
+      "cream"
+     ],
+     "detail": "sleeveless, v-neck, button-up, cropped"
+    },
+    {
+     "name": "Cream satin midi skirt",
+     "type": "skirts",
+     "colors": [
+      "cream"
+     ],
+     "detail": "satin fabric, midi length, high waisted"
+    },
+    {
+     "name": "White handbag",
+     "type": "bags",
+     "colors": [
+      "white"
+     ],
+     "detail": "small structured tote with silver hardware"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "open toe, thin straps"
+    }
+   ]
+  },
+  "1407443629896089": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/35/e8/b5/35e8b5319abd4898131b91f0329eee5e.jpg",
+   "text": "Look polished for Bbq nights, Cinema dates, or a stroll To School with Business Casual Outfit Ideas for the Summer of 2025. These looks merge Fashion-forward vibes, Women in 30s Simple Fashion elegance, and Daily practicality while offering chic Travel Fashion outfits for the modern Woman.",
+   "pieces": [
+    {
+     "name": "White long sleeve blouse",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "v-neck, long sleeves, buttonless front"
+    },
+    {
+     "name": "Olive green midi skirt",
+     "type": "skirts",
+     "colors": [
+      "olive green"
+     ],
+     "detail": "high-waisted, wrap style, midi length, front slit"
+    },
+    {
+     "name": "Tan leather handbag",
+     "type": "bags",
+     "colors": [
+      "tan"
+     ],
+     "detail": "structured top handle bag with gold hardware"
+    },
+    {
+     "name": "Tan strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "heeled, minimalist straps"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large hoop style"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin bangle on left wrist"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic band on left wrist"
+    },
+    {
+     "name": "Gold ring",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin band on finger"
+    }
+   ]
+  },
+  "1407443629896088": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/3b/56/ba/3b56ba9c5306450bfaef31c4d5dd0d1c.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black tank top",
+     "type": "tanks",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, scoop neckline, fitted"
+    },
+    {
+     "name": "Blue denim maxi skirt",
+     "type": "skirts",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high-waisted, long length, front slit, denim fabric"
+    },
+    {
+     "name": "Tan heeled sandals",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "stiletto heel, open toe, strappy design"
+    },
+    {
+     "name": "Sunglasses",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "dark lenses, classic frame"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin, delicate band"
+    }
+   ]
+  },
+  "1407443629887122": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/97/73/42/977342faf7329506bb6441f2a6459fca.jpg",
+   "text": "mirror selfie, woman taking a photo with her phone, wearing a white fitted tank top, light blue high-waisted denim skirt with a front slit, minimal accessories, casual yet elegant outfit, neutral and muted color palette, effortless chic, modern minimalism, aesthetic: casual and timeless fashion, soft and natural ambiance, simplicity with sophistication.",
+   "pieces": [
+    {
+     "name": "White tank top",
+     "type": "tanks",
+     "colors": [
+      "white"
+     ],
+     "detail": "sleeveless, scoop neckline, fitted"
+    },
+    {
+     "name": "Light blue denim maxi skirt",
+     "type": "skirts",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, long length, front slit, denim fabric"
+    }
+   ]
+  },
+  "1407443629827561": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/d3/61/f3/d361f3c2002dc91e20cd51f9360d9f25.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black sleeveless top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, high neckline, fitted"
+    },
+    {
+     "name": "Blue denim maxi skirt",
+     "type": "skirts",
+     "colors": [
+      "blue"
+     ],
+     "detail": "denim, maxi length, front slit"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "leather, gold buckle"
+    },
+    {
+     "name": "Brown shoulder bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "leather, small shoulder bag"
+    },
+    {
+     "name": "Black strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "strappy, high heel, minimalist"
+    }
+   ]
+  },
+  "1407443629827559": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/df/06/95/df0695b523ba742db39a60a16c1b05fd.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige sleeveless knit top",
+     "type": "tops",
+     "colors": [
+      "beige"
+     ],
+     "detail": "sleeveless, crew neck, knit, cropped length"
+    },
+    {
+     "name": "Light blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, wide-leg, denim, cuffed hem"
+    },
+    {
+     "name": "Brown suede handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "shoulder bag, suede fabric, structured"
+    },
+    {
+     "name": "Brown leather slides",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "flat, leather, wide strap"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "oval face, metal link strap"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thick hoop, metal"
+    },
+    {
+     "name": "Brown sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "cat-eye shape, tinted lenses"
+    }
+   ]
+  },
+  "1407443629814092": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/9a/31/d0/9a31d0295467076598856f1981f75fb3.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black strapless bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "sweetheart neckline, strapless, tight fit"
+    },
+    {
+     "name": "Light blue denim midi skirt",
+     "type": "skirts",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, midi length, front slit"
+    },
+    {
+     "name": "Brown leather belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "thin with gold buckle"
+    },
+    {
+     "name": "Tan strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "high heel, lace-up straps"
+    },
+    {
+     "name": "Brown patterned gloves",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "sheer, patterned, wrist length"
+    }
+   ]
+  },
+  "1407443624365850": {
+   "board": "nikkimasani/outfits",
+   "image": "https://i.pinimg.com/564x/56/0f/aa/560faa1f853b6b43cce6ecc207b41f4c.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White long coat",
+     "type": "outerwear",
+     "colors": [
+      "white"
+     ],
+     "detail": "long length, open front, collar"
+    },
+    {
+     "name": "White cropped top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "cropped, scoop neckline, short sleeves"
+    },
+    {
+     "name": "Blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "skinny fit, distressed, high waisted"
+    },
+    {
+     "name": "Beige pointed heels",
+     "type": "shoes",
+     "colors": [
+      "beige"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    },
+    {
+     "name": "Patterned handbag",
+     "type": "bags",
+     "colors": [
+      "beige",
+      "brown"
+     ],
+     "detail": "animal print, chain strap"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain"
+    }
+   ]
+  },
+  "1407443631445087": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/ad/f7/1c/adf71c300de28e1a2725eeec33738f8c.jpg",
+   "text": "Build a versatile wardrobe with timeless basics you can mix and match for endless outfit combinations. &#129294; From classic tops and bodysuits to neutral bottoms, jackets, shoes, bags, and accessories&#8212;these essentials make getting dressed so much easier.  Save this Pin for outfit inspiration! &#128204; Interested in any of these finds? Send me a message and I&#8217;ll share the link. &#128717;&#65039;  #ClosetBasics #WardrobeEssentials #AmazonFinds #OutfitIdeas #CapsuleWardrobe #FashionFinds #EverydayStyle #WomensFashion #OutfitInspo",
+   "pieces": [
+    {
+     "name": "white short sleeve t-shirt",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "crew neck, short sleeves"
+    },
+    {
+     "name": "black short sleeve t-shirt",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "crew neck, short sleeves"
+    },
+    {
+     "name": "tan bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "tan"
+     ],
+     "detail": "scoop neck, sleeveless"
+    },
+    {
+     "name": "black bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "scoop neck, sleeveless"
+    },
+    {
+     "name": "white button down shirt",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeves, collared"
+    },
+    {
+     "name": "tan halter top",
+     "type": "tops",
+     "colors": [
+      "tan"
+     ],
+     "detail": "halter neck, sleeveless"
+    },
+    {
+     "name": "black tank top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "scoop neck, sleeveless"
+    },
+    {
+     "name": "white one shoulder top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "one shoulder, sleeveless"
+    }
+   ]
+  },
+  "1407443631444857": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/fc/8c/36/fc8c3634ecfafd625a81a40c6c574f82.jpg",
+   "text": "The black work pants every office wardrobe needs &#128420; These high-waisted wide leg trousers look so polished styled with a neutral blazer, fitted top, pointed heels and a structured work bag. Perfect for business casual outfits, corporate workwear, office outfit ideas and elevated everyday work looks. Save this for black trouser outfit inspiration, women&#8217;s work pants, professional outfits, fall workwear and capsule wardrobe staples. Shop the pants here!       #AD  #PAID  womensworkwear  fallworkwear  winter outfits for women  falloffice  office outfits women",
+   "pieces": [
+    {
+     "name": "Beige blazer",
+     "type": "outerwear",
+     "colors": [
+      "beige"
+     ],
+     "detail": "single breasted, long sleeves, structured shoulders"
+    },
+    {
+     "name": "White bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "white"
+     ],
+     "detail": "crew neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Black wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "high-waisted, wide-leg, floor length"
+    },
+    {
+     "name": "Black pointed-toe heels",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured tote, top handles"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with small pendant"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain bracelet"
+    }
+   ]
+  },
+  "1407443631444707": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/4c/4e/04/4c4e044b0678d1949a59f5c2a5ee4cfb.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White long sleeve button-down shirt",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "v-neckline, long sleeves, relaxed fit"
+    },
+    {
+     "name": "Blue wide leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high-waisted, denim, full length"
+    },
+    {
+     "name": "Burgundy pointed toe heels",
+     "type": "shoes",
+     "colors": [
+      "burgundy"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic, wrist accessory"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic, chunky style"
+    },
+    {
+     "name": "Beaded bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "beaded, layered style"
+    }
+   ]
+  },
+  "1407443631444699": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/5f/54/23/5f542389aee770e7afb4231e1b003325.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black blazer",
+     "type": "outerwear",
+     "colors": [
+      "black"
+     ],
+     "detail": "long sleeve, structured, single breasted"
+    },
+    {
+     "name": "Black tank top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, crew neckline"
+    },
+    {
+     "name": "Cream wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "cream"
+     ],
+     "detail": "high-waisted, pleated, full length"
+    },
+    {
+     "name": "Black belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "gold buckle"
+    },
+    {
+     "name": "Black leather watch",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "rectangular face, leather strap"
+    },
+    {
+     "name": "Gold pendant necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain, circular charm"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "structured, top handle, flap closure"
+    },
+    {
+     "name": "Black pumps",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    }
+   ]
+  },
+  "1407443631444643": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/dd/2c/7c/dd2c7c6bf2a4d992feba42bf830257a0.jpg",
+   "text": "Elevate your style with this chic sage green minimalist outfit inspired by the quiet luxury trend. Featuring tailored sage green trousers, a structured white sleeveless top, nude heels, and a matching handbag, this look blends elegance with modern simplicity. Styled with delicate gold jewelry and timeless accessories, this outfit is perfect for workwear, brunch, or everyday classy fashion. Save this pin for neutral outfit inspiration, minimalist wardrobe ideas, and sophisticated styling tips.  #SageGreenOutfit  #QuietLuxuryStyle  #MinimalistFashion #NeutralOutfits #ChicStyle  #ElegantOutfits  #FashionInspo  #PinterestFashion",
+   "pieces": [
+    {
+     "name": "Sage green high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "sage green"
+     ],
+     "detail": "tailored, wide-leg, high-waisted"
+    },
+    {
+     "name": "White sleeveless bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "white"
+     ],
+     "detail": "square neckline, fitted, sleeveless"
+    },
+    {
+     "name": "Beige pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "beige"
+     ],
+     "detail": "stiletto heel, pointed toe"
+    },
+    {
+     "name": "Sage green handbag",
+     "type": "bags",
+     "colors": [
+      "sage green"
+     ],
+     "detail": "structured top handle bag with shoulder strap"
+    },
+    {
+     "name": "Gold layered necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chains with pendant"
+    },
+    {
+     "name": "Tortoiseshell sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "oversized, dark lenses"
+    },
+    {
+     "name": "Gold wristwatch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metal link bracelet, square face"
+    },
+    {
+     "name": "Gold rings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "minimalist band style"
+    }
+   ]
+  },
+  "1407443631432179": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/a5/2f/09/a52f099f8a6e4309dd66ae5290ca8ec3.jpg",
+   "text": "O look de trabalho fica outro com 1 pe&#231;a bem cortada e confort&#225;vel. Separei achadinhos pra montar combina&#231;&#245;es elegantes sem gastar muito. #achadinhos #modafeminina #lookdodia #trabalho #shopee",
+   "pieces": [
+    {
+     "name": "Tan blazer",
+     "type": "outerwear",
+     "colors": [
+      "tan"
+     ],
+     "detail": "single breasted, long sleeves, structured shoulders"
+    },
+    {
+     "name": "White top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "crew neck, fitted, short sleeves"
+    },
+    {
+     "name": "Light blue jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high waisted, straight leg, cuffed hem"
+    },
+    {
+     "name": "Brown belt",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "leather with gold V-shaped buckle"
+    },
+    {
+     "name": "White pumps",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    },
+    {
+     "name": "Brown handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "structured leather with gold chain and hardware"
+    }
+   ]
+  },
+  "1407443631432177": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/ef/87/f8/ef87f87c3ff1794e3aaf839875c3bd09.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige double-breasted blazer",
+     "type": "outerwear",
+     "colors": [
+      "beige"
+     ],
+     "detail": "tailored, long sleeves, buttoned front"
+    },
+    {
+     "name": "Black crewneck top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "fitted, short sleeves, crew neckline"
+    },
+    {
+     "name": "Light blue high-waisted jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "straight leg, denim, ankle length"
+    },
+    {
+     "name": "Black leather handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured, top handle, gold hardware"
+    },
+    {
+     "name": "Nude pointed-toe heels",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "stiletto, ankle strap, pointed toe"
+    },
+    {
+     "name": "Gold pendant necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain, circular pendant"
+    },
+    {
+     "name": "Silver hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "small hoop style"
+    }
+   ]
+  },
+  "1407443631432175": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/d8/d4/bc/d8d4bc3bfbafc11b90457e1273898645.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Brown square sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "square frame, tinted lenses"
+    },
+    {
+     "name": "Black sheer corset top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "sheer fabric, square neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Cream wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "cream"
+     ],
+     "detail": "high-waisted, wide-leg, long length"
+    },
+    {
+     "name": "Brown baguette bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "small, gold curved handle"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metal link strap, rectangular face"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large, thick hoop style"
+    },
+    {
+     "name": "Cream pointed pumps",
+     "type": "shoes",
+     "colors": [
+      "cream"
+     ],
+     "detail": "pointed toe, high stiletto heel"
+    }
+   ]
+  },
+  "1407443631009727": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/5c/9d/37/5c9d377cf45f39150bf1f40b730d4ef3.jpg",
+   "text": "Timeless Italian glamour captured in warm city lights. A woman walks through a romantic street wearing a champagne satin slip skirt, fitted top, and a soft cardigan draped over her shoulders. Layered gold necklaces, statement earrings, and a sleek clutch complete this elegant night-out look. Perfect inspiration for date night outfits, European street style, feminine minimal fashion, and luxury travel aesthetics.",
+   "pieces": [
+    {
+     "name": "White ribbed tank top",
+     "type": "tanks",
+     "colors": [
+      "white"
+     ],
+     "detail": "fitted, ribbed fabric, cropped length, scoop neckline, spaghetti straps"
+    },
+    {
+     "name": "White cardigan",
+     "type": "outerwear",
+     "colors": [
+      "white"
+     ],
+     "detail": "longline, lightweight fabric, open front, long sleeves"
+    },
+    {
+     "name": "Champagne satin maxi skirt",
+     "type": "skirts",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "high-waisted, satin fabric, maxi length, smooth texture"
+    },
+    {
+     "name": "Gold clutch bag",
+     "type": "bags",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic, rectangular shape, handheld"
+    },
+    {
+     "name": "Gold layered necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chains, layered style, pendant detail"
+    },
+    {
+     "name": "Gold drop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "small drop style, metallic"
+    }
+   ]
+  },
+  "1407443631009726": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/d5/d3/da/d5d3da7a79ce0301782d22751e66e381.jpg",
+   "text": "Posh Direction Satin Midi Skirt (Taupe) &#183; NanaMacs",
+   "pieces": [
+    {
+     "name": "Champagne satin vest",
+     "type": "tops",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "sleeveless, button-down, v-neck, cropped"
+    },
+    {
+     "name": "Champagne satin midi skirt",
+     "type": "skirts",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "midi length, satin fabric, high waisted"
+    },
+    {
+     "name": "White and black handbag",
+     "type": "bags",
+     "colors": [
+      "white",
+      "black"
+     ],
+     "detail": "structured, small, top handle"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "open toe, thin straps, high heel"
+    }
+   ]
+  },
+  "1407443630918411": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/5c/9d/37/5c9d377cf45f39150bf1f40b730d4ef3.jpg",
+   "text": "Timeless Italian glamour captured in warm city lights. A woman walks through a romantic street wearing a champagne satin slip skirt, fitted top, and a soft cardigan draped over her shoulders. Layered gold necklaces, statement earrings, and a sleek clutch complete this elegant night-out look. Perfect inspiration for date night outfits, European street style, feminine minimal fashion, and luxury travel aesthetics.",
+   "pieces": [
+    {
+     "name": "White ribbed tank top",
+     "type": "tanks",
+     "colors": [
+      "white"
+     ],
+     "detail": "ribbed fabric, spaghetti straps, cropped length"
+    },
+    {
+     "name": "Cream cardigan",
+     "type": "outerwear",
+     "colors": [
+      "cream"
+     ],
+     "detail": "long sleeves, open front, lightweight fabric"
+    },
+    {
+     "name": "Champagne satin skirt",
+     "type": "skirts",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "satin fabric, midi length, high waisted"
+    },
+    {
+     "name": "Gold clutch bag",
+     "type": "bags",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic finish, rectangular shape"
+    },
+    {
+     "name": "Gold layered necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "multiple delicate chains with small pendants"
+    },
+    {
+     "name": "Gold drop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "small drop style"
+    }
+   ]
+  },
+  "1407443630330353": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/9e/66/8c/9e668c39b9cb00e26babc1099367967e.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige V-neck top",
+     "type": "tops",
+     "colors": [
+      "beige"
+     ],
+     "detail": "v-neck, knit, short sleeves"
+    },
+    {
+     "name": "Beige cardigan",
+     "type": "outerwear",
+     "colors": [
+      "beige"
+     ],
+     "detail": "long sleeves, button-up, knit"
+    },
+    {
+     "name": "Tan leather skirt",
+     "type": "skirts",
+     "colors": [
+      "tan"
+     ],
+     "detail": "mini length, leather, high waisted"
+    },
+    {
+     "name": "Black tights",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "sheer, opaque"
+    },
+    {
+     "name": "Brown ankle boots",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "leather, block heel, ankle length"
+    }
+   ]
+  },
+  "1407443630330343": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/df/06/95/df0695b523ba742db39a60a16c1b05fd.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige sleeveless knit top",
+     "type": "tops",
+     "colors": [
+      "beige"
+     ],
+     "detail": "sleeveless, crew neck, knit, cropped length with side slits"
+    },
+    {
+     "name": "Light blue wide-leg jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, wide-leg, denim, cuffed hem"
+    },
+    {
+     "name": "Brown suede handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "suede, shoulder bag, structured"
+    },
+    {
+     "name": "Brown leather slides",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "flat, leather, wide strap"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "oval face, metal link strap"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thick hoop style"
+    },
+    {
+     "name": "Brown sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "cat-eye shape, tinted lenses"
+    }
+   ]
+  },
+  "1407443629827560": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/07/a7/09/07a70903cbb4c2deb072f2b3a204d876.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Brown sleeveless midi dress",
+     "type": "dresses",
+     "colors": [
+      "brown"
+     ],
+     "detail": "sleeveless, bodycon, midi length, crew neck"
+    },
+    {
+     "name": "Tan pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "pointed toe, high heel"
+    },
+    {
+     "name": "Brown patterned handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "large tote, patterned fabric, top handle"
+    },
+    {
+     "name": "Gold sunglasses",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "oversized, aviator style"
+    },
+    {
+     "name": "Grey sleeveless midi dress",
+     "type": "dresses",
+     "colors": [
+      "grey"
+     ],
+     "detail": "sleeveless, bodycon, midi length, crew neck"
+    },
+    {
+     "name": "Pink pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "pink"
+     ],
+     "detail": "pointed toe, high heel"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured, top handle"
+    },
+    {
+     "name": "Black sleeveless midi dress",
+     "type": "dresses",
+     "colors": [
+      "black"
+     ],
+     "detail": "sleeveless, bodycon, midi length, crew neck"
+    }
+   ]
+  },
+  "1407443629707399": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/d5/d3/da/d5d3da7a79ce0301782d22751e66e381.jpg",
+   "text": "Posh Direction Satin Midi Skirt (Taupe) &#183; NanaMacs",
+   "pieces": [
+    {
+     "name": "Champagne satin vest",
+     "type": "tops",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "sleeveless, button-down, v-neck, cropped"
+    },
+    {
+     "name": "Champagne satin midi skirt",
+     "type": "skirts",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "midi length, satin fabric, high waisted"
+    },
+    {
+     "name": "White and black handbag",
+     "type": "bags",
+     "colors": [
+      "white",
+      "black"
+     ],
+     "detail": "structured, small, top handle"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "open toe, thin straps, high heel"
+    }
+   ]
+  },
+  "1407443629707398": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/d8/a7/da/d8a7daa754e15e9224dd73fb421a0b35.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black spaghetti strap camisole",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "cropped, v-neckline, thin straps"
+    },
+    {
+     "name": "Light blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, distressed, straight leg"
+    },
+    {
+     "name": "Black strappy heeled sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "stiletto heel, ankle strap, open toe"
+    },
+    {
+     "name": "Black small shoulder bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured, gold hardware, top handle"
+    },
+    {
+     "name": "Round sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "dark lenses, gold frame"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "medium size, circular"
+    }
+   ]
+  },
+  "1407443627295525": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/59/c0/28/59c028bb7094cf7b1cec059dc65fd0ff.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White button-down shirt",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeves, v-neckline, loose fit"
+    },
+    {
+     "name": "Light blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, distressed knees, straight leg"
+    },
+    {
+     "name": "Beige pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "beige"
+     ],
+     "detail": "stiletto heel, pointed toe"
+    }
+   ]
+  },
+  "1407443627295523": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/05/f4/44/05f444f4805b3b79a529931463197b96.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Grey plaid blazer",
+     "type": "outerwear",
+     "colors": [
+      "grey"
+     ],
+     "detail": "long sleeve, patterned, structured"
+    },
+    {
+     "name": "White v-neck top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "v-neck, lightweight fabric"
+    },
+    {
+     "name": "Blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "distressed, denim, full length"
+    },
+    {
+     "name": "Beige pointed pumps",
+     "type": "shoes",
+     "colors": [
+      "beige"
+     ],
+     "detail": "stiletto heel, pointed toe"
+    },
+    {
+     "name": "Beige crossbody bag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "structured, gold hardware"
+    },
+    {
+     "name": "Silver bracelet",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "metallic, wrist"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate, chain"
+    }
+   ]
+  },
+  "1407443627295522": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/f3/0b/b8/f30bb8728cad2c8bf3ede2aeca906436.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige blazer",
+     "type": "outerwear",
+     "colors": [
+      "beige"
+     ],
+     "detail": "long sleeve, single breasted, structured shoulders"
+    },
+    {
+     "name": "White tank top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "scoop neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Light blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high waisted, cropped length, distressed with holes"
+    },
+    {
+     "name": "Clear pointed heels",
+     "type": "shoes",
+     "colors": [
+      "clear"
+     ],
+     "detail": "pointed toe, transparent material, stiletto heel"
+    },
+    {
+     "name": "Beige clutch bag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "envelope style, small, handheld"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "layered, delicate chain"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "chain link, wrist"
+    },
+    {
+     "name": "Sunglasses",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "oversized, dark lenses"
+    }
+   ]
+  },
+  "1407443627295520": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/e3/9b/c4/e39bc4237d87fe612ff80c15e4b73128.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Tan oversized blazer",
+     "type": "outerwear",
+     "colors": [
+      "tan"
+     ],
+     "detail": "single breasted, long sleeves, notched lapel"
+    },
+    {
+     "name": "White tank top",
+     "type": "tanks",
+     "colors": [
+      "white"
+     ],
+     "detail": "scoop neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Light blue skinny jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high waisted, distressed hem, slim fit"
+    },
+    {
+     "name": "Black strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "stiletto heel, thin toe strap"
+    },
+    {
+     "name": "Gold clutch bag",
+     "type": "bags",
+     "colors": [
+      "gold"
+     ],
+     "detail": "small, metallic, rectangular"
+    }
+   ]
+  },
+  "1407443627295519": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/10/1a/98/101a981a514354fda0f2ef3e89f80377.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White blazer",
+     "type": "outerwear",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeve, single breasted, structured shoulders"
+    },
+    {
+     "name": "Tan ribbed tank top",
+     "type": "tanks",
+     "colors": [
+      "tan"
+     ],
+     "detail": "scoop neckline, ribbed fabric, sleeveless"
+    },
+    {
+     "name": "White trousers",
+     "type": "bottoms",
+     "colors": [
+      "white"
+     ],
+     "detail": "high waisted, slim fit, ankle length, button closure"
+    },
+    {
+     "name": "Gold strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "gold"
+     ],
+     "detail": "stiletto heel, lace-up, open toe"
+    },
+    {
+     "name": "Gold mini bag",
+     "type": "bags",
+     "colors": [
+      "gold"
+     ],
+     "detail": "small structured handbag with chain strap"
+    },
+    {
+     "name": "Silver necklace",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "delicate chain with small pendant"
+    },
+    {
+     "name": "Silver bracelet",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "beaded or link style on wrist"
+    },
+    {
+     "name": "Ring",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "simple band on finger"
+    }
+   ]
+  },
+  "1407443627295517": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/00/37/4b/00374bd04c058d42569c23e43f40a15c.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White strapless corset top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "strapless, structured, sweetheart neckline"
+    },
+    {
+     "name": "Beige high-waisted leggings",
+     "type": "bottoms",
+     "colors": [
+      "beige"
+     ],
+     "detail": "high-waisted, ribbed fabric, full length"
+    },
+    {
+     "name": "Nude clear heels",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "stiletto, transparent straps"
+    },
+    {
+     "name": "Brown monogram handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "small, structured, monogram print"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic, wrist accessory"
+    }
+   ]
+  },
+  "1407443626675411": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/31/1a/d8/311ad88b66277523b014dca1955c0447.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Champagne satin camisole",
+     "type": "tops",
+     "colors": [
+      "champagne"
+     ],
+     "detail": "v-neckline, sleeveless, satin fabric"
+    },
+    {
+     "name": "White high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "white"
+     ],
+     "detail": "high-waisted, straight leg, full length"
+    },
+    {
+     "name": "Cream longline cardigan",
+     "type": "outerwear",
+     "colors": [
+      "cream"
+     ],
+     "detail": "longline, open front, lightweight fabric"
+    },
+    {
+     "name": "Gold strappy heels",
+     "type": "shoes",
+     "colors": [
+      "gold"
+     ],
+     "detail": "stiletto heel, strappy design"
+    },
+    {
+     "name": "Cream handbag",
+     "type": "bags",
+     "colors": [
+      "cream"
+     ],
+     "detail": "small structured top handle bag"
+    },
+    {
+     "name": "Gold choker necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin choker style"
+    }
+   ]
+  },
+  "1407443626675410": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/22/66/e8/2266e80be8b1f5afe06580e86b45add6.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White ribbed halter top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "ribbed fabric, halter neckline, sleeveless"
+    },
+    {
+     "name": "Peach wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "peach"
+     ],
+     "detail": "high-waisted, wide-leg, flowing fabric"
+    },
+    {
+     "name": "Beige mini handbag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "small structured top-handle bag with gold hardware"
+    },
+    {
+     "name": "Gold statement earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large circular drop earrings"
+    },
+    {
+     "name": "Gold bracelets",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "stacked delicate bracelets on wrist"
+    },
+    {
+     "name": "Gold ring",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "simple band on finger"
+    }
+   ]
+  },
+  "1407443626675409": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/a5/b3/55/a5b355511b8723aa2e7bc2b586b21098.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White blazer",
+     "type": "outerwear",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeve, open front, tailored"
+    },
+    {
+     "name": "Tan tank top",
+     "type": "tanks",
+     "colors": [
+      "tan"
+     ],
+     "detail": "scoop neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Light blue ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high waisted, distressed, denim"
+    },
+    {
+     "name": "Tan belt",
+     "type": "accessories",
+     "colors": [
+      "tan"
+     ],
+     "detail": "wide with large gold buckle"
+    },
+    {
+     "name": "Gold layered necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "multiple chains with pendants"
+    },
+    {
+     "name": "Gold bracelets",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "stacked bangles and chain style"
+    },
+    {
+     "name": "Beige handbag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "structured with gold chain strap"
+    }
+   ]
+  },
+  "1407443626675408": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/4c/6a/36/4c6a361e8b1b46ffd708cb6dda46b0c1.jpg",
+   "text": " \n\nno idea how this type of thing would feel/ look on my body, but I like it on her :P\n\n",
+   "pieces": [
+    {
+     "name": "Black satin blouse",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "long sleeve, deep V-neckline, silky fabric"
+    },
+    {
+     "name": "Beige high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "beige"
+     ],
+     "detail": "straight leg, high-waisted, tailored fabric"
+    },
+    {
+     "name": "Black leather handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured top handle bag"
+    },
+    {
+     "name": "Brown sunglasses",
+     "type": "accessories",
+     "colors": [
+      "brown"
+     ],
+     "detail": "oversized frame"
+    }
+   ]
+  },
+  "1407443626675406": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/0a/55/36/0a553672f05dc20165dd712ca1a4445b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black button-down shirt",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "long sleeve, collared, buttoned"
+    },
+    {
+     "name": "Black high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "slim fit, ankle length"
+    },
+    {
+     "name": "Black strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "heeled, ankle strap"
+    },
+    {
+     "name": "Gold buckle belt",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "thin, circular gold buckle"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "round face, metal band"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large hoop style"
+    }
+   ]
+  },
+  "1407443626637357": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/d8/20/6e/d8206e0e849c328c7107a3e85461f14b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Beige sleeveless bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "beige"
+     ],
+     "detail": "scoop neckline, sleeveless, tight fit"
+    },
+    {
+     "name": "White high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "white"
+     ],
+     "detail": "wide leg, pleated, high waisted"
+    },
+    {
+     "name": "White tank top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "racerback, sleeveless, tight fit"
+    },
+    {
+     "name": "Tan high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "tan"
+     ],
+     "detail": "tapered leg, belted, high waisted"
+    },
+    {
+     "name": "Tan belt",
+     "type": "accessories",
+     "colors": [
+      "tan"
+     ],
+     "detail": "wide, matching fabric, gold buckle"
+    },
+    {
+     "name": "Beige clutch bag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "soft, gathered fabric, handheld"
+    },
+    {
+     "name": "Clear pointed-toe heels",
+     "type": "shoes",
+     "colors": [
+      "clear"
+     ],
+     "detail": "pointed toe, slingback, transparent"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with small pendant"
+    }
+   ]
+  },
+  "1407443626637355": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/18/78/de/1878de347c0e27d2fadee4a389c80ebe.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White textured sweater",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "knitted, textured fabric, long sleeves"
+    }
+   ]
+  },
+  "1407443626637351": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/e4/fb/f2/e4fbf26bf891d0139bda0708a5945b5a.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Light blue plaid blazer",
+     "type": "outerwear",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "long sleeve, single breasted, structured shoulders"
+    },
+    {
+     "name": "White crew neck top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "short sleeve, crew neckline, fitted"
+    },
+    {
+     "name": "Light wash ripped jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "straight leg, distressed knees, ankle length"
+    },
+    {
+     "name": "Beige clutch bag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "pouch style, soft fabric, handheld"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "high heel, thin straps, open toe"
+    },
+    {
+     "name": "Silver ring",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "minimalist band"
+    }
+   ]
+  },
+  "1407443626637349": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/09/e4/25/09e425fb97320fbdb02f29a2575b09bc.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Gold chain bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thick link chain bracelet"
+    }
+   ]
+  },
+  "1407443626601330": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/73/9f/17/739f177d4078ecafa40f2eae77372589.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Dark green sleeveless bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "dark green"
+     ],
+     "detail": "high neckline, sleeveless, form-fitting"
+    },
+    {
+     "name": "White high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "white"
+     ],
+     "detail": "slim fit, ankle length, belted waist"
+    },
+    {
+     "name": "White belt",
+     "type": "accessories",
+     "colors": [
+      "white"
+     ],
+     "detail": "narrow, with silver buckle"
+    },
+    {
+     "name": "Clear strap heels",
+     "type": "shoes",
+     "colors": [
+      "clear"
+     ],
+     "detail": "stiletto heel, transparent straps"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "large hoop style"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain on wrist"
+    }
+   ]
+  },
+  "1407443626528058": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/89/b2/3f/89b23f80786c8bdb2947ad6b11dfa05b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White off-the-shoulder sweater",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "off-the-shoulder, long sleeves, knit fabric"
+    },
+    {
+     "name": "Black high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "slim fit, full length"
+    },
+    {
+     "name": "Beige patterned clutch",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "rectangular, patterned, handheld"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "stiletto heel, thin straps"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin chain on wrist"
+    },
+    {
+     "name": "Silver waist chain",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "thin chain worn around waist"
+    }
+   ]
+  },
+  "1407443626528056": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/1d/58/64/1d58646a614a41f52d0f4cf154c8ce64.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White blazer",
+     "type": "outerwear",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeve, open front, tailored"
+    },
+    {
+     "name": "White tank top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "cropped, scoop neckline, sleeveless"
+    },
+    {
+     "name": "Blue denim shorts",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "high waisted, distressed denim"
+    },
+    {
+     "name": "Brown crossbody bag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "textured leather, gold chain strap"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with pendant"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thin bangle"
+    },
+    {
+     "name": "Gold rings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "multiple thin bands"
+    }
+   ]
+  },
+  "1407443626528052": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/e7/68/f3/e768f33d4d42caffec6326f18d47a723.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black halter top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "halter neckline, sleeveless, cropped length"
+    },
+    {
+     "name": "Beige wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "beige"
+     ],
+     "detail": "high-waisted, wide-leg, long length"
+    },
+    {
+     "name": "Black shoulder bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "small, quilted texture, gold chain strap"
+    },
+    {
+     "name": "Nude heels",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "pointed toe, high heel"
+    },
+    {
+     "name": "Silver hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "large hoop style"
+    }
+   ]
+  },
+  "1407443626373162": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/2d/51/a6/2d51a6443fd78f14189ade2f95c2d2c4.jpg",
+   "text": " ",
+   "pieces": []
+  },
+  "1407443626373161": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/cf/5d/1c/cf5d1ca068b44297176039f7c6c67936.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White crewneck top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "fitted, jersey fabric, short length, crew neckline"
+    },
+    {
+     "name": "Cream ribbed cardigan",
+     "type": "outerwear",
+     "colors": [
+      "cream"
+     ],
+     "detail": "longline, ribbed knit, open front, long balloon sleeves"
+    },
+    {
+     "name": "Light blue denim jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "high-waisted, slim fit, full length"
+    },
+    {
+     "name": "Black leather belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "thin, silver buckle"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with small pendant"
+    },
+    {
+     "name": "Black ankle boots",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "leather, pointed toe, block heel"
+    }
+   ]
+  },
+  "1407443626373039": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/ae/59/d2/ae59d27ae8dc0707920a8b60260b327a.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Grey sleeveless bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "grey"
+     ],
+     "detail": "fitted, scoop neckline, sleeveless"
+    },
+    {
+     "name": "Black high-waisted trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "skinny fit, high-waisted, full length"
+    },
+    {
+     "name": "Black stiletto sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "ankle strap, high heel, open toe"
+    },
+    {
+     "name": "Black quilted handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "quilted leather, gold chain strap, small size"
+    },
+    {
+     "name": "Black belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "slim, leather, with buckle"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic, wrist wear"
+    },
+    {
+     "name": "Gold earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "hoop style"
+    },
+    {
+     "name": "Clear glasses",
+     "type": "accessories",
+     "colors": [
+      "transparent"
+     ],
+     "detail": "thin frame, eyewear"
+    }
+   ]
+  },
+  "1407443626373032": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/ae/b4/a8/aeb4a8a59abb7d3675f2ddf7c5d5d144.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Tan blazer",
+     "type": "outerwear",
+     "colors": [
+      "tan"
+     ],
+     "detail": "single breasted, gold buttons, long sleeves"
+    },
+    {
+     "name": "Beige bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "beige"
+     ],
+     "detail": "scoop neckline, sleeveless, tight fit"
+    },
+    {
+     "name": "Blue skinny jeans",
+     "type": "bottoms",
+     "colors": [
+      "blue"
+     ],
+     "detail": "denim, distressed knee, high waisted"
+    },
+    {
+     "name": "Nude stiletto heels",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "pointed toe, ankle strap, gold hardware"
+    },
+    {
+     "name": "Brown leather handbag",
+     "type": "bags",
+     "colors": [
+      "brown"
+     ],
+     "detail": "structured, top handle, gold accents"
+    },
+    {
+     "name": "Dark sunglasses",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "oversized, dark lenses"
+    },
+    {
+     "name": "Silver watch",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "metal strap, wrist wear"
+    }
+   ]
+  },
+  "1407443626373026": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/06/14/82/061482dccc80668e49126074a7d7020d.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Brown oversized knit sweater",
+     "type": "tops",
+     "colors": [
+      "brown"
+     ],
+     "detail": "oversized, chunky knit, long sleeves, high neck"
+    },
+    {
+     "name": "Tan checkered mini skirt",
+     "type": "skirts",
+     "colors": [
+      "tan",
+      "white"
+     ],
+     "detail": "mini length, small slit, checkered pattern"
+    },
+    {
+     "name": "Brown tall boots",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "knee-high, suede-like material"
+    },
+    {
+     "name": "Checkered tote bag",
+     "type": "bags",
+     "colors": [
+      "beige",
+      "white"
+     ],
+     "detail": "large tote, checkered pattern, tan leather trim"
+    },
+    {
+     "name": "Gold ring",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "simple band on finger"
+    }
+   ]
+  },
+  "1407443626373012": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/76/a6/27/76a62725290bfdeb5a4e3eb6026123a0.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black blazer",
+     "type": "outerwear",
+     "colors": [
+      "black"
+     ],
+     "detail": "tailored, long sleeves, single breasted"
+    },
+    {
+     "name": "Black trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "slim fit, full length"
+    },
+    {
+     "name": "Black tote bag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured, leather-look, top handles"
+    },
+    {
+     "name": "Black strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "high heel, thin straps"
+    }
+   ]
+  },
+  "1407443626372984": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/20/11/3a/20113a9647d95460665af0ca9f7f8c55.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White cable knit sweater",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeve, v-neck, chunky knit"
+    },
+    {
+     "name": "Brown trousers",
+     "type": "bottoms",
+     "colors": [
+      "brown"
+     ],
+     "detail": "high waisted, straight leg, tailored"
+    },
+    {
+     "name": "Beige belt",
+     "type": "accessories",
+     "colors": [
+      "beige"
+     ],
+     "detail": "thin, leather-like"
+    },
+    {
+     "name": "Beige handbag",
+     "type": "bags",
+     "colors": [
+      "beige"
+     ],
+     "detail": "structured satchel with top handles"
+    },
+    {
+     "name": "Beige pointed-toe heels",
+     "type": "shoes",
+     "colors": [
+      "beige"
+     ],
+     "detail": "pointed toe, closed"
+    },
+    {
+     "name": "Gold watch",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "metallic band"
+    }
+   ]
+  },
+  "1407443626372980": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/15/d5/c5/15d5c522c7447b83fc5a31b32bdb3114.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White blazer",
+     "type": "outerwear",
+     "colors": [
+      "white"
+     ],
+     "detail": "long sleeve, single breasted, structured"
+    },
+    {
+     "name": "White button-down shirt",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "collared, long sleeve, tucked in"
+    },
+    {
+     "name": "Beige trousers",
+     "type": "bottoms",
+     "colors": [
+      "beige"
+     ],
+     "detail": "high waisted, straight leg, ankle length"
+    },
+    {
+     "name": "Tan pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "tan"
+     ],
+     "detail": "pointed toe, stiletto heel"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with small pendant"
+    },
+    {
+     "name": "Ring",
+     "type": "accessories",
+     "colors": [
+      "silver"
+     ],
+     "detail": "band style on finger"
+    }
+   ]
+  },
+  "1407443626372972": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/25/49/75/254975512c9d99f4cc7d04ad6c8f475a.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Rose gold vine ring",
+     "type": "accessories",
+     "colors": [
+      "rose gold"
+     ],
+     "detail": "delicate floral vine design with small sparkling stones"
+    }
+   ]
+  },
+  "1407443626372971": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/33/97/af/3397af317b79a0ce41a92cc9e3d838d6.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black plaid blazer coat",
+     "type": "outerwear",
+     "colors": [
+      "black",
+      "white"
+     ],
+     "detail": "longline, plaid pattern, notched lapel, long sleeves"
+    },
+    {
+     "name": "Black lace bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "black"
+     ],
+     "detail": "sheer lace, V-neckline, sleeveless"
+    },
+    {
+     "name": "Black leather trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "high-waisted, slim fit, faux leather"
+    },
+    {
+     "name": "Black Gucci belt",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "gold"
+     ],
+     "detail": "gold GG buckle, slim width"
+    },
+    {
+     "name": "Black leather handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured satchel, top handles, shoulder strap"
+    },
+    {
+     "name": "Clear pointed heels",
+     "type": "shoes",
+     "colors": [
+      "transparent"
+     ],
+     "detail": "pointed toe, stiletto heel, PVC material"
+    },
+    {
+     "name": "Gold bracelet",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain, wrist wear"
+    },
+    {
+     "name": "Gold ring",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "band style, finger wear"
+    }
+   ]
+  },
+  "1407443626370694": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/28/6f/47/286f472c42da0d7444276acf449bc9ae.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "White long sleeve bodysuit",
+     "type": "bodysuits",
+     "colors": [
+      "white"
+     ],
+     "detail": "v-neckline, long sleeves, wrap style"
+    },
+    {
+     "name": "Beige midi pencil skirt",
+     "type": "skirts",
+     "colors": [
+      "beige"
+     ],
+     "detail": "high waisted, tight fit, midi length"
+    },
+    {
+     "name": "Nude strappy sandals",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "heeled, thin straps"
+    }
+   ]
+  },
+  "1407443626370693": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/d2/ef/b4/d2efb445d2ac460fffb3dec0c142537b.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Black blazer",
+     "type": "outerwear",
+     "colors": [
+      "black"
+     ],
+     "detail": "long sleeve, structured, single breasted"
+    },
+    {
+     "name": "White top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "crew neck, fitted"
+    },
+    {
+     "name": "Black leather leggings",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "high waisted, slim fit, faux leather"
+    },
+    {
+     "name": "White sneakers",
+     "type": "shoes",
+     "colors": [
+      "white"
+     ],
+     "detail": "low top, lace up, casual"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured tote, top handles, gold hardware"
+    }
+   ]
+  },
+  "1407443626370627": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/94/f8/d7/94f8d7dd4d93d6e1f38170651d534dc0.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Pink chunky knit sweater",
+     "type": "tops",
+     "colors": [
+      "pink"
+     ],
+     "detail": "oversized, textured knit, long sleeves, crew neck"
+    },
+    {
+     "name": "Black leather pants",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "skinny fit, high-waisted, faux leather material"
+    },
+    {
+     "name": "Brown lace-up boots",
+     "type": "shoes",
+     "colors": [
+      "brown"
+     ],
+     "detail": "platform, lace-up, ankle height"
+    },
+    {
+     "name": "Beige patterned handbag",
+     "type": "bags",
+     "colors": [
+      "beige",
+      "brown"
+     ],
+     "detail": "small shoulder bag, monogram print, gold chain strap"
+    }
+   ]
+  },
+  "1407443626370624": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/13/cf/32/13cf3241a3b2111fb8d8fddd72926480.jpg",
+   "text": " ",
+   "pieces": []
+  },
+  "1407443626370620": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/32/76/9d/32769d455c0c01e2dee67f3234883865.jpg",
+   "text": " ",
+   "pieces": [
+    {
+     "name": "Tan ribbed crop top",
+     "type": "tops",
+     "colors": [
+      "tan"
+     ],
+     "detail": "ribbed fabric, short sleeves, cropped length"
+    },
+    {
+     "name": "Light blue denim jeans",
+     "type": "bottoms",
+     "colors": [
+      "light blue"
+     ],
+     "detail": "denim fabric, high waisted"
+    }
+   ]
+  }
+ }
+}
