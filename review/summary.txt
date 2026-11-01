@@ -1,4 +1,4 @@
-61 made this run · 115 of 1005 in the wardrobe · 26 failed
+135 made this run · 216 of 1005 in the wardrobe · 30 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -14,9 +14,6 @@ starter-black-leather-belt: a white or grey body shape (a dress form?)
 starter-tortoiseshell-claw-clip: a white or grey body shape (a dress form?)
 starter-gold-rings-set: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-beige-bucket-hat: a light piece on a white background (it can’t be cut out cleanly)
-starter-black-strapless-tube-top: it added shorts or trousers to the top
-starter-brown-leopard-corset-top: it added shorts or trousers to the top
-starter-camel-ribbed-turtleneck: it added shorts or trousers to the top
 starter-black-fitted-tee: it added shorts or trousers to the top
 starter-chocolate-ribbed-tank: it added shorts or trousers to the top
 starter-olive-hobo-bag: cut-out not clean enough (left out by review)
@@ -25,3 +22,10 @@ starter-brown-belt-bag: cut-out not clean enough (left out by review)
 starter-gold-anklet: cut-out not clean enough (left out by review)
 starter-brown-crescent-bag: cut-out not clean enough (left out by review)
 starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
+starter-black-tailored-vest: it added shorts or trousers to the top
+starter-beige-tailored-vest: it added shorts or trousers to the top
+starter-beige-sleeveless-knit-top: it added shorts or trousers to the top
+starter-black-ribbed-polo-knit: it added shorts or trousers to the top
+starter-black-fine-knit-sweater: it added shorts or trousers to the top
+starter-tan-ribbed-tank: it added shorts or trousers to the top
+starter-chocolate-halter-top: it added shorts or trousers to the top
