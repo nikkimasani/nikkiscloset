@@ -1,4 +1,4 @@
-135 made this run · 216 of 1005 in the wardrobe · 30 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+20 made this run · 209 of 1005 in the wardrobe · 37 failed
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -29,3 +29,10 @@ starter-black-ribbed-polo-knit: it added shorts or trousers to the top
 starter-black-fine-knit-sweater: it added shorts or trousers to the top
 starter-tan-ribbed-tank: it added shorts or trousers to the top
 starter-chocolate-halter-top: it added shorts or trousers to the top
+starter-black-strapless-tube-top: taken out on review: it drew a T-shirt, not a tube top
+starter-tan-halter-top: taken out on review: pale arms kept with the piece
+starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece
+starter-gold-sequin-cami: taken out on review: a blotch on the piece
+starter-floral-corset-top: taken out on review: colours off (green tint)
+starter-floral-corset-bodysuit: taken out on review: a patch on her leg kept with the piece
+starter-sage-satin-blouse: taken out on review: it added trousers to the top
