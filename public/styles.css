@@ -689,7 +689,6 @@ body.wic-on { overflow: hidden; }
 .starterbadge { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 2px 7px; border-radius: 999px; background: #3b2a22e6; color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .02em; pointer-events: none; }
 .starterbadge.inline { position: static; display: inline-block; vertical-align: 1px; }
 .piece.is-starter { position: relative; }
-.wic-item.is-starter::after, .pick.is-starter::after { content: 'Starter'; position: absolute; top: 2px; left: 2px; padding: 1px 5px; border-radius: 999px; background: #3b2a22d9; color: #fff; font-size: 9px; font-weight: 800; pointer-events: none; }
 .pick.is-starter { position: relative; }
 .starterbatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
 .starterbatches button { min-height: 44px; display: grid; justify-items: start; text-align: left; }
@@ -786,3 +785,15 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .idea { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px; padding: 9px 12px; font-size: 13px; }
 .idea > div { min-width: 0; overflow-wrap: anywhere; }
 .idea button { flex: 0 0 auto; }
+/* the walk-in closet, from the model; Wardrobe > Choose several to try on */
+.closetbtn { position: absolute; top: 12px; left: 12px; z-index: 5; min-height: 40px; padding: 4px 14px; border-radius: 99px; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-weight: 800; font-size: 13px; }
+.pickrow { margin: 4px 0 0; }
+.piece.picked { outline: 3px solid var(--accent); outline-offset: -3px; }
+.pickmark { position: absolute; top: 8px; right: 8px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #0005; background: #fffc; display: grid; place-items: center; font-weight: 900; color: var(--accent-ink); }
+.piece.picked .pickmark { background: var(--accent); border-color: var(--accent); }
+.pickbar { position: sticky; bottom: calc(var(--nav-h, 80px) + 10px); z-index: 20; display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 10px 12px; border-radius: 18px; background: #0b1f35f2; box-shadow: 0 6px 20px #0008; }
+.pickbar > span { flex: 1; } .pickbar .primary { min-width: 120px; }
+.wic-pickbar { position: fixed; left: 10px; right: 10px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 30; pointer-events: auto; }
+.wic-pickbar .pickbar { position: static; margin: 0; }
+.wic-item.picked { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
+.wic-item.picked::after { content: '✓'; position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 900; }

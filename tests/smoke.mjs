@@ -5,6 +5,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
+import { ITEMS as STARTER_ITEMS } from '../public/starter/items.js';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const axeSource = (await import('node:fs')).readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
@@ -93,8 +94,11 @@ const server = spawn('node', ['server.js'], { env: { ...process.env, PORT, FAL_K
 await new Promise((r) => setTimeout(r, 600));
 const out = process.env.SHOTS || mkdtempSync(join(tmpdir(), 'closet-'));
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+// every page starts with no preloaded wardrobe (public/starter/made/ holds the real one); the preload section serves its own index
+const rawNewContext = browser.newContext.bind(browser);
+browser.newContext = async (o) => { const c = await rawNewContext(o); await c.route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: '{"version":0,"pieces":{},"failed":{}}' })); return c; };
 const _newContext = browser.newContext.bind(browser); // (kept as an alias: some sections below start from a fresh, raw context on purpose)
-const page = await browser.newPage({ viewport: { width: 1200, height: 900 } });
+const page = await (await browser.newContext({ viewport: { width: 1200, height: 900 } })).newPage();
 await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing flows exercise the 2D fallback; 3D has its own section below
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
@@ -719,6 +723,15 @@ try {
   await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .edit').click(); await pB.click('#backrm'); await pB.click('#save');
   await pB.waitForFunction(() => !window.__closet.items.find((i) => i.name === 'White tee').backCutout);
   ok(true, 'the back photo can be removed');
+  { // Wardrobe > Choose several to try on: tap pieces, then Try on puts them all on her at once
+    await pB.evaluate(() => { window.__closet.outfit = {}; }); await pB.click('[data-view=closet]'); await pB.locator('.piece:has-text("White tee") .img').click(); // (the tee is on her already)
+    await pB.click('[data-view=closet]'); await pB.click('[data-act=pickmode]');
+    await pB.locator('.piece:has-text("White tee") .img').click(); await pB.locator('.piece:has-text("Satin midi skirt") .img').click(); await pB.locator('.piece:has-text("Camel blazer") .img').click();
+    ok(await pB.locator('.piece.picked').count() === 3 && /3 chosen/.test(await pB.locator('.pickbar').innerText()), 'chosen pieces are marked and counted');
+    await pB.click('[data-act=trypicked]'); await pB.waitForFunction(() => document.querySelector('.stage'));
+    const on = await pB.evaluate(() => Object.values(window.__closet.outfit).map((id) => window.__closet.items.find((i) => i.id === id)?.name).sort());
+    ok(JSON.stringify(on) === JSON.stringify(['Camel blazer', 'Satin midi skirt', 'White tee']), `Try on puts every chosen piece on her at once, and one already on stays on (${on.join(', ')})`);
+  }
 
   // ── the walk-in closet: no character, swipe / tap to move, your pieces on the rails and shelves ──
   {
@@ -726,6 +739,7 @@ try {
     const pw = await cw.newPage(); pw.setDefaultTimeout(60000); pw.on('pageerror', (e) => errors.push(e.message)); pw.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await pw.goto(`http://localhost:${PORT}/`); await pw.waitForFunction(() => window.__closet); await loadFixtures(pw);
     ok(await pw.evaluate(() => !('__apt' in window) && !document.querySelector('#joy, .camrot, .world-jump')), 'the 3D apartment, the walking avatar, the stick and the rotate buttons are gone');
+    ok(await pw.locator('.closetbtn').isVisible() && /Walk-in closet/.test(await pw.locator('.closetbtn').innerText()), 'a labelled Walk-in closet button sits on the model, also on a phone');
     await pw.click('[data-act=scene][data-v=closet] >> visible=true'); // (the scene switch, or the ✨ button in the challenge row on a phone) await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
     ok(await pw.evaluate(() => getComputedStyle(document.querySelector('header.top')).display === 'none' && getComputedStyle(document.querySelector('#nav')).display === 'none'), 'the closet fills the screen: no app header or tabs, just a thin bar');
     ok(await pw.locator('.wic-top [data-act=wicmirror]').count() === 1 && /\d/.test(await pw.locator('.wic-coins').innerText()) && await pw.locator('.wic-top [data-act=shop]').count() === 1, 'the top bar has back, coins and Shop');
@@ -746,6 +760,16 @@ try {
     ok(await pw.evaluate(() => window.__closet.wicAt === 'shoes'), 'the arrow keys move along the walls too');
     await pw.screenshot({ path: join(out, '22-closet-shoes.png') });
     await pw.click('.wic-strip [data-v=dresses]'); await pw.waitForTimeout(800);
+    { // ☑ Choose: tap pieces on the rails, then Try on puts them all on her
+      await pw.click('[data-act=wicpickmode]'); await pw.click('.wic-strip [data-act=wicgo][data-v=tops]'); await pw.waitForTimeout(700);
+      await pw.locator('.wic-panel[data-k=tops] .wic-item').first().click(); await pw.click('.wic-strip [data-act=wicgo][data-v=bottoms]'); await pw.waitForTimeout(700);
+      await pw.locator('.wic-panel[data-k=bottoms] .wic-item').first().click();
+      ok(await pw.locator('.wic-item.picked').count() === 2 && /2 chosen/.test(await pw.locator('.wic-pickbar').innerText()), 'in the walk-in closet, Choose checks pieces instead of opening their card');
+      await pw.click('.wic-pickbar [data-act=trypicked]'); await pw.waitForSelector('.stage');
+      ok(await pw.evaluate(() => ['top', 'bottom'].every((k) => window.__closet.outfit[k])), 'Try on puts the chosen top and bottom on her and goes to the mirror');
+      await pw.evaluate(() => { window.__closet.outfit = {}; }); await pw.click('[data-act=scene][data-v=closet] >> visible=true'); await pw.waitForSelector('.wic-panel[data-k=dresses] .wic-art');
+    }
+    await pw.click('.wic-strip [data-act=wicgo][data-v=dresses]'); await pw.waitForTimeout(700);
     await pw.click('.wic-panel[data-k=dresses] .wic-item'); await pw.waitForSelector('.wic-card');
     ok(/Dinner/.test(await pw.locator('.wic-card').innerText()), 'tapping a piece opens its card with its tags');
     await pw.evaluate(axeSource);
@@ -846,9 +870,14 @@ try {
 
   // the starter closet: clothes are drawn on the model (mock Cloudflare FLUX.2 klein) and only the piece is kept; bags are product photos
   {
-    const pS = await mk(); await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
+    const pS = await mk();
+    await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[aria-label="Starter closet"]');
+    ok(await pS.locator('[data-act=starterbatch]').count() === 0 && new RegExp(`0 of ${STARTER_ITEMS.length} in your closet`).test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the starter closet only reports progress: the wardrobe arrives preloaded, there is nothing to make on the phone');
+    await pS.evaluate(() => localStorage.setItem('starter_make', '1')); await pS.reload(); await pS.waitForFunction(() => window.__closet); // (making on the phone, kept behind a flag, is tested below)
+    await pS.evaluate(() => { localStorage.setItem('aipass', 'letmein'); localStorage.setItem('starter_test_pictures', '1'); }); // (stand-in pictures: the colour check is skipped)
     await pS.click('[data-view=closet]').catch(() => {}); await pS.waitForSelector('[data-act=starterbatch][data-v=tops]');
-    ok(/57\.6 neurons a picture, 1,152 a batch of 20, 8,064 for all 140 \(free: 10,000 a day\)/.test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
+    const nAll = STARTER_ITEMS.length, nTops = STARTER_ITEMS.filter((i) => i.batch === 'tops').length;
+    ok(new RegExp(`57\\.6 neurons a picture, 1,152 a batch of 20, ${Math.round(57.6 * nAll).toLocaleString('en-US')} for all ${nAll} \\(free: 10,000 a day\\)`).test(await pS.locator('[aria-label="Starter closet"]').innerText()), 'the neuron estimate and the free daily allowance are shown before anything runs');
     await pS.click('[data-act=starterbatch][data-v=tops]');
     await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20, null, { timeout: 90000 });
     ok(cf.wears.length === 23 && !cf.calls.length && !starterCalls.length && cf.wears.every((c) => c.auth === 'Bearer cf-token' && c.png && c.size.join() === '512,1008' && c.fields === 'height,input_image_0,prompt,width' && c.id && /^This is a fashion figure whose body is painted flat (green|magenta) from the neck down/.test(c.prompt) && !/mannequin|dress form/i.test(c.prompt)),
@@ -876,9 +905,9 @@ try {
     ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id && i.made === 'model' && i.worn?.join() === '896,1776') && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions, source Starter and the worn picture the size of the model');
     ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare drew for it (no mix-ups between pieces)');
     ok(its.length === nReady && its.every((i) => i.ready) && !its.some((i) => i.id === 'starter-navy-halter-top'), 'only Ready pieces are added: one that needs review never reaches the closet or the model');
-    ok(new RegExp(`${nReady} of 140 ready · 0 need review .* · ${140 - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
-    ok(await pS.locator('.piece .starterbadge').count() === nReady, 'each one carries a Starter badge');
-    ok(/1 to make/.test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'the tops batch has only the piece that needed review left to make');
+    ok(new RegExp(`${nReady} of ${nAll} ready · 0 need review .* · ${nAll - nReady} not made yet`).test(await pS.locator('.starterready').innerText()), 'the closet reports ready vs need review');
+    ok(await pS.locator('.piece.is-starter').count() === nReady && !(await pS.locator('.piece').first().innerText()).includes('Starter'), 'the pieces carry no Starter label');
+    ok(new RegExp(`\\b${nTops - nReady} to make`).test(await pS.locator('[data-act=starterbatch][data-v=tops]').innerText()), 'a batch makes 20 at a time; the rest of the tops (and the piece that needed review) are left to make');
     await pS.screenshot({ path: join(out, '41-starter-closet.png') });
     // on the model: the worn picture is drawn as it is, over her, lined up (no warping)
     const tee = await pS.evaluate(() => window.__closet.items.find((i) => i.starterId === 'starter-black-fitted-tee').id);
@@ -962,9 +991,9 @@ try {
       await put('items', await mkIt('old1', 'starter-navy-halter-top', 'Navy halter top', bad));
       await put('items', await mkIt('old2', 'starter-black-fitted-tee', 'Black fitted tee', good));
     }, [readFileSync(new URL('./fixtures/shot_dress.png', import.meta.url)).toString('base64'), readFileSync(new URL('./fixtures/white/dress.png', import.meta.url)).toString('base64')]);
-    await pR.reload(); await pR.waitForFunction(() => window.__closet && (window.__closet.starterReview || []).length >= 1, null, { timeout: 30000 });
-    const st = await pR.evaluate(() => ({ items: window.__closet.items.map((i) => i.name), review: window.__closet.starterReview.map((i) => i.name) }));
-    ok(st.review.includes('Navy halter top') && !st.items.includes('Navy halter top'), `an older starter piece that fails today's check is taken off the closet and the model (${JSON.stringify(st)})`);
+    await pR.reload(); await pR.waitForFunction(() => window.__closet?.items);
+    const st = await pR.evaluate(() => ({ items: window.__closet.items.map((i) => i.name) }));
+    ok(!st.items.includes('Navy halter top') && !st.items.includes('Black fitted tee'), `an old flat photo of a piece drawn on her stays off the closet and the model until the preloaded one arrives (${JSON.stringify(st)})`);
     await pR.context().close();
   }
 

@@ -30,11 +30,11 @@ if (!reextract && (!process.env.CF_ACCOUNT_ID || !process.env.CF_API_TOKEN)) { c
 mkdirSync(DIR, { recursive: true }); mkdirSync('review', { recursive: true });
 const index = existsSync(INDEX) ? JSON.parse(readFileSync(INDEX, 'utf8')) : { version: 0, pieces: {}, failed: {} };
 for (const id of redo) { delete index.pieces[id]; rmSync(`${DIR}/${id}.webp`, { force: true }); }
-// what to make: missing pieces first, then pieces drawn on the model by an older version of wear.js (remade, so they all match)
+// what to make: pieces already in the closet but drawn by an older version of wear.js first (they're what you see today), then missing ones
 const outdated = (i) => index.pieces[i.id]?.kind === 'worn' && (index.pieces[i.id].v || 1) < WEAR_VERSION;
 const inScope = (i) => !onlyBatch || i.batch === onlyBatch;
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
-  : [...ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id))), ...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i))];
+  : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id)))];
 console.log(`${Object.keys(index.pieces).length} of ${ITEMS.length} made; ${todo.length} to make this run`);
 if (!todo.length) process.exit(0);
 
@@ -76,9 +76,14 @@ for (const it of todo) {
   if (r.limit) { stopped = 'the day’s free Cloudflare allowance is used up'; break; }
   if (r.ok) {
     writeFileSync(`${DIR}/${it.id}.webp`, Buffer.from(r.data.split(',')[1], 'base64'));
-    index.pieces[it.id] = { kind: r.kind, ...(r.box && { box: r.box, v: WEAR_VERSION }), color: r.color, colors: r.colors, t: Date.now() }; // (t: phones swap in a remade piece) delete index.failed[it.id]; made++;
+    index.pieces[it.id] = { kind: r.kind, ...(r.box && { box: r.box, v: WEAR_VERSION }), color: r.color, colors: r.colors, t: Date.now() }; // (t: phones swap in a remade piece)
+    delete index.failed[it.id]; made++;
     console.log(`✓ ${it.id} (${r.kind}, try ${r.tries})`);
-  } else { index.failed[it.id] = r.reasons; console.log(`✗ ${it.id}: ${r.reasons.join('; ')}`); }
+  } else {
+    // a piece that no longer passes when cut out again is taken out, so the next run makes it fresh
+    index.failed[it.id] = r.reasons; if (reextract) { delete index.pieces[it.id]; rmSync(`${DIR}/${it.id}.webp`, { force: true }); }
+    console.log(`✗ ${it.id}: ${r.reasons.join('; ')}`);
+  }
   save();
 }
 
