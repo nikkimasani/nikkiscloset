@@ -37,7 +37,7 @@ const S = {
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
-  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
+  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: /[?&]points\b/.test(location.search) /* (the body points over the model: a developer view, only with ?points in the address) */, meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '', src: 'all' },
   picking: false, pick: [],          // choosing several pieces to try on at once (Wardrobe or the walk-in closet)
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
@@ -230,7 +230,7 @@ function queueFit(item) {
     clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
   }).catch(() => S.fitPending.delete(key));
 }
-const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
+const usingPhoto = () => false; // (your own photo and the photoreal try-on are off the Dress Up screen: the model is always shown)
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
 /** Your chosen hairstyle and colour, ready for dollSVG. */
@@ -261,45 +261,41 @@ function render() {
 
 /* ───────────────────────── closet ───────────────────────── */
 function renderCloset() {
-  const { type, occ, q, src } = S.filter;
-  const counts = Object.fromEntries(Object.keys(TYPES).map((t) => [t, S.items.filter((i) => i.type === t).length]));
-  const shown = S.items.filter((i) =>
-    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) && (src === 'all' || (src === 'starter') === starter.isStarter(i)) &&
-    (!q || (i.name + ' ' + (i.brand || '') + ' ' + (i.color?.name || '')).toLowerCase().includes(q.toLowerCase())));
-
+  const { type, occ, q, color = 'all' } = S.filter;
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const shown = S.items.filter((i) => (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) && (color === 'all' || i.color?.name === color)
+    && words.every((w) => `${i.name} ${i.brand || ''} ${i.color?.name || ''} ${(i.tags?.colors || []).join(' ')} ${TYPES[i.type]?.label || ''} ${(i.occasions || []).join(' ')}`.toLowerCase().includes(w)));
   const rails = Object.keys(TYPES).map((t) => {
     const list = shown.filter((i) => i.type === t);
     if (!list.length) return '';
     return `<section class="rail" aria-label="${TYPES[t].label}"><h3 class="rail-h"><span aria-hidden="true">${TYPES[t].emoji}</span> ${TYPES[t].label} <small>${list.length}</small></h3>
       <div class="rail-row">${list.map(pieceCard).join('')}</div></section>`;
   }).join('');
-
+  const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
   $('#main').innerHTML = `
-    <h2 class="view-title sr-only">Your closet</h2>
-    ${S.items.length ? `<div class="row pickrow"><button class="${S.picking ? 'ghost' : 'primary'}" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done choosing' : '☑ Choose several to try on'}</button>${S.picking ? '<span class="muted">Tap pieces, then Try on</span>' : ''}</div>` : ''}
-    <div class="row" style="margin-top:12px">
-      <input type="search" id="q" class="grow" aria-label="Search your closet" placeholder="Search your closet…" value="${esc(q)}" style="max-width:300px">
-      <select id="occ" aria-label="Filter by occasion" style="width:auto"><option value="all">All occasions</option>${OCCASIONS.map((o) => `<option ${o === occ ? 'selected' : ''}>${o}</option>`).join('')}</select>
-      <span class="muted">${S.items.length} pieces</span>
-    </div>
-    ${S.items.some(starter.isStarter) ? `<div class="chips srcchips" style="margin-top:12px" role="group" aria-label="Whose pieces">${[['all', 'All'], ['mine', 'Mine'], ['starter', 'Starter']].map(([k, l]) => `<button class="chip ${src === k ? 'on' : ''}" aria-pressed="${src === k}" data-act="fsrc" data-v="${k}">${l} · ${S.items.filter((i) => k === 'all' || (k === 'starter') === starter.isStarter(i)).length}</button>`).join('')}</div>` : ''}
-    <div class="chips" style="margin-top:12px" role="group" aria-label="Filter by type">
-      <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
-      ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
-    </div>
+    <h2 class="view-title sr-only">Your wardrobe</h2>
+    <div class="row addrow"><button class="primary grow" data-act="add">+ Add a piece (photo or link)</button>${S.items.length ? `<button class="${S.picking ? 'primary' : 'ghost'}" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done' : '☑ Try several'}</button>` : ''}</div>
+    <section class="finder" aria-label="Find pieces" style="margin-top:12px">
+      <div class="findbar"><input type="search" id="q" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(q)}" autocomplete="off"></div>
+      <div class="chips findrow" role="group" aria-label="Type">${chip('ftype', 'all', type, 'All')}${Object.entries(TYPES).map(([k, v]) => chip('ftype', k, type, `<span aria-hidden="true">${v.emoji}</span> ${v.label}`)).join('')}</div>
+      <div class="chips findrow" role="group" aria-label="Colour">${chip('fcolor', 'all', color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcolor', n, color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+      <div class="chips findrow" role="group" aria-label="Style">${chip('foccas', 'all', occ, 'Any style')}${OCCASIONS.map((o) => chip('foccas', o, occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
+      <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>
+    </section>
     ${rails || emptyCloset()}
     ${S.picking ? pickBar() : ''}
-    ${addPanel()}
-    ${starterPanel()}
-    <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
-      <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
-      <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
-      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
-      <input type="file" id="restore" accept=".json,application/json" hidden></section>
-    ${syncPanel()}`;
+    <details class="panel more" ${S.moreOpen ? 'open' : ''}><summary>Backup, sync &amp; adding from other apps</summary>
+      ${addPanel()}
+      <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
+        <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
+        <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
+        ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
+        <input type="file" id="restore" accept=".json,application/json" hidden></section>
+      ${syncPanel()}
+      ${starterPanel()}</details>`;
+  const more = $('details.more'); if (more) more.ontoggle = () => { S.moreOpen = more.open; }; // (stays open while you use backup, sync or the starter pieces)
   const qEl = $('#q');
   qEl.oninput = () => { S.filter.q = qEl.value; const p = qEl.selectionStart; renderCloset(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
-  $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
 }
 
 /** Wardrobe > Choose several: the bar that puts every chosen piece on her at once (one per slot; a later pick replaces an earlier one there). */
@@ -908,7 +904,7 @@ function casHTML() {
   const close = '<button class="cas-x" data-act="casclose" aria-label="Close customizer"><span aria-hidden="true">✕</span></button>';
   if (usingPhoto()) return `<div class="cas" role="region" aria-label="Customize your model"><p class="muted">You’re showing your own photo. Switch back to the model under <b>Me</b> to customize it.</p>${close}</div>`;
   // The base picture is fixed art: hair is your own hairstyle pictures laid over it; the anchor points are coordinates over it.
-  const tabs = dollPack?.hair ? ['hair', 'anchors'] : ['anchors'];
+  const tabs = ['hair'];
   if (!tabs.includes(S.casTab)) S.casTab = tabs[0];
   const pts = dollPack?.points || {};
   const panes = {
@@ -1145,14 +1141,9 @@ function wicPanel(sec, W, H, x) {
 /** The top bar, the challenge pill and the tip: drawn over the closet, never over the strip. */
 function wicChrome() {
   const bar = $('.wic-chrome'); if (!bar) return;
-  const d = S.game.day, open = !!S.wicPill;
   bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to dress up"><span aria-hidden="true">←</span></button>
-      <span class="wic-coins" role="status"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span>
-      <button class="wic-round wide" data-act="wicpickmode" aria-pressed="${!!S.picking}">${S.picking ? '✓ Done' : '☑ Choose'}</button>
-      <button class="wic-round wide" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button></div>
+      <button class="wic-round wide" data-act="wicpickmode" aria-pressed="${!!S.picking}">${S.picking ? '✓ Done' : '☑ Choose'}</button></div>
     ${S.picking ? `<div class="wic-pickbar">${pickBar()}</div>` : ''}
-    ${d ? `<div class="wic-pillbox"><button class="wic-pill" data-act="wicpill" aria-expanded="${open}" aria-controls="wicpillcard">${esc(themeLine(d.theme))}</button>
-      ${open ? `<div class="wic-pillcard" id="wicpillcard"><p>Today’s challenge: <b>${esc(d.theme.title)}</b>. ${d.stars ? `You scored ${d.stars}★.` : hasOutfit() ? 'Rate your look in the mirror.' : 'Pick pieces, then rate the look in the mirror.'}</p><button class="wic-btn" data-act="wicmirror">🪞 To the mirror</button></div>` : ''}</div>` : ''}
     ${store.get('wictip', '') ? '' : '<div class="wic-tip" role="status">Swipe to move along the walls, or tap a section. Pinch to look closer. <button class="wic-x" data-act="wictip" aria-label="Got it">✕</button></div>'}`;
 }
 function wicStrip(cur) {
@@ -1207,69 +1198,84 @@ function layoutVars() {
 }
 addEventListener('resize', () => layoutVars());
 
+/** The wardrobe finder under the model: search words, then type, colour and style (occasion) chips; every match is a tile you tap to wear. */
+const FIND = { q: '', type: 'all', color: 'all', occ: 'all', more: 0 };
+const PAGE = 48;
+/** The colours in your closet, most common first: [name, hex, count]. */
+function closetColors() {
+  const by = new Map();
+  for (const i of S.items) { const n = i.color?.name; if (!n) continue; const c = by.get(n) || [n, i.color.hex, 0]; c[2]++; by.set(n, c); }
+  return [...by.values()].sort((x, y) => y[2] - x[2]);
+}
+/** Pieces matching the finder: every search word must appear in the name, colour, type, style or season. */
+function findPieces() {
+  const words = FIND.q.toLowerCase().split(/\s+/).filter(Boolean);
+  return S.items.filter((i) => (FIND.type === 'all' || i.type === FIND.type) && (FIND.color === 'all' || i.color?.name === FIND.color) && (FIND.occ === 'all' || i.occasions?.includes(FIND.occ))
+    && words.every((w) => `${i.name} ${i.brand || ''} ${i.color?.name || ''} ${(i.tags?.colors || []).join(' ')} ${TYPES[i.type]?.label || ''} ${(i.occasions || []).join(' ')} ${i.season || ''}`.toLowerCase().includes(w)));
+}
+function finderHTML() {
+  const list = findPieces(), shown = list.slice(0, PAGE * (FIND.more + 1)), on = new Set(Object.values(S.outfit));
+  const chip = (act, v, cur, label, extra = '') => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}"${extra}>${label}</button>`;
+  const colors = closetColors().slice(0, 18);
+  const any = FIND.q || FIND.type !== 'all' || FIND.color !== 'all' || FIND.occ !== 'all';
+  return `<section class="finder" aria-label="Your wardrobe">
+    <div class="findbar"><input type="search" id="fq" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(FIND.q)}" autocomplete="off">${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
+    <div class="chips findrow" role="group" aria-label="Type">${chip('ftyp', 'all', FIND.type, 'All')}${Object.entries(TYPES).filter(([k]) => S.items.some((i) => i.type === k)).map(([k, t]) => chip('ftyp', k, FIND.type, `<span aria-hidden="true">${t.emoji}</span> ${t.label}`)).join('')}</div>
+    <div class="chips findrow" role="group" aria-label="Colour">${chip('fcol', 'all', FIND.color, 'Any colour')}${colors.map(([n, hex]) => chip('fcol', n, FIND.color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+    <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
+    <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
+    ${S.items.length ? `<div class="findgrid">${shown.map((i) => `<button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy"><span>${esc(i.name)}</span></button>`).join('')}</div>
+      ${list.length > shown.length ? `<button class="ghost wide" data-act="fmore">Show more (${list.length - shown.length})</button>` : ''}
+      ${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
+  </section>`;
+}
+/** Saved looks and the day's outfit: save what's on the model, wear it today, or put a saved look back on. */
+function looksHTML() {
+  return `<section class="looks panel" aria-label="Looks"><h3>Looks</h3>
+    <div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Name this look (optional)" class="grow"><button class="primary" data-act="savelook">Save look</button></div>
+    <button class="ghost wide" data-act="wearToday" style="margin-top:8px"><span aria-hidden="true">📅</span> I’m wearing this today</button>
+    ${S.outfits.length ? `<div class="chips" style="margin-top:10px">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : ''}</section>`;
+}
 function renderMirror() {
-  if (dollOn() && S.drawer === 'fit') S.drawer = 'looks'; // the doll's fit controls sit right under it instead
-  if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
-  const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
+  const keepY = S.view === S.lastView ? window.scrollY : 0;
   const worn = outfitItems(S.outfit);
-  const stk = wearStreak(S.wears, iso(new Date()));
-  const m = outfitMeters(worn, S.mood, wearCounts());
   const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
-  const pickList = S.items.filter((i) => i.type === S.tab), counts = wearCounts();
-  $('#main').innerHTML = `<h2 class="view-title sr-only">Dress up</h2>
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Build an outfit</h2>
   <div class="dress ${dollOn() ? 'dollmode' : ''}">
     <div class="dress-left">
-      ${sceneBar()}
-      ${dollOn() ? gameBarHTML(false) : ''}
-      <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
-        <div class="gem" aria-hidden="true"></div>
+      <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''}">
         <div class="stage" id="stage">${stageHTML()}</div>
-        ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${dollOn() ? '<button class="closetbtn" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>' : ''}
-        ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
+        ${dollOn() && Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}
         ${dollOn() ? tuckBtnHTML(worn) : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
         ${S.cas ? casHTML() : ''}
         ${dollOn() ? dollBarHTML(fit) : ''}
       </div>
       ${dollOn() ? dollFitHTML(worn, fit) : ''}
-      <div class="tools" role="group" aria-label="Quick actions">
-        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
+      <div class="tools" role="group" aria-label="Outfit">
         <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
-        <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
-        <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
-        ${dollOn() ? '<button data-act="photo"><span aria-hidden="true">📸</span>Photo</button>' : ''}
-        <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
+        <button data-act="clear"><span aria-hidden="true">🧺</span>Clear</button>
+        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">💇</span>Hair</button>
+        <button class="go" data-act="gosave"><span aria-hidden="true">💾</span>Save look</button>
       </div>
-      ${metersHTML(worn)}
-      <div class="moods" role="group" aria-label="Mood: what’s the occasion?">
-        ${OCCASIONS.map((o) => `<button class="chip ${S.mood === o ? 'on' : ''}" aria-pressed="${S.mood === o}" data-act="mood" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}</button>`).join('')}
-      </div>
-      ${weatherLine()}
     </div>
-    <div class="dress-right">
-      <section class="tray" aria-label="Wardrobe">
-        <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
-        ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${Object.values(S.outfit).includes(i.id) ? 'on' : ''} ${starter.isStarter(i) ? 'is-starter' : ''}" aria-pressed="${Object.values(S.outfit).includes(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
-      </section>
-      <section class="drawer" aria-label="Outfit options">
-        <div class="seg" role="group" aria-label="Options">${DRAWERS.filter(([k]) => !(dollOn() && k === 'fit')).map(([k, l]) => `<button class="${S.drawer === k ? 'on' : ''}" aria-pressed="${S.drawer === k}" data-act="drawer" data-v="${k}">${l}</button>`).join('')}</div>
-        <div class="drawer-body">${drawerHTML(worn, fit)}</div>
-      </section>
-    </div></div>`;
-  S.lastTab = S.tab; S.lastView = 'tryon';
-  // on a phone, Hair / Anchors / Fit open as a bottom sheet and the model shrinks to fit above it (never cropped)
+    <div class="dress-right">${finderHTML()}${looksHTML()}</div></div>`;
+  S.lastView = 'tryon';
+  // on a phone, Hair and Fit open as a bottom sheet and the model shrinks to fit above it (never cropped)
   document.body.classList.toggle('dsheet', !!(dollOn() && (S.cas || (S.fitOpen && fit))));
   layoutVars();
   mountStage(); restoreCachedRender();
   if (dollOn()) bindDollGestures($('#stage'));
-  const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
+  const q = $('#fq'); if (q) q.oninput = () => { FIND.q = q.value; FIND.more = 0; const p = q.selectionStart; refreshFinder(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
   window.scrollTo(0, keepY);
-  $('#main').querySelectorAll('[data-adj]').forEach((r) => {
-    r.oninput = () => { fit.adj[r.dataset.adj] = +r.value; refreshStage(); };
-    r.onchange = () => put('items', fit);
-  });
   if (S.pop) { S.pop = false; sparkle(); }
+}
+/** Redraw only the finder (typing in search keeps the page where it is). */
+function refreshFinder() {
+  const f = $('.finder'); if (!f) return renderTryon();
+  f.outerHTML = finderHTML();
+  const q = $('#fq'); if (q) q.oninput = () => { FIND.q = q.value; FIND.more = 0; const p = q.selectionStart; refreshFinder(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
 }
 
 
@@ -1633,7 +1639,7 @@ document.addEventListener('click', async (e) => {
     case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
     case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
     case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).includes(id) ? id : Object.values(S.outfit).at(-1) || null; // (taking a piece off selects another one still worn) S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
-    case 'dbgpts': S.dbgPts = !S.dbgPts; store.set('dbgpts', S.dbgPts ? '1' : ''); if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
+    case 'dbgpts': S.dbgPts = !S.dbgPts; if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
     case 'syncconnect': { const k = $('#synckey').value; if (!k.trim()) return toast('Enter your sync key first'); syncConnect(k); if (!(await runSync())) { syncDisconnect(); render(); } return; }
@@ -1658,8 +1664,16 @@ document.addEventListener('click', async (e) => {
     case 'display': if (S.profile) { S.profile.display = v; await put('profile', S.profile); } return renderTryon();
     case 'setup': return openModelModal();
     case 'clear': S.outfit = {}; return renderTryon();
+    case 'fcolor': S.filter.color = v; return renderCloset();
+    case 'foccas': S.filter.occ = v; return renderCloset();
+    case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
+    case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
+    case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
+    case 'fmore': FIND.more++; return refreshFinder();
+    case 'fclear': Object.assign(FIND, { q: '', type: 'all', color: 'all', occ: 'all', more: 0 }); return refreshFinder();
+    case 'gosave': { const l = $('.looks'); l?.scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#lookname')?.focus({ preventScroll: true }); return; }
     case 'styleme': {
-      const o = S.mood;
+      const o = FIND.occ !== 'all' ? FIND.occ : S.mood; // (the style you picked in the finder)
       if (!S.items.length) return toast('Add some pieces first');
       const r = styleMe(S.items, o, wearCounts(), todayWeather(ctx));
       if (!Object.keys(r).length) return toast(`Nothing tagged for ${o} yet`);

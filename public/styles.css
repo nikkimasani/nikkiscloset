@@ -799,3 +799,26 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .wic-pickbar .pickbar { position: static; margin: 0; }
 .wic-item.picked { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
 .wic-item.picked::after { content: '✓'; position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 900; }
+
+/* ── the outfit builder: one wardrobe finder under the model ── */
+.finder { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 12px; display: grid; gap: 8px; }
+.findbar { display: flex; gap: 8px; }
+.findbar input { flex: 1; min-width: 0; }
+.findrow { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.findrow::-webkit-scrollbar { display: none; }
+.findrow .chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
+.findrow .chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip .sw { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #fff8; display: inline-block; }
+.findcount { margin: 0; font-size: 13px; }
+.findgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.findgrid .pick { flex: none; width: auto; }
+.findgrid .pick.on { border-color: var(--hot); }
+.findgrid .pick img { height: 88px; }
+.looks h3 { margin: 0 0 8px; }
+.dress .tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 919px) { /* the model stays pinned (smaller) while you scroll and search the wardrobe under it */
+  .dress.dollmode .room.dollroom { position: sticky; top: calc(var(--top-h, 64px) + 4px); z-index: 6; height: 46dvh; min-height: 320px; }
+  .dress.dollmode .tools { order: 0; margin-top: 0; }
+  .dress.dollmode .tools button { min-height: 52px; }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 46dvh + 12px); }
+}
