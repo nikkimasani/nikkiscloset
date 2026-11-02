@@ -158,7 +158,10 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, off = r.off || [0, 0], pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean).map(([x, y]) => [x + off[0], y + off[1]]), pair = pts.length === 2;
     // (a bracelet or watch seen from the front is a band round the wrist: its photo, taken from above, is squashed to an ellipse)
     const cw = pair ? iw / 2 : iw, w = r.w ?? (r.h * cw) / ih, h = r.squash ? w * r.squash : r.h ?? (r.w * ih) / cw, href = urls.get(it.id) || '';
-    const pic = pts.map(([px, py], k) => `<svg x="${num(px - r.anchor[0] * w)}" y="${num(py - r.anchor[1] * h)}" width="${num(w)}" height="${num(h)}" viewBox="${pair ? num(k * cw) : 0} 0 ${num(cw)} ${ih}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`).join('');
+    const P = pack.points, hb = r.draw === 'band' && P.templeL && P.crown; // (a headband: a band drawn over the top of her head in its colour; its photo is a side view)
+    const band = hb ? (() => { const hex = it.color?.hex || '#222222', y = (P.templeL[1] + P.templeR[1]) / 2 - 8, d = `M${P.templeL[0] - 2} ${num(y)}Q${P.crown[0]} ${num(P.crown[1] - 62)} ${P.templeR[0] + 2} ${num(y)}`;
+      return `<path d="${d}" fill="none" stroke="${shade(hex, 0.4)}" stroke-width="${r.w + 4}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${hex}" stroke-width="${r.w}" stroke-linecap="round"/>`; })() : '';
+    const pic = hb ? band : pts.map(([px, py], k) => `<svg x="${num(px - r.anchor[0] * w)}" y="${num(py - r.anchor[1] * h)}" width="${num(w)}" height="${num(h)}" viewBox="${pair ? num(k * cw) : 0} 0 ${num(cw)} ${ih}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`).join('');
     const [cx, cy] = pts[0];
     return `<g class="gar acc${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})" transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g>`;
   };
