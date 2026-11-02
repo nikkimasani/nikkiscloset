@@ -314,7 +314,9 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   assert.ok(Math.abs(strap[2] - P.shoulderR[1]) < 20 && Math.abs(strap[1] - P.shoulderR[0]) < 60, 'the strap goes up to her shoulder');
   assert.match(sh, /stroke="#8b4a2b"/, 'in the bag’s colour');
   const x = (svg) => +svg.match(/<svg x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)"/)[1], w = (svg) => +svg.match(/<svg x="[\d.-]+" y="[\d.-]+" width="([\d.]+)"/)[1];
-  const cl = bag('Black clutch', 'clutch'); assert.doesNotMatch(cl, /<path/, 'a clutch has no strap');
+  assert.match(sh, /<g id="fig-(\d+)">[\s\S]*class="basepic"[\s\S]*<\/g><g class="gar acc bag[\s\S]*<use href="#fig-\1" clip-path="url\(#armclip-\1\)"/, 'her arm is drawn again over a shoulder bag (it hangs behind her arm)');
+  assert.match(sh, /<g clip-path="url\(#strapclip-\d+\)"><path/, 'and the strap shows on top of her shoulder');
+  const cl = bag('Black clutch', 'clutch'); assert.doesNotMatch(cl, /<path/, 'a clutch has no strap'); assert.doesNotMatch(cl, /<use /, 'and is held in front of her hand');
   assert.ok(Math.abs(x(cl) + w(cl) / 2 - P.handR[0]) < 20, 'a clutch is in her hand');
   assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
 });
