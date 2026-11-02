@@ -1,26 +1,6 @@
 {
- "version": 1793643280950,
+ "version": 1793647131327,
  "pieces": {
-  "starter-cream-crochet-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 260,
-    "y": 362,
-    "w": 366,
-    "h": 464
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f8f4d9",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f8f4d9",
-    "#cbc4a9",
-    "#9b9579"
-   ],
-   "t": 1793457172205
-  },
   "starter-white-ribbed-tank": {
    "kind": "worn",
    "box": {
@@ -38,27 +18,6 @@
     "#f6f7f7"
    ],
    "t": 1793457172936
-  },
-  "starter-butter-yellow-corset-top": {
-   "kind": "worn",
-   "box": {
-    "x": 290,
-    "y": 322,
-    "w": 324,
-    "h": 444
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f8eab6",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f8eab6",
-    "#d6ba77",
-    "#b78836",
-    "#a68956"
-   ],
-   "t": 1793457173980
   },
   "starter-black-halter-bodysuit": {
    "kind": "worn",
@@ -6067,6 +6026,12 @@
   ],
   "starter-champagne-satin-slip-maxi": [
    "her arm and neck kept with the dress (left out by review)"
+  ],
+  "starter-butter-yellow-corset-top": [
+   "chunks missing from the corset (left out by review)"
+  ],
+  "starter-cream-crochet-cami": [
+   "a hole cut through the middle (left out by review)"
   ]
  },
  "blocked": {
