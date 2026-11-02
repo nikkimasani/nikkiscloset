@@ -1128,12 +1128,12 @@ function wicPanel(sec, W, H, x) {
       return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${S.picking && S.pick.includes(it.id) ? 'picked' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
   } else if (sec.k === 'mirror') {
     const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
-    inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to dress up">${fig}</button>`;
+    inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to try it on">${fig}</button>`;
   }
   const n = list.length;
   const label = sec.k === 'overview' ? '' : `<div class="wic-label"><b>${sec.emoji} ${sec.label}</b>${sec.types ? ` · ${n} ${n === 1 ? 'piece' : 'pieces'}` : ''}</div>`;
   const note = sec.types && !n ? `<div class="wic-empty"><p>No ${sec.label.toLowerCase()} here yet.</p><button class="wic-btn" data-act="add" data-v="${sec.types[0]}">+ Add pieces</button></div>`
-    : sec.k === 'mirror' ? '<div class="wic-empty low"><button class="wic-btn" data-act="wicmirror">🪞 Dress up in the mirror</button></div>'
+    : sec.k === 'mirror' ? '<div class="wic-empty low"><button class="wic-btn" data-act="wicmirror">🪞 Try it on in the mirror</button></div>'
     : sec.k === 'vanity' ? `<div class="wic-empty low wic-vanity">${hairPickerHTML()}<button class="wic-btn" data-act="wichair">🪞 Try hair in the mirror</button></div>` : '';
   return `<section class="wic-panel" data-k="${sec.k}" style="left:${x}px;width:${b.pw}px" aria-label="${sec.label}">
     <div class="wic-art" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;background-image:url(/assets/closet/${sec.bg}.jpg)">${inner}</div>${label}${note}</section>`;
@@ -1141,7 +1141,7 @@ function wicPanel(sec, W, H, x) {
 /** The top bar, the challenge pill and the tip: drawn over the closet, never over the strip. */
 function wicChrome() {
   const bar = $('.wic-chrome'); if (!bar) return;
-  bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to dress up"><span aria-hidden="true">←</span></button>
+  bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to Try On"><span aria-hidden="true">←</span></button>
       <button class="wic-round wide" data-act="wicpickmode" aria-pressed="${!!S.picking}">${S.picking ? '✓ Done' : '☑ Choose'}</button></div>
     ${S.picking ? `<div class="wic-pickbar">${pickBar()}</div>` : ''}
     ${store.get('wictip', '') ? '' : '<div class="wic-tip" role="status">Swipe to move along the walls, or tap a section. Pinch to look closer. <button class="wic-x" data-act="wictip" aria-label="Got it">✕</button></div>'}`;
