@@ -166,8 +166,9 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
   // strap drawn in the bag's colour. Its nudge moves the bag; the strap stays on her shoulder.
   const bagPiece = (it, slot, f, sel) => {
     const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, P = pack.points, href = urls.get(it.id) || '';
-    const st = bagStyle(it), R = { ...BAG_RULES[st], ...(pack.bagRules?.[st] || {}) }, B = m?.body || { x: m?.bx ?? 0, y: m?.by ?? 0, w: m?.bw ?? 1, h: m?.bh ?? 1 };
-    const crop = st === 'hand' ? { x: Math.max(0, B.x - 0.04), y: Math.min(B.y, m?.by ?? B.y), w: Math.min(1, B.w + 0.08), h: 0 } : { ...B }; // (a handbag keeps the handles above it)
+    const st = bagStyle(it), R = { ...BAG_RULES[st], ...(pack.bagRules?.[st] || {}) }, all = { x: m?.bx ?? 0, y: m?.by ?? 0, w: m?.bw ?? 1, h: m?.bh ?? 1 };
+    const B = m?.body && (m.body.share ?? 1) >= 0.3 ? m.body : all; // (if most of the photo isn't one solid piece, it isn't a strap that was left out: use it all)
+    const crop = st === 'hand' ? { x: Math.max(0, B.x - B.w * 0.08), y: Math.min(B.y, all.y), w: B.w * 1.16, h: 0 } : { ...B }; // (a handbag keeps the handles above it)
     if (st === 'hand') { crop.w = Math.min(1 - crop.x, crop.w); crop.h = B.y + B.h - crop.y; }
     const s = (R.w * bagSize(it)) / Math.max(1, B.w * iw), w = crop.w * iw * s, h0 = crop.h * ih * s, k = Math.min(1, (R.maxH || 1e9) / h0), W = w * k, H = h0 * k;
     const bodyTop = (B.y - crop.y) * ih * s * k; // (where the bag itself starts, below any handles)
@@ -253,7 +254,7 @@ export function shade(hex, t) {
 /**
  * Where a bag's own body is in its photo, without the strap or handles: thin parts of the see-through mask are opened away (eroded, then grown
  * back) and the biggest piece left is the bag. mask: Uint8Array (1 = opaque) of W×H; r: how thick a strap may be, in mask pixels.
- * Returns { x, y, w, h } as fractions of the photo, or null if nothing is left.
+ * Returns { x, y, w, h } as fractions of the photo and share (how much of the opaque photo it is), or null if nothing is left.
  */
 export function bagBody(mask, W, H, r) {
   const pass = (src, grow) => { // a square min (erode) or max (grow) filter, rows then columns
@@ -263,7 +264,8 @@ export function bagBody(mask, W, H, r) {
     return b;
   };
   const open = pass(pass(mask, false), true), seen = new Int32Array(W * H);
-  let best = null, id = 0;
+  let best = null, id = 0, total = 0;
+  for (let i = 0; i < W * H; i++) total += mask[i] ? 1 : 0;
   for (let i = 0; i < W * H; i++) {
     if (!open[i] || seen[i]) continue;
     id++; let n = 0, x0 = W, y0 = H, x1 = -1, y1 = -1; const st = [i]; seen[i] = id;
@@ -273,7 +275,7 @@ export function bagBody(mask, W, H, r) {
     }
     if (!best || n > best.n) best = { n, x0, y0, x1, y1 };
   }
-  return best ? { x: best.x0 / W, y: best.y0 / H, w: (best.x1 - best.x0 + 1) / W, h: (best.y1 - best.y0 + 1) / H } : null;
+  return best ? { x: best.x0 / W, y: best.y0 / H, w: (best.x1 - best.x0 + 1) / W, h: (best.y1 - best.y0 + 1) / H, share: Math.round((best.n / Math.max(1, total)) * 100) / 100 } : null;
 }
 
 /** Slot of the item an element belongs to (used when you tap or drag a garment on the figure). */

@@ -301,8 +301,8 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   for (let y = 10; y < 40; y++) for (let x = 15; x < 45; x++) m[y * W + x] = 1; // the bag
   for (let x = 2; x < 58; x++) { m[50 * W + x] = 1; m[51 * W + x] = 1; } // its strap laid flat below it
   for (let y = 0; y < 51; y++) { m[y * W + 3] = 1; m[y * W + 56] = 1; }
-  const b = bagBody(m, W, H, 2);
-  assert.deepEqual(b, { x: 15 / W, y: 10 / H, w: 30 / W, h: 30 / H });
+  const { share, ...b } = bagBody(m, W, H, 2);
+  assert.deepEqual(b, { x: 15 / W, y: 10 / H, w: 30 / W, h: 30 / H }); assert.ok(share > 0.6 && share < 1);
   assert.equal(bagStyle({ name: 'Black clutch', acc: 'clutch' }), 'clutch'); assert.equal(bagStyle({ name: 'Red mini crossbody', acc: 'shoulderbag' }), 'cross');
   assert.equal(bagStyle({ name: 'Black leather tote', acc: 'handbag' }), 'tote'); assert.equal(bagStyle({ name: 'Black top-handle bag', acc: 'handbag' }), 'hand');
   assert.equal(bagStyle({ name: 'Brown leather shoulder bag', acc: 'shoulderbag' }), 'shoulder');

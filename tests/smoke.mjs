@@ -632,8 +632,8 @@ try {
   ok((await pdl.locator('.tuckbtn').innerText()).includes('Tuck in'), 'and tapping again untucks it');
   // a bag is carried at her side, at a bag's size (not stretched over her body)
   await wearOne('bags', 'Black mini bag'); await pdl.waitForSelector('#stage .gar.bag');
-  const bagW = await pdl.evaluate(() => { const g = document.querySelector('#stage .gar.bag svg'), d = document.querySelector('#stage svg.doll'); return g.getBoundingClientRect().width / d.getBoundingClientRect().width; });
-  ok(bagW > 0.08 && bagW < 0.35, `a bag is drawn at a bag's size (${Math.round(bagW * 100)}% of the picture's width)`);
+  const bagW = await pdl.evaluate(() => +document.querySelector('#stage .gar.bag svg').getAttribute('width') / +document.querySelector('#stage .basepic').getAttribute('width'));
+  ok(bagW > 0.08 && bagW < 0.35, `a bag is drawn at a bag's size (${Math.round(bagW * 100)}% of her picture's width)`);
   await wearOne('bags', 'Black mini bag'); await pdl.waitForFunction(() => !document.querySelector('#stage .gar.bag'));
   ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
   // fit: select the top, nudge, and it is remembered

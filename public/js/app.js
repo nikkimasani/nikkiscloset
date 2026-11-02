@@ -1632,7 +1632,7 @@ document.addEventListener('click', async (e) => {
     case 'gbpill': S.gbOpen = !S.gbOpen; return refreshGame();
     case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
     case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
-    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
+    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).includes(id) ? id : Object.values(S.outfit).at(-1) || null; // (taking a piece off selects another one still worn) S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
     case 'dbgpts': S.dbgPts = !S.dbgPts; store.set('dbgpts', S.dbgPts ? '1' : ''); if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
