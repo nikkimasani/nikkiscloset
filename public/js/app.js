@@ -1200,7 +1200,6 @@ addEventListener('resize', () => layoutVars());
 
 /** The wardrobe finder under the model: search words, then type, colour and style (occasion) chips; every match is a tile you tap to wear. */
 const FIND = { q: '', type: 'all', color: 'all', occ: 'all', more: 0 };
-const PAGE = 48;
 /** The colours in your closet, most common first: [name, hex, count]. */
 function closetColors() {
   const by = new Map();
@@ -1214,21 +1213,27 @@ function findPieces() {
     && words.every((w) => `${i.name} ${i.brand || ''} ${i.color?.name || ''} ${(i.tags?.colors || []).join(' ')} ${TYPES[i.type]?.label || ''} ${(i.occasions || []).join(' ')} ${i.season || ''}`.toLowerCase().includes(w)));
 }
 function finderHTML() {
-  const list = findPieces(), shown = list.slice(0, PAGE * (FIND.more + 1)), on = new Set(Object.values(S.outfit));
-  const chip = (act, v, cur, label, extra = '') => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}"${extra}>${label}</button>`;
-  const colors = closetColors().slice(0, 18);
-  const any = FIND.q || FIND.type !== 'all' || FIND.color !== 'all' || FIND.occ !== 'all';
+  const list = findPieces(), on = new Set(Object.values(S.outfit));
+  const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
+  const nf = (FIND.color !== 'all') + (FIND.occ !== 'all'), any = FIND.q || FIND.type !== 'all' || nf;
+  const tile = (i) => `<button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>`;
+  // one carousel per kind of piece (swipe sideways through tops, then the next row is bottoms...)
+  const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
   return `<section class="finder" aria-label="Your wardrobe">
-    <div class="findbar"><input type="search" id="fq" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(FIND.q)}" autocomplete="off">${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
-    <div class="chips findrow" role="group" aria-label="Type">${chip('ftyp', 'all', FIND.type, 'All')}${Object.entries(TYPES).filter(([k]) => S.items.some((i) => i.type === k)).map(([k, t]) => chip('ftyp', k, FIND.type, `<span aria-hidden="true">${t.emoji}</span> ${t.label}`)).join('')}</div>
-    <div class="chips findrow" role="group" aria-label="Colour">${chip('fcol', 'all', FIND.color, 'Any colour')}${colors.map(([n, hex]) => chip('fcol', n, FIND.color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
-    <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
+    <div class="findbar"><input type="search" id="fq" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(FIND.q)}" autocomplete="off">
+      <button class="ghost ${S.fOpen ? 'on' : ''}" data-act="ftoggle" aria-expanded="${!!S.fOpen}" aria-controls="ffilters">Filters${nf ? ` · ${nf}` : ''}</button>${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
+    <div class="chips findrow" role="group" aria-label="Show only">${chip('ftyp', 'all', FIND.type, 'Everything')}${Object.entries(TYPES).filter(([k]) => S.items.some((i) => i.type === k)).map(([k, t]) => chip('ftyp', k, FIND.type, `<span aria-hidden="true">${t.emoji}</span> ${t.label}`)).join('')}</div>
+    <div id="ffilters" ${S.fOpen ? '' : 'hidden'}>
+      <div class="chips findrow" role="group" aria-label="Colour">${chip('fcol', 'all', FIND.color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcol', n, FIND.color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+      <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
+    </div>
     <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
-    ${S.items.length ? `<div class="findgrid">${shown.map((i) => `<button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy"><span>${esc(i.name)}</span></button>`).join('')}</div>
-      ${list.length > shown.length ? `<button class="ghost wide" data-act="fmore">Show more (${list.length - shown.length})</button>` : ''}
-      ${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
+    ${S.items.length ? `${rows}${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
   </section>`;
 }
+/** Where each carousel was scrolled to, so putting a piece on doesn't send the row back to its start. */
+const carScroll = () => Object.fromEntries([...document.querySelectorAll('.car-row')].map((r) => [r.dataset.type, r.scrollLeft]));
+const carRestore = (pos) => document.querySelectorAll('.car-row').forEach((r) => { if (pos[r.dataset.type]) r.scrollLeft = pos[r.dataset.type]; });
 /** Saved looks and the day's outfit: save what's on the model, wear it today, or put a saved look back on. */
 function looksHTML() {
   return `<section class="looks panel" aria-label="Looks"><h3>Looks</h3>
@@ -1237,7 +1242,7 @@ function looksHTML() {
     ${S.outfits.length ? `<div class="chips" style="margin-top:10px">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : ''}</section>`;
 }
 function renderMirror() {
-  const keepY = S.view === S.lastView ? window.scrollY : 0;
+  const keepY = S.view === S.lastView ? window.scrollY : 0, keepX = S.view === S.lastView ? carScroll() : {};
   const worn = outfitItems(S.outfit);
   const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
   $('#main').innerHTML = `<h2 class="view-title sr-only">Build an outfit</h2>
@@ -1268,13 +1273,13 @@ function renderMirror() {
   mountStage(); restoreCachedRender();
   if (dollOn()) bindDollGestures($('#stage'));
   const q = $('#fq'); if (q) q.oninput = () => { FIND.q = q.value; FIND.more = 0; const p = q.selectionStart; refreshFinder(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
-  window.scrollTo(0, keepY);
+  window.scrollTo(0, keepY); carRestore(keepX);
   if (S.pop) { S.pop = false; sparkle(); }
 }
 /** Redraw only the finder (typing in search keeps the page where it is). */
 function refreshFinder() {
   const f = $('.finder'); if (!f) return renderTryon();
-  f.outerHTML = finderHTML();
+  const keepX = carScroll(); f.outerHTML = finderHTML(); carRestore(keepX);
   const q = $('#fq'); if (q) q.oninput = () => { FIND.q = q.value; FIND.more = 0; const p = q.selectionStart; refreshFinder(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
 }
 
@@ -1638,7 +1643,7 @@ document.addEventListener('click', async (e) => {
     case 'gbpill': S.gbOpen = !S.gbOpen; return refreshGame();
     case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
     case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
-    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).includes(id) ? id : Object.values(S.outfit).at(-1) || null; // (taking a piece off selects another one still worn) S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
+    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).includes(id) ? id : Object.values(S.outfit).at(-1) || null; /* (taking a piece off selects another one still worn) */ S.pop = true; return renderTryon();
     case 'dbgpts': S.dbgPts = !S.dbgPts; if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
@@ -1669,7 +1674,7 @@ document.addEventListener('click', async (e) => {
     case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
     case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
     case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
-    case 'fmore': FIND.more++; return refreshFinder();
+    case 'ftoggle': S.fOpen = !S.fOpen; return refreshFinder();
     case 'fclear': Object.assign(FIND, { q: '', type: 'all', color: 'all', occ: 'all', more: 0 }); return refreshFinder();
     case 'gosave': { const l = $('.looks'); l?.scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#lookname')?.focus({ preventScroll: true }); return; }
     case 'styleme': {
@@ -1798,5 +1803,10 @@ const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure
   if (syncState().on) runSync(); // pick up changes from other devices
   openFromLink();
   try { const n = sessionStorage.getItem('restored'); if (n) { sessionStorage.removeItem('restored'); toast(`Restored ${n} piece${n === '1' ? '' : 's'} from your backup`); } } catch { /* private mode */ }
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('/sw.js').catch(() => {}); // lets it install as an app and open offline
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { // lets it install as an app and open offline
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('/sw.js').then((r) => r.update()).catch(() => {}); // (look for a new version every time the app opens)
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !sessionStorage.getItem('swreload')) { sessionStorage.setItem('swreload', '1'); location.reload(); } }); // a new version took over: show it now
+  }
+  try { localStorage.removeItem('dbgpts'); } catch { /* private mode */ } // (an old switch that kept the body points showing)
 })();
