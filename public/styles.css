@@ -822,3 +822,35 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
   .dress.dollmode .tools button { min-height: 52px; }
   html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 46dvh + 12px); }
 }
+
+/* ── the wardrobe as carousels: one swipeable row per kind of piece ── */
+.finder { gap: 10px; padding: 14px; }
+.findbar .ghost.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+#ffilters { display: grid; gap: 8px; }
+#ffilters[hidden] { display: none; }
+.car { display: grid; gap: 6px; }
+.car-h { margin: 6px 2px 0; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+.car-h small { color: var(--muted); font-weight: 600; font-size: 13px; }
+.car-row { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; padding: 2px 2px 8px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.car-row .pick { flex: 0 0 clamp(118px, 32vw, 150px); scroll-snap-align: start; padding: 8px 6px 6px; border-radius: 18px; }
+.car-row .pick img { height: clamp(120px, 30vw, 150px); }
+.car-row .pick span { font-size: 12.5px; }
+.car-row .pick.on { border-color: var(--hot); box-shadow: 0 0 0 2px var(--hot) inset, 0 4px 14px #0003; }
+@media (min-width: 920px) { /* iPad landscape and computers: the model on the left, the wardrobe rows on the right */
+  .dress { grid-template-columns: minmax(340px, 42%) minmax(0, 1fr); gap: 20px; }
+  .dress-right { position: static; }
+  .dress-left { position: sticky; top: calc(var(--top-h, 64px) + 10px); align-self: start; }
+  .car-row .pick { flex-basis: 150px; } .car-row .pick img { height: 150px; }
+}
+@media (min-width: 600px) and (max-width: 919px) { /* iPad portrait: a taller pinned model, wider tiles */
+  .dress.dollmode .room.dollroom { height: 50dvh; }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 50dvh + 12px); }
+  .car-row .pick { flex-basis: 150px; } .car-row .pick img { height: 150px; }
+}
+@media (max-width: 599px) { /* phones: a little more air between things */
+  .dress { gap: 12px; }
+  .dress.dollmode .room.dollroom { height: 44dvh; min-height: 300px; }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 44dvh + 12px); }
+  .dress .tools { gap: 8px; } .dress .tools button { min-height: 48px; font-size: 11.5px; }
+  .finder { padding: 12px 10px; border-radius: 20px; }
+}

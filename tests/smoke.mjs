@@ -104,6 +104,7 @@ const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 const openMore = async (pg) => { await pg.click('[data-view=closet]').catch(() => {}); if (!(await pg.locator('details.more[open]').count())) await pg.click('details.more summary'); };
+const openF = async (pg) => { if (await pg.locator('#ffilters[hidden]').count()) await pg.click('[data-act=ftoggle]'); };
 let failed = 0;
 // A closet to test with: your own photo cutouts (tests/fixtures are real garment cutouts), put straight into the browser's database.
 const FIX = [['White tee', 'tops', 'snake'], ['Silk blouse', 'tops', 'tie'], ['Black tank', 'tanks', 'bodysuit'], ['Blue jeans', 'bottoms', 'banana'], ['Black trousers', 'bottoms', 'flare'], ['Satin midi skirt', 'skirts', 'dress:skirt'],
@@ -237,7 +238,7 @@ try {
   ok((await p2.locator('.piece').count()) === 10, 'sample closet loads 10 pieces');
   await p2.screenshot({ path: join(out, '5-closet.png'), fullPage: true });
   await p2.click('[data-view=tryon]');
-  await p2.click('[data-act=focc][data-v="Date Night"]');
+  await openF(p2); await p2.click('[data-act=focc][data-v="Date Night"]');
   await p2.click('[data-act=styleme]');
   ok(await p2.locator('#stage image').count() >= 2, 'Style me builds an outfit');
   await p2.screenshot({ path: join(out, '6-styleme.png') });
@@ -264,7 +265,7 @@ try {
     await p3.waitForFunction(() => document.querySelectorAll('#stage .gar').length >= 2);
     ok(await p3.locator('#stage svg.doll').count() === 1 && await p3.locator('#stage canvas').count() === 0, 'Style me dresses the 2D doll');
     const types0 = await p3.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
-    await p3.click('[data-act=focc][data-v="Dinner"]'); await p3.click('[data-act=styleme]'); await p3.waitForTimeout(400);
+    await openF(p3); await p3.click('[data-act=focc][data-v="Dinner"]'); await p3.click('[data-act=styleme]'); await p3.waitForTimeout(400);
     ok((await p3.locator('#stage .gar').count()) >= 2, `outfit changes update the doll (was ${types0.join('+')})`);
     await p3.evaluate(axeSource);
     const r3 = await p3.evaluate(() => window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa', 'wcag21aa', 'best-practice'] }));
@@ -307,15 +308,20 @@ try {
     await p3.click('[data-act=casclose]');
     // the outfit builder: no game, ratings or meters; one wardrobe finder with search, type, colour and style
     ok(await p3.locator('.gamebar, .rate-fab, .meters, .moods, .wxline, .streakbadge, [data-act=rate]').count() === 0, 'no challenge, coins, rating, meters, moods or weather on Dress Up');
-    await p3.fill('#fq', 'blouse'); await p3.waitForFunction(() => document.querySelectorAll('.findgrid .pick').length === 1);
-    ok(/Silk blouse/.test(await p3.locator('.findgrid .pick').innerText()), 'searching finds a piece by its name');
+    await p3.fill('#fq', 'blouse'); await p3.waitForFunction(() => document.querySelectorAll('.finder .pick').length === 1);
+    ok(/Silk blouse/.test(await p3.locator('.finder .pick').innerText()), 'searching finds a piece by its name');
     await p3.click('[data-act=fclear]'); await p3.click('[data-act=ftyp][data-v=bottoms]');
-    ok(await p3.locator('.findgrid .pick').count() === 2, 'the type chips narrow the wardrobe (2 bottoms)');
+    ok(await p3.locator('.finder .pick').count() === 2, 'the type chips narrow the wardrobe (2 bottoms)');
+    await p3.click('[data-act=fclear]');
+    ok(JSON.stringify(await p3.locator('.car-row').evaluateAll((r) => r.map((x) => x.dataset.type))) === JSON.stringify(['tops', 'tanks', 'bottoms', 'skirts', 'dresses', 'outerwear', 'shoes', 'bags']), 'the wardrobe is one carousel per kind of piece');
+    if (!(await p3.locator('#ffilters[hidden]').count())) await p3.click('[data-act=ftoggle]');
+    ok(await p3.locator('[data-act=fcol]').first().isHidden() && await p3.locator('[data-act=ftoggle]').isVisible(), 'colour and style fold behind Filters (less to scroll past)');
+    await p3.click('[data-act=ftoggle]');
     const col = await p3.locator('[data-act=fcol]:not([data-v=all])').first().getAttribute('data-v');
-    await p3.click('[data-act=fclear]'); await p3.click(`[data-act=fcol][data-v="${col}"]`);
-    ok(await p3.evaluate((c) => [...document.querySelectorAll('.findgrid .pick')].every((b) => window.__closet.items.find((i) => i.id === b.dataset.id).color?.name === c), col), `the colour chips show only that colour (${col})`);
-    await p3.click('[data-act=fclear]'); await p3.click('[data-act=focc][data-v="Work / Office"]');
-    ok(await p3.evaluate(() => [...document.querySelectorAll('.findgrid .pick')].every((b) => window.__closet.items.find((i) => i.id === b.dataset.id).occasions.includes('Work / Office'))), 'the style chips show only pieces for that occasion');
+    await p3.click(`[data-act=fcol][data-v="${col}"]`);
+    ok(await p3.evaluate((c) => [...document.querySelectorAll('.finder .pick')].every((b) => window.__closet.items.find((i) => i.id === b.dataset.id).color?.name === c), col), `the colour chips show only that colour (${col})`);
+    await p3.click('[data-act=fclear]'); await openF(p3); await p3.click('[data-act=focc][data-v="Work / Office"]');
+    ok(await p3.evaluate(() => [...document.querySelectorAll('.finder .pick')].every((b) => window.__closet.items.find((i) => i.id === b.dataset.id).occasions.includes('Work / Office'))), 'the style chips show only pieces for that occasion');
     await p3.click('[data-act=fclear]');
   }
 
