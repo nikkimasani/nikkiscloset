@@ -1,5 +1,5 @@
 {
- "version": 1793581178822,
+ "version": 1793582181737,
  "pieces": {
   "starter-cream-crochet-cami": {
    "kind": "worn",
@@ -4820,24 +4820,6 @@
    ],
    "t": 1793580730125
   },
-  "starter-grey-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 290,
-    "y": 304,
-    "w": 340,
-    "h": 560
-   },
-   "v": 5,
-   "color": {
-    "hex": "#89959a",
-    "name": "Grey"
-   },
-   "colors": [
-    "#89959a"
-   ],
-   "t": 1793580744583
-  },
   "starter-beige-ribbed-tank": {
    "kind": "worn",
    "box": {
@@ -5120,46 +5102,6 @@
     "#86a8d9"
    ],
    "t": 1793580837498
-  },
-  "starter-white-satin-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 278,
-    "y": 320,
-    "w": 342,
-    "h": 594
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f8f8f8",
-    "name": "White"
-   },
-   "colors": [
-    "#f8f8f8",
-    "#b7aaa8"
-   ],
-   "t": 1793580842183
-  },
-  "starter-chocolate-brown-satin-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 322,
-    "w": 630,
-    "h": 684
-   },
-   "v": 5,
-   "color": {
-    "hex": "#26140c",
-    "name": "Black"
-   },
-   "colors": [
-    "#26140c",
-    "#d8b48b",
-    "#895a54",
-    "#56342b"
-   ],
-   "t": 1793580851642
   },
   "starter-burgundy-satin-cami": {
    "kind": "worn",
@@ -5585,26 +5527,6 @@
    ],
    "t": 1793580978164
   },
-  "starter-beige-button-down-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 254,
-    "w": 646,
-    "h": 766
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e2cbb9",
-    "name": "Beige"
-   },
-   "colors": [
-    "#e2cbb9",
-    "#a69c94",
-    "#987a66"
-   ],
-   "t": 1793580981541
-  },
   "starter-pink-button-down-shirt": {
    "kind": "worn",
    "box": {
@@ -5642,65 +5564,6 @@
     "#768a69"
    ],
    "t": 1793580989508
-  },
-  "starter-chocolate-brown-button-down-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 236,
-    "w": 638,
-    "h": 792
-   },
-   "v": 5,
-   "color": {
-    "hex": "#482825",
-    "name": "Brown"
-   },
-   "colors": [
-    "#482825",
-    "#190804"
-   ],
-   "t": 1793580993020
-  },
-  "starter-navy-button-down-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 136,
-    "y": 256,
-    "w": 626,
-    "h": 778
-   },
-   "v": 5,
-   "color": {
-    "hex": "#262668",
-    "name": "Navy"
-   },
-   "colors": [
-    "#262668",
-    "#252239",
-    "#030409"
-   ],
-   "t": 1793580996348
-  },
-  "starter-grey-button-down-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 254,
-    "w": 630,
-    "h": 752
-   },
-   "v": 5,
-   "color": {
-    "hex": "#87848c",
-    "name": "Grey"
-   },
-   "colors": [
-    "#87848c",
-    "#33333a",
-    "#5c5a63"
-   ],
-   "t": 1793580999975
   },
   "starter-ivory-silk-blouse": {
    "kind": "worn",
@@ -6294,25 +6157,6 @@
    ],
    "t": 1793581165528
   },
-  "starter-peach-flowy-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 164,
-    "y": 666,
-    "w": 536,
-    "h": 1040
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fdc7b4",
-    "name": "Blush"
-   },
-   "colors": [
-    "#fdc7b4",
-    "#c78678"
-   ],
-   "t": 1793581170988
-  },
   "starter-beige-straight-trousers": {
    "kind": "worn",
    "box": {
@@ -6448,6 +6292,30 @@
   ],
   "starter-chocolate-brown-corset-top": [
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c16ae430-67c1-4fb6-a065-b81d53db5f89)"
+  ],
+  "starter-beige-button-down-shirt": [
+   "taken out on review: it added trousers to the shirt"
+  ],
+  "starter-chocolate-brown-button-down-shirt": [
+   "taken out on review: it added trousers to the shirt"
+  ],
+  "starter-navy-button-down-shirt": [
+   "taken out on review: it added trousers to the shirt"
+  ],
+  "starter-grey-button-down-shirt": [
+   "taken out on review: it added trousers to the shirt"
+  ],
+  "starter-grey-ribbed-tank": [
+   "taken out on review: blotches on the piece"
+  ],
+  "starter-chocolate-brown-satin-cami": [
+   "taken out on review: pale arms kept with the piece"
+  ],
+  "starter-white-satin-cami": [
+   "taken out on review: it added shorts to the top"
+  ],
+  "starter-peach-flowy-trousers": [
+   "taken out on review: one leg chopped (too close to her skin tone)"
   ]
  }
 }
