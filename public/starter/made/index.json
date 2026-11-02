@@ -1,5 +1,5 @@
 {
- "version": 1793582181737,
+ "version": 1793582839239,
  "pieces": {
   "starter-cream-crochet-cami": {
    "kind": "worn",
@@ -3888,24 +3888,6 @@
    ],
    "t": 1793499289679
   },
-  "starter-black-strapless-tube-top": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 308,
-    "w": 640,
-    "h": 554
-   },
-   "v": 5,
-   "color": {
-    "hex": "#0b0a0a",
-    "name": "Black"
-   },
-   "colors": [
-    "#0b0a0a"
-   ],
-   "t": 1793580476473
-  },
   "starter-black-fitted-tee": {
    "kind": "worn",
    "box": {
@@ -4015,130 +3997,6 @@
     "#876849"
    ],
    "t": 1793580543519
-  },
-  "starter-tan-halter-top": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 236,
-    "w": 620,
-    "h": 774
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c99876",
-    "name": "Camel"
-   },
-   "colors": [
-    "#c99876",
-    "#e9c4a7",
-    "#7a5543",
-    "#46271b"
-   ],
-   "t": 1793580553435
-  },
-  "starter-tan-scoop-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 136,
-    "y": 256,
-    "w": 632,
-    "h": 718
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c59979",
-    "name": "Camel"
-   },
-   "colors": [
-    "#c59979",
-    "#88654a"
-   ],
-   "t": 1793580557775
-  },
-  "starter-floral-corset-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 232,
-    "y": 314,
-    "w": 440,
-    "h": 660
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f7f3e8",
-    "name": "White"
-   },
-   "colors": [
-    "#f7f3e8",
-    "#e3c8b8",
-    "#f6bac6",
-    "#a99488"
-   ],
-   "t": 1793580563749
-  },
-  "starter-sage-satin-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 270,
-    "w": 630,
-    "h": 758
-   },
-   "v": 5,
-   "color": {
-    "hex": "#97a69a",
-    "name": "Grey"
-   },
-   "colors": [
-    "#97a69a",
-    "#4b6458",
-    "#acd5c3"
-   ],
-   "t": 1793580569620
-  },
-  "starter-gold-sequin-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 282,
-    "y": 384,
-    "w": 328,
-    "h": 332
-   },
-   "v": 5,
-   "color": {
-    "hex": "#664a27",
-    "name": "Brown"
-   },
-   "colors": [
-    "#664a27",
-    "#382a15",
-    "#977548",
-    "#864a18"
-   ],
-   "t": 1793580572500
-  },
-  "starter-floral-corset-top": {
-   "kind": "worn",
-   "box": {
-    "x": 282,
-    "y": 402,
-    "w": 332,
-    "h": 378
-   },
-   "v": 5,
-   "color": {
-    "hex": "#39a857",
-    "name": "Green"
-   },
-   "colors": [
-    "#39a857",
-    "#b79aa6",
-    "#579867",
-    "#d9c9d4",
-    "#87a789"
-   ],
-   "t": 1793580576650
   },
   "starter-chocolate-halter-top": {
    "kind": "worn",
@@ -6316,6 +6174,36 @@
   ],
   "starter-peach-flowy-trousers": [
    "taken out on review: one leg chopped (too close to her skin tone)"
+  ],
+  "starter-black-strapless-tube-top": [
+   "taken out on review: drawn as a long-sleeve top, twice"
+  ],
+  "starter-tan-halter-top": [
+   "taken out on review: pale arms kept with the piece, twice"
+  ],
+  "starter-tan-scoop-bodysuit": [
+   "taken out on review: pale arms kept with the piece, twice"
+  ],
+  "starter-gold-sequin-cami": [
+   "taken out on review: cut out in shreds, twice"
+  ],
+  "starter-floral-corset-top": [
+   "taken out on review: torn and off colours, twice"
+  ],
+  "starter-floral-corset-bodysuit": [
+   "taken out on review: patches on her legs kept, twice"
+  ],
+  "starter-sage-satin-blouse": [
+   "taken out on review: trousers added, twice"
   ]
+ },
+ "blocked": {
+  "starter-black-strapless-tube-top": "drawn as a long-sleeve top, twice",
+  "starter-tan-halter-top": "pale arms kept with the piece, twice",
+  "starter-tan-scoop-bodysuit": "pale arms kept with the piece, twice",
+  "starter-gold-sequin-cami": "cut out in shreds, twice",
+  "starter-floral-corset-top": "torn and off colours, twice",
+  "starter-floral-corset-bodysuit": "patches on her legs kept, twice",
+  "starter-sage-satin-blouse": "trousers added, twice"
  }
 }
