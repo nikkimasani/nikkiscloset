@@ -861,3 +861,9 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .tile-x:hover, .tile-x:focus-visible { background: #ffe1ea; }
 .piece .tile-x { top: 6px; right: 48px; width: 36px; height: 36px; }
 @media (min-width: 600px) { .car-row .tile .pick { flex-basis: 150px; } }
+
+/* what's on the model, each with a ✕ to take it off */
+.onmodel { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.onmodel .chip.worn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 4px; background: #ffffff1c; }
+.onmodel .chip.worn img { width: 28px; height: 28px; object-fit: contain; border-radius: 8px; background: var(--tile); }
+.onmodel .chip.worn .bare { width: 28px; height: 28px; min-height: 0; border-radius: 50%; background: #ffffff26; display: grid; place-items: center; }

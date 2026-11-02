@@ -326,10 +326,12 @@ try {
     await p3.click('[data-act=fclear]'); await openF(p3); await p3.click('[data-act=focc][data-v="Work / Office"]');
     ok(await p3.evaluate(() => [...document.querySelectorAll('.finder .pick')].every((b) => window.__closet.items.find((i) => i.id === b.dataset.id).occasions.includes('Work / Office'))), 'the style chips show only pieces for that occasion');
     await p3.click('[data-act=fclear]');
-    // the ✕ on a piece removes it from the closet (after you confirm)
-    const n0 = await p3.evaluate(() => window.__closet.items.length); p3.once('dialog', (d) => d.accept());
-    await p3.locator('.finder .tile-x').first().click(); await p3.waitForFunction((n) => window.__closet.items.length === n - 1, n0);
-    ok(await p3.locator('.finder .tile').count() === n0 - 1, 'the ✕ on a piece removes it from the closet');
+    // the ✕ on a piece you're wearing takes it off the model; it stays in the closet
+    await p3.click('.tools [data-act=clear]'); const n0 = await p3.evaluate(() => window.__closet.items.length);
+    await p3.locator('.finder .pick').first().click(); await p3.waitForSelector('.finder .tile-x');
+    ok(await p3.locator('.finder .tile-x').count() === 1 && await p3.locator('.onmodel .chip.worn').count() === 1, 'a piece on the model shows a ✕ (on its tile and in On the model)');
+    await p3.locator('.finder .tile-x').first().click(); await p3.waitForFunction(() => !document.querySelector('.finder .tile-x'));
+    ok(await p3.evaluate(() => Object.keys(window.__closet.outfit).length) === 0 && await p3.evaluate(() => window.__closet.items.length) === n0, 'the ✕ takes it off the model and keeps it in the closet');
   }
 
   // ── audit regressions ──

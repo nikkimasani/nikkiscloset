@@ -100,6 +100,7 @@ async function load() {
  *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
 async function importPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
+  if (!store.get('restore_x_v1', '')) { store.set('starter_removed', '[]'); store.set('preloaded', ''); store.set('restore_x_v1', '1'); } // (the ✕ briefly deleted pieces instead of taking them off: bring them back once)
   let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
   if (!idx?.pieces) return;
   // a preloaded piece taken out of the wardrobe on review (now failed or blocked there) leaves the closet too; one you made yours stays
@@ -314,7 +315,7 @@ function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
-    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="tile-x" data-act="rmpiece" data-id="${i.id}" aria-label="Remove ${esc(i.name)} from your closet"><span aria-hidden="true">✕</span></button>`}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>`}
     <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
@@ -1216,7 +1217,7 @@ function finderHTML() {
   const list = findPieces(), on = new Set(Object.values(S.outfit));
   const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
   const nf = (FIND.color !== 'all') + (FIND.occ !== 'all'), any = FIND.q || FIND.type !== 'all' || nf;
-  const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button><button class="tile-x" data-act="rmpiece" data-id="${i.id}" aria-label="Remove ${esc(i.name)} from your closet"><span aria-hidden="true">✕</span></button></div>`;
+  const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>${on.has(i.id) ? `<button class="tile-x" data-act="unwear" data-id="${i.id}" aria-label="Take ${esc(i.name)} off"><span aria-hidden="true">✕</span></button>` : ''}</div>`;
   // one carousel per kind of piece (swipe sideways through tops, then the next row is bottoms...)
   const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
   return `<section class="finder" aria-label="Your wardrobe">
@@ -1227,6 +1228,7 @@ function finderHTML() {
       <div class="chips findrow" role="group" aria-label="Colour">${chip('fcol', 'all', FIND.color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcol', n, FIND.color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
     </div>
+    ${on.size ? `<div class="chips onmodel" role="group" aria-label="On the model">${[...on].map(itemById).filter(Boolean).map((i) => `<span class="chip worn"><img src="${url(i.id)}" alt="">${esc(i.name)}<button class="bare" data-act="unwear" data-id="${i.id}" aria-label="Take ${esc(i.name)} off"><span aria-hidden="true">✕</span></button></span>`).join('')}</div>` : ''}
     <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
     ${S.items.length ? `${rows}${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
   </section>`;
@@ -1674,9 +1676,10 @@ document.addEventListener('click', async (e) => {
     case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
     case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
     case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
-    case 'rmpiece': { // the ✕ on a piece: it leaves the closet (a preloaded one stays gone, even when new pieces arrive)
-      const it = itemById(id); if (!it || !confirm(`Remove “${it.name}” from your closet?`)) return;
-      await removeItems([id], { byYou: true }); toast(`Removed “${it.name}”`); return render();
+    case 'unwear': { // the ✕ on a piece you're wearing takes it off the model (it stays in your closet)
+      for (const k of Object.keys(S.outfit)) if (S.outfit[k] === id) delete S.outfit[k];
+      if (S.adjust === id) S.adjust = Object.values(S.outfit).at(-1) || null;
+      return renderTryon();
     }
     case 'ftoggle': S.fOpen = !S.fOpen; return refreshFinder();
     case 'fclear': Object.assign(FIND, { q: '', type: 'all', color: 'all', occ: 'all', more: 0 }); return refreshFinder();
