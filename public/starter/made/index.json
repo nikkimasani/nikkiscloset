@@ -1,5 +1,5 @@
 {
- "version": 1793647131327,
+ "version": 1793659131570,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -148,24 +148,6 @@
     "#292b14"
    ],
    "t": 1793457178547
-  },
-  "starter-white-off-shoulder-sweater": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 394,
-    "w": 652,
-    "h": 492
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f6f6f7",
-    "name": "White"
-   },
-   "colors": [
-    "#f6f6f7"
-   ],
-   "t": 1793457178870
   },
   "starter-light-wash-wide-leg-jeans": {
    "kind": "worn",
@@ -399,44 +381,6 @@
    ],
    "t": 1793457190812
   },
-  "starter-black-leather-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 230,
-    "y": 644,
-    "w": 438,
-    "h": 396
-   },
-   "v": 5,
-   "color": {
-    "hex": "#04090a",
-    "name": "Black"
-   },
-   "colors": [
-    "#04090a",
-    "#34363a",
-    "#64666b"
-   ],
-   "t": 1793457191172
-  },
-  "starter-cream-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 224,
-    "y": 672,
-    "w": 456,
-    "h": 656
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e6e4c9",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e6e4c9"
-   ],
-   "t": 1793457191496
-  },
   "starter-white-denim-straight-jeans": {
    "kind": "worn",
    "box": {
@@ -547,25 +491,6 @@
     "#545a38"
    ],
    "t": 1793457194062
-  },
-  "starter-camel-sweater-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 116,
-    "y": 236,
-    "w": 670,
-    "h": 1470
-   },
-   "v": 5,
-   "color": {
-    "hex": "#95684b",
-    "name": "Brown"
-   },
-   "colors": [
-    "#95684b",
-    "#c49884"
-   ],
-   "t": 1793457194489
   },
   "starter-black-bodycon-midi-dress": {
    "kind": "worn",
@@ -6032,6 +5957,18 @@
   ],
   "starter-cream-crochet-cami": [
    "a hole cut through the middle (left out by review)"
+  ],
+  "starter-white-off-shoulder-sweater": [
+   "a blue edge at her sides (left out by review)"
+  ],
+  "starter-black-leather-mini-skirt": [
+   "holes at the sides (left out by review)"
+  ],
+  "starter-cream-knit-midi-skirt": [
+   "a brown patch at the hip (left out by review)"
+  ],
+  "starter-camel-sweater-dress": [
+   "her legs kept with the dress (left out by review)"
   ]
  },
  "blocked": {
