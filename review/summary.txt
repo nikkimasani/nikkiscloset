@@ -1,4 +1,4 @@
-20 made this run · 209 of 1005 in the wardrobe · 37 failed
+129 made this run · 338 of 1005 in the wardrobe · 28 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -14,8 +14,6 @@ starter-black-leather-belt: a white or grey body shape (a dress form?)
 starter-tortoiseshell-claw-clip: a white or grey body shape (a dress form?)
 starter-gold-rings-set: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-beige-bucket-hat: a light piece on a white background (it can’t be cut out cleanly)
-starter-black-fitted-tee: it added shorts or trousers to the top
-starter-chocolate-ribbed-tank: it added shorts or trousers to the top
 starter-olive-hobo-bag: cut-out not clean enough (left out by review)
 starter-white-woven-clutch: cut-out not clean enough (left out by review)
 starter-brown-belt-bag: cut-out not clean enough (left out by review)
@@ -23,16 +21,9 @@ starter-gold-anklet: cut-out not clean enough (left out by review)
 starter-brown-crescent-bag: cut-out not clean enough (left out by review)
 starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
 starter-black-tailored-vest: it added shorts or trousers to the top
-starter-beige-tailored-vest: it added shorts or trousers to the top
-starter-beige-sleeveless-knit-top: it added shorts or trousers to the top
-starter-black-ribbed-polo-knit: it added shorts or trousers to the top
-starter-black-fine-knit-sweater: it added shorts or trousers to the top
-starter-tan-ribbed-tank: it added shorts or trousers to the top
-starter-chocolate-halter-top: it added shorts or trousers to the top
-starter-black-strapless-tube-top: taken out on review: it drew a T-shirt, not a tube top
-starter-tan-halter-top: taken out on review: pale arms kept with the piece
-starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece
-starter-gold-sequin-cami: taken out on review: a blotch on the piece
-starter-floral-corset-top: taken out on review: colours off (green tint)
-starter-floral-corset-bodysuit: taken out on review: a patch on her leg kept with the piece
-starter-sage-satin-blouse: taken out on review: it added trousers to the top
+starter-beige-tailored-vest: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (29a8c474-5ff2-4037-ba82-e93718f33695)
+starter-black-ribbed-tank: it added shorts or trousers to the top
+starter-sage-green-ribbed-tank: it added shorts or trousers to the top
+starter-chocolate-brown-fitted-tee: it added shorts or trousers to the top
+starter-navy-fitted-tee: it added shorts or trousers to the top
+starter-chocolate-brown-corset-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c16ae430-67c1-4fb6-a065-b81d53db5f89)
