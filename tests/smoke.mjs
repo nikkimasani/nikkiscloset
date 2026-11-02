@@ -310,6 +310,9 @@ try {
     ok(await p3.locator('.gamebar, .rate-fab, .meters, .moods, .wxline, .streakbadge, [data-act=rate]').count() === 0, 'no challenge, coins, rating, meters, moods or weather on Dress Up');
     await p3.fill('#fq', 'blouse'); await p3.waitForFunction(() => document.querySelectorAll('.finder .pick').length === 1);
     ok(/Silk blouse/.test(await p3.locator('.finder .pick').innerText()), 'searching finds a piece by its name');
+    await p3.locator('.finder .pick').first().click(); await p3.waitForTimeout(300);
+    ok(await p3.locator('#stage .pointsdbg, .dbgchip').count() === 0 && !(await p3.evaluate(() => window.__closet.dbgPts)), 'putting a piece on never turns the body points on');
+    await p3.locator('.finder .pick').first().click();
     await p3.click('[data-act=fclear]'); await p3.click('[data-act=ftyp][data-v=bottoms]');
     ok(await p3.locator('.finder .pick').count() === 2, 'the type chips narrow the wardrobe (2 bottoms)');
     await p3.click('[data-act=fclear]');
