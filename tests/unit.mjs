@@ -310,12 +310,12 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   const bag = (name, acc) => dollSVG({ pack, items: { bag: mkItem('g', 'bags', { name, acc, color: { hex: '#8b4a2b' } }) }, urls: u, meta });
   const sh = bag('Brown leather shoulder bag', 'shoulderbag'), view = sh.match(/viewBox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)" preserveAspectRatio="none"/).slice(1).map(Number);
   assert.deepEqual(view, [150, 100, 300, 300], 'only the bag itself is drawn, not the strap in its photo');
-  const P = config.points, strap = sh.match(/<path d="M([\d.]+) ([\d.]+)L/);
+  const P = config.points, strap = sh.match(/<path d="M([\d.]+) ([\d.]+)[LQ]/);
   assert.ok(Math.abs(strap[2] - P.shoulderR[1]) < 20 && Math.abs(strap[1] - P.shoulderR[0]) < 60, 'the strap goes up to her shoulder');
   assert.match(sh, /stroke="#8b4a2b"/, 'in the bag’s colour');
   const x = (svg) => +svg.match(/<svg x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)"/)[1], w = (svg) => +svg.match(/<svg x="[\d.-]+" y="[\d.-]+" width="([\d.]+)"/)[1];
   assert.match(sh, /<g id="fig-(\d+)">[\s\S]*class="basepic"[\s\S]*<\/g><g class="gar acc bag[\s\S]*<use href="#fig-\1" clip-path="url\(#armclip-\1\)"/, 'her arm is drawn again over a shoulder bag (it hangs behind her arm)');
-  assert.match(sh, /<g clip-path="url\(#strapclip-\d+\)"><path/, 'and the strap shows on top of her shoulder');
+  assert.match(sh, /<use href="#fig-\d+"[^>]*\/><path d="M/, 'and one strap comes over her shoulder in front of her (its other end is behind her arm)');
   const cl = bag('Black clutch', 'clutch'); assert.doesNotMatch(cl, /<path/, 'a clutch has no strap'); assert.doesNotMatch(cl, /<use /, 'and is held in front of her hand');
   assert.ok(Math.abs(x(cl) + w(cl) / 2 - P.handR[0]) < 20, 'a clutch is in her hand');
   assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
@@ -538,7 +538,7 @@ test('every hairstyle is fitted by its landmarks: temples on her temples, hairli
 test('the starter list: over 1,000 pieces across 7 batches, valid types and occasions, one shared image spec', async () => {
   const { ITEMS, BATCHES, promptFor, sizeFor } = await import('../public/starter/items.js');
   const { TYPES: T, OCCASIONS: O } = await import('../public/js/data.js');
-  assert.ok(ITEMS.length >= 1000, `${ITEMS.length} pieces`); assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length, 'unique ids');
+  assert.ok(ITEMS.length >= 3000, `${ITEMS.length} pieces`); assert.equal(new Set(ITEMS.map((i) => i.id)).size, ITEMS.length, 'unique ids');
   for (const [b] of BATCHES) assert.ok(ITEMS.filter((i) => i.batch === b).length >= 40, b);
   for (const i of ITEMS.filter((i) => i.type === 'bags' || i.type === 'accessories')) assert.ok(i.acc, `${i.id}: snaps to a body point`);
   for (const i of ITEMS) { assert.ok(T[i.type], i.id); assert.ok(i.occasions.length && i.occasions.every((o) => O.includes(o)), i.id); assert.ok(['light', 'all', 'warm'].includes(i.season)); }

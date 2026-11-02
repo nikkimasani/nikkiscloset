@@ -314,7 +314,7 @@ function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
-    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>`}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="tile-x" data-act="rmpiece" data-id="${i.id}" aria-label="Remove ${esc(i.name)} from your closet"><span aria-hidden="true">✕</span></button>`}
     <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
@@ -1216,7 +1216,7 @@ function finderHTML() {
   const list = findPieces(), on = new Set(Object.values(S.outfit));
   const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
   const nf = (FIND.color !== 'all') + (FIND.occ !== 'all'), any = FIND.q || FIND.type !== 'all' || nf;
-  const tile = (i) => `<button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>`;
+  const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button><button class="tile-x" data-act="rmpiece" data-id="${i.id}" aria-label="Remove ${esc(i.name)} from your closet"><span aria-hidden="true">✕</span></button></div>`;
   // one carousel per kind of piece (swipe sideways through tops, then the next row is bottoms...)
   const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
   return `<section class="finder" aria-label="Your wardrobe">
@@ -1674,6 +1674,10 @@ document.addEventListener('click', async (e) => {
     case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
     case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
     case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
+    case 'rmpiece': { // the ✕ on a piece: it leaves the closet (a preloaded one stays gone, even when new pieces arrive)
+      const it = itemById(id); if (!it || !confirm(`Remove “${it.name}” from your closet?`)) return;
+      await removeItems([id], { byYou: true }); toast(`Removed “${it.name}”`); return render();
+    }
     case 'ftoggle': S.fOpen = !S.fOpen; return refreshFinder();
     case 'fclear': Object.assign(FIND, { q: '', type: 'all', color: 'all', occ: 'all', more: 0 }); return refreshFinder();
     case 'gosave': { const l = $('.looks'); l?.scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#lookname')?.focus({ preventScroll: true }); return; }
