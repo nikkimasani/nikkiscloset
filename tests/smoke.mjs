@@ -329,9 +329,15 @@ try {
     // the ✕ on a piece you're wearing takes it off the model; it stays in the closet
     await p3.click('.tools [data-act=clear]'); const n0 = await p3.evaluate(() => window.__closet.items.length);
     await p3.locator('.finder .pick').first().click(); await p3.waitForSelector('.finder .tile-x');
-    ok(await p3.locator('.finder .tile-x').count() === 1 && await p3.locator('.onmodel .chip.worn').count() === 1, 'a piece on the model shows a ✕ (on its tile and in On the model)');
+    ok(await p3.locator('.finder .tile-x').count() === 1, 'a piece on the model shows one ✕, on its tile');
     await p3.locator('.finder .tile-x').first().click(); await p3.waitForFunction(() => !document.querySelector('.finder .tile-x'));
     ok(await p3.evaluate(() => Object.keys(window.__closet.outfit).length) === 0 && await p3.evaluate(() => window.__closet.items.length) === n0, 'the ✕ takes it off the model and keeps it in the closet');
+    // undo brings it back on, redo takes it off again
+    await p3.click('[data-act=undo]'); await p3.waitForSelector('.finder .tile-x');
+    ok(await p3.evaluate(() => Object.keys(window.__closet.outfit).length) === 1, 'Undo puts the piece back on');
+    await p3.click('[data-act=redo]'); await p3.waitForFunction(() => !document.querySelector('.finder .tile-x'));
+    ok(await p3.evaluate(() => Object.keys(window.__closet.outfit).length) === 0, 'Redo takes it off again');
+    ok(await p3.locator('.car-btn').count() >= 2, 'each carousel has arrows to page through it');
   }
 
   // ── audit regressions ──
@@ -356,6 +362,10 @@ try {
   const gone = await p4.evaluate(() => { const S = window.__closet; return { looks: S.outfits.length, outfit: Object.keys(S.outfit).length, wears: S.wears.length, urls: [...S.urls.keys()].filter((k) => !k.includes(':') && k !== 'profile').length }; });
   ok(gone.looks === 0 && gone.outfit === 0, 'deleting a piece removes it from the current outfit and saved looks (no ghosts)');
   ok(gone.wears === 1 && gone.urls === 9, 'diary history is kept and the deleted piece’s image is released');
+  // Wardrobe: 🗑 deletes a piece from the closet, and the toast's Undo brings it back
+  await p4.click('[data-view=closet]'); await p4.locator('.piece .del').first().click(); await p4.waitForFunction(() => window.__closet.items.length === 8);
+  await p4.click('#toast .toast-undo'); await p4.waitForFunction(() => window.__closet.items.length === 9);
+  ok(await p4.locator('.piece').count() === 9, 'the Wardrobe’s delete has an Undo that brings the piece back');
   // installable app
   const pwa = await p4.evaluate(async () => ({ sw: (await navigator.serviceWorker.ready).active?.state, manifest: (await fetch('/manifest.webmanifest')).status, icon: (await fetch('/icon-192.png')).status, link: !!document.querySelector('link[rel=manifest]') }));
   ok(pwa.sw === 'activated' && pwa.manifest === 200 && pwa.icon === 200 && pwa.link, 'installable: manifest, icons and service worker are live');
