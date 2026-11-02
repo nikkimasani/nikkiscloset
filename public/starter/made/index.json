@@ -1,5 +1,5 @@
 {
- "version": 1793642564970,
+ "version": 1793643280950,
  "pieces": {
   "starter-cream-crochet-cami": {
    "kind": "worn",
@@ -534,27 +534,6 @@
    ],
    "t": 1793457192544
   },
-  "starter-champagne-satin-slip-maxi": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 252,
-    "w": 620,
-    "h": 1454
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f9f8f4",
-    "name": "White"
-   },
-   "colors": [
-    "#f9f8f4",
-    "#ba9a85",
-    "#d8c6b8",
-    "#886859"
-   ],
-   "t": 1793642336039
-  },
   "starter-black-strapless-mini-dress": {
    "kind": "worn",
    "box": {
@@ -669,9 +648,9 @@
   "starter-chocolate-satin-cowl-dress": {
    "kind": "worn",
    "box": {
-    "x": 134,
+    "x": 212,
     "y": 312,
-    "w": 624,
+    "w": 464,
     "h": 1310
    },
    "v": 5,
@@ -681,11 +660,10 @@
    },
    "colors": [
     "#180c09",
-    "#482a24",
-    "#9a6459",
-    "#e9b488"
+    "#482924",
+    "#996459"
    ],
-   "t": 1793642337138
+   "t": 1793643256715
   },
   "starter-black-one-shoulder-dress": {
    "kind": "worn",
@@ -742,7 +720,7 @@
     "#e8d4bb",
     "#b9a38b"
    ],
-   "t": 1793642337520
+   "t": 1793643257441
   },
   "starter-black-wrap-dress": {
    "kind": "worn",
@@ -6086,6 +6064,9 @@
   ],
   "starter-camel-wool-coat": [
    "dark patches inside the coat (left out by review)"
+  ],
+  "starter-champagne-satin-slip-maxi": [
+   "her arm and neck kept with the dress (left out by review)"
   ]
  },
  "blocked": {
