@@ -1,4 +1,4 @@
-83 pins looked at (0 this run)
+85 pins looked at (2 this run) · stopped: Today’s free Cloudflare allowance is used up.
 
 ## accessories (52)
 19× Gold necklace — thin chain with pendant
@@ -55,7 +55,7 @@
 1× Black Gucci belt — gold GG buckle, slim width
 
 ## bags (40)
-5× Black handbag — structured top handle, gold hardware
+6× Black handbag — structured top handle, gold hardware
 4× Black shoulder bag — small, leather, thin strap
 3× Black quilted handbag — shoulder bag with chain strap and gold hardware
 3× Brown suede handbag — shoulder bag, suede fabric, structured
@@ -114,7 +114,7 @@
 1× Black lace bodysuit — sheer lace, V-neckline, sleeveless
 1× White long sleeve bodysuit — v-neckline, long sleeves, wrap style
 
-## bottoms (41)
+## bottoms (42)
 5× Light blue wide-leg jeans — high-waisted, wide-leg, denim fabric
 5× Light blue ripped jeans — high-waisted, straight leg, distressed knee cutouts
 3× White high-waisted trousers — high-waisted, straight leg, full length
@@ -156,6 +156,7 @@
 1× Black leather trousers — high-waisted, slim fit, faux leather
 1× Black leather leggings — high waisted, slim fit, faux leather
 1× Black leather pants — skinny fit, high-waisted, faux leather material
+1× Grey wide leg trousers — high waisted, wide leg, full length
 
 ## dresses (3)
 1× Brown sleeveless midi dress — sleeveless, bodycon, midi length, crew neck
@@ -253,7 +254,7 @@
 1× Tan ribbed tank top — scoop neckline, ribbed fabric, sleeveless
 1× Tan tank top — scoop neckline, sleeveless, fitted
 
-## tops (44)
+## tops (45)
 4× White tank top — v-neck, sleeveless
 3× Beige sleeveless knit top — sleeveless, crew neck, knit, cropped length
 2× Cream ribbed short sleeve top — ribbed knit, short sleeves, crew neck, pocket detail
@@ -298,3 +299,4 @@
 1× White cable knit sweater — long sleeve, v-neck, chunky knit
 1× Pink chunky knit sweater — oversized, textured knit, long sleeves, crew neck
 1× Tan ribbed crop top — ribbed fabric, short sleeves, cropped length
+1× Black long sleeve top — fitted, crew neck, long sleeves
