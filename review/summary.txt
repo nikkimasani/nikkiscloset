@@ -1,4 +1,4 @@
-129 made this run · 338 of 1005 in the wardrobe · 28 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+0 made this run · 317 of 1005 in the wardrobe · 49 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -27,3 +27,24 @@ starter-sage-green-ribbed-tank: it added shorts or trousers to the top
 starter-chocolate-brown-fitted-tee: it added shorts or trousers to the top
 starter-navy-fitted-tee: it added shorts or trousers to the top
 starter-chocolate-brown-corset-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c16ae430-67c1-4fb6-a065-b81d53db5f89)
+starter-beige-button-down-shirt: taken out on review: it added trousers to the shirt
+starter-chocolate-brown-button-down-shirt: taken out on review: it added trousers to the shirt
+starter-navy-button-down-shirt: taken out on review: it added trousers to the shirt
+starter-grey-button-down-shirt: taken out on review: it added trousers to the shirt
+starter-grey-ribbed-tank: taken out on review: blotches on the piece
+starter-chocolate-brown-satin-cami: taken out on review: pale arms kept with the piece
+starter-white-satin-cami: taken out on review: it added shorts to the top
+starter-peach-flowy-trousers: taken out on review: one leg chopped (too close to her skin tone)
+starter-black-strapless-tube-top: taken out on review: drawn as a long-sleeve top, twice
+starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
+starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
+starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
+starter-floral-corset-top: taken out on review: torn and off colours, twice
+starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
+starter-sage-satin-blouse: taken out on review: trousers added, twice
+starter-black-kitten-heels: holes where her foot shows through (left out by review)
+starter-black-knee-high-boots: holes down the side of the boots (left out by review)
+starter-black-ankle-boots: hollow shaft, her leg shows through (left out by review)
+starter-black-loafers: torn shape (left out by review)
+starter-black-pointed-pumps: only the toes came out (left out by review)
+starter-white-pointed-kitten-heels: only the toes came out (left out by review)
