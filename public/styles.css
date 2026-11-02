@@ -461,6 +461,8 @@ html:has(.room.world) { scroll-padding-top: 70px; }
 .dollbar .fb { min-width: 40px; min-height: 40px; padding: 4px 8px; font-size: 16px; color: #fff; border-color: #ffffff40; }
 .dollbar .fb.done { font-size: 12px; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); min-height: 34px; }
 .dolltoggle { position: absolute; top: 12px; right: 12px; z-index: 5; min-height: 40px; padding: 4px 14px; border-radius: 99px; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-weight: 800; font-size: 13px; }
+.tuckbtn { position: absolute; top: 60px; right: 12px; z-index: 5; min-height: 40px; padding: 4px 14px; border-radius: 99px; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-weight: 800; font-size: 13px; }
+body.dsheet .tuckbtn { display: none; } /* (the Fit sheet has its own Tucked in button) */
 .dolltoggle[aria-expanded=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .dollfit { padding: 6px 0; border: 0; background: none; }
 
