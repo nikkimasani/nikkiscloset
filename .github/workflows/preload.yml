@@ -30,11 +30,19 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          if git fetch origin preload-wardrobe; then git checkout -B preload-wardrobe origin/preload-wardrobe && git merge --no-edit origin/main; else git checkout -b preload-wardrobe; fi
+          if git fetch origin preload-wardrobe; then
+            git checkout -B preload-wardrobe origin/preload-wardrobe
+            if ! git merge --no-edit origin/main; then
+              # contact sheets are made again every run: main's do; anything else that clashes means starting fresh from main
+              git checkout origin/main -- review && git add review
+              if git diff --name-only --diff-filter=U | grep -q .; then git merge --abort; git checkout -B preload-wardrobe origin/main; echo '::notice::The wardrobe branch clashed with main, so this run starts fresh from main.'; else git commit --no-edit; fi
+            fi
+          else git checkout -b preload-wardrobe; fi
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+        timeout-minutes: 10 # (it once hung for over an hour; it normally takes under a minute)
       - name: Make the pieces
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
