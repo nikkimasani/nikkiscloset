@@ -1,5 +1,5 @@
 {
- "version": 1793659131570,
+ "version": 1793660274379,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -4330,25 +4330,6 @@
    ],
    "t": 1793581136216
   },
-  "starter-cream-pleated-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 182,
-    "y": 648,
-    "w": 532,
-    "h": 1058
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e9e4d8",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e9e4d8",
-    "#b8a998"
-   ],
-   "t": 1793581141438
-  },
   "starter-white-straight-trousers": {
    "kind": "worn",
    "box": {
@@ -5969,6 +5950,9 @@
   ],
   "starter-camel-sweater-dress": [
    "her legs kept with the dress (left out by review)"
+  ],
+  "starter-cream-pleated-trousers": [
+   "holes at the side of the trousers (left out by review)"
   ]
  },
  "blocked": {

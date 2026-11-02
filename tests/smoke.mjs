@@ -771,7 +771,8 @@ try {
     ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes a piece that still can’t be found is shown as Needs review, with the reason');
     ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
     const spent = () => cf.wears.length * 57.5 + cf.calls.length * 57.6 + cf.looks.length * 10.7;
-    ok(new RegExp(`Neurons used today: ${Math.round(spent()).toLocaleString('en-US')} of 10,000`).test(await pS.locator('.sheet').innerText()), `neurons used today are tracked (${Math.round(spent())})`);
+    const neuronsShown = async () => { for (let t = 0; t < 50; t++) { if (new RegExp(`Neurons used today: ${Math.round(spent()).toLocaleString('en-US')} of 10,000`).test(await pS.locator('.sheet').innerText())) return true; await pS.waitForTimeout(100); } return false; }; // (the last call's count can land a moment after the tiles)
+    ok(await neuronsShown(), `neurons used today are tracked (${Math.round(spent())})`);
     const srcs = await pS.locator('.startertile img').evaluateAll((im) => im.map((i) => i.src));
     ok(srcs.length === 20 && new Set(srcs).size === 20, 'twenty tiles, twenty different pictures');
     const nReady = await pS.locator('.startertile.ready').count();
