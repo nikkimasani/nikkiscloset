@@ -102,6 +102,9 @@ async function importPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
   let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
   if (!idx?.pieces) return;
+  // a preloaded piece taken out of the wardrobe on review (now failed or blocked there) leaves the closet too; one you made yours stays
+  const withdrawn = S.items.filter((i) => i.preloaded && starter.isStarter(i) && !idx.pieces[i.starterId] && (idx.failed?.[i.starterId] || idx.blocked?.[i.starterId])).map((i) => i.id);
+  if (withdrawn.length) await removeItems(withdrawn);
   for (const i of S.items.filter((i) => i.preloaded && starter.isStarter(i))) { // (once: where each piece sits on her, for tucking, and its catalogue colour name)
     const p = idx.pieces[i.starterId], it = STARTER_ITEMS.find((x) => x.id === i.starterId), color = it && starter.namedColor(it, i.color);
     if ((p?.box && !i.wornBox) || (color && color.name !== i.color?.name)) { Object.assign(i, p?.box && !i.wornBox ? { wornBox: p.box } : {}, color ? { color } : {}); await put('items', i); }

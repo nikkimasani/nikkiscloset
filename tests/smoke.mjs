@@ -967,7 +967,8 @@ try {
   {
     const pP = await mk(); let ver = 1;
     const box = { x: 220, y: 240, w: 460, h: 760 }, pic = readFileSync(new URL('./fixtures/white/blazer.png', import.meta.url));
-    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, t: ver * 10, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
+    let withdraw = false; // (later: every piece taken out on review, as the preload job's index records it)
+    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: withdraw ? JSON.stringify({ version: ver, pieces: {}, failed: { 'starter-black-fitted-tee': ['taken out on review'] }, blocked: { 'starter-black-clutch': 'taken out twice' } }) : JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, t: ver * 10, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
     await pP.context().route('**/starter/made/*.webp*', (r) => r.fulfill({ contentType: 'image/png', body: pic }));
     const w0 = cf.wears.length, c0 = cf.calls.length;
     await pP.reload(); await pP.waitForFunction(() => window.__closet?.items.length === 2, null, { timeout: 20000 });
@@ -979,6 +980,8 @@ try {
     await pP.click('[data-view=closet]'); await pP.click('.piece.is-starter .edit >> nth=0'); await pP.click('#rm');
     await pP.waitForFunction(() => window.__closet.items.length === 1); ver = 3; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items, null, { timeout: 20000 }); await pP.waitForTimeout(1500);
     ok(await pP.evaluate(() => window.__closet.items.length) === 1, 'a preloaded piece you removed stays removed when the wardrobe is updated');
+    withdraw = true; ver = 4; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items && !window.__closet.items.length, null, { timeout: 20000 });
+    ok(true, 'a preloaded piece taken out of the wardrobe on review (failed or blocked) leaves the closet on the next open');
     await pP.context().close();
   }
 
