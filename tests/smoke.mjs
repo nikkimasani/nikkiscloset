@@ -624,6 +624,17 @@ try {
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); await wearOne('outerwear', 'Camel blazer'); await wearOne('shoes', 'Nude heels');
   const slots = () => pdl.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'layers stack correctly: shoes, bottom, top, jacket over top');
+  // a top over bottoms has its own Tuck in button on the model (no need to open Fit)
+  ok((await pdl.locator('.tuckbtn').innerText()).includes('Tuck in'), 'a Tuck in button sits on the model');
+  await pdl.click('.tuckbtn'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1]?.dataset.slot === 'top');
+  ok((await pdl.locator('.tuckbtn').getAttribute('aria-pressed')) === 'true' && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tapping it tucks the top in');
+  await pdl.click('.tuckbtn'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1]?.dataset.slot === 'bottom');
+  ok((await pdl.locator('.tuckbtn').innerText()).includes('Tuck in'), 'and tapping again untucks it');
+  // a bag is carried at her side, at a bag's size (not stretched over her body)
+  await wearOne('bags', 'Black mini bag'); await pdl.waitForSelector('#stage .gar.bag');
+  const bagW = await pdl.evaluate(() => +document.querySelector('#stage .gar.bag svg').getAttribute('width') / +document.querySelector('#stage .basepic').getAttribute('width'));
+  ok(bagW > 0.08 && bagW < 0.35, `a bag is drawn at a bag's size (${Math.round(bagW * 100)}% of her picture's width)`);
+  await wearOne('bags', 'Black mini bag'); await pdl.waitForFunction(() => !document.querySelector('#stage .gar.bag'));
   ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
   // fit: select the top, nudge, and it is remembered
   const fitPiece = async (label) => { // on a wide screen the worn pieces are chips under the model; on a phone they're in the Fit sheet
