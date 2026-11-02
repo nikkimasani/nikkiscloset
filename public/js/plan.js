@@ -1,6 +1,6 @@
 // The Plan tab: weather, a 7-day outfit plan, packing lists, wardrobe gaps and a wishlist.
 // Rendering + click handlers live here; app.js passes in a small context object (state, helpers, navigation).
-import { OCCASIONS, OCCASION_EMOJI, TYPES, SLOT_LABEL, slotOf } from './data.js';
+import { OCCASIONS, OCCASION_EMOJI, TYPES, SLOT_LABEL, wornSlot } from './data.js';
 import { BANDS, bandFor, fetchForecast, geocode, toF, weatherEmoji } from './weather.js';
 import { gapAnalysis } from './insights.js';
 import { packingList, planWeek } from './planner.js';
@@ -128,7 +128,7 @@ function eventsCard(c) {
 }
 
 /* ───────────────────────── actions ───────────────────────── */
-const outfitFromIds = (c, ids) => Object.fromEntries(ids.map(c.itemById).filter(Boolean).map((i) => [slotOf(i.type), i.id]));
+const outfitFromIds = (c, ids) => Object.fromEntries(ids.map(c.itemById).filter(Boolean).map((i) => [wornSlot(i), i.id]));
 
 async function savePlan(c, date, outfit) {
   const rec = { id: date, date, itemIds: Object.values(outfit).map((i) => i.id), createdAt: Date.now() };

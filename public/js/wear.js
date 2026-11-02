@@ -76,8 +76,9 @@ export function coreBoxes(type, P) {
   return [];
 }
 
-export function regionFor(type, pack) {
+export function regionFor(type, pack, piece = null) {
   const P = pack.points, top = P.nape[1] - 20, ankle = Math.min(P.ankleL[1], P.ankleR[1]);
+  if (type === 'shoes' && /knee|thigh|riding/i.test(`${piece?.name || ''} ${piece?.detail || ''}`)) return { y0: Math.min(P.kneeL[1], P.kneeR[1]) - 40, y1: pack.size[1] }; // (tall boots reach her knee)
   if (type === 'shoes') return { y0: ankle - 50, y1: pack.size[1] }; // (from just above the ankle: no socks or leggings)
   if (type === 'bottoms' || type === 'skirts') return { y0: Math.min(P.waistL[1], P.waistR[1]) - 40, y1: ankle + 110 };
   if (type === 'dresses' || type === 'outerwear') return { y0: top, y1: ankle + 110 };
@@ -156,7 +157,7 @@ export async function extractWorn(blob, piece, pack) {
   let both = 0, baseN = 0; for (let i = 0; i < w * h; i++) if (BA[i * 4 + 3] >= 128) { baseN++; if (!isBackdrop(A[i * 4], A[i * 4 + 1], A[i * 4 + 2], key)) both++; }
   if (baseN && both / baseN < 0.9) reasons.push('she moved or changed shape in the picture it drew (it couldn’t be lined up)');
   // the piece: inside its region, neither her painted body nor the backdrop
-  const R = regionFor(type, pack), y0 = Math.max(0, Math.floor(R.y0 / k)), y1 = Math.min(h, Math.ceil(R.y1 / k)), m = new Uint8Array(w * h);
+  const R = regionFor(type, pack, piece), y0 = Math.max(0, Math.floor(R.y0 / k)), y1 = Math.min(h, Math.ceil(R.y1 / k)), m = new Uint8Array(w * h);
   // sometimes FLUX draws bits of her in her own skin instead of the key colour: where the piece isn't skin-coloured itself, a pixel that
   // matches base.png's own skin there is her, not the piece
   const skinish = /\b(nude|camel|tan|beige|brown|cognac|taupe|chocolate|caramel|oatmeal|champagne|blush|peach)\b/i.test(`${(piece.colors || []).join(' ')} ${piece.name || ''}`);
@@ -177,7 +178,7 @@ export async function extractWorn(blob, piece, pack) {
     const forearms = [[P.wristL[0] + 4, P.elbowL[1] + 30, P.elbowL[0] + 26, P.wristL[1] - 30], [P.elbowR[0] - 26, P.elbowR[1] + 30, P.wristR[0] - 4, P.wristR[1] - 30]];
     const skin = clusters([...cheeks.flatMap((b) => box(A, b, () => true)), ...forearms.flatMap((b) => box(BA, b, (o) => BA[o + 3] > 200))], 4);
     const paint = []; for (let y = y0; y < y1; y += 3) for (let x = 0; x < w; x += 3) { const o = (y * w + x) * 4; if (isKeyed(A[o], A[o + 1], A[o + 2], key) && !isBackdrop(A[o], A[o + 1], A[o + 2], key)) paint.push(toLab(A[o], A[o + 1], A[o + 2])); }
-    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...(skinish ? [] : skin.map(([L, a, b]) => [L * 0.6, a * 0.85, b * 0.85])), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC, ...(skinish ? [] : keyC.flatMap(([L, a, b]) => [[L * 0.5, a * 0.6, b * 0.6], [L * 0.3, a * 0.4, b * 0.4]]))]; // (the key in deep shadow, between arm and body; not for a skin-toned piece, whose own shadows look alike)
+    const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...(skinish ? [] : skin.map(([L, a, b]) => [L * 0.6, a * 0.85, b * 0.85])), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC];
     for (const sk of skin) for (const g of keyC) for (const t of [0.3, 0.5, 0.7]) her.push(sk.map((v, j) => v * (1 - t) + g[j] * t));
     if (garment.length && skin.length) {
       const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);
@@ -233,10 +234,10 @@ export async function extractWorn(blob, piece, pack) {
     const P = pack.points, cy = Math.round(P.crotch[1] / k), lx = [Math.round(P.kneeL[0] / k) - 30, Math.round(P.crotch[0] / k) - 4], rx = [Math.round(P.crotch[0] / k) + 4, Math.round(P.kneeR[0] / k) + 30];
     let L = 0, Rr = 0, nL = 0, nR = 0; // (FLUX's shorts end just below the crotch, so look right there)
     for (let y = cy + 3; y < Math.min(y1, cy + 14); y++) { for (let x = lx[0]; x < lx[1]; x++) { nL++; L += out[y * w + x]; } for (let x = rx[0]; x < rx[1]; x++) { nR++; Rr += out[y * w + x]; } }
-    if (nL && L / nL > 0.5 && Rr / nR > 0.5 && !/tunic|longline|shirt dress|oversized|button-down|(?<!t-)shirt\b/i.test(`${piece.name} ${piece.detail || ''}`)) reasons.push('it added shorts or trousers to the top');
+    if (nL && L / nL > 0.5 && Rr / nR > 0.5 && !/tunic|longline|shirt dress|oversized/i.test(`${piece.name} ${piece.detail || ''}`)) reasons.push('it added shorts or trousers to the top'); // (only pieces meant to run long are spared; FLUX also repaints her shorts to match a shirt)
   }
   let area = 0; for (let i = 0; i < w * h; i++) area += out[i];
-  const frac = area / (w * h), [lo, hi] = type === 'shoes' ? [0.004, 0.06] : type === 'dresses' || type === 'outerwear' ? [0.05, 0.5] : [0.02, 0.4];
+  const frac = area / (w * h), [lo, hi] = type === 'shoes' ? [0.004, R.y0 < pack.points.kneeL[1] ? 0.12 : 0.06] : type === 'dresses' || type === 'outerwear' ? [0.05, 0.5] : [0.02, 0.4];
   if (frac < lo) reasons.push('the piece barely shows (it may not have dressed her)');
   if (frac > hi) reasons.push('too much of the picture changed (not just the piece)');
   // the worn picture: the drawn pixels, lined up at full size, where the mask is (softened), with the key colour's spill taken off the edges

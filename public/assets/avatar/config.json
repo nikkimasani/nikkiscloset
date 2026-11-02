@@ -133,12 +133,12 @@
       153
     ],
     "earL": [
-      369,
-      200
+      380,
+      188
     ],
     "earR": [
-      527,
-      200
+      515,
+      188
     ],
     "necklace": [
       448,
@@ -758,17 +758,27 @@
     ],
     "marksVersion": 2
   },
-  "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules.",
+  "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules. 'off' moves the point, 'squash' draws the picture as a band (height = width x squash, for a bracelet or watch), and 'variants' change the size or anchor for pieces whose name or description matches.",
   "accRules": {
     "earrings": {
       "at": [
         "earL",
         "earR"
       ],
-      "w": 30,
+      "w": 32,
       "anchor": [
         0.5,
         0.04
+      ],
+      "variants": [
+        {
+          "match": "stud|pearl|dome|button",
+          "w": 20,
+          "anchor": [
+            0.5,
+            0.35
+          ]
+        }
       ]
     },
     "necklace": {
@@ -781,7 +791,12 @@
     },
     "watch": {
       "at": "wristL",
-      "w": 46,
+      "off": [
+        6,
+        -22
+      ],
+      "w": 50,
+      "squash": 0.42,
       "anchor": [
         0.5,
         0.5
@@ -789,7 +804,12 @@
     },
     "bracelet": {
       "at": "wristR",
-      "w": 44,
+      "off": [
+        -6,
+        -22
+      ],
+      "w": 50,
+      "squash": 0.42,
       "anchor": [
         0.5,
         0.5
@@ -813,10 +833,10 @@
     },
     "sunglasses": {
       "at": "eyes",
-      "w": 172,
+      "w": 146,
       "anchor": [
         0.5,
-        0.5
+        0.45
       ]
     },
     "hat": {

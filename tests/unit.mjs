@@ -7,7 +7,7 @@ import { styleMe, suitsWeather } from '../public/js/stylist.js';
 import { planWeek, packingList } from '../public/js/planner.js';
 import { outfitMeters } from '../public/js/meters.js';
 import { colorName, hexDist, toLab, unhex } from '../public/js/color.js';
-import { wear } from '../public/js/data.js';
+import { wear, wornSlot, slotKeys } from '../public/js/data.js';
 
 const it = (id, type, extra = {}) => ({ id, name: id, type, occasions: ['Work / Office'], color: { hex: '#222222' }, createdAt: 0, ...extra });
 const closet = [
@@ -115,6 +115,19 @@ test('wearing a dress removes top and bottom, and tapping again takes it off', (
   assert.deepEqual(wear(o, { id: 'd', type: 'dresses' }), {});
 });
 
+test('several accessories are worn at once, one of each kind; a second pair of earrings replaces the first', () => {
+  const acc = (id, kind) => ({ id, type: 'accessories', acc: kind });
+  let o = wear({}, { id: 't', type: 'tops' });
+  for (const a of [acc('hoops', 'earrings'), acc('chain', 'necklace'), acc('watch', 'watch'), acc('cuff', 'bracelet'), acc('shades', 'sunglasses'), acc('hat', 'hat')]) o = wear(o, a);
+  assert.deepEqual(o, { top: 't', 'acc:earrings': 'hoops', 'acc:neck': 'chain', 'acc:watch': 'watch', 'acc:bracelet': 'cuff', 'acc:sunglasses': 'shades', 'acc:head': 'hat' });
+  o = wear(o, acc('pearls', 'earrings')); assert.equal(o['acc:earrings'], 'pearls');
+  o = wear(o, acc('scarf', 'scarf')); assert.equal(o['acc:neck'], 'scarf', 'a scarf takes the necklace’s place');
+  o = wear(o, acc('watch', 'watch')); assert.ok(!('acc:watch' in o), 'tapping one again takes just that one off');
+  assert.equal(wear({ acc: 'old' }, { id: 'old', type: 'accessories', acc: 'rings' }).acc, undefined, 'an outfit saved before still takes its accessory off');
+  assert.equal(wornSlot({ type: 'accessories' }), 'acc:other');
+  assert.deepEqual(slotKeys({ 'acc:watch': 1, shoes: 1, top: 1, bag: 1 }), ['top', 'shoes', 'bag', 'acc:watch']);
+});
+
 test('wear counts', () => assert.deepEqual(wearCountMap([{ itemIds: ['a', 'b'] }, { itemIds: ['a'] }]), { a: 2, b: 1 }));
 
 // ── AI helper endpoints (pure parts) ──
@@ -214,7 +227,7 @@ test('product endpoint demands the passcode but not a fal key', async () => {
 });
 
 // ── the dress-up figure: a picture shown as it is, plus points and rules for the clothes ──
-import { dollSVG, fitOf, garmentTransform, isTuckable, deriveAnchors, withPoints, bodyWidth, levelY, contentBox, imageRect } from '../public/js/doll.js';
+import { dollSVG, fitOf, garmentTransform, isTuckable, deriveAnchors, withPoints, bodyWidth, levelY, contentBox, imageRect, bagBody, bagStyle, tuckCut } from '../public/js/doll.js';
 import { readFileSync, existsSync } from 'node:fs';
 const config = JSON.parse(readFileSync(new URL('../public/assets/avatar/config.json', import.meta.url), 'utf8'));
 const pack = { ...withPoints(config), files: { 'base.png': '/assets/avatar/base.png' }, base: '/assets/avatar/' };
@@ -255,6 +268,55 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /clip-path="url\(#tuckclip-\d+\)"/);
   const body = svg.indexOf('class="basepic"'), first = svg.indexOf('class="gar'); assert.ok(body > 0 && body < first, 'the picture is under the clothes');
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
+});
+
+test('a tucked top hides below the bottoms\' own waistband, only as wide as the bottoms (sleeves stay)', () => {
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms', { wornBox: { x: 300, y: 690, w: 300, h: 500 } }) }, urls });
+  assert.match(svg, /<clipPath id="tuckclip-\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\d+V\d+H0Z M310 706H590V\d+H310Z"\/>/);
+});
+
+test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
+  const top = new Int16Array(40).fill(-1); for (let x = 5; x < 35; x++) top[x] = 190 - Math.abs(x - 20); // (higher at the sides, lower in the middle)
+  const d = tuckCut(pack, null, { k: 4, top }), ys = [...d.matchAll(/(\d+(?:\.\d+)?) (\d+(?:\.\d+)?)/g)].map((m) => [+m[1], +m[2]]);
+  const at = (x) => ys.find(([px]) => px === x)?.[1];
+  assert.ok(Math.abs(at(80) - (190 * 4 + 12)) <= 8, `the cut sits just inside their top edge in the middle (${at(80)})`);
+  assert.ok(at(40) < at(80) - 20, 'and rises with the waistband at the sides');
+  assert.ok(ys.every(([x]) => x >= 5 * 4 && x <= 34 * 4), 'only as wide as the bottoms');
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls, fits: new Map([['t', 'blob:tf'], ['b', 'blob:bf']]), masks: new Map([['b', { k: 4, top }]]) });
+  assert.match(svg, /<clipPath id="tuckclip-\d+"[^>]*><path clip-rule="evenodd" d="M0 0H896V1776H0Z M\d+ \d+L/);
+});
+
+test('several accessories are drawn together, each on its own body point', () => {
+  const u = new Map([['e', 'blob:e'], ['w', 'blob:w'], ['s', 'blob:s']]), meta = new Map([['e', { iw: 200, ih: 100 }], ['w', { iw: 100, ih: 100 }], ['s', { iw: 300, ih: 100 }]]);
+  const svg = dollSVG({ pack, items: { 'acc:earrings': mkItem('e', 'accessories', { acc: 'earrings', name: 'Gold hoops' }), 'acc:watch': mkItem('w', 'accessories', { acc: 'watch' }), 'acc:sunglasses': mkItem('s', 'accessories', { acc: 'sunglasses' }) }, urls: u, meta });
+  assert.deepEqual([...svg.matchAll(/class="gar acc[^"]*" data-id="(\w)"/g)].map((m) => m[1]), ['e', 'w', 's']);
+  const watch = svg.slice(svg.indexOf('data-id="w"')), [, ww, wh] = watch.match(/<svg [^>]*width="([\d.]+)" height="([\d.]+)"/);
+  assert.ok(+wh < +ww * 0.5, 'a watch is drawn as a band round the wrist, not a flat circle');
+  const studs = dollSVG({ pack, items: { 'acc:earrings': mkItem('e', 'accessories', { acc: 'earrings', name: 'Pearl earrings' }) }, urls: u, meta });
+  assert.ok(+studs.match(/<svg [^>]*width="([\d.]+)"/)[1] < 25, 'studs are smaller than hoops');
+});
+
+test('a bag: its own body is found without the strap, it is carried the way its kind is, and a shoulder bag gets a strap up to her shoulder', () => {
+  const W = 60, H = 60, m = new Uint8Array(W * H);
+  for (let y = 10; y < 40; y++) for (let x = 15; x < 45; x++) m[y * W + x] = 1; // the bag
+  for (let x = 2; x < 58; x++) { m[50 * W + x] = 1; m[51 * W + x] = 1; } // its strap laid flat below it
+  for (let y = 0; y < 51; y++) { m[y * W + 3] = 1; m[y * W + 56] = 1; }
+  const { share, ...b } = bagBody(m, W, H, 2);
+  assert.deepEqual(b, { x: 15 / W, y: 10 / H, w: 30 / W, h: 30 / H }); assert.ok(share > 0.6 && share < 1);
+  assert.equal(bagStyle({ name: 'Black clutch', acc: 'clutch' }), 'clutch'); assert.equal(bagStyle({ name: 'Red mini crossbody', acc: 'shoulderbag' }), 'cross');
+  assert.equal(bagStyle({ name: 'Black leather tote', acc: 'handbag' }), 'tote'); assert.equal(bagStyle({ name: 'Black top-handle bag', acc: 'handbag' }), 'hand');
+  assert.equal(bagStyle({ name: 'Brown leather shoulder bag', acc: 'shoulderbag' }), 'shoulder');
+  const u = new Map([['g', 'blob:g']]), meta = new Map([['g', { iw: 600, ih: 600, bx: 0, by: 0, bw: 1, bh: 1, body: b }]]);
+  const bag = (name, acc) => dollSVG({ pack, items: { bag: mkItem('g', 'bags', { name, acc, color: { hex: '#8b4a2b' } }) }, urls: u, meta });
+  const sh = bag('Brown leather shoulder bag', 'shoulderbag'), view = sh.match(/viewBox="([\d.]+) ([\d.]+) ([\d.]+) ([\d.]+)" preserveAspectRatio="none"/).slice(1).map(Number);
+  assert.deepEqual(view, [150, 100, 300, 300], 'only the bag itself is drawn, not the strap in its photo');
+  const P = config.points, strap = sh.match(/<path d="M([\d.]+) ([\d.]+)L/);
+  assert.ok(Math.abs(strap[2] - P.shoulderR[1]) < 20 && Math.abs(strap[1] - P.shoulderR[0]) < 60, 'the strap goes up to her shoulder');
+  assert.match(sh, /stroke="#8b4a2b"/, 'in the bag’s colour');
+  const x = (svg) => +svg.match(/<svg x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)"/)[1], w = (svg) => +svg.match(/<svg x="[\d.-]+" y="[\d.-]+" width="([\d.]+)"/)[1];
+  const cl = bag('Black clutch', 'clutch'); assert.doesNotMatch(cl, /<path/, 'a clutch has no strap');
+  assert.ok(Math.abs(x(cl) + w(cl) / 2 - P.handR[0]) < 20, 'a clutch is in her hand');
+  assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
 });
 
 test('a bodysuit goes under the bottoms by default (no trim at the waist), and can be untucked', () => {

@@ -624,6 +624,17 @@ try {
   await wearOne('tops', 'White tee'); await wearOne('bottoms', 'Blue jeans'); await wearOne('outerwear', 'Camel blazer'); await wearOne('shoes', 'Nude heels');
   const slots = () => pdl.evaluate(() => [...document.querySelectorAll('#stage .gar')].map((g) => g.dataset.slot));
   ok(JSON.stringify(await slots()) === JSON.stringify(['shoes', 'bottom', 'top', 'outer']), 'layers stack correctly: shoes, bottom, top, jacket over top');
+  // a top over bottoms has its own Tuck in button on the model (no need to open Fit)
+  ok((await pdl.locator('.tuckbtn').innerText()).includes('Tuck in'), 'a Tuck in button sits on the model');
+  await pdl.click('.tuckbtn'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1]?.dataset.slot === 'top');
+  ok((await pdl.locator('.tuckbtn').getAttribute('aria-pressed')) === 'true' && (await pdl.locator('#stage [clip-path] .gar[data-slot=top]').count()) === 1, 'tapping it tucks the top in');
+  await pdl.click('.tuckbtn'); await pdl.waitForFunction(() => document.querySelectorAll('#stage .gar')[1]?.dataset.slot === 'bottom');
+  ok((await pdl.locator('.tuckbtn').innerText()).includes('Tuck in'), 'and tapping again untucks it');
+  // a bag is carried at her side, at a bag's size (not stretched over her body)
+  await wearOne('bags', 'Black mini bag'); await pdl.waitForSelector('#stage .gar.bag');
+  const bagW = await pdl.evaluate(() => +document.querySelector('#stage .gar.bag svg').getAttribute('width') / +document.querySelector('#stage .basepic').getAttribute('width'));
+  ok(bagW > 0.08 && bagW < 0.35, `a bag is drawn at a bag's size (${Math.round(bagW * 100)}% of her picture's width)`);
+  await wearOne('bags', 'Black mini bag'); await pdl.waitForFunction(() => !document.querySelector('#stage .gar.bag'));
   ok((await pdl.locator('#stage .gar image').first().getAttribute('href')).startsWith('blob:'), 'the real photo cutouts are what is drawn on the doll');
   // fit: select the top, nudge, and it is remembered
   const fitPiece = async (label) => { // on a wide screen the worn pieces are chips under the model; on a phone they're in the Fit sheet
@@ -967,7 +978,8 @@ try {
   {
     const pP = await mk(); let ver = 1;
     const box = { x: 220, y: 240, w: 460, h: 760 }, pic = readFileSync(new URL('./fixtures/white/blazer.png', import.meta.url));
-    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, t: ver * 10, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
+    let withdraw = false; // (later: every piece taken out on review, as the preload job's index records it)
+    await pP.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: withdraw ? JSON.stringify({ version: ver, pieces: {}, failed: { 'starter-black-fitted-tee': ['taken out on review'] }, blocked: { 'starter-black-clutch': 'taken out twice' } }) : JSON.stringify({ version: ver, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, t: ver * 10, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
     await pP.context().route('**/starter/made/*.webp*', (r) => r.fulfill({ contentType: 'image/png', body: pic }));
     const w0 = cf.wears.length, c0 = cf.calls.length;
     await pP.reload(); await pP.waitForFunction(() => window.__closet?.items.length === 2, null, { timeout: 20000 });
@@ -979,6 +991,8 @@ try {
     await pP.click('[data-view=closet]'); await pP.click('.piece.is-starter .edit >> nth=0'); await pP.click('#rm');
     await pP.waitForFunction(() => window.__closet.items.length === 1); ver = 3; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items, null, { timeout: 20000 }); await pP.waitForTimeout(1500);
     ok(await pP.evaluate(() => window.__closet.items.length) === 1, 'a preloaded piece you removed stays removed when the wardrobe is updated');
+    withdraw = true; ver = 4; await pP.reload(); await pP.waitForFunction(() => window.__closet?.items && !window.__closet.items.length, null, { timeout: 20000 });
+    ok(true, 'a preloaded piece taken out of the wardrobe on review (failed or blocked) leaves the closet on the next open');
     await pP.context().close();
   }
 

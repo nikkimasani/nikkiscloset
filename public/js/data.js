@@ -54,12 +54,21 @@ export const BODY_TYPES = {
 };
 
 export const slotOf = (type) => TYPES[type].slot;
+// Accessories are worn several at once: one of each kind (earrings, a necklace, a watch, sunglasses...). Head pieces share a spot, and so do
+// a necklace and a scarf, so the outfit holds them under keys like 'acc:earrings' or 'acc:head'.
+const ACC_GROUP = { hat: 'head', headband: 'head', clip: 'head', scarf: 'neck', necklace: 'neck' };
+/** The outfit key an item is worn under: its slot, or for an accessory 'acc:<kind>'. */
+export const wornSlot = (item) => { const s = slotOf(item.type); return s === 'acc' ? `acc:${ACC_GROUP[item.acc] || item.acc || 'other'}` : s; };
+/** A label for an outfit key ('acc:earrings' is an Accessory). */
+export const slotLabel = (k) => SLOT_LABEL[k] || SLOT_LABEL[String(k).split(':')[0]] || k;
+/** The keys of a worn map in dressing order (accessories last). */
+export const slotKeys = (worn) => Object.keys(worn).filter((k) => worn[k]).sort((a, b) => SLOTS.indexOf(a.split(':')[0]) - SLOTS.indexOf(b.split(':')[0]));
 
 /** Put an item into an outfit map, enforcing slot rules (dress vs. top/bottom). */
 export function wear(outfit, item) {
   const next = { ...outfit };
-  const slot = slotOf(item.type);
-  if (next[slot] === item.id) { delete next[slot]; return next; } // tap again to take off
+  const slot = wornSlot(item);
+  for (const k of Object.keys(next)) if (next[k] === item.id) { delete next[k]; return next; } // tap again to take off (under any key, even an old one)
   next[slot] = item.id;
   if (slot === 'dress') { delete next.top; delete next.bottom; }
   if (slot === 'top' || slot === 'bottom') delete next.dress;

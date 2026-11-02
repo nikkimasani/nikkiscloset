@@ -105,12 +105,35 @@ export function garmentTransform(anchor, fit) {
   return `translate(${num(cx)} ${num(cy)}) rotate(${num(fit.rot)}) scale(${num(fit.scale * 1000) / 1000}) translate(${-anchor.w / 2} ${-anchor.h / 2})`;
 }
 
+/** Tucked in: the top hides below the bottoms' own waistband, across her hips only, so sleeves and hands stay. With the bottoms' outline
+ *  (edge: { k, top } — the first opaque row of each column of their worn picture, in steps of k pixels) the cut follows their waistband, so a
+ *  low-rise pair or a curved waistband leaves no gap of skin; otherwise it is a straight line just below where they start. */
+export function tuckCut(pack, bottom, edge) {
+  const P = pack.points, [W, H] = pack.size, bx = bottom?.wornBox, dip = 12;
+  if (edge?.top?.length) {
+    const cols = [...edge.top].map((y, x) => [x, y]).filter(([, y]) => y >= 0);
+    if (cols.length > 4) {
+      const xs = cols.map(([x]) => x), lo = Math.min(...xs), hi = Math.max(...xs), inset = Math.max(1, Math.round(10 / edge.k)), pts = [];
+      for (let x = lo + inset; x <= hi - inset; x++) { // (a running median over a few columns: a stray pixel doesn't make a notch)
+        const win = []; for (let d = -3; d <= 3; d++) { const y = edge.top[x + d]; if (y >= 0) win.push(y); }
+        if (win.length) { win.sort((a, b) => a - b); pts.push([x * edge.k, win[win.length >> 1] * edge.k + dip]); }
+      }
+      if (pts.length > 1) return `M${pts.map(([x, y]) => `${num(x)} ${num(y)}`).join('L')}L${num(pts[pts.length - 1][0])} ${H}L${num(pts[0][0])} ${H}Z`;
+    }
+  }
+  const cut = Math.round((bx?.y ?? P.belt?.[1] ?? pack.waistY) + 16), x0 = bx ? bx.x + 10 : (P.waistbandL?.[0] ?? 0), x1 = bx ? bx.x + bx.w - 10 : (P.waistbandR?.[0] ?? W);
+  return `M${x0} ${cut}H${x1}V${H}H${x0}Z`;
+}
+function tuckClip(pack, bottom, n, edge) {
+  const [W, H] = pack.size;
+  return `<clipPath id="tuckclip-${n}" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H${W}V${H}H0Z ${tuckCut(pack, bottom, edge)}"/></clipPath>`;
+}
 let uidN = 0;
 /**
  * @param {{pack:object, items:Record<string,object>, urls:Map<string,string>, meta?:Map<string,object>, selected?:string, cls?:string, label?:string, debug?:boolean}} o
  *   items: slot -> item. meta: id -> { iw, ih, bx, by, bw, bh } for the dashed selection box.
  */
-export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, base = '', selected = '', cls = '', label = '', debug = false }) {
+export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
   const tucked = !!(top && bottom && isTuckable(top, pack) && tuckOf(top, pack)), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
@@ -119,8 +142,9 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     const it = items[slot]; if (!it) return '';
     const a = pack.anchors[it.type]; if (!a) return '';
     const f = fitOf(it, pack), href = urls.get(it.id) || '', box = contentBox(a, meta?.get(it.id)), fitted = fits?.get(it.id);
+    if (it.type === 'bags' && !fitted) return bagPiece(it, slot, f, selected === it.id); // a bag hangs from her hand or shoulder, at a real bag's size
     const ar = it.acc && pack.accRules?.[it.acc];
-    if (ar && !fitted) return accPiece(it, ar, f, selected === it.id); // a bag or accessory snaps to its body point (accRules in config.json)
+    if (ar && !fitted) return accPiece(it, { ...ar, ...(ar.variants || []).find((v) => new RegExp(v.match, 'i').test(`${it.name || ''} ${it.detail || ''}`)) }, f, selected === it.id, slot); // an accessory snaps to its body point (accRules in config.json)
     if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
       const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
       const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}"><image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
@@ -130,12 +154,37 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <image href="${href}" width="${a.w}" height="${a.h}" preserveAspectRatio="${a.align} meet" filter="url(#gfx-${n})"/>${selected === it.id ? `<rect class="selbox" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="6" fill="none"/>` : ''}</g>`;
     return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` : g;
   };
-  const accPiece = (it, r, f, sel) => {
-    const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean), pair = pts.length === 2;
-    const cw = pair ? iw / 2 : iw, w = r.w ?? (r.h * cw) / ih, h = r.h ?? (r.w * ih) / cw, href = urls.get(it.id) || '';
+  const accPiece = (it, r, f, sel, slot) => {
+    const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, off = r.off || [0, 0], pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean).map(([x, y]) => [x + off[0], y + off[1]]), pair = pts.length === 2;
+    // (a bracelet or watch seen from the front is a band round the wrist: its photo, taken from above, is squashed to an ellipse)
+    const cw = pair ? iw / 2 : iw, w = r.w ?? (r.h * cw) / ih, h = r.squash ? w * r.squash : r.h ?? (r.w * ih) / cw, href = urls.get(it.id) || '';
     const pic = pts.map(([px, py], k) => `<svg x="${num(px - r.anchor[0] * w)}" y="${num(py - r.anchor[1] * h)}" width="${num(w)}" height="${num(h)}" viewBox="${pair ? num(k * cw) : 0} 0 ${num(cw)} ${ih}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`).join('');
     const [cx, cy] = pts[0];
-    return `<g class="gar acc${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slotFor(it)}" filter="url(#gfx-${n})" transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g>`;
+    return `<g class="gar acc${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})" transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g>`;
+  };
+  // A bag: its own body (no strap or handles from the photo, see bagBody) at a real bag's size, held in her hand or hung from her shoulder by a
+  // strap drawn in the bag's colour. Its nudge moves the bag; the strap stays on her shoulder.
+  const bagPiece = (it, slot, f, sel) => {
+    const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, P = pack.points, href = urls.get(it.id) || '';
+    const st = bagStyle(it), R = { ...BAG_RULES[st], ...(pack.bagRules?.[st] || {}) }, all = { x: m?.bx ?? 0, y: m?.by ?? 0, w: m?.bw ?? 1, h: m?.bh ?? 1 };
+    const B = m?.body && (m.body.share ?? 1) >= 0.3 ? m.body : all; // (if most of the photo isn't one solid piece, it isn't a strap that was left out: use it all)
+    const crop = st === 'hand' ? { x: Math.max(0, B.x - B.w * 0.08), y: Math.min(B.y, all.y), w: B.w * 1.16, h: 0 } : { ...B }; // (a handbag keeps the handles above it)
+    if (st === 'hand') { crop.w = Math.min(1 - crop.x, crop.w); crop.h = B.y + B.h - crop.y; }
+    const s = (R.w * bagSize(it)) / Math.max(1, B.w * iw), w = crop.w * iw * s, h0 = crop.h * ih * s, k = Math.min(1, (R.maxH || 1e9) / h0), W = w * k, H = h0 * k;
+    const bodyTop = (B.y - crop.y) * ih * s * k; // (where the bag itself starts, below any handles)
+    const at = (pt, d) => [P[pt][0] + d[0], P[pt][1] + d[1]];
+    const [ax, ay] = R.at ? at(R.at, R.off || [0, 0]) : [P[R.x[0]][0] + R.x[1], levelY(P, R.y[0]) + R.y[1]];
+    const x = ax - W * (R.anchor?.[0] ?? 0.5), y = ay - H * (R.anchor?.[1] ?? 0); // (top-left of the bag picture, before the nudge)
+    const cx = x + W / 2, cy = y + H / 2, sc = f.scale, mv = ([px, py]) => [num(cx + (px - cx) * sc + f.dx), num(cy + (py - cy) * sc + f.dy)];
+    const pic = `<svg x="${num(x)}" y="${num(y)}" width="${num(W)}" height="${num(H)}" viewBox="${num(crop.x * iw)} ${num(crop.y * ih)} ${num(crop.w * iw)} ${num(crop.h * ih)}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`;
+    let strap = '';
+    if (R.strap) {
+      const sh = at(R.strap, R.strapOff || [0, 0]), ends = (R.ends || [0.14, 0.86]).map((e) => mv([x + W * e, y + bodyTop + 6]));
+      const chain = /chain/i.test(it.name || ''), hex = chain ? (/silver/i.test(it.name) ? '#c9ccd2' : '#c9a24a') : it.color?.hex || '#4a3426';
+      const line = (e) => `M${num(sh[0])} ${num(sh[1])}L${e[0]} ${e[1]}`, d = ends.map(line).join('');
+      strap = `<path d="${d}" fill="none" stroke="${shade(hex, 0.45)}" stroke-width="${chain ? 7 : 11}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${hex}" stroke-width="${chain ? 4.5 : 8}" stroke-linecap="round"${chain ? ' stroke-dasharray="5 3"' : ''}/>`;
+    }
+    return `<g class="gar acc bag${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})">${strap}<g transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(sc * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g></g>`;
   };
   const clothes = order.map(garment).join('');
   const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
@@ -161,7 +210,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <g mask="url(#hairback-${n})"><g filter="url(#hairfx-${n})">${img}</g></g></g>`;
     hairFront = `<g class="hairfront" mask="url(#hairfront-${n})"><g filter="url(#hairfx-${n})">${img}</g></g>`;
   }
-  const parts = { hairBack, body, clothes, hair: hairFront, acc: garment('acc') };
+  const parts = { hairBack, body, clothes, hair: hairFront, acc: Object.keys(items).filter((k) => k === 'acc' || k.startsWith('acc:')).map(garment).join('') }; // (every accessory: earrings, a necklace, a watch...)
   const [x, y, w, h] = pack.view;
   const names = Object.values(items).map((i) => i.name).filter(Boolean);
   const desc = label || (names.length ? `Model wearing ${names.join(', ')}` : 'Model with no clothes selected');
@@ -173,8 +222,60 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hairDefs}<clipPath id="tuckclip-${n}"><rect x="0" y="0" width="${pack.size[0]}" height="${pack.waistY + 12}"/></clipPath></defs>
+    <defs>${fx}${hairDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}</defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
+}
+
+/* ── bags ── */
+/** How a bag is carried, from its kind and name: held like a clutch, hung from her hand by its handles, on her shoulder, or across her body. */
+export function bagStyle(it) {
+  const t = `${it.name || ''} ${it.detail || ''}`;
+  if (it.acc === 'clutch' || /clutch/i.test(t)) return 'clutch';
+  if (/crossbody|camera bag|belt bag/i.test(t)) return 'cross';
+  if (it.acc === 'handbag' || /tote|top-handle|bucket|mini bag/i.test(t)) return /tote/i.test(t) ? 'tote' : 'hand';
+  return 'shoulder';
+}
+/** A mini bag is smaller than a usual one. */
+export const bagSize = (it) => (/\bmini\b/i.test(it.name || '') ? 0.8 : /\bsmall\b/i.test(it.name || '') ? 0.86 : 1);
+// Sizes are the bag's own width in base-picture pixels (her hips are about 430 across). 'at'/'off': the point the 'anchor' of the picture sits on;
+// or 'x'/'y': a point beside her hip. 'strap': the shoulder point the strap goes up to.
+export const BAG_RULES = {
+  clutch: { w: 175, at: 'handR', off: [-8, -6], anchor: [0.5, 0.5] },
+  hand: { w: 205, at: 'handR', off: [0, -34], anchor: [0.5, 0], maxH: 330 },
+  tote: { w: 250, at: 'handR', off: [0, -34], anchor: [0.5, 0], maxH: 400 },
+  shoulder: { w: 190, x: ['hipR', 22], y: ['hip', -150], anchor: [0.5, 0], maxH: 240, strap: 'shoulderR', strapOff: [-44, 6] },
+  cross: { w: 150, x: ['hipR', 6], y: ['hip', -120], anchor: [0.5, 0], maxH: 200, strap: 'shoulderL', strapOff: [44, 8], ends: [0.18] },
+};
+/** A darker shade of a #rrggbb colour (t = how much black to mix in). */
+export function shade(hex, t) {
+  const v = parseInt(String(hex).replace('#', '').padEnd(6, '0').slice(0, 6), 16), f = (c) => Math.round(c * (1 - t)).toString(16).padStart(2, '0');
+  return `#${f(v >> 16)}${f((v >> 8) & 255)}${f(v & 255)}`;
+}
+/**
+ * Where a bag's own body is in its photo, without the strap or handles: thin parts of the see-through mask are opened away (eroded, then grown
+ * back) and the biggest piece left is the bag. mask: Uint8Array (1 = opaque) of W×H; r: how thick a strap may be, in mask pixels.
+ * Returns { x, y, w, h } as fractions of the photo and share (how much of the opaque photo it is), or null if nothing is left.
+ */
+export function bagBody(mask, W, H, r) {
+  const pass = (src, grow) => { // a square min (erode) or max (grow) filter, rows then columns
+    const a = new Uint8Array(W * H), b = new Uint8Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let v = grow ? 0 : 1; for (let d = -r; d <= r && v === (grow ? 0 : 1); d++) { const xx = x + d, q = xx < 0 || xx >= W ? 0 : src[y * W + xx]; v = grow ? Math.max(v, q) : Math.min(v, q); } a[y * W + x] = v; }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let v = grow ? 0 : 1; for (let d = -r; d <= r && v === (grow ? 0 : 1); d++) { const yy = y + d, q = yy < 0 || yy >= H ? 0 : a[yy * W + x]; v = grow ? Math.max(v, q) : Math.min(v, q); } b[y * W + x] = v; }
+    return b;
+  };
+  const open = pass(pass(mask, false), true), seen = new Int32Array(W * H);
+  let best = null, id = 0, total = 0;
+  for (let i = 0; i < W * H; i++) total += mask[i] ? 1 : 0;
+  for (let i = 0; i < W * H; i++) {
+    if (!open[i] || seen[i]) continue;
+    id++; let n = 0, x0 = W, y0 = H, x1 = -1, y1 = -1; const st = [i]; seen[i] = id;
+    while (st.length) {
+      const j = st.pop(), x = j % W, y = (j - x) / W; n++; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+      for (const k of [x > 0 ? j - 1 : -1, x < W - 1 ? j + 1 : -1, y > 0 ? j - W : -1, y < H - 1 ? j + W : -1]) if (k >= 0 && open[k] && !seen[k]) { seen[k] = id; st.push(k); }
+    }
+    if (!best || n > best.n) best = { n, x0, y0, x1, y1 };
+  }
+  return best ? { x: best.x0 / W, y: best.y0 / H, w: (best.x1 - best.x0 + 1) / W, h: (best.y1 - best.y0 + 1) / H, share: Math.round((best.n / Math.max(1, total)) * 100) / 100 } : null;
 }
 
 /** Slot of the item an element belongs to (used when you tap or drag a garment on the figure). */
