@@ -184,9 +184,16 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       const line = (e) => `M${num(sh[0])} ${num(sh[1])}L${e[0]} ${e[1]}`, d = ends.map(line).join('');
       strap = `<path d="${d}" fill="none" stroke="${shade(hex, 0.45)}" stroke-width="${chain ? 7 : 11}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${hex}" stroke-width="${chain ? 4.5 : 8}" stroke-linecap="round"${chain ? ' stroke-dasharray="5 3"' : ''}/>`;
     }
-    return `<g class="gar acc bag${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})">${strap}<g transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(sc * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g></g>`;
+    const bag = `<g class="gar acc bag${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})">${strap}<g transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(sc * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g></g>`;
+    if (!underArm) return bag;
+    // her arm (and its sleeve) hangs in front of the bag: the figure is drawn again over it, inside the arm's outline; the strap shows on
+    // top of her shoulder and then goes behind the arm (a crossbody's strap stays in front across her chest)
+    const top = R.strap === 'shoulderR' ? `<g clip-path="url(#strapclip-${n})">${strap}</g>` : strap;
+    return `${bag}<use href="#fig-${n}" clip-path="url(#armclip-${n})" pointer-events="none"/>${top}`;
   };
-  const clothes = order.map(garment).join('');
+  const bagIt = items.bag, underArm = !!(bagIt && pack.bagArm && ['shoulder', 'cross'].includes(bagStyle(bagIt)) && !fits?.get(bagIt.id));
+  const clothes = order.filter((k) => !(underArm && k === 'bag')).map(garment).join(''), bagLayer = underArm ? garment('bag') : '';
+  const armDefs = underArm ? `<clipPath id="armclip-${n}"><polygon points="${pack.bagArm.map(([x, y]) => `${x},${y}`).join(' ')}"/></clipPath><clipPath id="strapclip-${n}"><rect x="0" y="-200" width="${pack.size[0]}" height="${200 + (pack.points.armpitR?.[1] ?? 540)}"/></clipPath>` : '';
   const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
   let hairBack = '', hairFront = '', hairDefs = '';
   if (hair && pack.points.crown) { // behind the body: the hair inside the neck column below the jaw, and a soft fill between her skull and the hair's crown
@@ -210,7 +217,8 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <g mask="url(#hairback-${n})"><g filter="url(#hairfx-${n})">${img}</g></g></g>`;
     hairFront = `<g class="hairfront" mask="url(#hairfront-${n})"><g filter="url(#hairfx-${n})">${img}</g></g>`;
   }
-  const parts = { hairBack, body, clothes, hair: hairFront, acc: Object.keys(items).filter((k) => k === 'acc' || k.startsWith('acc:')).map(garment).join('') }; // (every accessory: earrings, a necklace, a watch...)
+  const parts = underArm ? { hairBack, body: `<g id="fig-${n}">${body}${clothes}</g>`, clothes: bagLayer } : { hairBack, body, clothes };
+  Object.assign(parts, { hair: hairFront, acc: Object.keys(items).filter((k) => k === 'acc' || k.startsWith('acc:')).map(garment).join('') }); // (every accessory: earrings, a necklace, a watch...)
   const [x, y, w, h] = pack.view;
   const names = Object.values(items).map((i) => i.name).filter(Boolean);
   const desc = label || (names.length ? `Model wearing ${names.join(', ')}` : 'Model with no clothes selected');
@@ -222,7 +230,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hairDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}</defs>
+    <defs>${fx}${hairDefs}${armDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}</defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 

@@ -6,6 +6,7 @@
 //   ... --redo starter-black-fitted-tee,starter-camel-ribbed-turtleneck          make these again
 //   ... --redo worn                                                             make every piece drawn on the model again
 //   ... --batch tops                                                            just one category
+//   ... --only starter-camel-wide-leg-trousers,...                              just these pieces
 //   node scripts/preload.mjs --reextract                                        cut the pieces out again from the drawings kept in
 //                                                                               starter-raw/ (after a change to wear.js; no Cloudflare)
 //
@@ -21,7 +22,7 @@ import { ITEMS, BATCHES } from '../public/starter/items.js';
 const arg = (k) => { const i = process.argv.indexOf('--' + k); return i < 0 ? undefined : process.argv[i + 1]; };
 const WEAR = readFileSync('public/js/wear.js', 'utf8'), WEAR_VERSION = +WEAR.match(/WEAR_VERSION = (\d+)/)[1], WORN = JSON.parse(WEAR.match(/WORN_TYPES = (\[[^\]]*\])/)[1].replace(/'/g, '"'));
 const isWornType = (t) => WORN.includes(t); // (read from wear.js: it's a browser module)
-const reextract = process.argv.includes('--reextract'), onlyBatch = arg('batch');
+const reextract = process.argv.includes('--reextract'), onlyBatch = arg('batch'), only = arg('only')?.split(',').map((s) => s.trim()).filter(Boolean);
 let redo = (arg('redo') || '').split(',').map((s) => s.trim()).filter(Boolean);
 if (redo.includes('worn')) redo = [...redo.filter((r) => r !== 'worn'), ...ITEMS.filter((i) => isWornType(i.type)).map((i) => i.id)];
 const DIR = 'public/starter/made', INDEX = `${DIR}/index.json`, PORT = 5480 + Math.floor(Math.random() * 100), PASS = randomBytes(12).toString('hex');
@@ -33,7 +34,7 @@ for (const id of redo) { delete index.pieces[id]; rmSync(`${DIR}/${id}.webp`, { 
 // what to make: pieces already in the closet but drawn by an older version of wear.js first (they're what you see today), then missing ones
 const outdated = (i) => index.pieces[i.id]?.kind === 'worn' && (index.pieces[i.id].v || 1) < WEAR_VERSION;
 const blocked = new Set(Object.keys(index.blocked || {})); // pieces taken out on review more than once: not made again unless asked for by name (--redo)
-const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!blocked.has(i.id) || redo.includes(i.id));
+const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!only || only.includes(i.id)) && (!blocked.has(i.id) || redo.includes(i.id));
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
   : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id)))];
 console.log(`${Object.keys(index.pieces).length} of ${ITEMS.length} made; ${todo.length} to make this run`);

@@ -180,10 +180,15 @@ export async function extractWorn(blob, piece, pack) {
     const paint = []; for (let y = y0; y < y1; y += 3) for (let x = 0; x < w; x += 3) { const o = (y * w + x) * 4; if (isKeyed(A[o], A[o + 1], A[o + 2], key) && !isBackdrop(A[o], A[o + 1], A[o + 2], key)) paint.push(toLab(A[o], A[o + 1], A[o + 2])); }
     const keyC = clusters(paint, 3), her = [...skin, ...skin.map(([L, a, b]) => [L * 0.8, a, b]), ...(skinish ? [] : skin.map(([L, a, b]) => [L * 0.6, a * 0.85, b * 0.85])), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.1), a * 0.9, b * 0.9]), ...skin.map(([L, a, b]) => [Math.min(100, L * 1.22), a * 0.8, b * 0.8]), ...keyC];
     for (const sk of skin) for (const g of keyC) for (const t of [0.3, 0.5, 0.7]) her.push(sk.map((v, j) => v * (1 - t) + g[j] * t));
+    // a piece in her own colours (camel, tan, beige...) is only told apart from her skin where skin can show: above her shoulders and at her
+    // feet (her hands go anyway, below); elsewhere a colour like hers is the piece itself, or camel trousers come out in shreds. (Only for
+    // pieces that cover her legs or body: on a top it would keep the tan shorts FLUX repaints under it)
+    const feetY = Math.min(P.ankleL[1], P.ankleR[1]) - 30, neckY = Math.min(P.shoulderL[1], P.shoulderR[1]) - 10;
+    const skinZone = (y) => !skinish || !['bottoms', 'skirts', 'dresses', 'outerwear'].includes(type) || y * k < neckY || y * k > feetY; // (a top still loses the tan shorts FLUX repaints)
     if (garment.length && skin.length) {
       const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);
       for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!raw[i]) continue; const o = i * 4, p = toLab(A[o], A[o + 1], A[o + 2]), dG = near(p, garment);
-        if (dG > 64 && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
+        if (dG > 64 && skinZone(y) && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
       // a patch the piece closes around is the piece (a shiny fold, a print), however skin-like: her arms, neck and legs reach the outside
       const seen = new Uint8Array(w * h), st = [];
       for (let i = y0 * w; i < y1 * w; i++) { if (raw[i] === 1 || seen[i]) continue; let open = false, tl = 0; st.length = 0; st.push(i); seen[i] = 1;
