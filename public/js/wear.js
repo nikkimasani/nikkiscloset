@@ -234,7 +234,7 @@ export async function extractWorn(blob, piece, pack) {
     const P = pack.points, cy = Math.round(P.crotch[1] / k), lx = [Math.round(P.kneeL[0] / k) - 30, Math.round(P.crotch[0] / k) - 4], rx = [Math.round(P.crotch[0] / k) + 4, Math.round(P.kneeR[0] / k) + 30];
     let L = 0, Rr = 0, nL = 0, nR = 0; // (FLUX's shorts end just below the crotch, so look right there)
     for (let y = cy + 3; y < Math.min(y1, cy + 14); y++) { for (let x = lx[0]; x < lx[1]; x++) { nL++; L += out[y * w + x]; } for (let x = rx[0]; x < rx[1]; x++) { nR++; Rr += out[y * w + x]; } }
-    if (nL && L / nL > 0.5 && Rr / nR > 0.5 && !/tunic|longline|shirt dress|oversized|button-down|(?<!t-)shirt\b/i.test(`${piece.name} ${piece.detail || ''}`)) reasons.push('it added shorts or trousers to the top');
+    if (nL && L / nL > 0.5 && Rr / nR > 0.5 && !/tunic|longline|shirt dress|oversized/i.test(`${piece.name} ${piece.detail || ''}`)) reasons.push('it added shorts or trousers to the top'); // (only pieces meant to run long are spared; FLUX also repaints her shorts to match a shirt)
   }
   let area = 0; for (let i = 0; i < w * h; i++) area += out[i];
   const frac = area / (w * h), [lo, hi] = type === 'shoes' ? [0.004, R.y0 < pack.points.kneeL[1] ? 0.12 : 0.06] : type === 'dresses' || type === 'outerwear' ? [0.05, 0.5] : [0.02, 0.4];
