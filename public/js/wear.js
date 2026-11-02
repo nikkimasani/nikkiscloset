@@ -184,11 +184,13 @@ export async function extractWorn(blob, piece, pack) {
     // feet (her hands go anyway, below); elsewhere a colour like hers is the piece itself, or camel trousers come out in shreds. (Only for
     // pieces that cover her legs or body: on a top it would keep the tan shorts FLUX repaints under it)
     const feetY = Math.min(P.ankleL[1], P.ankleR[1]) - 30, neckY = Math.min(P.shoulderL[1], P.shoulderR[1]) - 10;
-    const skinZone = (y) => !skinish || !['bottoms', 'skirts', 'dresses', 'outerwear'].includes(type) || y * k < neckY || y * k > feetY; // (a top still loses the tan shorts FLUX repaints)
+    const bustY = Math.min(P.bustL[1], P.bustR[1]), armX = [P.armpitL[0], P.armpitR[0]];
+    const skinZone = (x, y) => !skinish || !['bottoms', 'skirts', 'dresses', 'outerwear'].includes(type) || y * k < neckY || y * k > feetY // (a top still loses the tan shorts FLUX repaints)
+      || (type === 'dresses' && (y * k < bustY || x * k < armX[0] || x * k > armX[1])); // (a dress leaves her chest and arms bare; a coat's sleeves are the coat)
     if (garment.length && skin.length) {
       const near = (p, list) => list.reduce((m, q) => Math.min(m, d2(p, q)), Infinity);
       for (let y = y0; y < y1; y++) for (let x = 0; x < w; x++) { const i = y * w + x; if (!raw[i]) continue; const o = i * 4, p = toLab(A[o], A[o + 1], A[o + 2]), dG = near(p, garment);
-        if (dG > 64 && skinZone(y) && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
+        if (dG > 64 && skinZone(x, y) && near(p, her) * 2 < dG) raw[i] = 2; } // (clearly nearer hers; within 8 of a colour of the piece, it is the piece) // (clearly nearer hers; within 8 of a colour of the piece, it is the piece)
       // a patch the piece closes around is the piece (a shiny fold, a print), however skin-like: her arms, neck and legs reach the outside
       const seen = new Uint8Array(w * h), st = [];
       for (let i = y0 * w; i < y1 * w; i++) { if (raw[i] === 1 || seen[i]) continue; let open = false, tl = 0; st.length = 0; st.push(i); seen[i] = 1;
