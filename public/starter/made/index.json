@@ -1347,24 +1347,6 @@
    ],
    "t": 1793503210556
   },
-  "starter-black-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 226,
-    "y": 1664,
-    "w": 422,
-    "h": 82
-   },
-   "v": 5,
-   "color": {
-    "hex": "#020203",
-    "name": "Black"
-   },
-   "colors": [
-    "#020203"
-   ],
-   "t": 1793503211015
-  },
   "starter-gold-strappy-heeled-sandals": {
    "kind": "worn",
    "box": {
@@ -1405,25 +1387,6 @@
    ],
    "t": 1793503211598
   },
-  "starter-black-kitten-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 230,
-    "y": 1556,
-    "w": 448,
-    "h": 190
-   },
-   "v": 5,
-   "color": {
-    "hex": "#050404",
-    "name": "Black"
-   },
-   "colors": [
-    "#050404",
-    "#b88669"
-   ],
-   "t": 1793503211909
-  },
   "starter-tan-mules": {
    "kind": "worn",
    "box": {
@@ -1445,25 +1408,6 @@
     "#230e05"
    ],
    "t": 1793503212193
-  },
-  "starter-white-pointed-kitten-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 232,
-    "y": 1638,
-    "w": 414,
-    "h": 110
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e9e8e6",
-    "name": "White"
-   },
-   "colors": [
-    "#e9e8e6",
-    "#b9b8b6"
-   ],
-   "t": 1793503212593
   },
   "starter-brown-ankle-boots": {
    "kind": "worn",
@@ -1565,25 +1509,6 @@
     "#271508"
    ],
    "t": 1793503214768
-  },
-  "starter-black-loafers": {
-   "kind": "worn",
-   "box": {
-    "x": 198,
-    "y": 1580,
-    "w": 496,
-    "h": 166
-   },
-   "v": 5,
-   "color": {
-    "hex": "#09090a",
-    "name": "Black"
-   },
-   "colors": [
-    "#09090a",
-    "#373735"
-   ],
-   "t": 1793503215100
   },
   "starter-beige-knee-high-boots": {
    "kind": "worn",
@@ -1896,42 +1821,6 @@
     "#babab9"
    ],
    "t": 1793457197839
-  },
-  "starter-black-knee-high-boots": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 1256,
-    "w": 444,
-    "h": 490
-   },
-   "v": 5,
-   "color": {
-    "hex": "#050608",
-    "name": "Black"
-   },
-   "colors": [
-    "#050608"
-   ],
-   "t": 1793503213102
-  },
-  "starter-black-ankle-boots": {
-   "kind": "worn",
-   "box": {
-    "x": 236,
-    "y": 1534,
-    "w": 422,
-    "h": 212
-   },
-   "v": 5,
-   "color": {
-    "hex": "#060707",
-    "name": "Black"
-   },
-   "colors": [
-    "#060707"
-   ],
-   "t": 1793503216786
   },
   "starter-white-shoulder-bag": {
    "kind": "photo",
@@ -6066,11 +5955,11 @@
   ],
   "starter-cognac-saddle-bag": [
    "more than the item in the picture (text, a hanger or a prop?)",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+   "a white patch at the top or bottom edge (a form\u2019s neck or stand?)"
   ],
   "starter-straw-beach-tote": [
    "skin-coloured areas (a person or a body form?)",
-   "a light piece on a white background (it can’t be cut out cleanly)",
+   "a light piece on a white background (it can\u2019t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-structured-tote": [
@@ -6079,25 +5968,25 @@
   ],
   "starter-layered-gold-necklaces": [
    "more than the item in the picture (text, a hanger or a prop?)",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white patch at the top or bottom edge (a form\u2019s neck or stand?)",
    "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-pendant-necklace": [
    "item is missing or tiny",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+   "a white patch at the top or bottom edge (a form\u2019s neck or stand?)"
   ],
   "starter-tortoiseshell-sunglasses": [
    "more than the item in the picture (text, a hanger or a prop?)",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white patch at the top or bottom edge (a form\u2019s neck or stand?)",
    "a white or grey body shape (a dress form?)"
   ],
   "starter-brown-oversized-sunglasses": [
    "a white or grey body shape (a dress form?)",
-   "colour doesn’t look brown"
+   "colour doesn\u2019t look brown"
   ],
   "starter-brown-leather-belt": [
    "more than the item in the picture (text, a hanger or a prop?)",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+   "a white patch at the top or bottom edge (a form\u2019s neck or stand?)"
   ],
   "starter-black-leather-belt": [
    "a white or grey body shape (a dress form?)"
@@ -6106,11 +5995,11 @@
    "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-rings-set": [
-   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white patch at the top or bottom edge (a form\u2019s neck or stand?)",
    "a white or grey body shape (a dress form?)"
   ],
   "starter-beige-bucket-hat": [
-   "a light piece on a white background (it can’t be cut out cleanly)"
+   "a light piece on a white background (it can\u2019t be cut out cleanly)"
   ],
   "starter-olive-hobo-bag": [
    "cut-out not clean enough (left out by review)"
@@ -6195,6 +6084,24 @@
   ],
   "starter-sage-satin-blouse": [
    "taken out on review: trousers added, twice"
+  ],
+  "starter-black-kitten-heels": [
+   "holes where her foot shows through (left out by review)"
+  ],
+  "starter-black-knee-high-boots": [
+   "holes down the side of the boots (left out by review)"
+  ],
+  "starter-black-ankle-boots": [
+   "hollow shaft, her leg shows through (left out by review)"
+  ],
+  "starter-black-loafers": [
+   "torn shape (left out by review)"
+  ],
+  "starter-black-pointed-pumps": [
+   "only the toes came out (left out by review)"
+  ],
+  "starter-white-pointed-kitten-heels": [
+   "only the toes came out (left out by review)"
   ]
  },
  "blocked": {
