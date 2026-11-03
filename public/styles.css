@@ -883,11 +883,11 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 body.dsheet .undobar { display: none; }
 
 /* ── carousel tiles: one size for every tile, a whole number per row (3 on a phone, 4 beside the model, 5 on an iPad held upright) ── */
-.finder .car-row { --per: 3; --gap: 10px; gap: var(--gap); scroll-snap-type: x mandatory; scroll-padding-inline: 0; padding: 4px 2px 10px; }
-.finder .car-row > .tile { flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); width: calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); min-width: 0; scroll-snap-align: start; }
-.finder .car-row > .tile > .pick, .dress.dollmode .finder .car-row > .tile > .pick { flex: 1 1 auto; width: 100%; min-width: 0; margin: 0; padding: 8px 8px 10px; border-radius: 16px; display: grid; grid-template-rows: auto auto; gap: 6px; box-shadow: 0 4px 12px #0003; }
-.finder .car-row > .tile > .pick img, .dress.dollmode .finder .car-row > .tile > .pick img { width: 100%; height: auto; aspect-ratio: 1 / 1.1; object-fit: contain; }
-.finder .car-row > .tile > .pick span, .dress.dollmode .finder .car-row > .tile > .pick span { font-size: 12px; line-height: 1.25; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.finder .car-row { --per: 3; --gap: 10px; gap: var(--gap); scroll-snap-type: x mandatory; scroll-padding-inline: 6px; padding: 6px 6px 12px; }
+.finder .car-row > .tile { flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); width: calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); max-width: calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); min-width: 0; scroll-snap-align: start; display: block; }
+.finder .car-row > .tile > .pick, .dress.dollmode .finder .car-row > .tile > .pick { flex: 1 1 auto; width: 100%; min-width: 0; margin: 0; padding: 8px 8px 10px; border-radius: 16px; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 6px; box-sizing: border-box; overflow: hidden; box-shadow: 0 4px 12px #0003; }
+.finder .car-row > .tile > .pick img, .dress.dollmode .finder .car-row > .tile > .pick img { width: 100%; height: auto; max-width: 100%; min-width: 0; aspect-ratio: 1 / 1.1; object-fit: contain; display: block; }
+.finder .car-row > .tile > .pick span, .dress.dollmode .finder .car-row > .tile > .pick span { font-size: 12px; line-height: 1.25; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; max-width: 100%; }
 .finder .car-row > .tile > .tile-x { top: 6px; right: 6px; }
 @media (min-width: 600px) and (max-width: 919px) { .finder .car-row { --per: 5; } }
 @media (min-width: 920px) { .finder .car-row { --per: 4; --gap: 12px; } }
