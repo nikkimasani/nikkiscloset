@@ -486,7 +486,7 @@ try {
   ok(true, 'non-Pinterest links are refused');
   await p11.fill('#plink', `http://localhost:${FAL}/pin/1`); await p11.click('[data-act=pinfetch]');
   await p11.waitForSelector('.drop img');
-  ok((await p11.inputValue('#plink')).endsWith('/pin/1') && (await p11.locator('.pal span').count()) > 0, 'a pin link fetches the picture into Inspo and keeps the link');
+  ok((await p11.inputValue('#plink')).endsWith('/pin/1') && (await p11.locator('#iresult .stage').count()) > 0, 'a pin link fetches the picture into Inspo and keeps the link');
 
   // ── phase 1: adding pieces (link, paste, auto cutout, shared files, deep links) ──
   const prod = (url, pass = 'letmein') => api('/api/product', { method: 'POST', headers: { 'x-app-passcode': pass, 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
@@ -782,7 +782,7 @@ try {
     ok(cf.tries['starter-cream-crochet-cami'] === 2 && await pS.locator('.startertile.ready[data-id=starter-cream-crochet-cami]').count() === 1, 'a drawing where she isn’t wearing the piece is remade automatically, and the remake is Ready');
     ok(cf.tries['starter-navy-halter-top'] === 3 && /Needs review\s+\S/.test(await pS.locator('.startertile[data-id=starter-navy-halter-top]').innerText()), 'after 2 automatic remakes a piece that still can’t be found is shown as Needs review, with the reason');
     ok(await pS.evaluate(() => window.__closet.items.length) === 0, 'nothing is added before you approve');
-    const spent = () => cf.wears.length * 57.5 + cf.calls.length * 57.6 + cf.looks.length * 10.7;
+    const spent = () => cf.wears.length * 57.5 + cf.calls.length * 57.6 + cf.looks.length * 10.7 + (cf.describes || 0) * 13.1; // (13.1: an inspo picture looked at by the AI)
     const neuronsShown = async () => { for (let t = 0; t < 50; t++) { if (new RegExp(`Neurons used today: ${Math.round(spent()).toLocaleString('en-US')} of 10,000`).test(await pS.locator('.sheet').innerText())) return true; await pS.waitForTimeout(100); } return false; }; // (the last call's count can land a moment after the tiles)
     ok(await neuronsShown(), `neurons used today are tracked (${Math.round(spent())})`);
     const srcs = await pS.locator('.startertile img').evaluateAll((im) => im.map((i) => i.src));
@@ -797,7 +797,7 @@ try {
     await pS.click('.startertile >> nth=3'); await pS.waitForFunction(() => document.querySelectorAll('.startertile.ok').length === 20);
     ok(cf.wears.length === 24, 'tapping a picture makes it again');
     await pS.click('#sbok'); await pS.waitForFunction((n) => window.__closet.items.length === n, nReady);
-    ok(Math.abs(cf.used - spent()) < 0.5, `the day's neurons are counted on the server (${cf.used})`);
+    ok(Math.abs(cf.used - spent()) < 0.5, `the day's neurons are counted on the server (${cf.used} vs ${spent()}, describes ${cf.describes})`);
     const its = await pS.evaluate(() => Promise.all(window.__closet.items.map(async (i) => { const b = i.worn && await createImageBitmap(i.worn); return { s: i.source, t: i.type, o: i.occasions, c: i.color, w: !!i.cutout, id: i.starterId, bytes: i.original?.size, ready: i.ready, made: i.made, worn: b ? [b.width, b.height] : null }; })));
     ok(its.every((i) => i.s === 'starter' && i.w && i.c?.hex && i.o.length && i.id && i.made === 'model' && i.worn?.join() === '896,1776') && its.some((i) => i.t === 'bodysuits') && its.some((i) => i.t === 'tanks'), 'approved pieces are saved with type, colours, occasions, source Starter and the worn picture the size of the model');
     ok(its.every((i) => i.bytes === cf.sent[i.id]), 'every piece keeps the very picture Cloudflare drew for it (no mix-ups between pieces)');
@@ -850,9 +850,9 @@ try {
   {
     const pI = await mk(); await pI.evaluate(() => localStorage.setItem('aipass', 'letmein'));
     await pI.click('[data-view=inspo]'); await pI.setInputFiles('#ifile', new URL('./fixtures/shot_dress.png', import.meta.url).pathname);
-    await pI.waitForSelector('[data-act=inspoideas]'); const w0 = cf.wears.length;
-    await pI.click('[data-act=inspoideas]'); await pI.waitForSelector('.idea');
+    const w0 = cf.wears.length; await pI.waitForSelector('.idea'); // (with the passcode saved, the AI looks at the picture straight away)
     ok(await pI.locator('.idea').count() === 2 && /Camel wrap coat/.test(await pI.locator('.ideas').innerText()), 'an AI lists the pieces in an inspo picture (only kinds it can make for the model)');
+    ok(await pI.locator('#iwant [data-s=outer].on').count() === 1 && await pI.locator('#iwant [data-s=bottom].on').count() === 1 && await pI.locator('#iwant [data-s=top].on').count() === 0, 'the pieces it saw set what to look for');
     await pI.click('[data-act=makeidea][data-v="0"]'); await pI.waitForSelector('.idea b.ok', { timeout: 30000 });
     const made = await pI.evaluate(() => window.__closet.items.map((i) => ({ n: i.name, t: i.type, made: i.made, worn: !!i.worn?.size })));
     ok(cf.wears.length === w0 + 1 && /Dress her in only a camel belted wool wrap coat, knee length, worn open/.test(cf.wears.at(-1).prompt) && made.length === 1 && made[0].n === 'Camel wrap coat' && made[0].made === 'model' && made[0].worn,

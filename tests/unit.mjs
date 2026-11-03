@@ -657,3 +657,20 @@ test('the green-screen key: what FLUX draws of the body is keyed, fabric is not 
   assert.ok(!isKeyed(10, 10, 12, green), 'black (no hue to trust)');
   assert.equal(keyFor({ name: 'Light denim maxi skirt', colors: ['light denim'] }).bg.name, 'magenta', 'denim gets a magenta backdrop');
 });
+
+import { matchPieces, pieceScore } from '../public/js/stylist.js';
+import { hexOfName } from '../public/js/color.js';
+test('inspo: each piece seen in a photo is matched by its own colour and kind, not the photo’s background', () => {
+  assert.equal(hexOfName('powder blue'), hexOfName('light blue')); assert.ok(hexOfName('Ivory')); assert.equal(hexOfName('sparkly'), '');
+  const items = [
+    { id: 'a', name: 'Black satin wrap blouse', type: 'tops', color: { hex: '#1a1a1a' } }, { id: 'b', name: 'White square-neck top', type: 'tops', color: { hex: '#f5f5f2' } },
+    { id: 'c', name: 'Black flare pants', type: 'bottoms', color: { hex: '#1a1a1a' } }, { id: 'd', name: 'Light blue tailored trousers', type: 'bottoms', color: { hex: '#a9c0dc' } },
+    { id: 'e', name: 'Black strappy heels', type: 'shoes', color: { hex: '#1a1a1a' } }, { id: 'f', name: 'White pointed pumps', type: 'shoes', color: { hex: '#f2f0ea' } },
+  ];
+  const seen = matchPieces(items, [
+    { name: 'White square neck top', type: 'tops', colors: ['white'], detail: 'fitted, square neckline' }, { name: 'Light blue trousers', type: 'bottoms', colors: ['light blue'], detail: 'high-waisted, tapered' },
+    { name: 'White pointed heels', type: 'shoes', colors: ['white'], detail: 'pointed toe pumps' }, { name: 'White cropped cardigan', type: 'outerwear', colors: ['white'], detail: 'cropped knit' },
+  ]);
+  assert.deepEqual(seen.map((s) => s.best?.item.id ?? null), ['b', 'd', 'f', null]);
+  assert.ok(pieceScore(items[2], { name: 'Light blue trousers', type: 'bottoms', colors: ['light blue'] }) < 60, 'black flares are not a match for light blue trousers');
+});

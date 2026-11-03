@@ -1,5 +1,5 @@
 // The "stylist": colour-aware outfit matching against Pinterest-style inspo, plus a random OOTD picker.
-import { hexDist, palette } from './color.js';
+import { hexDist, hexOfName, palette } from './color.js';
 import { TYPES, slotOf } from './data.js';
 
 /** 0-100: how close an item's colour is to the nearest colour in the inspo palette. */
@@ -28,16 +28,47 @@ function rank(items, slot, pal, occasion, wearCounts) {
  * @param {string[]} wanted slots seen in the inspo (dress|top|bottom|outer|shoes|bag)
  * @returns {{picks: Record<string,{item,color}>, gaps: {slot,hex}[]}}
  */
-export function matchInspo(items, pal, { wanted, occasion, wearCounts = {} }) {
+export function matchInspo(items, pal, { wanted, occasion, wearCounts = {}, regions = {} }) {
   if (!pal.length) return { picks: {}, gaps: [] }; // no usable colours in the picture (e.g. fully transparent)
   const slots = wanted.includes('dress') ? wanted.filter((s) => s !== 'top' && s !== 'bottom') : wanted;
   const picks = {}, gaps = [];
   for (const slot of slots) {
-    const best = rank(items, slot, pal, occasion, wearCounts)[0];
+    const best = rank(items, slot, regions[slot]?.length ? regions[slot] : pal, occasion, wearCounts)[0]; // (each slot against the colours where that piece is in the photo, when known)
     if (best && best.color >= 35) picks[slot] = best;
     else gaps.push({ slot, hex: pal[Math.min(gaps.length + 1, pal.length - 1)]?.hex || pal[0]?.hex, closest: best });
   }
   return { picks, gaps };
+}
+
+// Words that name a kind of garment: a closet piece sharing one with a piece in the photo is the same kind of thing (a cardigan for a cardigan).
+const KINDS = [['cardigan'], ['blazer', 'suit jacket'], ['trench'], ['coat', 'overcoat'], ['jacket', 'bomber', 'shacket'], ['sweater', 'jumper', 'knit', 'pullover'], ['hoodie', 'sweatshirt'], ['turtleneck', 'mock neck'], ['shirt', 'button-down', 'button down', 'blouse'],
+  ['tee', 't-shirt', 't shirt'], ['cami', 'camisole', 'tank', 'strappy top'], ['corset', 'bustier'], ['bodysuit'], ['crop top', 'cropped top'], ['jeans', 'denim'], ['trousers', 'pants', 'slacks', 'chinos'], ['leggings'], ['shorts'], ['skirt'], ['dress', 'gown'],
+  ['heels', 'pumps', 'stilettos', 'slingbacks', 'mules'], ['flats', 'ballet', 'loafers'], ['sneakers', 'trainers'], ['boots', 'booties'], ['sandals']];
+const kindsIn = (text) => { const s = ` ${String(text || '').toLowerCase()} `; return KINDS.filter((ws) => ws.some((w) => new RegExp(`[^a-z]${w}s?[^a-z]`).test(s))).map((ws) => ws[0]); };
+
+/** 0-100: how close a closet piece is to one seen in a photo, by colour (most of it) and by being the same kind of garment. */
+export function pieceScore(item, piece) {
+  const want = (piece.colors || []).map(hexOfName).filter(Boolean);
+  const color = want.length && item.color ? Math.max(...want.map((h) => Math.max(0, 100 - hexDist(item.color.hex, h) * 2.2))) : 40;
+  const pk = kindsIn(`${piece.name} ${piece.detail || ''}`), ik = kindsIn(item.name);
+  const kind = pk.length && ik.some((k) => pk.includes(k)) ? 100 : item.type === piece.type ? 55 : 25;
+  return Math.round(color * (0.55 + 0.45 * kind / 100)); // (the wrong colour is never a close match, however alike the cut)
+}
+
+/**
+ * The closest closet piece to each piece an AI saw in the photo (same slot only).
+ * @returns {{piece, best: {item, score}|null}[]}
+ */
+export function matchPieces(items, pieces, { occasion, wearCounts = {} } = {}) {
+  return pieces.map((piece) => {
+    const slot = slotOf(piece.type);
+    const best = items.filter((i) => slotOf(i.type) === slot).map((item) => {
+      const score = pieceScore(item, piece);
+      const nudge = (occasion && item.occasions?.includes(occasion) ? 3 : 0) + (item.source === 'starter' ? 0 : 2) + Math.max(0, 1 - (wearCounts[item.id] || 0)); // (tie-breakers only)
+      return { item, score, rank: score + nudge };
+    }).sort((a, b) => b.rank - a.rank)[0] || null;
+    return { piece, best };
+  });
 }
 
 /** Does a piece suit this weather band? (pieces with no season count as all-season) */

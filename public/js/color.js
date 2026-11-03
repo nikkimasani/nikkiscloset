@@ -60,3 +60,17 @@ export function palette(canvas, n = 5, minDist = 16) {
   const total = picked.reduce((a, p) => a + p.count, 0) || 1;
   return picked.map((p) => ({ hex: hex(...p.rgb), share: p.count / total }));
 }
+
+// A colour word ("powder blue", "ivory", "light grey") as one of the named colours' hex, or '' if none is recognised.
+const ALIAS = { ivory: 'Cream', 'off white': 'Cream', 'off-white': 'Cream', ecru: 'Cream', oatmeal: 'Beige', nude: 'Beige', sand: 'Beige', taupe: 'Beige', khaki: 'Tan', cognac: 'Tan', chocolate: 'Brown', espresso: 'Brown', mocha: 'Brown',
+  gray: 'Grey', 'light gray': 'Grey', 'light grey': 'Grey', heather: 'Grey', 'dark grey': 'Charcoal', 'dark gray': 'Charcoal', graphite: 'Charcoal', jet: 'Black', ebony: 'Black',
+  'powder blue': 'Light Blue', 'baby blue': 'Light Blue', 'sky blue': 'Light Blue', 'pale blue': 'Light Blue', 'dusty blue': 'Light Blue', 'blue grey': 'Light Blue', 'blue-grey': 'Light Blue', 'grey blue': 'Light Blue', 'gray blue': 'Light Blue', periwinkle: 'Lavender', cobalt: 'Blue', royal: 'Blue', indigo: 'Denim', chambray: 'Denim',
+  'navy blue': 'Navy', midnight: 'Navy', emerald: 'Green', forest: 'Green', 'hunter green': 'Green', mint: 'Sage', khakigreen: 'Olive', army: 'Olive', mustard: 'Yellow', butter: 'Yellow', lemon: 'Yellow',
+  terracotta: 'Rust', copper: 'Rust', coral: 'Orange', peach: 'Blush', wine: 'Burgundy', maroon: 'Burgundy', oxblood: 'Burgundy', plum: 'Burgundy', crimson: 'Red', scarlet: 'Red', cherry: 'Red', fuchsia: 'Hot Pink', magenta: 'Hot Pink',
+  rose: 'Pink', 'dusty pink': 'Blush', 'pale pink': 'Blush', lilac: 'Lavender', mauve: 'Lavender', violet: 'Purple', champagne: 'Cream', metallic: 'Silver' };
+const WORDS = [...Object.keys(ALIAS).map((k) => [k, ALIAS[k]]), ...Object.keys(NAMED).map((k) => [k.toLowerCase(), k])].sort((a, b) => b[0].length - a[0].length);
+export function hexOfName(name) {
+  const s = ` ${String(name || '').toLowerCase().replace(/[^a-z -]/g, ' ')} `;
+  const hit = WORDS.find(([w]) => s.includes(` ${w} `) || s.includes(` ${w}-`) || s.includes(`-${w} `));
+  return hit ? NAMED[hit[1]] : '';
+}
