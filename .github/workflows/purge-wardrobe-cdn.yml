@@ -1,0 +1,21 @@
+name: refresh wardrobe pictures on the CDN
+# Vercel serves /starter/made/* from jsDelivr (see vercel.json), which caches main for up to 12 hours.
+# When new or remade pieces reach main, this asks jsDelivr to fetch them again right away.
+on:
+  push:
+    branches: [main]
+    paths: ['public/starter/made/**']
+  workflow_dispatch:
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - name: Purge changed pictures and the index
+        run: |
+          base=https://purge.jsdelivr.net/gh/${{ github.repository }}@main
+          files=$( (git diff --name-only HEAD~1 HEAD -- public/starter/made 2>/dev/null; echo public/starter/made/index.json) | sort -u)
+          for f in $files; do
+            curl -fsS --retry 2 "$base/$f" >/dev/null && echo "purged $f" || echo "::warning::could not purge $f"
+          done
