@@ -892,3 +892,14 @@ body.dsheet .undobar { display: none; }
 @media (min-width: 600px) and (max-width: 919px) { .finder .car-row { --per: 5; } }
 @media (min-width: 920px) { .finder .car-row { --per: 4; --gap: 12px; } }
 @media (min-width: 1300px) { .finder .car-row { --per: 5; } }
+/* Inspo: each piece in the look, the closest one you have, and a button to make it */
+.idea { display: grid; grid-template-columns: 1fr; gap: 8px; align-items: stretch; }
+.idea .idea-what b { font-size: 14px; }
+.idea .idea-have { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; background: rgba(255,255,255,.05); }
+.idea .idea-have img { width: 44px; height: 44px; object-fit: contain; border-radius: 8px; background: var(--tile); flex: 0 0 auto; }
+.idea .idea-have > div { display: grid; min-width: 0; }
+.idea .idea-have > div b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.idea .idea-have .muted { font-size: 11px; }
+.idea button { justify-self: start; }
+.score.meh { color: #ffd27a; }
+@media (min-width: 700px) { .idea { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; } }

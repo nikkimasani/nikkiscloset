@@ -4,7 +4,7 @@ import { OCCASIONS, OCCASION_EMOJI, SEASONS, TYPES, SLOTS, SLOT_LABEL, slotOf, w
 import { SECTIONS, HOTSPOTS, sectionOf, layoutSection, artBox, trackLayout, bindCloset } from './closet.js';
 import { loadImage, toCanvas, removeBackground, canvasToBlob, trimTransparent } from './cutout.js';
 import { palette, colorName } from './color.js';
-import { matchInspo, styleMe } from './stylist.js';
+import { matchInspo, matchPieces, styleMe } from './stylist.js';
 import { outfitMeters } from './meters.js';
 import { closetInsights, streak as wearStreak } from './insights.js';
 import { syncState, connect as syncConnect, disconnect as syncDisconnect, syncNow } from './sync.js';
@@ -1551,16 +1551,7 @@ function renderInspo() {
   if (d) showMatch();
 }
 
-/** Inspo: the pieces an AI sees in the picture, each with a button that draws it on the model and adds it to the closet. */
-function ideasHTML(d) {
-  if (!d.ideas) return `<p class="muted">An AI lists the pieces in this picture; tap one to have it made for your model (about ${Math.round(wearAI.WEAR_NEURONS + 12)} neurons each, free tier). The pin’s own picture is never put on her.</p><button class="ghost" data-act="inspoideas">✨ What’s in this look?</button>`;
-  if (d.ideas.busy) return '<p class="muted" role="status">Looking at the picture…</p>';
-  if (d.ideas.error) return `<p class="muted" role="alert">${esc(d.ideas.error)}</p><button class="ghost" data-act="inspoideas">Try again</button>`;
-  if (!d.ideas.length) return '<p class="muted">No pieces found in this picture.</p>';
-  return `<div class="ideas">${d.ideas.map((p, k) => `<div class="idea"><div><b>${esc(p.name)}</b><div class="muted">${esc(SLOT_LABEL[slotOf(p.type)] || p.type)} · ${esc(p.detail)}</div>${p.error ? `<div class="muted" role="alert">${esc(p.error)}</div>` : ''}</div>
-    ${p.made ? '<b class="ok">✓ In your closet</b>' : `<button class="ghost" data-act="makeidea" data-v="${k}" ${p.busy ? 'disabled' : ''}>${p.busy ? 'Making…' : 'Make it for the model'}</button>`}</div>`).join('')}</div>`;
-}
-const paintIdeas = () => { const el = $('#ideas'); if (el && S.inspo) el.innerHTML = ideasHTML(S.inspo); };
+const paintIdeas = () => showMatch();
 /** One piece drawn on the model and added to the closet (remade up to twice if the piece can't be found in the picture). */
 async function makePieceForModel(piece, pass, { occasion = '' } = {}) {
   const pack = dollPack || await loadPack(); if (!pack) throw new Error('The model picture didn’t load. Try again.');
@@ -1577,31 +1568,66 @@ async function makePieceForModel(piece, pass, { occasion = '' } = {}) {
   throw new Error(`It didn’t come out right (${(last?.check.reasons || []).join('; ')}). Try again.`);
 }
 
+/** The colours where each piece usually is in an outfit photo (middle of the picture, by height), so a top is matched to the top's colours and not the wall behind. */
+function inspoRegions(canvas) {
+  const band = (y0, y1) => { const w = canvas.width, h = canvas.height, c = document.createElement('canvas'); c.width = Math.round(w * 0.5); c.height = Math.max(1, Math.round(h * (y1 - y0)));
+    c.getContext('2d').drawImage(canvas, w * 0.25, h * y0, c.width, c.height, 0, 0, c.width, c.height); return palette(c, 3, 18); };
+  return { top: band(0.2, 0.45), outer: band(0.2, 0.5), dress: band(0.2, 0.75), bottom: band(0.5, 0.8), shoes: band(0.86, 1), bag: band(0.35, 0.7) };
+}
+/** Ask the AI what's in the inspo picture; the pieces it lists drive the match and can each be made for the model. */
+async function describeInspo(d, pass) {
+  d.ideas = { busy: true }; if (S.inspo === d) showMatch();
+  try {
+    const c = toCanvas((await loadImage(d.blob)).img, 512), img = c.toDataURL('image/jpeg', 0.85);
+    const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ describe: true, image: img }) });
+    const j = await r.json().catch(() => ({})); if (Number.isFinite(j.used)) starter.setUsed(j.used);
+    if (!r.ok) throw new Error(j.error || `Failed (${r.status})`);
+    d.ideas = j.pieces || [];
+    if (d.ideas.length) d.wanted = [...new Set(d.ideas.map((p) => slotOf(p.type)))];
+  } catch (e) { d.ideas = { error: e.message }; if (/passcode/i.test(e.message)) store.set('aipass', ''); }
+  if (S.inspo === d && S.view === 'inspo') renderInspo();
+}
+
 async function setInspoFile(file, extra = {}) {
   try {
     const { img, url: u } = await loadImage(file);
     const raw = toCanvas(img, 700), canvas = document.createElement('canvas'); // flatten onto white so transparent PNGs still have colours
     canvas.width = raw.width; canvas.height = raw.height;
     const cg = canvas.getContext('2d'); cg.fillStyle = '#fff'; cg.fillRect(0, 0, canvas.width, canvas.height); cg.drawImage(raw, 0, 0);
-    S.inspo = { blob: file, url: u, palette: palette(canvas, 5, 18), link: '', occasion: '', wanted: ['top', 'bottom', 'shoes'], ...extra };
+    S.inspo = { blob: file, url: u, palette: palette(canvas, 5, 18), regions: inspoRegions(canvas), link: '', occasion: '', wanted: ['top', 'bottom', 'shoes'], ...extra };
     renderInspo();
+    const pass = store.get('aipass', ''); if (pass) describeInspo(S.inspo, pass); // (an AI says what's in the picture straight away; about 12 neurons)
   } catch (e) { toast(e.message); }
 }
 
 function showMatch() {
   const d = S.inspo, el = $('#iresult'); if (!d || !el) return;
-  const { picks, gaps } = matchInspo(S.items, d.palette, { wanted: d.wanted, occasion: d.occasion, wearCounts: wearCounts() });
+  const seen = Array.isArray(d.ideas) && d.ideas.length ? matchPieces(S.items, d.ideas, { occasion: d.occasion, wearCounts: wearCounts() }) : null;
+  const pct = (n) => `<span class="score ${n >= 75 ? '' : 'meh'}" aria-label="${n} percent match">${n}%</span>`;
+  let body, picks = {};
+  if (seen) { // what the AI saw, each with the closest piece you have and a button to make it for the model
+    for (const { piece, best } of seen) { const s = slotOf(piece.type); if (best && best.score >= 60 && !(picks[s] && picks[s].score >= best.score)) picks[s] = best; }
+    const missing = seen.filter(({ piece, best }) => !piece.made && !(best && best.score >= 75)).length;
+    body = `<h3>In this look</h3><div class="ideas">${seen.map(({ piece: p, best }, k) => `<div class="idea"><div class="idea-what"><b>${esc(p.name)}</b><div class="muted">${esc(SLOT_LABEL[slotOf(p.type)] || p.type)} · ${esc(p.detail)}</div>${p.error ? `<div class="muted" role="alert">${esc(p.error)}</div>` : ''}</div>
+      ${best ? `<div class="idea-have"><img src="${url(best.item.id)}" alt=""><div><span class="muted">Closest you have</span><b>${esc(best.item.name)}</b></div>${pct(best.score)}</div>` : '<div class="idea-have muted">Nothing like it in your closet yet</div>'}
+      ${p.made ? '<b class="ok">✓ Made for you</b>' : `<button class="${best && best.score >= 75 ? 'ghost' : 'primary'}" data-act="makeidea" data-v="${k}" ${p.busy ? 'disabled' : ''}>${p.busy ? 'Making…' : 'Make it for the model'}</button>`}</div>`).join('')}</div>
+      ${missing > 1 ? `<button class="ghost" data-act="makeall" style="margin-top:8px">✨ Make the ${missing} missing pieces (about ${Math.round(missing * (wearAI.WEAR_NEURONS + 12))} neurons)</button>` : ''}`;
+  } else {
+    const m = matchInspo(S.items, d.palette, { wanted: d.wanted, occasion: d.occasion, wearCounts: wearCounts(), regions: d.regions });
+    picks = m.picks;
+    const rows = SLOTS.filter((s) => picks[s]).map((s) => `<div class="match"><img src="${url(picks[s].item.id)}" alt=""><div><b>${esc(picks[s].item.name)}</b><div class="muted">${SLOT_LABEL[s]} · ${esc(picks[s].item.color?.name || '')}</div></div>${pct(picks[s].color)}</div>`).join('');
+    const ai = !d.ideas ? `<p class="muted">Let an AI look at the picture: it names each piece (a white cardigan, light blue trousers…), finds the closest one you have and can make the rest for your model (about 12 neurons to look).</p><button class="primary" data-act="inspoideas">✨ What’s in this look?</button>`
+      : d.ideas.busy ? '<p class="muted" role="status">Looking at the picture…</p>'
+      : d.ideas.error ? `<p class="muted" role="alert">${esc(d.ideas.error)}</p><button class="ghost" data-act="inspoideas">Try again</button>` : '<p class="muted">No pieces found in this picture.</p>';
+    body = `<div id="ideas">${ai}</div><h3>Closest by colour</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
+      ${m.gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>. <button class="chip" data-act="wishgap" data-slot="${g.slot}" data-hex="${g.hex}">+ Wishlist</button></div>`).join('')}`;
+  }
   d.picks = Object.fromEntries(Object.entries(picks).map(([s, p]) => [s, p.item.id]));
-  const rows = SLOTS.filter((s) => picks[s]).map((s) => `<div class="match"><img src="${url(picks[s].item.id)}" alt=""><div><b>${esc(picks[s].item.name)}</b><div class="muted">${SLOT_LABEL[s]} · ${esc(picks[s].item.color?.name || '')}</div></div><span class="score" aria-label="${picks[s].color} percent colour match">${picks[s].color}%</span></div>`).join('');
+  const any = Object.keys(d.picks).length;
   el.innerHTML = `<div class="row" style="align-items:flex-start;gap:20px">
     <div style="flex:0 0 220px"><div class="stage">${figure(d.picks)}</div></div>
-    <div class="grow" style="min-width:240px"><h3>Inspo palette</h3>
-      <div class="pal">${d.palette.map((p) => `<span style="background:${p.hex};flex:${Math.max(p.share, .08)}">${colorName(p.hex)}</span>`).join('')}</div>
-      <h3>Your closest look</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
-      <h3>Make pieces like these</h3>
-      <div id="ideas">${ideasHTML(d)}</div>
-      ${gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>. <button class="chip" data-act="wishgap" data-slot="${g.slot}" data-hex="${g.hex}">+ Wishlist</button></div>`).join('')}
-      <div class="row" style="margin-top:12px"><button class="primary" data-act="tryinspo" ${rows ? '' : 'disabled'}>Try this on</button></div>
+    <div class="grow" style="min-width:240px">${body}
+      <div class="row" style="margin-top:12px"><button class="primary" data-act="tryinspo" ${any ? '' : 'disabled'}>Try this on</button></div>
     </div></div>`;
 }
 
@@ -1758,15 +1784,18 @@ async function handleClick(e) {
     case 'inspoideas': {
       const d = S.inspo; if (!d) return;
       const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim(); if (!pass) return; store.set('aipass', pass);
-      d.ideas = { busy: true }; paintIdeas();
-      try {
-        const c = toCanvas((await loadImage(d.blob)).img, 512), img = c.toDataURL('image/jpeg', 0.85);
-        const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ describe: true, image: img }) });
-        const j = await r.json().catch(() => ({})); if (Number.isFinite(j.used)) starter.setUsed(j.used);
-        if (!r.ok) throw new Error(j.error || `Failed (${r.status})`);
-        d.ideas = j.pieces || [];
-      } catch (e) { d.ideas = { error: e.message }; if (/passcode/i.test(e.message)) store.set('aipass', ''); }
-      return paintIdeas();
+      return describeInspo(d, pass);
+    }
+    case 'makeall': { // every piece in the look you don't have something close to, one after another
+      const d = S.inspo, pass = store.get('aipass', ''); if (!d || !pass || !Array.isArray(d.ideas)) return;
+      const todo = matchPieces(S.items, d.ideas, {}).filter(({ piece, best }) => !piece.made && !piece.busy && !(best && best.score >= 75)).map(({ piece }) => piece);
+      for (const p of todo) {
+        p.busy = true; p.error = ''; paintIdeas();
+        try { await makePieceForModel(p, pass, { occasion: d.occasion }); p.made = true; toast(`${p.name} added to your closet ✓`); }
+        catch (e) { p.error = e.message; p.busy = false; paintIdeas(); if (/allowance|passcode/i.test(e.message)) break; continue; }
+        p.busy = false; paintIdeas();
+      }
+      return;
     }
     case 'makeidea': {
       const d = S.inspo, p = d?.ideas?.[+v]; if (!p || p.busy) return;
