@@ -102,13 +102,25 @@ async function load() {
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
-  Promise.all(S.items.map(analyseItem)).then(() => { if (S.view === 'tryon' && dollPack) mountStage(); });
+  analyseAll();
   recheckStarters(); // the dashed selection box and tap-to-select need each cutout's real bounds
   importPreloaded();
 }
 
 /** The preloaded wardrobe (public/starter/made/, made once by the preload workflow): pieces this closet doesn't have yet are added as
  *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
+/** A pause that lets the page handle taps and draw (between pieces of a long job). */
+const breather = () => new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 120 }) : setTimeout(r, 16)));
+/** A background worker that fetches a preloaded piece and places it on a model-size picture; null where the browser can't (no OffscreenCanvas). */
+function composeWorker() {
+  if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined' || !OffscreenCanvas.prototype.convertToBlob) return null;
+  let w; try { w = new Worker('/js/compose-worker.js'); } catch { return null; }
+  const waiting = new Map();
+  w.onmessage = (e) => { const f = waiting.get(e.data.id); if (f) { waiting.delete(e.data.id); e.data.error ? f[1](new Error(e.data.error)) : f[0]({ cutout: e.data.cutout, worn: e.data.worn || undefined }); } };
+  w.onerror = () => { for (const [, f] of waiting) f[1](new Error('worker failed')); waiting.clear(); };
+  return (id, url, box, size) => new Promise((ok, no) => { waiting.set(id, [ok, no]); w.postMessage({ id, url: new URL(url, location.href).href, box, size }); setTimeout(() => waiting.has(id) && (waiting.delete(id), no(new Error('timeout'))), 30000); });
+}
+
 async function importPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
   if (!store.get('restore_x_v1', '')) { store.set('starter_removed', '[]'); store.set('preloaded', ''); store.set('restore_x_v1', '1'); } // (the ✕ briefly deleted pieces instead of taking them off: bring them back once)
@@ -125,8 +137,11 @@ async function importPreloaded() {
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
   const pack = dollPack || await loadPack(); if (!pack) return;
   let added = 0, updated = 0;
+  const worker = composeWorker(); let busyUntil = 0;
   const pictures = async (sid, p) => { // the closet picture, and for a piece drawn on her, the piece placed on a picture the size of the model
-    const cutout = await (await fetch(`/starter/made/${sid}.webp?v=${p.t || idx.version}`)).blob(); let worn;
+    const src = `/starter/made/${sid}.webp?v=${p.t || idx.version}`;
+    if (worker) { const r = await worker(sid, src, p.kind === 'worn' ? p.box : null, pack.size).catch(() => null); if (r) return r; } // (in the background, so the app keeps responding)
+    const cutout = await (await fetch(src)).blob(); let worn;
     if (p.kind === 'worn') {
       const { img, url: u } = await loadImage(cutout), c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
       c.getContext('2d').drawImage(img, p.box.x, p.box.y, p.box.w, p.box.h); URL.revokeObjectURL(u); worn = await canvasToBlob(c, 'image/png'); c.width = 0;
@@ -135,6 +150,7 @@ async function importPreloaded() {
   };
   for (const [sid, p] of Object.entries(idx.pieces)) {
     const it = STARTER_ITEMS.find((x) => x.id === sid); if (!it || removed.has(sid)) continue;
+    if (performance.now() > busyUntil) { await breather(); busyUntil = performance.now() + 30; } // (taps and scrolling get a turn between pieces)
     try {
       const mine = S.items.find((i) => i.id === `pre-${sid}`);
       if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
@@ -186,14 +202,28 @@ function bagBodyOf(img, iw, ih) {
 /** Look at a cutout once: its size, where the visible part is, and a small see-through map so a tap picks the piece you actually touched. */
 async function analyseItem(item) {
   if (!item?.cutout) return;
+  let img, done = () => {};
   try {
-    const { img, url: u } = await loadImage(item.cutout); URL.revokeObjectURL(u);
-    const iw = img.naturalWidth, ih = img.naturalHeight, N = 64, c = document.createElement('canvas'); c.width = N; c.height = N;
+    if (typeof createImageBitmap === 'function') { img = await createImageBitmap(item.cutout); done = () => img.close?.(); } // (decoded off the main thread)
+    else { const r = await loadImage(item.cutout); img = r.img; URL.revokeObjectURL(r.url); }
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, N = 64, c = document.createElement('canvas'); c.width = N; c.height = N;
     const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, N, N);
     const d = g.getImageData(0, 0, N, N).data, mask = new Uint8Array(N * N); let x0 = N, y0 = N, x1 = -1, y1 = -1;
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (d[(y * N + x) * 4 + 3] > 40) { mask[y * N + x] = 1; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     S.meta.set(item.id, x1 < 0 ? { iw, ih, bx: 0, by: 0, bw: 1, bh: 1, mask, N } : { iw, ih, bx: x0 / N, by: y0 / N, bw: (x1 - x0 + 1) / N, bh: (y1 - y0 + 1) / N, mask, N, ...(item.type === 'bags' && { body: bagBodyOf(img, iw, ih) }) });
-  } catch { /* an unreadable picture just keeps the full box */ }
+  } catch { /* an unreadable picture just keeps the full box */ } finally { done(); }
+}
+/** Every piece looked at once, one at a time with a pause between (what's on the model first), so opening the app never freezes it. */
+async function analyseAll() {
+  const on = new Set(Object.values(S.outfit || {}));
+  const order = [...S.items].sort((a, b) => on.has(b.id) - on.has(a.id));
+  let shown = false;
+  for (const it of order) {
+    if (!shown && !on.has(it.id)) { shown = true; if (S.view === 'tryon' && dollPack) mountStage(); } // (the model's outfit is ready: draw it)
+    if (S.meta.has(it.id) || !S.items.includes(it)) continue;
+    await analyseItem(it); await breather();
+  }
+  if (S.view === 'tryon' && dollPack) mountStage();
 }
 
 /** slot -> item objects for a {slot: id} map or an id list. */
@@ -327,7 +357,7 @@ function pieceCard(i) {
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
     ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your closet"><span aria-hidden="true">🗑</span></button>`}
-    <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
+    <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt="" loading="lazy" decoding="async"></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
     ${i.price > 0 ? `<div class="meta price">${worn ? `$${(i.price / worn).toFixed(2)}/wear` : `$${i.price.toFixed(2)} · not worn yet`}</div>` : ''}</article>`;
