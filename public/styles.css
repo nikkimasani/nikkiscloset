@@ -861,3 +861,23 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .tile-x:hover, .tile-x:focus-visible { background: #ffe1ea; }
 .piece .tile-x { top: 6px; right: 48px; width: 36px; height: 36px; }
 @media (min-width: 600px) { .car-row .tile .pick { flex-basis: 150px; } }
+
+/* what's on the model, each with a ✕ to take it off */
+.onmodel { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.onmodel .chip.worn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 4px; background: #ffffff1c; }
+.onmodel .chip.worn img { width: 28px; height: 28px; object-fit: contain; border-radius: 8px; background: var(--tile); }
+.onmodel .chip.worn .bare { width: 28px; height: 28px; min-height: 0; border-radius: 50%; background: #ffffff26; display: grid; place-items: center; }
+
+/* Undo / Redo, carousel arrows, Wardrobe delete */
+.dress .tools button:disabled { opacity: .4; }
+.car-nav { margin-left: auto; display: inline-flex; gap: 6px; }
+.car-btn { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: #ffffff14; color: var(--ink); font-size: 22px; line-height: 1; display: grid; place-items: center; }
+.piece .del { position: absolute; z-index: 2; top: 6px; right: 48px; border: 0; background: #ffe1ea; color: #5a1f33; border-radius: 50%; width: 36px; height: 36px; min-height: 36px; font-size: 14px; }
+.toast-undo { margin-left: 8px; min-height: 32px; padding: 2px 12px; border-radius: 99px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.toast .toast-undo { pointer-events: auto; }
+@media (max-width: 599px) { .dress .tools button { font-size: 10.5px; min-height: 46px; } }
+
+.undobar { position: absolute; left: 12px; bottom: 12px; z-index: 5; display: flex; gap: 8px; }
+.undobar button { width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-size: 22px; font-weight: 800; display: grid; place-items: center; }
+.undobar button:disabled { opacity: .35; }
+body.dsheet .undobar { display: none; }

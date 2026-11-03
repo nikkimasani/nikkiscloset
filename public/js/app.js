@@ -56,6 +56,17 @@ function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 3200);
 }
+/** A message with an Undo button (shown a little longer). */
+function toastUndo(msg, undo) {
+  const t = $('#toast'); t.innerHTML = `<span>${esc(msg)}</span> <button class="toast-undo" type="button">Undo</button>`; t.classList.add('show');
+  t.querySelector('.toast-undo').onclick = async (e) => { e.stopPropagation(); t.classList.remove('show'); await undo(); };
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 8000);
+}
+/** Put a deleted piece back in the closet (and take it off the list of preloaded pieces you removed). */
+async function restorePiece(it) {
+  await put('items', it); if (!S.items.some((i) => i.id === it.id)) S.items.push(it); url(it.id, it.cutout); S.meta.delete(it.id); analyseItem(it); queueFit(it);
+  if (it.starterId) { let r; try { r = JSON.parse(store.get('starter_removed', '[]')); } catch { r = []; } store.set('starter_removed', JSON.stringify(r.filter((x) => x !== it.starterId))); }
+}
 
 let lastFocus;
 let modalSeq = 0; // bumps whenever a dialog opens or closes, so slow AI replies can tell they've gone stale
@@ -100,6 +111,7 @@ async function load() {
  *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
 async function importPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
+  if (!store.get('restore_x_v1', '')) { store.set('starter_removed', '[]'); store.set('preloaded', ''); store.set('restore_x_v1', '1'); } // (the ✕ briefly deleted pieces instead of taking them off: bring them back once)
   let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
   if (!idx?.pieces) return;
   // a preloaded piece taken out of the wardrobe on review (now failed or blocked there) leaves the closet too; one you made yours stays
@@ -314,7 +326,7 @@ function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
-    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="tile-x" data-act="rmpiece" data-id="${i.id}" aria-label="Remove ${esc(i.name)} from your closet"><span aria-hidden="true">✕</span></button>`}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your closet"><span aria-hidden="true">🗑</span></button>`}
     <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
@@ -1216,9 +1228,9 @@ function finderHTML() {
   const list = findPieces(), on = new Set(Object.values(S.outfit));
   const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
   const nf = (FIND.color !== 'all') + (FIND.occ !== 'all'), any = FIND.q || FIND.type !== 'all' || nf;
-  const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button><button class="tile-x" data-act="rmpiece" data-id="${i.id}" aria-label="Remove ${esc(i.name)} from your closet"><span aria-hidden="true">✕</span></button></div>`;
+  const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>${on.has(i.id) ? `<button class="tile-x" data-act="unwear" data-id="${i.id}" aria-label="Take ${esc(i.name)} off"><span aria-hidden="true">✕</span></button>` : ''}</div>`;
   // one carousel per kind of piece (swipe sideways through tops, then the next row is bottoms...)
-  const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
+  const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small><span class="car-nav"><button class="car-btn" data-act="carl" aria-label="Back through ${t.label}">‹</button><button class="car-btn" data-act="carr" aria-label="More ${t.label}">›</button></span></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
   return `<section class="finder" aria-label="Your wardrobe">
     <div class="findbar"><input type="search" id="fq" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(FIND.q)}" autocomplete="off">
       <button class="ghost ${S.fOpen ? 'on' : ''}" data-act="ftoggle" aria-expanded="${!!S.fOpen}" aria-controls="ffilters">Filters${nf ? ` · ${nf}` : ''}</button>${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
@@ -1253,6 +1265,7 @@ function renderMirror() {
         ${dollOn() ? '<button class="closetbtn" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>' : ''}
         ${dollOn() && Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}
         ${dollOn() ? tuckBtnHTML(worn) : ''}
+        ${dollOn() ? `<div class="undobar" role="group" aria-label="Undo and redo"><button data-act="undo" ${HIST.back.length ? '' : 'disabled'} aria-label="Undo"><span aria-hidden="true">↶</span></button><button data-act="redo" ${HIST.fwd.length ? '' : 'disabled'} aria-label="Redo"><span aria-hidden="true">↷</span></button></div>` : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
         ${S.cas ? casHTML() : ''}
         ${dollOn() ? dollBarHTML(fit) : ''}
@@ -1593,13 +1606,34 @@ function showMatch() {
 }
 
 /* ───────────────────────── events ───────────────────────── */
+/* ── undo / redo for the outfit: every change to what's on the model can be stepped back and forward ── */
+const HIST = { back: [], fwd: [] };
+const outfitSig = () => JSON.stringify(S.outfit);
+function noteOutfit(before) { if (before === outfitSig()) return; HIST.back.push(before); if (HIST.back.length > 60) HIST.back.shift(); HIST.fwd.length = 0; }
+function stepOutfit(from, to) { if (!from.length) return; to.push(outfitSig()); S.outfit = Object.fromEntries(Object.entries(JSON.parse(from.pop())).filter(([, v]) => itemById(v))); S.adjust = Object.values(S.outfit).at(-1) || null; }
 document.addEventListener('click', async (e) => {
+  const before = outfitSig(); HIST.skip = null;
+  await handleClick(e);
+  if (HIST.skip === null) noteOutfit(before); refreshUndo();
+});
+/** Undo / Redo stay in step with the history without redrawing the page. */
+function refreshUndo() { const u = $('[data-act=undo]'), r = $('[data-act=redo]'); if (u) u.disabled = !HIST.back.length; if (r) r.disabled = !HIST.fwd.length; }
+async function handleClick(e) {
   const nav = e.target.closest('#nav button');
   if (nav) return go(nav.dataset.view);
   const el = e.target.closest('[data-act]'); if (!el) return;
   const { act, id, v } = el.dataset;
   if (el.tagName !== 'INPUT') e.preventDefault(); // let checkboxes toggle
   switch (act) {
+    case 'undo': { const b = outfitSig(); stepOutfit(HIST.back, HIST.fwd); HIST.skip = b; return renderTryon(); }
+    case 'redo': { const b = outfitSig(); stepOutfit(HIST.fwd, HIST.back); HIST.skip = b; return renderTryon(); }
+    case 'carl': case 'carr': { const row = el.closest('.car')?.querySelector('.car-row'); row?.scrollBy({ left: (act === 'carl' ? -1 : 1) * row.clientWidth * 0.9, behavior: 'smooth' }); return; }
+    case 'ftop': return window.scrollTo({ top: 0, behavior: 'smooth' });
+    case 'delpiece': { // Wardrobe only: delete a piece from the closet, with Undo
+      const it = itemById(id); if (!it || !confirm(`Delete “${it.name}” from your closet?`)) return;
+      const copy = { ...it }; await removeItems([id], { byYou: true }); render();
+      return toastUndo(`Deleted “${it.name}”`, async () => { await restorePiece(copy); render(); toast(`“${copy.name}” is back ✓`); });
+    }
     case 'add': return openItemModal(undefined, TYPES[v] ? { type: v } : {});
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
@@ -1674,9 +1708,10 @@ document.addEventListener('click', async (e) => {
     case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
     case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
     case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
-    case 'rmpiece': { // the ✕ on a piece: it leaves the closet (a preloaded one stays gone, even when new pieces arrive)
-      const it = itemById(id); if (!it || !confirm(`Remove “${it.name}” from your closet?`)) return;
-      await removeItems([id], { byYou: true }); toast(`Removed “${it.name}”`); return render();
+    case 'unwear': { // the ✕ on a piece you're wearing takes it off the model (it stays in your closet)
+      for (const k of Object.keys(S.outfit)) if (S.outfit[k] === id) delete S.outfit[k];
+      if (S.adjust === id) S.adjust = Object.values(S.outfit).at(-1) || null;
+      return renderTryon();
     }
     case 'ftoggle': S.fOpen = !S.fOpen; return refreshFinder();
     case 'fclear': Object.assign(FIND, { q: '', type: 'all', color: 'all', occ: 'all', more: 0 }); return refreshFinder();
@@ -1762,7 +1797,7 @@ document.addEventListener('click', async (e) => {
     case 'tryinspo': S.outfit = { ...S.inspo.picks }; S.scene = 'doll'; return go('tryon');
     default: if (planActs[act]) return planActs[act](ctx, el);
   }
-});
+}
 
 document.addEventListener('input', (e) => {
   const t = e.target;
