@@ -5805,24 +5805,6 @@
    ],
    "t": 1793667231594
   },
-  "starter-white-off-shoulder-sweater": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 390,
-    "w": 648,
-    "h": 496
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5f6f6",
-    "name": "White"
-   },
-   "colors": [
-    "#f5f6f6"
-   ],
-   "t": 1793667235691
-  },
   "starter-black-ribbed-tank": {
    "kind": "worn",
    "box": {
@@ -5898,26 +5880,6 @@
    ],
    "t": 1793667284994
   },
-  "starter-chocolate-brown-satin-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 254,
-    "y": 360,
-    "w": 382,
-    "h": 560
-   },
-   "v": 5,
-   "color": {
-    "hex": "#29140b",
-    "name": "Black"
-   },
-   "colors": [
-    "#29140b",
-    "#58352a",
-    "#86574b"
-   ],
-   "t": 1793667291621
-  },
   "starter-navy-fitted-tee": {
    "kind": "worn",
    "box": {
@@ -5954,26 +5916,6 @@
     "#a78b75"
    ],
    "t": 1793667316647
-  },
-  "starter-navy-button-down-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 258,
-    "w": 654,
-    "h": 628
-   },
-   "v": 5,
-   "color": {
-    "hex": "#2a2b66",
-    "name": "Navy"
-   },
-   "colors": [
-    "#2a2b66",
-    "#151439",
-    "#010106"
-   ],
-   "t": 1793667337724
   },
   "starter-grey-button-down-shirt": {
    "kind": "worn",
@@ -6032,27 +5974,6 @@
    ],
    "t": 1793667349375
   },
-  "starter-white-cap-sleeve-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 288,
-    "w": 464,
-    "h": 686
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5f5f6",
-    "name": "White"
-   },
-   "colors": [
-    "#f5f5f6",
-    "#e3c5bc",
-    "#dcc696",
-    "#979797"
-   ],
-   "t": 1793667353313
-  },
   "starter-cream-cap-sleeve-bodysuit": {
    "kind": "worn",
    "box": {
@@ -6070,44 +5991,6 @@
     "#f9e8d8"
    ],
    "t": 1793667357184
-  },
-  "starter-beige-cap-sleeve-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 300,
-    "w": 470,
-    "h": 674
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c7aa97",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c7aa97",
-    "#977969"
-   ],
-   "t": 1793667360341
-  },
-  "starter-camel-cap-sleeve-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 294,
-    "w": 624,
-    "h": 680
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c48b4c",
-    "name": "Tan"
-   },
-   "colors": [
-    "#c48b4c",
-    "#965c29"
-   ],
-   "t": 1793667376501
   },
   "starter-chocolate-brown-cap-sleeve-bodysuit": {
    "kind": "worn",
@@ -6200,26 +6083,6 @@
     "#580627"
    ],
    "t": 1793667397517
-  },
-  "starter-sage-green-cap-sleeve-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 136,
-    "y": 284,
-    "w": 622,
-    "h": 690
-   },
-   "v": 5,
-   "color": {
-    "hex": "#96bca5",
-    "name": "Sage"
-   },
-   "colors": [
-    "#96bca5",
-    "#678668",
-    "#c8a987"
-   ],
-   "t": 1793667401530
   },
   "starter-blush-pink-cap-sleeve-bodysuit": {
    "kind": "worn",
@@ -6372,25 +6235,6 @@
    ],
    "t": 1793667429299
   },
-  "starter-camel-one-shoulder-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 288,
-    "w": 646,
-    "h": 686
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d69a84",
-    "name": "Camel"
-   },
-   "colors": [
-    "#d69a84",
-    "#a86b56"
-   ],
-   "t": 1793667432259
-  },
   "starter-chocolate-brown-one-shoulder-bodysuit": {
    "kind": "worn",
    "box": {
@@ -6484,45 +6328,6 @@
    ],
    "t": 1793667449484
   },
-  "starter-champagne-one-shoulder-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 170,
-    "y": 268,
-    "w": 510,
-    "h": 706
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f8f7f3",
-    "name": "White"
-   },
-   "colors": [
-    "#f8f7f3",
-    "#c7a996",
-    "#987a67"
-   ],
-   "t": 1793667453331
-  },
-  "starter-oatmeal-one-shoulder-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 296,
-    "w": 462,
-    "h": 678
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c4a79b",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c4a79b",
-    "#897568"
-   ],
-   "t": 1793667456464
-  },
   "starter-stone-one-shoulder-bodysuit": {
    "kind": "worn",
    "box": {
@@ -6541,24 +6346,6 @@
     "#493838"
    ],
    "t": 1793667459627
-  },
-  "starter-espresso-one-shoulder-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 298,
-    "w": 454,
-    "h": 676
-   },
-   "v": 5,
-   "color": {
-    "hex": "#5a3825",
-    "name": "Brown"
-   },
-   "colors": [
-    "#5a3825"
-   ],
-   "t": 1793667463611
   },
   "starter-mocha-one-shoulder-bodysuit": {
    "kind": "worn",
@@ -6615,24 +6402,6 @@
    ],
    "t": 1793667475189
   },
-  "starter-white-mock-neck-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 290,
-    "w": 628,
-    "h": 684
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f3f4f6",
-    "name": "White"
-   },
-   "colors": [
-    "#f3f4f6"
-   ],
-   "t": 1793667479131
-  },
   "starter-cream-mock-neck-bodysuit": {
    "kind": "worn",
    "box": {
@@ -6669,25 +6438,6 @@
     "#a58b78"
    ],
    "t": 1793667487195
-  },
-  "starter-chocolate-brown-mock-neck-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 300,
-    "w": 648,
-    "h": 674
-   },
-   "v": 5,
-   "color": {
-    "hex": "#5b3933",
-    "name": "Brown"
-   },
-   "colors": [
-    "#5b3933",
-    "#a86b48"
-   ],
-   "t": 1793667490898
   },
   "starter-grey-mock-neck-bodysuit": {
    "kind": "worn",
@@ -6744,44 +6494,6 @@
     "#535b35"
    ],
    "t": 1793667501849
-  },
-  "starter-burgundy-mock-neck-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 288,
-    "w": 634,
-    "h": 686
-   },
-   "v": 5,
-   "color": {
-    "hex": "#751535",
-    "name": "Burgundy"
-   },
-   "colors": [
-    "#751535",
-    "#490116"
-   ],
-   "t": 1793667504986
-  },
-  "starter-mocha-mock-neck-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 284,
-    "w": 632,
-    "h": 690
-   },
-   "v": 5,
-   "color": {
-    "hex": "#573932",
-    "name": "Brown"
-   },
-   "colors": [
-    "#573932",
-    "#2b1913"
-   ],
-   "t": 1793667509161
   },
   "starter-oatmeal-mock-neck-bodysuit": {
    "kind": "worn",
@@ -6933,25 +6645,6 @@
     "#998a79"
    ],
    "t": 1793667538157
-  },
-  "starter-camel-v-neck-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 238,
-    "w": 638,
-    "h": 736
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c98855",
-    "name": "Tan"
-   },
-   "colors": [
-    "#c98855",
-    "#945c38"
-   ],
-   "t": 1793667541399
   },
   "starter-chocolate-brown-v-neck-bodysuit": {
    "kind": "worn",
@@ -7324,45 +7017,6 @@
    ],
    "t": 1793667619207
   },
-  "starter-oatmeal-thong-back-tank-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 300,
-    "w": 466,
-    "h": 674
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b9a498",
-    "name": "Grey"
-   },
-   "colors": [
-    "#b9a498",
-    "#89746b"
-   ],
-   "t": 1793667623527
-  },
-  "starter-stone-thong-back-tank-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 302,
-    "w": 468,
-    "h": 672
-   },
-   "v": 5,
-   "color": {
-    "hex": "#585c63",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#585c63",
-    "#35363a",
-    "#83858a"
-   ],
-   "t": 1793667627476
-  },
   "starter-espresso-thong-back-tank-bodysuit": {
    "kind": "worn",
    "box": {
@@ -7436,26 +7090,6 @@
     "#373538"
    ],
    "t": 1793667642689
-  },
-  "starter-ivory-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 280,
-    "y": 370,
-    "w": 332,
-    "h": 370
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fcfcf8",
-    "name": "White"
-   },
-   "colors": [
-    "#fcfcf8",
-    "#c3b799",
-    "#c8c9c7"
-   ],
-   "t": 1793667646230
   },
   "starter-champagne-lace-trim-cami": {
    "kind": "worn",
@@ -7561,130 +7195,6 @@
    ],
    "t": 1793667669342
   },
-  "starter-sage-green-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 262,
-    "y": 318,
-    "w": 362,
-    "h": 496
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d5fae8",
-    "name": "White"
-   },
-   "colors": [
-    "#d5fae8",
-    "#3a4a36",
-    "#a6cbb4",
-    "#66846b"
-   ],
-   "t": 1793667673268
-  },
-  "starter-oatmeal-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 252,
-    "y": 310,
-    "w": 394,
-    "h": 620
-   },
-   "v": 5,
-   "color": {
-    "hex": "#866a56",
-    "name": "Brown"
-   },
-   "colors": [
-    "#866a56",
-    "#493932",
-    "#c4a88b",
-    "#181506"
-   ],
-   "t": 1793667678137
-  },
-  "starter-stone-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 248,
-    "y": 314,
-    "w": 398,
-    "h": 616
-   },
-   "v": 5,
-   "color": {
-    "hex": "#161919",
-    "name": "Black"
-   },
-   "colors": [
-    "#161919",
-    "#9ba4a5",
-    "#45494a",
-    "#6b7375"
-   ],
-   "t": 1793667681343
-  },
-  "starter-espresso-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 254,
-    "y": 318,
-    "w": 374,
-    "h": 608
-   },
-   "v": 5,
-   "color": {
-    "hex": "#170901",
-    "name": "Black"
-   },
-   "colors": [
-    "#170901",
-    "#351b09",
-    "#78553a",
-    "#aa8469"
-   ],
-   "t": 1793667689468
-  },
-  "starter-mocha-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 266,
-    "y": 310,
-    "w": 362,
-    "h": 610
-   },
-   "v": 5,
-   "color": {
-    "hex": "#472729",
-    "name": "Black"
-   },
-   "colors": [
-    "#472729",
-    "#190908",
-    "#956a68"
-   ],
-   "t": 1793667693162
-  },
-  "starter-ecru-lace-trim-cami": {
-   "kind": "worn",
-   "box": {
-    "x": 264,
-    "y": 308,
-    "w": 358,
-    "h": 440
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d7cab7",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d7cab7",
-    "#fbfbf5",
-    "#b59a79"
-   ],
-   "t": 1793667696036
-  },
   "starter-white-square-neck-tank": {
    "kind": "worn",
    "box": {
@@ -7722,24 +7232,6 @@
    ],
    "t": 1793667701775
   },
-  "starter-camel-square-neck-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 244,
-    "y": 306,
-    "w": 402,
-    "h": 614
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b47c56",
-    "name": "Tan"
-   },
-   "colors": [
-    "#b47c56"
-   ],
-   "t": 1793667724167
-  },
   "starter-chocolate-brown-square-neck-tank": {
    "kind": "worn",
    "box": {
@@ -7776,26 +7268,6 @@
     "#5a5b58"
    ],
    "t": 1793667732164
-  },
-  "starter-navy-square-neck-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 246,
-    "y": 302,
-    "w": 376,
-    "h": 406
-   },
-   "v": 5,
-   "color": {
-    "hex": "#1c1655",
-    "name": "Navy"
-   },
-   "colors": [
-    "#1c1655",
-    "#0b0528",
-    "#030006"
-   ],
-   "t": 1793667746880
   },
   "starter-olive-square-neck-tank": {
    "kind": "worn",
@@ -7965,25 +7437,6 @@
    ],
    "t": 1793667809865
   },
-  "starter-camel-racerback-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 264,
-    "y": 302,
-    "w": 364,
-    "h": 672
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a86b46",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a86b46",
-    "#79482b"
-   ],
-   "t": 1793667813448
-  },
   "starter-chocolate-brown-racerback-tank": {
    "kind": "worn",
    "box": {
@@ -8001,24 +7454,6 @@
     "#43241c"
    ],
    "t": 1793667820230
-  },
-  "starter-grey-racerback-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 280,
-    "y": 302,
-    "w": 350,
-    "h": 592
-   },
-   "v": 5,
-   "color": {
-    "hex": "#747b8b",
-    "name": "Grey"
-   },
-   "colors": [
-    "#747b8b"
-   ],
-   "t": 1793667825442
   },
   "starter-navy-racerback-tank": {
    "kind": "worn",
@@ -8075,25 +7510,6 @@
     "#a7d9f9"
    ],
    "t": 1793667839492
-  },
-  "starter-butter-yellow-racerback-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 260,
-    "y": 302,
-    "w": 420,
-    "h": 704
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5e8aa",
-    "name": "Beige"
-   },
-   "colors": [
-    "#f5e8aa",
-    "#c6b979"
-   ],
-   "t": 1793667848932
   }
  },
  "failed": {
@@ -8258,6 +7674,96 @@
   ],
   "starter-oatmeal-racerback-tank": [
    "it added shorts or trousers to the top"
+  ],
+  "starter-chocolate-brown-satin-cami": [
+   "knickers added under the cami (left out by review)"
+  ],
+  "starter-white-off-shoulder-sweater": [
+   "drawn as a long crew-neck jumper with a fuzzy hem, not off-shoulder (left out by review)"
+  ],
+  "starter-white-cap-sleeve-bodysuit": [
+   "a yellow patch on the chest and skin-pink legs (left out by review)"
+  ],
+  "starter-camel-cap-sleeve-bodysuit": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-sage-green-cap-sleeve-bodysuit": [
+   "a hole at the neckline (left out by review)"
+  ],
+  "starter-beige-cap-sleeve-bodysuit": [
+   "stray strips at the sleeves (left out by review)"
+  ],
+  "starter-camel-one-shoulder-bodysuit": [
+   "bare midriff and an extra arm kept (left out by review)"
+  ],
+  "starter-champagne-one-shoulder-bodysuit": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-oatmeal-one-shoulder-bodysuit": [
+   "a stray strip at the arm (left out by review)"
+  ],
+  "starter-espresso-one-shoulder-bodysuit": [
+   "a dark patch at the armpit (left out by review)"
+  ],
+  "starter-white-mock-neck-bodysuit": [
+   "a hole at the waist (left out by review)"
+  ],
+  "starter-mocha-mock-neck-bodysuit": [
+   "a patch at the neck (left out by review)"
+  ],
+  "starter-chocolate-brown-mock-neck-bodysuit": [
+   "her bare chest kept in a mock neck (left out by review)"
+  ],
+  "starter-burgundy-mock-neck-bodysuit": [
+   "her bare chest kept in a mock neck (left out by review)"
+  ],
+  "starter-camel-v-neck-bodysuit": [
+   "her neck and chest kept with it (left out by review)"
+  ],
+  "starter-stone-thong-back-tank-bodysuit": [
+   "a flap beside the waist (left out by review)"
+  ],
+  "starter-oatmeal-thong-back-tank-bodysuit": [
+   "a blue patch at the crotch (left out by review)"
+  ],
+  "starter-ivory-lace-trim-cami": [
+   "a smudge on the side (left out by review)"
+  ],
+  "starter-oatmeal-lace-trim-cami": [
+   "knickers added under the cami (left out by review)"
+  ],
+  "starter-mocha-lace-trim-cami": [
+   "knickers added under the cami (left out by review)"
+  ],
+  "starter-espresso-lace-trim-cami": [
+   "holes and knickers added (left out by review)"
+  ],
+  "starter-stone-lace-trim-cami": [
+   "cut out in shreds (left out by review)"
+  ],
+  "starter-ecru-lace-trim-cami": [
+   "an orange smudge at the hem (left out by review)"
+  ],
+  "starter-sage-green-lace-trim-cami": [
+   "dark patches beside the arms (left out by review)"
+  ],
+  "starter-navy-square-neck-tank": [
+   "dark patches at the armpits (left out by review)"
+  ],
+  "starter-camel-square-neck-tank": [
+   "knickers added under the tank (left out by review)"
+  ],
+  "starter-navy-button-down-shirt": [
+   "a magenta patch on the arm (left out by review)"
+  ],
+  "starter-camel-racerback-tank": [
+   "knickers added under the tank (left out by review)"
+  ],
+  "starter-grey-racerback-tank": [
+   "holes and knickers added (left out by review)"
+  ],
+  "starter-butter-yellow-racerback-tank": [
+   "her legs kept in shreds (left out by review)"
   ]
  },
  "blocked": {
