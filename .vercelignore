@@ -1,0 +1,13 @@
+# Keep each Vercel deployment small: only what the site and its /api functions need is uploaded.
+# The preloaded wardrobe pictures (public/starter/made/) are not uploaded: vercel.json rewrites
+# /starter/made/* to jsDelivr, which serves them from this (public) repo's main branch.
+# Cloudflare (wrangler) and the local server still serve them from public/ as before.
+/public/starter/made
+/starter-raw
+/review
+/tests
+/docs
+/wardrobe
+/scripts
+/worker
+/.github

@@ -833,10 +833,10 @@
     },
     "sunglasses": {
       "at": "eyes",
-      "w": 146,
+      "w": 138,
       "anchor": [
         0.5,
-        0.45
+        0.42
       ]
     },
     "hat": {
@@ -849,10 +849,11 @@
     },
     "headband": {
       "at": "head",
-      "w": 160,
+      "draw": "band",
+      "w": 14,
       "anchor": [
         0.5,
-        0.35
+        0.5
       ]
     },
     "clip": {
@@ -903,5 +904,64 @@
         0.0
       ]
     }
-  }
+  },
+  "bagArm": [
+    [
+      600,
+      330
+    ],
+    [
+      690,
+      330
+    ],
+    [
+      800,
+      520
+    ],
+    [
+      810,
+      1030
+    ],
+    [
+      688,
+      1030
+    ],
+    [
+      690,
+      980
+    ],
+    [
+      698,
+      920
+    ],
+    [
+      696,
+      860
+    ],
+    [
+      680,
+      800
+    ],
+    [
+      650,
+      740
+    ],
+    [
+      622,
+      680
+    ],
+    [
+      603,
+      620
+    ],
+    [
+      589,
+      560
+    ],
+    [
+      592,
+      470
+    ]
+  ],
+  "bagArmAbout": "The outline of her right arm (hand included), with the gap between arm and body as its inner edge: a bag on her shoulder hangs behind the arm, so the figure is drawn again inside this outline over the bag."
 }

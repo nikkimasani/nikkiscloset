@@ -158,7 +158,10 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, off = r.off || [0, 0], pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean).map(([x, y]) => [x + off[0], y + off[1]]), pair = pts.length === 2;
     // (a bracelet or watch seen from the front is a band round the wrist: its photo, taken from above, is squashed to an ellipse)
     const cw = pair ? iw / 2 : iw, w = r.w ?? (r.h * cw) / ih, h = r.squash ? w * r.squash : r.h ?? (r.w * ih) / cw, href = urls.get(it.id) || '';
-    const pic = pts.map(([px, py], k) => `<svg x="${num(px - r.anchor[0] * w)}" y="${num(py - r.anchor[1] * h)}" width="${num(w)}" height="${num(h)}" viewBox="${pair ? num(k * cw) : 0} 0 ${num(cw)} ${ih}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`).join('');
+    const P = pack.points, hb = r.draw === 'band' && P.templeL && P.crown; // (a headband: a band drawn over the top of her head in its colour; its photo is a side view)
+    const band = hb ? (() => { const hex = it.color?.hex || '#222222', y = (P.templeL[1] + P.templeR[1]) / 2 - 8, d = `M${P.templeL[0] - 2} ${num(y)}Q${P.crown[0]} ${num(P.crown[1] - 62)} ${P.templeR[0] + 2} ${num(y)}`;
+      return `<path d="${d}" fill="none" stroke="${shade(hex, 0.4)}" stroke-width="${r.w + 4}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${hex}" stroke-width="${r.w}" stroke-linecap="round"/>`; })() : '';
+    const pic = hb ? band : pts.map(([px, py], k) => `<svg x="${num(px - r.anchor[0] * w)}" y="${num(py - r.anchor[1] * h)}" width="${num(w)}" height="${num(h)}" viewBox="${pair ? num(k * cw) : 0} 0 ${num(cw)} ${ih}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`).join('');
     const [cx, cy] = pts[0];
     return `<g class="gar acc${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})" transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g>`;
   };
@@ -177,16 +180,26 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     const x = ax - W * (R.anchor?.[0] ?? 0.5), y = ay - H * (R.anchor?.[1] ?? 0); // (top-left of the bag picture, before the nudge)
     const cx = x + W / 2, cy = y + H / 2, sc = f.scale, mv = ([px, py]) => [num(cx + (px - cx) * sc + f.dx), num(cy + (py - cy) * sc + f.dy)];
     const pic = `<svg x="${num(x)}" y="${num(y)}" width="${num(W)}" height="${num(H)}" viewBox="${num(crop.x * iw)} ${num(crop.y * ih)} ${num(crop.w * iw)} ${num(crop.h * ih)}" preserveAspectRatio="none" overflow="hidden"><image href="${href}" width="${iw}" height="${ih}"/></svg>`;
-    let strap = '';
+    let strap = '', strapFront = '';
     if (R.strap) {
       const sh = at(R.strap, R.strapOff || [0, 0]), ends = (R.ends || [0.14, 0.86]).map((e) => mv([x + W * e, y + bodyTop + 6]));
       const chain = /chain/i.test(it.name || ''), hex = chain ? (/silver/i.test(it.name) ? '#c9ccd2' : '#c9a24a') : it.color?.hex || '#4a3426';
-      const line = (e) => `M${num(sh[0])} ${num(sh[1])}L${e[0]} ${e[1]}`, d = ends.map(line).join('');
-      strap = `<path d="${d}" fill="none" stroke="${shade(hex, 0.45)}" stroke-width="${chain ? 7 : 11}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${hex}" stroke-width="${chain ? 4.5 : 8}" stroke-linecap="round"${chain ? ' stroke-dasharray="5 3"' : ''}/>`;
+      const line = (e) => `M${num(sh[0])} ${num(sh[1])}Q${num((sh[0] + e[0]) / 2 + 10)} ${num((sh[1] + e[1]) / 2)} ${e[0]} ${e[1]}`;
+      const paint = (d) => `<path d="${d}" fill="none" stroke="${shade(hex, 0.45)}" stroke-width="${chain ? 7 : 11}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${hex}" stroke-width="${chain ? 4.5 : 8}" stroke-linecap="round"${chain ? ' stroke-dasharray="5 3"' : ''}/>`;
+      strap = paint(ends.map(line).join(''));
+      // seen from the front, a shoulder bag's strap comes over her shoulder and down to the bag in front; its other end goes behind her arm
+      if (R.strap === 'shoulderR' && ends.length > 1) { strapFront = paint(line(ends[0])); strap = paint(line(ends[1])); }
     }
-    return `<g class="gar acc bag${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})">${strap}<g transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(sc * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g></g>`;
+    const bag = `<g class="gar acc bag${sel ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" filter="url(#gfx-${n})">${strap}<g transform="translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(cx)} ${num(cy)}) translate(${num(cx)} ${num(cy)}) scale(${num(sc * 1000) / 1000}) translate(${-num(cx)} ${-num(cy)})">${pic}</g></g>`;
+    if (!underArm) return bag;
+    // her arm (and its sleeve) hangs in front of the bag: the figure is drawn again over it, inside the arm's outline; the strap shows on
+    // top of her shoulder and then goes behind the arm (a crossbody's strap stays in front across her chest)
+    const top = R.strap === 'shoulderR' ? strapFront || `<g clip-path="url(#strapclip-${n})">${strap}</g>` : strap;
+    return `${bag}<use href="#fig-${n}" clip-path="url(#armclip-${n})" pointer-events="none"/>${top}`;
   };
-  const clothes = order.map(garment).join('');
+  const bagIt = items.bag, underArm = !!(bagIt && pack.bagArm && ['shoulder', 'cross'].includes(bagStyle(bagIt)) && !fits?.get(bagIt.id));
+  const clothes = order.filter((k) => !(underArm && k === 'bag')).map(garment).join(''), bagLayer = underArm ? garment('bag') : '';
+  const armDefs = underArm ? `<clipPath id="armclip-${n}"><polygon points="${pack.bagArm.map(([x, y]) => `${x},${y}`).join(' ')}"/></clipPath><clipPath id="strapclip-${n}"><rect x="0" y="-200" width="${pack.size[0]}" height="${200 + (pack.points.armpitR?.[1] ?? 540)}"/></clipPath>` : '';
   const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
   let hairBack = '', hairFront = '', hairDefs = '';
   if (hair && pack.points.crown) { // behind the body: the hair inside the neck column below the jaw, and a soft fill between her skull and the hair's crown
@@ -210,7 +223,8 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <g mask="url(#hairback-${n})"><g filter="url(#hairfx-${n})">${img}</g></g></g>`;
     hairFront = `<g class="hairfront" mask="url(#hairfront-${n})"><g filter="url(#hairfx-${n})">${img}</g></g>`;
   }
-  const parts = { hairBack, body, clothes, hair: hairFront, acc: Object.keys(items).filter((k) => k === 'acc' || k.startsWith('acc:')).map(garment).join('') }; // (every accessory: earrings, a necklace, a watch...)
+  const parts = underArm ? { hairBack, body: `<g id="fig-${n}">${body}${clothes}</g>`, clothes: bagLayer } : { hairBack, body, clothes };
+  Object.assign(parts, { hair: hairFront, acc: Object.keys(items).filter((k) => k === 'acc' || k.startsWith('acc:')).map(garment).join('') }); // (every accessory: earrings, a necklace, a watch...)
   const [x, y, w, h] = pack.view;
   const names = Object.values(items).map((i) => i.name).filter(Boolean);
   const desc = label || (names.length ? `Model wearing ${names.join(', ')}` : 'Model with no clothes selected');
@@ -222,7 +236,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hairDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}</defs>
+    <defs>${fx}${hairDefs}${armDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}</defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 
@@ -243,7 +257,7 @@ export const BAG_RULES = {
   clutch: { w: 175, at: 'handR', off: [-8, -6], anchor: [0.5, 0.5] },
   hand: { w: 205, at: 'handR', off: [0, -34], anchor: [0.5, 0], maxH: 330 },
   tote: { w: 250, at: 'handR', off: [0, -34], anchor: [0.5, 0], maxH: 400 },
-  shoulder: { w: 190, x: ['hipR', 22], y: ['hip', -150], anchor: [0.5, 0], maxH: 240, strap: 'shoulderR', strapOff: [-44, 6] },
+  shoulder: { w: 190, x: ['hipR', 22], y: ['hip', -150], anchor: [0.5, 0], maxH: 240, strap: 'shoulderR', strapOff: [-26, -2], ends: [0.16, 0.84] },
   cross: { w: 150, x: ['hipR', 6], y: ['hip', -120], anchor: [0.5, 0], maxH: 200, strap: 'shoulderL', strapOff: [44, 8], ends: [0.18] },
 };
 /** A darker shade of a #rrggbb colour (t = how much black to mix in). */

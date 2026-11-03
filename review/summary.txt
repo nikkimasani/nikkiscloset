@@ -1,4 +1,4 @@
-129 made this run · 338 of 1005 in the wardrobe · 28 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+93 made this run (30 more left out by review) · 401 of 3044 in the wardrobe · 80 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -21,9 +21,31 @@ starter-gold-anklet: cut-out not clean enough (left out by review)
 starter-brown-crescent-bag: cut-out not clean enough (left out by review)
 starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
 starter-black-tailored-vest: it added shorts or trousers to the top
-starter-beige-tailored-vest: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (29a8c474-5ff2-4037-ba82-e93718f33695)
-starter-black-ribbed-tank: it added shorts or trousers to the top
-starter-sage-green-ribbed-tank: it added shorts or trousers to the top
+starter-black-strapless-tube-top: taken out on review: drawn as a long-sleeve top, twice
+starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
+starter-floral-corset-top: taken out on review: torn and off colours, twice
+starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
+starter-sage-satin-blouse: taken out on review: trousers added, twice
+starter-black-kitten-heels: holes where her foot shows through (left out by review)
+starter-black-knee-high-boots: holes down the side of the boots (left out by review)
+starter-black-ankle-boots: hollow shaft, her leg shows through (left out by review)
+starter-black-loafers: torn shape (left out by review)
+starter-black-pointed-pumps: only the toes came out (left out by review)
+starter-white-pointed-kitten-heels: only the toes came out (left out by review)
+starter-beige-tailored-vest: it added shorts or trousers to the top
+starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
+starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
 starter-chocolate-brown-fitted-tee: it added shorts or trousers to the top
-starter-navy-fitted-tee: it added shorts or trousers to the top
-starter-chocolate-brown-corset-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c16ae430-67c1-4fb6-a065-b81d53db5f89)
+starter-chocolate-brown-button-down-shirt: it added shorts or trousers to the top
+starter-brown-leather-blazer: a stub of trousers kept under it (left out by review)
+starter-camel-wool-coat: dark patches inside the coat (left out by review)
+starter-champagne-satin-slip-maxi: her arm and neck kept with the dress (left out by review)
+starter-black-leather-mini-skirt: holes at the sides (left out by review)
+starter-cream-knit-midi-skirt: a brown patch at the hip (left out by review)
+starter-camel-sweater-dress: her legs kept with the dress (left out by review)
+starter-cream-pleated-trousers: holes at the side of the trousers (left out by review)
+starter-light-blue-v-neck-bodysuit: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (1825e1a6-c730-4fd6-8640-70c137fc701e)
+starter-beige-square-neck-tank: it added shorts or trousers to the top
+starter-burgundy-square-neck-tank: it added shorts or trousers to the top
+starter-red-square-neck-tank: it added shorts or trousers to the top
+starter-oatmeal-racerback-tank: it added shorts or trousers to the top

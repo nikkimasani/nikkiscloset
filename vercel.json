@@ -5,6 +5,18 @@
   "installCommand": null,
   "outputDirectory": "public",
   "cleanUrls": true,
+  "git": {
+    "deploymentEnabled": {
+      "preload-wardrobe": false,
+      "wardrobe-ideas": false
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/starter/made/:path*",
+      "destination": "https://cdn.jsdelivr.net/gh/nikkimasani/nikkiscloset@main/public/starter/made/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/((?!lab/).*)",
