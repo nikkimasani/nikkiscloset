@@ -799,3 +799,85 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .wic-pickbar .pickbar { position: static; margin: 0; }
 .wic-item.picked { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
 .wic-item.picked::after { content: '✓'; position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 900; }
+
+/* ── the outfit builder: one wardrobe finder under the model ── */
+.finder { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 12px; display: grid; gap: 8px; }
+.findbar { display: flex; gap: 8px; }
+.findbar input { flex: 1; min-width: 0; }
+.findrow { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.findrow::-webkit-scrollbar { display: none; }
+.findrow .chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
+.findrow .chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip .sw { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #fff8; display: inline-block; }
+.findcount { margin: 0; font-size: 13px; }
+.findgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.findgrid .pick { flex: none; width: auto; }
+.findgrid .pick.on { border-color: var(--hot); }
+.findgrid .pick img { height: 88px; }
+.looks h3 { margin: 0 0 8px; }
+.dress .tools { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 919px) { /* the model stays pinned (smaller) while you scroll and search the wardrobe under it */
+  .dress.dollmode .room.dollroom { position: sticky; top: calc(var(--top-h, 64px) + 4px); z-index: 6; height: 46dvh; min-height: 320px; }
+  .dress.dollmode .tools { order: 0; margin-top: 0; }
+  .dress.dollmode .tools button { min-height: 52px; }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 46dvh + 12px); }
+}
+
+/* ── the wardrobe as carousels: one swipeable row per kind of piece ── */
+.finder { gap: 10px; padding: 14px; }
+.findbar .ghost.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+#ffilters { display: grid; gap: 8px; }
+#ffilters[hidden] { display: none; }
+.car { display: grid; gap: 6px; }
+.car-h { margin: 6px 2px 0; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+.car-h small { color: var(--muted); font-weight: 600; font-size: 13px; }
+.car-row { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 2px; padding: 2px 2px 8px; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.car-row .pick { flex: 0 0 clamp(118px, 32vw, 150px); scroll-snap-align: start; padding: 8px 6px 6px; border-radius: 18px; }
+.car-row .pick img { height: clamp(120px, 30vw, 150px); }
+.car-row .pick span { font-size: 12.5px; }
+.car-row .pick.on { border-color: var(--hot); box-shadow: 0 0 0 2px var(--hot) inset, 0 4px 14px #0003; }
+@media (min-width: 920px) { /* iPad landscape and computers: the model on the left, the wardrobe rows on the right */
+  .dress { grid-template-columns: minmax(340px, 42%) minmax(0, 1fr); gap: 20px; }
+  .dress-right { position: static; }
+  .dress-left { position: sticky; top: calc(var(--top-h, 64px) + 10px); align-self: start; }
+  .car-row .pick { flex-basis: 150px; } .car-row .pick img { height: 150px; }
+}
+@media (min-width: 600px) and (max-width: 919px) { /* iPad portrait: a taller pinned model, wider tiles */
+  .dress.dollmode .room.dollroom { height: 50dvh; }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 50dvh + 12px); }
+  .car-row .pick { flex-basis: 150px; } .car-row .pick img { height: 150px; }
+}
+@media (max-width: 599px) { /* phones: a little more air between things */
+  .dress { gap: 12px; }
+  .dress.dollmode .room.dollroom { height: 44dvh; min-height: 300px; }
+  html:has(.dress.dollmode .room) { scroll-padding-top: calc(var(--top-h, 64px) + 44dvh + 12px); }
+  .dress .tools { gap: 8px; } .dress .tools button { min-height: 48px; font-size: 11.5px; }
+  .finder { padding: 12px 10px; border-radius: 20px; }
+}
+/* the ✕ that removes a piece from the closet */
+.tile { position: relative; flex: 0 0 auto; scroll-snap-align: start; display: flex; }
+.car-row .tile .pick { flex: 0 0 clamp(118px, 32vw, 150px); }
+.tile-x { position: absolute; top: 4px; right: 4px; z-index: 2; width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid #0002; background: #ffffffd9; color: #5a1f33; font-size: 14px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 2px 6px #0003; }
+.tile-x:hover, .tile-x:focus-visible { background: #ffe1ea; }
+.piece .tile-x { top: 6px; right: 48px; width: 36px; height: 36px; }
+@media (min-width: 600px) { .car-row .tile .pick { flex-basis: 150px; } }
+
+/* what's on the model, each with a ✕ to take it off */
+.onmodel { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.onmodel .chip.worn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 4px; background: #ffffff1c; }
+.onmodel .chip.worn img { width: 28px; height: 28px; object-fit: contain; border-radius: 8px; background: var(--tile); }
+.onmodel .chip.worn .bare { width: 28px; height: 28px; min-height: 0; border-radius: 50%; background: #ffffff26; display: grid; place-items: center; }
+
+/* Undo / Redo, carousel arrows, Wardrobe delete */
+.dress .tools button:disabled { opacity: .4; }
+.car-nav { margin-left: auto; display: inline-flex; gap: 6px; }
+.car-btn { width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: #ffffff14; color: var(--ink); font-size: 22px; line-height: 1; display: grid; place-items: center; }
+.piece .del { position: absolute; z-index: 2; top: 6px; right: 48px; border: 0; background: #ffe1ea; color: #5a1f33; border-radius: 50%; width: 36px; height: 36px; min-height: 36px; font-size: 14px; }
+.toast-undo { margin-left: 8px; min-height: 32px; padding: 2px 12px; border-radius: 99px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.toast .toast-undo { pointer-events: auto; }
+@media (max-width: 599px) { .dress .tools button { font-size: 10.5px; min-height: 46px; } }
+
+.undobar { position: absolute; left: 12px; bottom: 12px; z-index: 5; display: flex; gap: 8px; }
+.undobar button { width: 44px; height: 44px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid #ffffff90; background: #1b0f2fcc; color: #fff; font-size: 22px; font-weight: 800; display: grid; place-items: center; }
+.undobar button:disabled { opacity: .35; }
+body.dsheet .undobar { display: none; }

@@ -37,7 +37,7 @@ const S = {
   view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
-  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: store.get('dbgpts', '') === '1', meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
+  events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: /[?&]points\b/.test(location.search) /* (the body points over the model: a developer view, only with ?points in the address) */, meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
   filter: { type: 'all', occ: 'all', q: '', src: 'all' },
   picking: false, pick: [],          // choosing several pieces to try on at once (Wardrobe or the walk-in closet)
   outfit: {},                       // slot -> item id (the outfit on the mannequin)
@@ -55,6 +55,17 @@ const wearCounts = () => S.wears.reduce((m, w) => (w.itemIds.forEach((id) => (m[
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('show');
   clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+/** A message with an Undo button (shown a little longer). */
+function toastUndo(msg, undo) {
+  const t = $('#toast'); t.innerHTML = `<span>${esc(msg)}</span> <button class="toast-undo" type="button">Undo</button>`; t.classList.add('show');
+  t.querySelector('.toast-undo').onclick = async (e) => { e.stopPropagation(); t.classList.remove('show'); await undo(); };
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 8000);
+}
+/** Put a deleted piece back in the closet (and take it off the list of preloaded pieces you removed). */
+async function restorePiece(it) {
+  await put('items', it); if (!S.items.some((i) => i.id === it.id)) S.items.push(it); url(it.id, it.cutout); S.meta.delete(it.id); analyseItem(it); queueFit(it);
+  if (it.starterId) { let r; try { r = JSON.parse(store.get('starter_removed', '[]')); } catch { r = []; } store.set('starter_removed', JSON.stringify(r.filter((x) => x !== it.starterId))); }
 }
 
 let lastFocus;
@@ -100,6 +111,7 @@ async function load() {
  *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
 async function importPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
+  if (!store.get('restore_x_v1', '')) { store.set('starter_removed', '[]'); store.set('preloaded', ''); store.set('restore_x_v1', '1'); } // (the ✕ briefly deleted pieces instead of taking them off: bring them back once)
   let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
   if (!idx?.pieces) return;
   // a preloaded piece taken out of the wardrobe on review (now failed or blocked there) leaves the closet too; one you made yours stays
@@ -230,7 +242,7 @@ function queueFit(item) {
     clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
   }).catch(() => S.fitPending.delete(key));
 }
-const usingPhoto = () => !!(S.profile?.photo && S.profile.display === 'photo');
+const usingPhoto = () => false; // (your own photo and the photoreal try-on are off the Dress Up screen: the model is always shown)
 const aiFor = (items) => { const st = aiSteps(items); return S.ai && usingPhoto() && st.length && S.ai.sig === aiSignature(st) ? st.map(([slot]) => slot) : null; };
 /** The model wearing an outfit, small (calendar days, inspo matches). */
 /** Your chosen hairstyle and colour, ready for dollSVG. */
@@ -261,45 +273,41 @@ function render() {
 
 /* ───────────────────────── closet ───────────────────────── */
 function renderCloset() {
-  const { type, occ, q, src } = S.filter;
-  const counts = Object.fromEntries(Object.keys(TYPES).map((t) => [t, S.items.filter((i) => i.type === t).length]));
-  const shown = S.items.filter((i) =>
-    (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) && (src === 'all' || (src === 'starter') === starter.isStarter(i)) &&
-    (!q || (i.name + ' ' + (i.brand || '') + ' ' + (i.color?.name || '')).toLowerCase().includes(q.toLowerCase())));
-
+  const { type, occ, q, color = 'all' } = S.filter;
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const shown = S.items.filter((i) => (type === 'all' || i.type === type) && (occ === 'all' || i.occasions.includes(occ)) && (color === 'all' || i.color?.name === color)
+    && words.every((w) => `${i.name} ${i.brand || ''} ${i.color?.name || ''} ${(i.tags?.colors || []).join(' ')} ${TYPES[i.type]?.label || ''} ${(i.occasions || []).join(' ')}`.toLowerCase().includes(w)));
   const rails = Object.keys(TYPES).map((t) => {
     const list = shown.filter((i) => i.type === t);
     if (!list.length) return '';
     return `<section class="rail" aria-label="${TYPES[t].label}"><h3 class="rail-h"><span aria-hidden="true">${TYPES[t].emoji}</span> ${TYPES[t].label} <small>${list.length}</small></h3>
       <div class="rail-row">${list.map(pieceCard).join('')}</div></section>`;
   }).join('');
-
+  const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
   $('#main').innerHTML = `
-    <h2 class="view-title sr-only">Your closet</h2>
-    ${S.items.length ? `<div class="row pickrow"><button class="${S.picking ? 'ghost' : 'primary'}" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done choosing' : '☑ Choose several to try on'}</button>${S.picking ? '<span class="muted">Tap pieces, then Try on</span>' : ''}</div>` : ''}
-    <div class="row" style="margin-top:12px">
-      <input type="search" id="q" class="grow" aria-label="Search your closet" placeholder="Search your closet…" value="${esc(q)}" style="max-width:300px">
-      <select id="occ" aria-label="Filter by occasion" style="width:auto"><option value="all">All occasions</option>${OCCASIONS.map((o) => `<option ${o === occ ? 'selected' : ''}>${o}</option>`).join('')}</select>
-      <span class="muted">${S.items.length} pieces</span>
-    </div>
-    ${S.items.some(starter.isStarter) ? `<div class="chips srcchips" style="margin-top:12px" role="group" aria-label="Whose pieces">${[['all', 'All'], ['mine', 'Mine'], ['starter', 'Starter']].map(([k, l]) => `<button class="chip ${src === k ? 'on' : ''}" aria-pressed="${src === k}" data-act="fsrc" data-v="${k}">${l} · ${S.items.filter((i) => k === 'all' || (k === 'starter') === starter.isStarter(i)).length}</button>`).join('')}</div>` : ''}
-    <div class="chips" style="margin-top:12px" role="group" aria-label="Filter by type">
-      <button class="chip ${type === 'all' ? 'on' : ''}" aria-pressed="${type === 'all'}" data-act="ftype" data-v="all">All</button>
-      ${Object.entries(TYPES).map(([k, v]) => `<button class="chip ${type === k ? 'on' : ''}" aria-pressed="${type === k}" data-act="ftype" data-v="${k}">${v.label} · ${counts[k]}</button>`).join('')}
-    </div>
+    <h2 class="view-title sr-only">Your wardrobe</h2>
+    <div class="row addrow"><button class="primary grow" data-act="add">+ Add a piece (photo or link)</button>${S.items.length ? `<button class="${S.picking ? 'primary' : 'ghost'}" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done' : '☑ Try several'}</button>` : ''}</div>
+    <section class="finder" aria-label="Find pieces" style="margin-top:12px">
+      <div class="findbar"><input type="search" id="q" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(q)}" autocomplete="off"></div>
+      <div class="chips findrow" role="group" aria-label="Type">${chip('ftype', 'all', type, 'All')}${Object.entries(TYPES).map(([k, v]) => chip('ftype', k, type, `<span aria-hidden="true">${v.emoji}</span> ${v.label}`)).join('')}</div>
+      <div class="chips findrow" role="group" aria-label="Colour">${chip('fcolor', 'all', color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcolor', n, color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+      <div class="chips findrow" role="group" aria-label="Style">${chip('foccas', 'all', occ, 'Any style')}${OCCASIONS.map((o) => chip('foccas', o, occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
+      <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>
+    </section>
     ${rails || emptyCloset()}
     ${S.picking ? pickBar() : ''}
-    ${addPanel()}
-    ${starterPanel()}
-    <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
-      <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
-      <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
-      ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
-      <input type="file" id="restore" accept=".json,application/json" hidden></section>
-    ${syncPanel()}`;
+    <details class="panel more" ${S.moreOpen ? 'open' : ''}><summary>Backup, sync &amp; adding from other apps</summary>
+      ${addPanel()}
+      <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
+        <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
+        <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
+        ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
+        <input type="file" id="restore" accept=".json,application/json" hidden></section>
+      ${syncPanel()}
+      ${starterPanel()}</details>`;
+  const more = $('details.more'); if (more) more.ontoggle = () => { S.moreOpen = more.open; }; // (stays open while you use backup, sync or the starter pieces)
   const qEl = $('#q');
   qEl.oninput = () => { S.filter.q = qEl.value; const p = qEl.selectionStart; renderCloset(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); };
-  $('#occ').onchange = (e) => { S.filter.occ = e.target.value; renderCloset(); };
 }
 
 /** Wardrobe > Choose several: the bar that puts every chosen piece on her at once (one per slot; a later pick replaces an earlier one there). */
@@ -318,7 +326,7 @@ function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
-    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button>`}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your closet"><span aria-hidden="true">🗑</span></button>`}
     <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt=""></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
@@ -908,7 +916,7 @@ function casHTML() {
   const close = '<button class="cas-x" data-act="casclose" aria-label="Close customizer"><span aria-hidden="true">✕</span></button>';
   if (usingPhoto()) return `<div class="cas" role="region" aria-label="Customize your model"><p class="muted">You’re showing your own photo. Switch back to the model under <b>Me</b> to customize it.</p>${close}</div>`;
   // The base picture is fixed art: hair is your own hairstyle pictures laid over it; the anchor points are coordinates over it.
-  const tabs = dollPack?.hair ? ['hair', 'anchors'] : ['anchors'];
+  const tabs = ['hair'];
   if (!tabs.includes(S.casTab)) S.casTab = tabs[0];
   const pts = dollPack?.points || {};
   const panes = {
@@ -1132,12 +1140,12 @@ function wicPanel(sec, W, H, x) {
       return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${S.picking && S.pick.includes(it.id) ? 'picked' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
   } else if (sec.k === 'mirror') {
     const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
-    inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to dress up">${fig}</button>`;
+    inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to try it on">${fig}</button>`;
   }
   const n = list.length;
   const label = sec.k === 'overview' ? '' : `<div class="wic-label"><b>${sec.emoji} ${sec.label}</b>${sec.types ? ` · ${n} ${n === 1 ? 'piece' : 'pieces'}` : ''}</div>`;
   const note = sec.types && !n ? `<div class="wic-empty"><p>No ${sec.label.toLowerCase()} here yet.</p><button class="wic-btn" data-act="add" data-v="${sec.types[0]}">+ Add pieces</button></div>`
-    : sec.k === 'mirror' ? '<div class="wic-empty low"><button class="wic-btn" data-act="wicmirror">🪞 Dress up in the mirror</button></div>'
+    : sec.k === 'mirror' ? '<div class="wic-empty low"><button class="wic-btn" data-act="wicmirror">🪞 Try it on in the mirror</button></div>'
     : sec.k === 'vanity' ? `<div class="wic-empty low wic-vanity">${hairPickerHTML()}<button class="wic-btn" data-act="wichair">🪞 Try hair in the mirror</button></div>` : '';
   return `<section class="wic-panel" data-k="${sec.k}" style="left:${x}px;width:${b.pw}px" aria-label="${sec.label}">
     <div class="wic-art" style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;background-image:url(/assets/closet/${sec.bg}.jpg)">${inner}</div>${label}${note}</section>`;
@@ -1145,14 +1153,9 @@ function wicPanel(sec, W, H, x) {
 /** The top bar, the challenge pill and the tip: drawn over the closet, never over the strip. */
 function wicChrome() {
   const bar = $('.wic-chrome'); if (!bar) return;
-  const d = S.game.day, open = !!S.wicPill;
-  bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to dress up"><span aria-hidden="true">←</span></button>
-      <span class="wic-coins" role="status"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span>
-      <button class="wic-round wide" data-act="wicpickmode" aria-pressed="${!!S.picking}">${S.picking ? '✓ Done' : '☑ Choose'}</button>
-      <button class="wic-round wide" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button></div>
+  bar.innerHTML = `<div class="wic-top"><button class="wic-round" data-act="wicmirror" aria-label="Back to Try On"><span aria-hidden="true">←</span></button>
+      <button class="wic-round wide" data-act="wicpickmode" aria-pressed="${!!S.picking}">${S.picking ? '✓ Done' : '☑ Choose'}</button></div>
     ${S.picking ? `<div class="wic-pickbar">${pickBar()}</div>` : ''}
-    ${d ? `<div class="wic-pillbox"><button class="wic-pill" data-act="wicpill" aria-expanded="${open}" aria-controls="wicpillcard">${esc(themeLine(d.theme))}</button>
-      ${open ? `<div class="wic-pillcard" id="wicpillcard"><p>Today’s challenge: <b>${esc(d.theme.title)}</b>. ${d.stars ? `You scored ${d.stars}★.` : hasOutfit() ? 'Rate your look in the mirror.' : 'Pick pieces, then rate the look in the mirror.'}</p><button class="wic-btn" data-act="wicmirror">🪞 To the mirror</button></div>` : ''}</div>` : ''}
     ${store.get('wictip', '') ? '' : '<div class="wic-tip" role="status">Swipe to move along the walls, or tap a section. Pinch to look closer. <button class="wic-x" data-act="wictip" aria-label="Got it">✕</button></div>'}`;
 }
 function wicStrip(cur) {
@@ -1207,69 +1210,90 @@ function layoutVars() {
 }
 addEventListener('resize', () => layoutVars());
 
+/** The wardrobe finder under the model: search words, then type, colour and style (occasion) chips; every match is a tile you tap to wear. */
+const FIND = { q: '', type: 'all', color: 'all', occ: 'all', more: 0 };
+/** The colours in your closet, most common first: [name, hex, count]. */
+function closetColors() {
+  const by = new Map();
+  for (const i of S.items) { const n = i.color?.name; if (!n) continue; const c = by.get(n) || [n, i.color.hex, 0]; c[2]++; by.set(n, c); }
+  return [...by.values()].sort((x, y) => y[2] - x[2]);
+}
+/** Pieces matching the finder: every search word must appear in the name, colour, type, style or season. */
+function findPieces() {
+  const words = FIND.q.toLowerCase().split(/\s+/).filter(Boolean);
+  return S.items.filter((i) => (FIND.type === 'all' || i.type === FIND.type) && (FIND.color === 'all' || i.color?.name === FIND.color) && (FIND.occ === 'all' || i.occasions?.includes(FIND.occ))
+    && words.every((w) => `${i.name} ${i.brand || ''} ${i.color?.name || ''} ${(i.tags?.colors || []).join(' ')} ${TYPES[i.type]?.label || ''} ${(i.occasions || []).join(' ')} ${i.season || ''}`.toLowerCase().includes(w)));
+}
+function finderHTML() {
+  const list = findPieces(), on = new Set(Object.values(S.outfit));
+  const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
+  const nf = (FIND.color !== 'all') + (FIND.occ !== 'all'), any = FIND.q || FIND.type !== 'all' || nf;
+  const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>${on.has(i.id) ? `<button class="tile-x" data-act="unwear" data-id="${i.id}" aria-label="Take ${esc(i.name)} off"><span aria-hidden="true">✕</span></button>` : ''}</div>`;
+  // one carousel per kind of piece (swipe sideways through tops, then the next row is bottoms...)
+  const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small><span class="car-nav"><button class="car-btn" data-act="carl" aria-label="Back through ${t.label}">‹</button><button class="car-btn" data-act="carr" aria-label="More ${t.label}">›</button></span></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
+  return `<section class="finder" aria-label="Your wardrobe">
+    <div class="findbar"><input type="search" id="fq" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(FIND.q)}" autocomplete="off">
+      <button class="ghost ${S.fOpen ? 'on' : ''}" data-act="ftoggle" aria-expanded="${!!S.fOpen}" aria-controls="ffilters">Filters${nf ? ` · ${nf}` : ''}</button>${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
+    <div class="chips findrow" role="group" aria-label="Show only">${chip('ftyp', 'all', FIND.type, 'Everything')}${Object.entries(TYPES).filter(([k]) => S.items.some((i) => i.type === k)).map(([k, t]) => chip('ftyp', k, FIND.type, `<span aria-hidden="true">${t.emoji}</span> ${t.label}`)).join('')}</div>
+    <div id="ffilters" ${S.fOpen ? '' : 'hidden'}>
+      <div class="chips findrow" role="group" aria-label="Colour">${chip('fcol', 'all', FIND.color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcol', n, FIND.color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+      <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
+    </div>
+    <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
+    ${S.items.length ? `${rows}${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
+  </section>`;
+}
+/** Where each carousel was scrolled to, so putting a piece on doesn't send the row back to its start. */
+const carScroll = () => Object.fromEntries([...document.querySelectorAll('.car-row')].map((r) => [r.dataset.type, r.scrollLeft]));
+const carRestore = (pos) => document.querySelectorAll('.car-row').forEach((r) => { if (pos[r.dataset.type]) r.scrollLeft = pos[r.dataset.type]; });
+/** Saved looks and the day's outfit: save what's on the model, wear it today, or put a saved look back on. */
+function looksHTML() {
+  return `<section class="looks panel" aria-label="Looks"><h3>Looks</h3>
+    <div class="row"><input type="text" id="lookname" aria-label="Look name" placeholder="Name this look (optional)" class="grow"><button class="primary" data-act="savelook">Save look</button></div>
+    <button class="ghost wide" data-act="wearToday" style="margin-top:8px"><span aria-hidden="true">📅</span> I’m wearing this today</button>
+    ${S.outfits.length ? `<div class="chips" style="margin-top:10px">${S.outfits.map((o) => `<span class="chip"><button class="bare" data-act="loadlook" data-id="${o.id}">${esc(o.name)}</button> <button class="bare danger" data-act="dellook" data-id="${o.id}" aria-label="Delete look ${esc(o.name)}"><span aria-hidden="true">×</span></button></span>`).join('')}</div>` : ''}</section>`;
+}
 function renderMirror() {
-  if (dollOn() && S.drawer === 'fit') S.drawer = 'looks'; // the doll's fit controls sit right under it instead
-  if (S.items.length && !S.items.some((i) => i.type === S.tab)) S.tab = S.items[0].type; // land on a shelf that has something
-  const old = $('.tray-row'), keepX = old && S.lastTab === S.tab ? old.scrollLeft : 0, keepY = S.view === S.lastView ? window.scrollY : 0;
+  const keepY = S.view === S.lastView ? window.scrollY : 0, keepX = S.view === S.lastView ? carScroll() : {};
   const worn = outfitItems(S.outfit);
-  const stk = wearStreak(S.wears, iso(new Date()));
-  const m = outfitMeters(worn, S.mood, wearCounts());
   const fit = S.adjust && itemById(S.adjust) && Object.values(S.outfit).includes(S.adjust) ? itemById(S.adjust) : null;
-  const pickList = S.items.filter((i) => i.type === S.tab), counts = wearCounts();
-  $('#main').innerHTML = `<h2 class="view-title sr-only">Dress up</h2>
+  $('#main').innerHTML = `<h2 class="view-title sr-only">Build an outfit</h2>
   <div class="dress ${dollOn() ? 'dollmode' : ''}">
     <div class="dress-left">
-      ${sceneBar()}
-      ${dollOn() ? gameBarHTML(false) : ''}
-      <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''}" style="--gem:${m ? `hsl(${Math.round(20 + m.overall * 1.7)} 90% 60%)` : '#7fd8ff'}">
-        <div class="gem" aria-hidden="true"></div>
+      <div class="room ${dollOn() ? 'dollroom' : 'mirror'} ${S.cas ? 'cas-open' : ''} ${usingPhoto() ? 'photo' : ''}">
         <div class="stage" id="stage">${stageHTML()}</div>
-        ${stk ? `<div class="streakbadge" role="status" aria-label="${stk}-day outfit streak"><span aria-hidden="true">🔥</span> ${stk}</div>` : ''}
         ${dollOn() ? '<button class="closetbtn" data-act="scene" data-v="closet"><span aria-hidden="true">🚪</span> Walk-in closet</button>' : ''}
-        ${dollOn() ? `${Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}` : ''}
+        ${dollOn() && Object.keys(worn).length ? `<button class="dolltoggle" data-act="dfit" aria-expanded="${!!S.fitOpen}" aria-controls="dollbar"><span aria-hidden="true">✋</span> Fit</button>` : ''}
         ${dollOn() ? tuckBtnHTML(worn) : ''}
+        ${dollOn() ? `<div class="undobar" role="group" aria-label="Undo and redo"><button data-act="undo" ${HIST.back.length ? '' : 'disabled'} aria-label="Undo"><span aria-hidden="true">↶</span></button><button data-act="redo" ${HIST.fwd.length ? '' : 'disabled'} aria-label="Redo"><span aria-hidden="true">↷</span></button></div>` : ''}
         ${S.dbgPts && dollOn() ? '<button class="dbgchip" data-act="dbgpts"><span aria-hidden="true">📍</span> Hide points</button>' : ''}
         ${S.cas ? casHTML() : ''}
         ${dollOn() ? dollBarHTML(fit) : ''}
       </div>
       ${dollOn() ? dollFitHTML(worn, fit) : ''}
-      <div class="tools" role="group" aria-label="Quick actions">
-        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">🎨</span>Customize</button>
+      <div class="tools" role="group" aria-label="Outfit">
         <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
-        <button data-act="clear"><span aria-hidden="true">🧺</span>Undress</button>
-        <button data-act="savelook"><span aria-hidden="true">💾</span>Save</button>
-        ${dollOn() ? '<button data-act="photo"><span aria-hidden="true">📸</span>Photo</button>' : ''}
-        <button class="go" data-act="wearToday"><span aria-hidden="true">📅</span>Wear today</button>
+        <button data-act="clear"><span aria-hidden="true">🧺</span>Clear</button>
+        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">💇</span>Hair</button>
+        <button class="go" data-act="gosave"><span aria-hidden="true">💾</span>Save look</button>
       </div>
-      ${metersHTML(worn)}
-      <div class="moods" role="group" aria-label="Mood: what’s the occasion?">
-        ${OCCASIONS.map((o) => `<button class="chip ${S.mood === o ? 'on' : ''}" aria-pressed="${S.mood === o}" data-act="mood" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}</button>`).join('')}
-      </div>
-      ${weatherLine()}
     </div>
-    <div class="dress-right">
-      <section class="tray" aria-label="Wardrobe">
-        <div class="tabs" role="group" aria-label="Clothing type">${Object.entries(TYPES).map(([k, v]) => `<button class="tab ${S.tab === k ? 'on' : ''}" aria-pressed="${S.tab === k}" data-act="tab" data-v="${k}"><span aria-hidden="true">${v.emoji}</span>${v.label}</button>`).join('')}</div>
-        ${S.items.length ? `<div class="tray-row">${pickList.length ? pickList.map((i) => `<button class="pick ${Object.values(S.outfit).includes(i.id) ? 'on' : ''} ${starter.isStarter(i) ? 'is-starter' : ''}" aria-pressed="${Object.values(S.outfit).includes(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt=""><span>${esc(i.name)}</span><small>${counts[i.id] ? `worn ${counts[i.id]}×` : 'new'}</small></button>`).join('') : `<p class="muted tray-empty">No ${TYPES[S.tab].label.toLowerCase()} yet — <button class="link" data-act="add">add one</button>.</p>`}</div>` : emptyCloset()}
-      </section>
-      <section class="drawer" aria-label="Outfit options">
-        <div class="seg" role="group" aria-label="Options">${DRAWERS.filter(([k]) => !(dollOn() && k === 'fit')).map(([k, l]) => `<button class="${S.drawer === k ? 'on' : ''}" aria-pressed="${S.drawer === k}" data-act="drawer" data-v="${k}">${l}</button>`).join('')}</div>
-        <div class="drawer-body">${drawerHTML(worn, fit)}</div>
-      </section>
-    </div></div>`;
-  S.lastTab = S.tab; S.lastView = 'tryon';
-  // on a phone, Hair / Anchors / Fit open as a bottom sheet and the model shrinks to fit above it (never cropped)
+    <div class="dress-right">${finderHTML()}${looksHTML()}</div></div>`;
+  S.lastView = 'tryon';
+  // on a phone, Hair and Fit open as a bottom sheet and the model shrinks to fit above it (never cropped)
   document.body.classList.toggle('dsheet', !!(dollOn() && (S.cas || (S.fitOpen && fit))));
   layoutVars();
   mountStage(); restoreCachedRender();
   if (dollOn()) bindDollGestures($('#stage'));
-  const row = $('.tray-row'); if (row) row.scrollLeft = keepX;
-  window.scrollTo(0, keepY);
-  $('#main').querySelectorAll('[data-adj]').forEach((r) => {
-    r.oninput = () => { fit.adj[r.dataset.adj] = +r.value; refreshStage(); };
-    r.onchange = () => put('items', fit);
-  });
+  const q = $('#fq'); if (q) q.oninput = () => { FIND.q = q.value; FIND.more = 0; const p = q.selectionStart; refreshFinder(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
+  window.scrollTo(0, keepY); carRestore(keepX);
   if (S.pop) { S.pop = false; sparkle(); }
+}
+/** Redraw only the finder (typing in search keeps the page where it is). */
+function refreshFinder() {
+  const f = $('.finder'); if (!f) return renderTryon();
+  const keepX = carScroll(); f.outerHTML = finderHTML(); carRestore(keepX);
+  const q = $('#fq'); if (q) q.oninput = () => { FIND.q = q.value; FIND.more = 0; const p = q.selectionStart; refreshFinder(); const n = $('#fq'); n.focus(); n.setSelectionRange(p, p); };
 }
 
 
@@ -1582,13 +1606,34 @@ function showMatch() {
 }
 
 /* ───────────────────────── events ───────────────────────── */
+/* ── undo / redo for the outfit: every change to what's on the model can be stepped back and forward ── */
+const HIST = { back: [], fwd: [] };
+const outfitSig = () => JSON.stringify(S.outfit);
+function noteOutfit(before) { if (before === outfitSig()) return; HIST.back.push(before); if (HIST.back.length > 60) HIST.back.shift(); HIST.fwd.length = 0; }
+function stepOutfit(from, to) { if (!from.length) return; to.push(outfitSig()); S.outfit = Object.fromEntries(Object.entries(JSON.parse(from.pop())).filter(([, v]) => itemById(v))); S.adjust = Object.values(S.outfit).at(-1) || null; }
 document.addEventListener('click', async (e) => {
+  const before = outfitSig(); HIST.skip = null;
+  await handleClick(e);
+  if (HIST.skip === null) noteOutfit(before); refreshUndo();
+});
+/** Undo / Redo stay in step with the history without redrawing the page. */
+function refreshUndo() { const u = $('[data-act=undo]'), r = $('[data-act=redo]'); if (u) u.disabled = !HIST.back.length; if (r) r.disabled = !HIST.fwd.length; }
+async function handleClick(e) {
   const nav = e.target.closest('#nav button');
   if (nav) return go(nav.dataset.view);
   const el = e.target.closest('[data-act]'); if (!el) return;
   const { act, id, v } = el.dataset;
   if (el.tagName !== 'INPUT') e.preventDefault(); // let checkboxes toggle
   switch (act) {
+    case 'undo': { const b = outfitSig(); stepOutfit(HIST.back, HIST.fwd); HIST.skip = b; return renderTryon(); }
+    case 'redo': { const b = outfitSig(); stepOutfit(HIST.fwd, HIST.back); HIST.skip = b; return renderTryon(); }
+    case 'carl': case 'carr': { const row = el.closest('.car')?.querySelector('.car-row'); row?.scrollBy({ left: (act === 'carl' ? -1 : 1) * row.clientWidth * 0.9, behavior: 'smooth' }); return; }
+    case 'ftop': return window.scrollTo({ top: 0, behavior: 'smooth' });
+    case 'delpiece': { // Wardrobe only: delete a piece from the closet, with Undo
+      const it = itemById(id); if (!it || !confirm(`Delete “${it.name}” from your closet?`)) return;
+      const copy = { ...it }; await removeItems([id], { byYou: true }); render();
+      return toastUndo(`Deleted “${it.name}”`, async () => { await restorePiece(copy); render(); toast(`“${copy.name}” is back ✓`); });
+    }
     case 'add': return openItemModal(undefined, TYPES[v] ? { type: v } : {});
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
@@ -1632,8 +1677,8 @@ document.addEventListener('click', async (e) => {
     case 'gbpill': S.gbOpen = !S.gbOpen; return refreshGame();
     case 'hairstyle': case 'haircolor': { const k = act === 'hairstyle' ? 'hairStyle' : 'hairColor'; S[k] = v; store.set(act, v); return S.scene === 'closet' && S.view === 'tryon' ? wicRefresh() : renderTryon(); }
     case 'wichair': S.scene = 'doll'; store.set('scene', 'doll'); S.cas = true; S.casTab = 'hair'; renderTryon(); window.scrollTo(0, 0); return;
-    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).includes(id) ? id : Object.values(S.outfit).at(-1) || null; // (taking a piece off selects another one still worn) S.pop = true; if (S.game.day) { S.game = spendEnergy(S.game, 3); saveGame(); } return renderTryon();
-    case 'dbgpts': S.dbgPts = !S.dbgPts; store.set('dbgpts', S.dbgPts ? '1' : ''); if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
+    case 'wear': S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).includes(id) ? id : Object.values(S.outfit).at(-1) || null; /* (taking a piece off selects another one still worn) */ S.pop = true; return renderTryon();
+    case 'dbgpts': S.dbgPts = !S.dbgPts; if (S.dbgPts) S.cas = false; /* get the panel out of the way so the points are visible */ return renderTryon();
     case 'export': return exportBackup();
     case 'restore': return $('#restore').click();
     case 'syncconnect': { const k = $('#synckey').value; if (!k.trim()) return toast('Enter your sync key first'); syncConnect(k); if (!(await runSync())) { syncDisconnect(); render(); } return; }
@@ -1658,8 +1703,21 @@ document.addEventListener('click', async (e) => {
     case 'display': if (S.profile) { S.profile.display = v; await put('profile', S.profile); } return renderTryon();
     case 'setup': return openModelModal();
     case 'clear': S.outfit = {}; return renderTryon();
+    case 'fcolor': S.filter.color = v; return renderCloset();
+    case 'foccas': S.filter.occ = v; return renderCloset();
+    case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
+    case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
+    case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
+    case 'unwear': { // the ✕ on a piece you're wearing takes it off the model (it stays in your closet)
+      for (const k of Object.keys(S.outfit)) if (S.outfit[k] === id) delete S.outfit[k];
+      if (S.adjust === id) S.adjust = Object.values(S.outfit).at(-1) || null;
+      return renderTryon();
+    }
+    case 'ftoggle': S.fOpen = !S.fOpen; return refreshFinder();
+    case 'fclear': Object.assign(FIND, { q: '', type: 'all', color: 'all', occ: 'all', more: 0 }); return refreshFinder();
+    case 'gosave': { const l = $('.looks'); l?.scrollIntoView({ behavior: 'smooth', block: 'center' }); $('#lookname')?.focus({ preventScroll: true }); return; }
     case 'styleme': {
-      const o = S.mood;
+      const o = FIND.occ !== 'all' ? FIND.occ : S.mood; // (the style you picked in the finder)
       if (!S.items.length) return toast('Add some pieces first');
       const r = styleMe(S.items, o, wearCounts(), todayWeather(ctx));
       if (!Object.keys(r).length) return toast(`Nothing tagged for ${o} yet`);
@@ -1739,7 +1797,7 @@ document.addEventListener('click', async (e) => {
     case 'tryinspo': S.outfit = { ...S.inspo.picks }; S.scene = 'doll'; return go('tryon');
     default: if (planActs[act]) return planActs[act](ctx, el);
   }
-});
+}
 
 document.addEventListener('input', (e) => {
   const t = e.target;
@@ -1784,5 +1842,10 @@ const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure
   if (syncState().on) runSync(); // pick up changes from other devices
   openFromLink();
   try { const n = sessionStorage.getItem('restored'); if (n) { sessionStorage.removeItem('restored'); toast(`Restored ${n} piece${n === '1' ? '' : 's'} from your backup`); } } catch { /* private mode */ }
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('/sw.js').catch(() => {}); // lets it install as an app and open offline
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) { // lets it install as an app and open offline
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('/sw.js').then((r) => r.update()).catch(() => {}); // (look for a new version every time the app opens)
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !sessionStorage.getItem('swreload')) { sessionStorage.setItem('swreload', '1'); location.reload(); } }); // a new version took over: show it now
+  }
+  try { localStorage.removeItem('dbgpts'); } catch { /* private mode */ } // (an old switch that kept the body points showing)
 })();
