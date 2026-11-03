@@ -1,5 +1,5 @@
 {
- "version": 1793660274379,
+ "version": 1793667860615,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -5765,6 +5765,2335 @@
     "#a6775b"
    ],
    "t": 1793503216214
+  },
+  "starter-cream-crochet-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 266,
+    "y": 322,
+    "w": 362,
+    "h": 424
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4ecd6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f4ecd6",
+    "#c7bba5"
+   ],
+   "t": 1793667226955
+  },
+  "starter-butter-yellow-corset-top": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 312,
+    "w": 336,
+    "h": 454
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9e6a8",
+    "name": "Beige"
+   },
+   "colors": [
+    "#f9e6a8",
+    "#d7b768",
+    "#a88546"
+   ],
+   "t": 1793667231594
+  },
+  "starter-white-off-shoulder-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 120,
+    "y": 390,
+    "w": 648,
+    "h": 496
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f6f6",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f6f6"
+   ],
+   "t": 1793667235691
+  },
+  "starter-black-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 298,
+    "w": 334,
+    "h": 460
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c0c0a",
+    "name": "Black"
+   },
+   "colors": [
+    "#0c0c0a"
+   ],
+   "t": 1793667266159
+  },
+  "starter-grey-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 294,
+    "w": 372,
+    "h": 504
+   },
+   "v": 5,
+   "color": {
+    "hex": "#767b84",
+    "name": "Grey"
+   },
+   "colors": [
+    "#767b84",
+    "#484a4a"
+   ],
+   "t": 1793667270036
+  },
+  "starter-sage-green-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 302,
+    "w": 346,
+    "h": 404
+   },
+   "v": 5,
+   "color": {
+    "hex": "#83987c",
+    "name": "Sage"
+   },
+   "colors": [
+    "#83987c",
+    "#576958"
+   ],
+   "t": 1793667281525
+  },
+  "starter-white-satin-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 292,
+    "y": 314,
+    "w": 316,
+    "h": 414
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fafafa",
+    "name": "White"
+   },
+   "colors": [
+    "#fafafa",
+    "#c6c9ca"
+   ],
+   "t": 1793667284994
+  },
+  "starter-chocolate-brown-satin-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 254,
+    "y": 360,
+    "w": 382,
+    "h": 560
+   },
+   "v": 5,
+   "color": {
+    "hex": "#29140b",
+    "name": "Black"
+   },
+   "colors": [
+    "#29140b",
+    "#58352a",
+    "#86574b"
+   ],
+   "t": 1793667291621
+  },
+  "starter-navy-fitted-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 284,
+    "w": 472,
+    "h": 490
+   },
+   "v": 5,
+   "color": {
+    "hex": "#242756",
+    "name": "Navy"
+   },
+   "colors": [
+    "#242756"
+   ],
+   "t": 1793667313605
+  },
+  "starter-beige-button-down-shirt": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 240,
+    "w": 636,
+    "h": 768
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d4baa4",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d4baa4",
+    "#a78b75"
+   ],
+   "t": 1793667316647
+  },
+  "starter-navy-button-down-shirt": {
+   "kind": "worn",
+   "box": {
+    "x": 120,
+    "y": 258,
+    "w": 654,
+    "h": 628
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2a2b66",
+    "name": "Navy"
+   },
+   "colors": [
+    "#2a2b66",
+    "#151439",
+    "#010106"
+   ],
+   "t": 1793667337724
+  },
+  "starter-grey-button-down-shirt": {
+   "kind": "worn",
+   "box": {
+    "x": 140,
+    "y": 260,
+    "w": 620,
+    "h": 688
+   },
+   "v": 5,
+   "color": {
+    "hex": "#76767b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#76767b",
+    "#484649"
+   ],
+   "t": 1793667342086
+  },
+  "starter-chocolate-brown-corset-top": {
+   "kind": "worn",
+   "box": {
+    "x": 258,
+    "y": 318,
+    "w": 362,
+    "h": 478
+   },
+   "v": 5,
+   "color": {
+    "hex": "#391815",
+    "name": "Black"
+   },
+   "colors": [
+    "#391815",
+    "#674748",
+    "#0a0201"
+   ],
+   "t": 1793667345299
+  },
+  "starter-black-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 288,
+    "w": 616,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161617",
+    "name": "Black"
+   },
+   "colors": [
+    "#161617"
+   ],
+   "t": 1793667349375
+  },
+  "starter-white-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 288,
+    "w": 464,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f5f6",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f5f6",
+    "#e3c5bc",
+    "#dcc696",
+    "#979797"
+   ],
+   "t": 1793667353313
+  },
+  "starter-cream-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 302,
+    "w": 492,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9e8d8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f9e8d8"
+   ],
+   "t": 1793667357184
+  },
+  "starter-beige-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 300,
+    "w": 470,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c7aa97",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c7aa97",
+    "#977969"
+   ],
+   "t": 1793667360341
+  },
+  "starter-camel-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 294,
+    "w": 624,
+    "h": 680
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c48b4c",
+    "name": "Tan"
+   },
+   "colors": [
+    "#c48b4c",
+    "#965c29"
+   ],
+   "t": 1793667376501
+  },
+  "starter-chocolate-brown-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 288,
+    "w": 634,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#54342c",
+    "name": "Brown"
+   },
+   "colors": [
+    "#54342c"
+   ],
+   "t": 1793667380270
+  },
+  "starter-grey-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 290,
+    "w": 634,
+    "h": 684
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a5a8a9",
+    "name": "Grey"
+   },
+   "colors": [
+    "#a5a8a9",
+    "#767a79"
+   ],
+   "t": 1793667383747
+  },
+  "starter-navy-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 290,
+    "w": 498,
+    "h": 684
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1a1c57",
+    "name": "Navy"
+   },
+   "colors": [
+    "#1a1c57",
+    "#090728"
+   ],
+   "t": 1793667387858
+  },
+  "starter-olive-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 282,
+    "w": 466,
+    "h": 692
+   },
+   "v": 5,
+   "color": {
+    "hex": "#535c35",
+    "name": "Olive"
+   },
+   "colors": [
+    "#535c35"
+   ],
+   "t": 1793667393092
+  },
+  "starter-burgundy-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 288,
+    "w": 630,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#580627",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#580627"
+   ],
+   "t": 1793667397517
+  },
+  "starter-sage-green-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 284,
+    "w": 622,
+    "h": 690
+   },
+   "v": 5,
+   "color": {
+    "hex": "#96bca5",
+    "name": "Sage"
+   },
+   "colors": [
+    "#96bca5",
+    "#678668",
+    "#c8a987"
+   ],
+   "t": 1793667401530
+  },
+  "starter-blush-pink-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 294,
+    "w": 522,
+    "h": 680
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eaa8a6",
+    "name": "Pink"
+   },
+   "colors": [
+    "#eaa8a6",
+    "#b67a74"
+   ],
+   "t": 1793667404759
+  },
+  "starter-light-blue-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 282,
+    "w": 622,
+    "h": 692
+   },
+   "v": 5,
+   "color": {
+    "hex": "#99c6f7",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#99c6f7",
+    "#6995ca"
+   ],
+   "t": 1793667408139
+  },
+  "starter-red-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 292,
+    "w": 626,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c80125",
+    "name": "Red"
+   },
+   "colors": [
+    "#c80125",
+    "#9a0015"
+   ],
+   "t": 1793667411892
+  },
+  "starter-mocha-cap-sleeve-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 290,
+    "w": 630,
+    "h": 684
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3a2227",
+    "name": "Black"
+   },
+   "colors": [
+    "#3a2227"
+   ],
+   "t": 1793667415290
+  },
+  "starter-black-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 298,
+    "w": 452,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0b0b09",
+    "name": "Black"
+   },
+   "colors": [
+    "#0b0b09"
+   ],
+   "t": 1793667420328
+  },
+  "starter-white-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 302,
+    "w": 366,
+    "h": 614
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8fa",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8fa",
+    "#c6c6c9"
+   ],
+   "t": 1793667423312
+  },
+  "starter-cream-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 270,
+    "y": 290,
+    "w": 356,
+    "h": 490
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5ebd4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f5ebd4",
+    "#bab7a6",
+    "#8b897a"
+   ],
+   "t": 1793667426034
+  },
+  "starter-beige-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 464,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d6bba7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d6bba7",
+    "#a68a77"
+   ],
+   "t": 1793667429299
+  },
+  "starter-camel-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 288,
+    "w": 646,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d69a84",
+    "name": "Camel"
+   },
+   "colors": [
+    "#d69a84",
+    "#a86b56"
+   ],
+   "t": 1793667432259
+  },
+  "starter-chocolate-brown-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 290,
+    "w": 446,
+    "h": 684
+   },
+   "v": 5,
+   "color": {
+    "hex": "#39221e",
+    "name": "Black"
+   },
+   "colors": [
+    "#39221e"
+   ],
+   "t": 1793667435686
+  },
+  "starter-grey-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 292,
+    "w": 456,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#83878c",
+    "name": "Grey"
+   },
+   "colors": [
+    "#83878c",
+    "#55585a"
+   ],
+   "t": 1793667438923
+  },
+  "starter-navy-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 296,
+    "w": 464,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#242258",
+    "name": "Navy"
+   },
+   "colors": [
+    "#242258",
+    "#130d29"
+   ],
+   "t": 1793667442946
+  },
+  "starter-olive-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 304,
+    "w": 462,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#57592b",
+    "name": "Olive"
+   },
+   "colors": [
+    "#57592b"
+   ],
+   "t": 1793667446363
+  },
+  "starter-red-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 464,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b70b24",
+    "name": "Red"
+   },
+   "colors": [
+    "#b70b24",
+    "#780008"
+   ],
+   "t": 1793667449484
+  },
+  "starter-champagne-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 268,
+    "w": 510,
+    "h": 706
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f7f3",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f7f3",
+    "#c7a996",
+    "#987a67"
+   ],
+   "t": 1793667453331
+  },
+  "starter-oatmeal-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 296,
+    "w": 462,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c4a79b",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c4a79b",
+    "#897568"
+   ],
+   "t": 1793667456464
+  },
+  "starter-stone-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 464,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#76656a",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#76656a",
+    "#493838"
+   ],
+   "t": 1793667459627
+  },
+  "starter-espresso-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 298,
+    "w": 454,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5a3825",
+    "name": "Brown"
+   },
+   "colors": [
+    "#5a3825"
+   ],
+   "t": 1793667463611
+  },
+  "starter-mocha-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 298,
+    "w": 444,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3a2423",
+    "name": "Black"
+   },
+   "colors": [
+    "#3a2423"
+   ],
+   "t": 1793667469182
+  },
+  "starter-ecru-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 460,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e4dbc9",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e4dbc9",
+    "#b6aa98"
+   ],
+   "t": 1793667472184
+  },
+  "starter-black-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 298,
+    "w": 620,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#151318",
+    "name": "Black"
+   },
+   "colors": [
+    "#151318"
+   ],
+   "t": 1793667475189
+  },
+  "starter-white-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 290,
+    "w": 628,
+    "h": 684
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3f4f6",
+    "name": "White"
+   },
+   "colors": [
+    "#f3f4f6"
+   ],
+   "t": 1793667479131
+  },
+  "starter-cream-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 288,
+    "w": 632,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3ebd8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f3ebd8"
+   ],
+   "t": 1793667483887
+  },
+  "starter-beige-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 300,
+    "w": 642,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5baa7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d5baa7",
+    "#a58b78"
+   ],
+   "t": 1793667487195
+  },
+  "starter-chocolate-brown-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 300,
+    "w": 648,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5b3933",
+    "name": "Brown"
+   },
+   "colors": [
+    "#5b3933",
+    "#a86b48"
+   ],
+   "t": 1793667490898
+  },
+  "starter-grey-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 294,
+    "w": 632,
+    "h": 680
+   },
+   "v": 5,
+   "color": {
+    "hex": "#858a97",
+    "name": "Grey"
+   },
+   "colors": [
+    "#858a97",
+    "#575b67"
+   ],
+   "t": 1793667494246
+  },
+  "starter-navy-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 294,
+    "w": 632,
+    "h": 680
+   },
+   "v": 5,
+   "color": {
+    "hex": "#121657",
+    "name": "Navy"
+   },
+   "colors": [
+    "#121657",
+    "#070729"
+   ],
+   "t": 1793667497931
+  },
+  "starter-olive-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 308,
+    "w": 630,
+    "h": 666
+   },
+   "v": 5,
+   "color": {
+    "hex": "#535b35",
+    "name": "Olive"
+   },
+   "colors": [
+    "#535b35"
+   ],
+   "t": 1793667501849
+  },
+  "starter-burgundy-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 288,
+    "w": 634,
+    "h": 686
+   },
+   "v": 5,
+   "color": {
+    "hex": "#751535",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#751535",
+    "#490116"
+   ],
+   "t": 1793667504986
+  },
+  "starter-mocha-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 284,
+    "w": 632,
+    "h": 690
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573932",
+    "name": "Brown"
+   },
+   "colors": [
+    "#573932",
+    "#2b1913"
+   ],
+   "t": 1793667509161
+  },
+  "starter-oatmeal-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 292,
+    "w": 636,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c4ac96",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c4ac96",
+    "#957c65"
+   ],
+   "t": 1793667513310
+  },
+  "starter-stone-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 286,
+    "w": 632,
+    "h": 688
+   },
+   "v": 5,
+   "color": {
+    "hex": "#676b74",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#676b74",
+    "#35373a",
+    "#969ba3"
+   ],
+   "t": 1793667516648
+  },
+  "starter-espresso-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 292,
+    "w": 620,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#462d22",
+    "name": "Brown"
+   },
+   "colors": [
+    "#462d22"
+   ],
+   "t": 1793667519935
+  },
+  "starter-ecru-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 278,
+    "w": 632,
+    "h": 696
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3e9d5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f3e9d5",
+    "#c8bba5"
+   ],
+   "t": 1793667524320
+  },
+  "starter-black-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 304,
+    "w": 626,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080808",
+    "name": "Black"
+   },
+   "colors": [
+    "#080808"
+   ],
+   "t": 1793667527970
+  },
+  "starter-white-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 300,
+    "w": 640,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f4f9",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f4f9",
+    "#c8c7c9"
+   ],
+   "t": 1793667530936
+  },
+  "starter-cream-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 300,
+    "w": 622,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fdf4e5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#fdf4e5",
+    "#d8c8a9"
+   ],
+   "t": 1793667534500
+  },
+  "starter-beige-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 292,
+    "w": 626,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#cab49b",
+    "name": "Beige"
+   },
+   "colors": [
+    "#cab49b",
+    "#998a79"
+   ],
+   "t": 1793667538157
+  },
+  "starter-camel-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 238,
+    "w": 638,
+    "h": 736
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c98855",
+    "name": "Tan"
+   },
+   "colors": [
+    "#c98855",
+    "#945c38"
+   ],
+   "t": 1793667541399
+  },
+  "starter-chocolate-brown-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 308,
+    "w": 644,
+    "h": 666
+   },
+   "v": 5,
+   "color": {
+    "hex": "#341d18",
+    "name": "Black"
+   },
+   "colors": [
+    "#341d18"
+   ],
+   "t": 1793667545042
+  },
+  "starter-grey-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 140,
+    "y": 296,
+    "w": 616,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#767b85",
+    "name": "Grey"
+   },
+   "colors": [
+    "#767b85",
+    "#46484a"
+   ],
+   "t": 1793667549277
+  },
+  "starter-navy-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 302,
+    "w": 640,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161c64",
+    "name": "Navy"
+   },
+   "colors": [
+    "#161c64",
+    "#090b38"
+   ],
+   "t": 1793667553679
+  },
+  "starter-olive-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 306,
+    "w": 630,
+    "h": 668
+   },
+   "v": 5,
+   "color": {
+    "hex": "#545b38",
+    "name": "Olive"
+   },
+   "colors": [
+    "#545b38"
+   ],
+   "t": 1793667557504
+  },
+  "starter-burgundy-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 302,
+    "w": 640,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#580024",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#580024",
+    "#28000b"
+   ],
+   "t": 1793667560572
+  },
+  "starter-sage-green-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 122,
+    "y": 306,
+    "w": 640,
+    "h": 668
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97ba87",
+    "name": "Sage"
+   },
+   "colors": [
+    "#97ba87"
+   ],
+   "t": 1793667564799
+  },
+  "starter-blush-pink-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 296,
+    "w": 622,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e998a6",
+    "name": "Pink"
+   },
+   "colors": [
+    "#e998a6",
+    "#b76469"
+   ],
+   "t": 1793667569001
+  },
+  "starter-red-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 302,
+    "w": 634,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d7001c",
+    "name": "Red"
+   },
+   "colors": [
+    "#d7001c",
+    "#a90013"
+   ],
+   "t": 1793667574797
+  },
+  "starter-mocha-v-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 304,
+    "w": 632,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#462c24",
+    "name": "Brown"
+   },
+   "colors": [
+    "#462c24"
+   ],
+   "t": 1793667577942
+  },
+  "starter-black-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 300,
+    "w": 458,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#030303",
+    "name": "Black"
+   },
+   "colors": [
+    "#030303"
+   ],
+   "t": 1793667581135
+  },
+  "starter-white-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 304,
+    "w": 378,
+    "h": 618
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f7f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f7f7",
+    "#c8c8c8"
+   ],
+   "t": 1793667584911
+  },
+  "starter-cream-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 292,
+    "w": 458,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4e9d6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f4e9d6",
+    "#cabaa6"
+   ],
+   "t": 1793667588537
+  },
+  "starter-beige-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 302,
+    "w": 458,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c9b5a5",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c9b5a5",
+    "#9a8778"
+   ],
+   "t": 1793667592883
+  },
+  "starter-camel-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 298,
+    "w": 506,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c98746",
+    "name": "Tan"
+   },
+   "colors": [
+    "#c98746",
+    "#965a29"
+   ],
+   "t": 1793667596767
+  },
+  "starter-chocolate-brown-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 302,
+    "w": 458,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#452c27",
+    "name": "Black"
+   },
+   "colors": [
+    "#452c27"
+   ],
+   "t": 1793667601667
+  },
+  "starter-grey-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 302,
+    "w": 460,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#666c74",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#666c74"
+   ],
+   "t": 1793667604826
+  },
+  "starter-navy-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 298,
+    "w": 460,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#191b49",
+    "name": "Navy"
+   },
+   "colors": [
+    "#191b49"
+   ],
+   "t": 1793667608896
+  },
+  "starter-olive-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 304,
+    "w": 462,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#545b39",
+    "name": "Olive"
+   },
+   "colors": [
+    "#545b39"
+   ],
+   "t": 1793667612507
+  },
+  "starter-sage-green-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 298,
+    "w": 458,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#788a76",
+    "name": "Grey"
+   },
+   "colors": [
+    "#788a76",
+    "#474838"
+   ],
+   "t": 1793667615782
+  },
+  "starter-blush-pink-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 300,
+    "w": 462,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e7b6b4",
+    "name": "Blush"
+   },
+   "colors": [
+    "#e7b6b4",
+    "#b98987"
+   ],
+   "t": 1793667619207
+  },
+  "starter-oatmeal-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 300,
+    "w": 466,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b9a498",
+    "name": "Grey"
+   },
+   "colors": [
+    "#b9a498",
+    "#89746b"
+   ],
+   "t": 1793667623527
+  },
+  "starter-stone-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 468,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#585c63",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#585c63",
+    "#35363a",
+    "#83858a"
+   ],
+   "t": 1793667627476
+  },
+  "starter-espresso-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 298,
+    "w": 456,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472a26",
+    "name": "Brown"
+   },
+   "colors": [
+    "#472a26"
+   ],
+   "t": 1793667630969
+  },
+  "starter-mocha-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 464,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#563b37",
+    "name": "Brown"
+   },
+   "colors": [
+    "#563b37"
+   ],
+   "t": 1793667634250
+  },
+  "starter-ecru-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 250,
+    "y": 296,
+    "w": 428,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d6cbb6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d6cbb6",
+    "#a69b87"
+   ],
+   "t": 1793667637397
+  },
+  "starter-black-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 266,
+    "y": 322,
+    "w": 364,
+    "h": 490
+   },
+   "v": 5,
+   "color": {
+    "hex": "#040404",
+    "name": "Black"
+   },
+   "colors": [
+    "#040404",
+    "#373538"
+   ],
+   "t": 1793667642689
+  },
+  "starter-ivory-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 370,
+    "w": 332,
+    "h": 370
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fcfcf8",
+    "name": "White"
+   },
+   "colors": [
+    "#fcfcf8",
+    "#c3b799",
+    "#c8c9c7"
+   ],
+   "t": 1793667646230
+  },
+  "starter-champagne-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 246,
+    "y": 324,
+    "w": 374,
+    "h": 436
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fdfcf6",
+    "name": "White"
+   },
+   "colors": [
+    "#fdfcf6",
+    "#997657",
+    "#d8c9b6",
+    "#3b240c"
+   ],
+   "t": 1793667652990
+  },
+  "starter-chocolate-brown-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 274,
+    "y": 318,
+    "w": 342,
+    "h": 442
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97655a",
+    "name": "Brown"
+   },
+   "colors": [
+    "#97655a",
+    "#38231b",
+    "#0b0601",
+    "#643d34"
+   ],
+   "t": 1793667656131
+  },
+  "starter-navy-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 316,
+    "w": 356,
+    "h": 386
+   },
+   "v": 5,
+   "color": {
+    "hex": "#020106",
+    "name": "Black"
+   },
+   "colors": [
+    "#020106",
+    "#070827",
+    "#344999",
+    "#1a2867"
+   ],
+   "t": 1793667661240
+  },
+  "starter-blush-pink-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 276,
+    "y": 314,
+    "w": 342,
+    "h": 442
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9d7d9",
+    "name": "Blush"
+   },
+   "colors": [
+    "#f9d7d9",
+    "#aa6668",
+    "#daa6a8"
+   ],
+   "t": 1793667665943
+  },
+  "starter-burgundy-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 274,
+    "y": 322,
+    "w": 348,
+    "h": 470
+   },
+   "v": 5,
+   "color": {
+    "hex": "#170103",
+    "name": "Black"
+   },
+   "colors": [
+    "#170103",
+    "#470815",
+    "#b63a59",
+    "#75162b"
+   ],
+   "t": 1793667669342
+  },
+  "starter-sage-green-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 318,
+    "w": 362,
+    "h": 496
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5fae8",
+    "name": "White"
+   },
+   "colors": [
+    "#d5fae8",
+    "#3a4a36",
+    "#a6cbb4",
+    "#66846b"
+   ],
+   "t": 1793667673268
+  },
+  "starter-oatmeal-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 252,
+    "y": 310,
+    "w": 394,
+    "h": 620
+   },
+   "v": 5,
+   "color": {
+    "hex": "#866a56",
+    "name": "Brown"
+   },
+   "colors": [
+    "#866a56",
+    "#493932",
+    "#c4a88b",
+    "#181506"
+   ],
+   "t": 1793667678137
+  },
+  "starter-stone-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 248,
+    "y": 314,
+    "w": 398,
+    "h": 616
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161919",
+    "name": "Black"
+   },
+   "colors": [
+    "#161919",
+    "#9ba4a5",
+    "#45494a",
+    "#6b7375"
+   ],
+   "t": 1793667681343
+  },
+  "starter-espresso-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 254,
+    "y": 318,
+    "w": 374,
+    "h": 608
+   },
+   "v": 5,
+   "color": {
+    "hex": "#170901",
+    "name": "Black"
+   },
+   "colors": [
+    "#170901",
+    "#351b09",
+    "#78553a",
+    "#aa8469"
+   ],
+   "t": 1793667689468
+  },
+  "starter-mocha-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 266,
+    "y": 310,
+    "w": 362,
+    "h": 610
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472729",
+    "name": "Black"
+   },
+   "colors": [
+    "#472729",
+    "#190908",
+    "#956a68"
+   ],
+   "t": 1793667693162
+  },
+  "starter-ecru-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 264,
+    "y": 308,
+    "w": 358,
+    "h": 440
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d7cab7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d7cab7",
+    "#fbfbf5",
+    "#b59a79"
+   ],
+   "t": 1793667696036
+  },
+  "starter-white-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 282,
+    "y": 302,
+    "w": 334,
+    "h": 442
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9fafa",
+    "name": "White"
+   },
+   "colors": [
+    "#f9fafa",
+    "#c9c9c7"
+   ],
+   "t": 1793667699019
+  },
+  "starter-cream-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 270,
+    "y": 300,
+    "w": 356,
+    "h": 436
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e7dbc8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e7dbc8"
+   ],
+   "t": 1793667701775
+  },
+  "starter-camel-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 244,
+    "y": 306,
+    "w": 402,
+    "h": 614
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b47c56",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b47c56"
+   ],
+   "t": 1793667724167
+  },
+  "starter-chocolate-brown-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 302,
+    "w": 338,
+    "h": 440
+   },
+   "v": 5,
+   "color": {
+    "hex": "#492824",
+    "name": "Brown"
+   },
+   "colors": [
+    "#492824"
+   ],
+   "t": 1793667727366
+  },
+  "starter-grey-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 296,
+    "w": 340,
+    "h": 444
+   },
+   "v": 5,
+   "color": {
+    "hex": "#85898b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#85898b",
+    "#5a5b58"
+   ],
+   "t": 1793667732164
+  },
+  "starter-navy-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 246,
+    "y": 302,
+    "w": 376,
+    "h": 406
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1c1655",
+    "name": "Navy"
+   },
+   "colors": [
+    "#1c1655",
+    "#0b0528",
+    "#030006"
+   ],
+   "t": 1793667746880
+  },
+  "starter-olive-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 300,
+    "w": 336,
+    "h": 468
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5b6536",
+    "name": "Olive"
+   },
+   "colors": [
+    "#5b6536",
+    "#373c13"
+   ],
+   "t": 1793667752878
+  },
+  "starter-sage-green-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 272,
+    "y": 304,
+    "w": 354,
+    "h": 482
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8ba37c",
+    "name": "Sage"
+   },
+   "colors": [
+    "#8ba37c",
+    "#576848"
+   ],
+   "t": 1793667766314
+  },
+  "starter-blush-pink-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 266,
+    "y": 298,
+    "w": 376,
+    "h": 508
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9b5b7",
+    "name": "Pink"
+   },
+   "colors": [
+    "#f9b5b7",
+    "#d88789"
+   ],
+   "t": 1793667769105
+  },
+  "starter-light-blue-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 270,
+    "y": 292,
+    "w": 350,
+    "h": 468
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97caf7",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#97caf7",
+    "#77a8e9"
+   ],
+   "t": 1793667772451
+  },
+  "starter-mocha-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 272,
+    "y": 298,
+    "w": 338,
+    "h": 448
+   },
+   "v": 5,
+   "color": {
+    "hex": "#482b22",
+    "name": "Brown"
+   },
+   "colors": [
+    "#482b22"
+   ],
+   "t": 1793667788762
+  },
+  "starter-black-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 264,
+    "y": 302,
+    "w": 350,
+    "h": 460
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c0c0a",
+    "name": "Black"
+   },
+   "colors": [
+    "#0c0c0a"
+   ],
+   "t": 1793667799583
+  },
+  "starter-white-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 284,
+    "y": 302,
+    "w": 326,
+    "h": 440
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fafaf9",
+    "name": "White"
+   },
+   "colors": [
+    "#fafaf9"
+   ],
+   "t": 1793667802875
+  },
+  "starter-cream-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 282,
+    "y": 298,
+    "w": 330,
+    "h": 464
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5edd2",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f5edd2",
+    "#c5b89b"
+   ],
+   "t": 1793667806539
+  },
+  "starter-beige-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 282,
+    "y": 296,
+    "w": 330,
+    "h": 438
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dcc2a8",
+    "name": "Beige"
+   },
+   "colors": [
+    "#dcc2a8",
+    "#ac9379"
+   ],
+   "t": 1793667809865
+  },
+  "starter-camel-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 264,
+    "y": 302,
+    "w": 364,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a86b46",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a86b46",
+    "#79482b"
+   ],
+   "t": 1793667813448
+  },
+  "starter-chocolate-brown-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 296,
+    "w": 342,
+    "h": 460
+   },
+   "v": 5,
+   "color": {
+    "hex": "#43241c",
+    "name": "Brown"
+   },
+   "colors": [
+    "#43241c"
+   ],
+   "t": 1793667820230
+  },
+  "starter-grey-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 302,
+    "w": 350,
+    "h": 592
+   },
+   "v": 5,
+   "color": {
+    "hex": "#747b8b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#747b8b"
+   ],
+   "t": 1793667825442
+  },
+  "starter-navy-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 256,
+    "y": 294,
+    "w": 378,
+    "h": 508
+   },
+   "v": 5,
+   "color": {
+    "hex": "#222458",
+    "name": "Navy"
+   },
+   "colors": [
+    "#222458",
+    "#0d0d25"
+   ],
+   "t": 1793667829369
+  },
+  "starter-olive-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 270,
+    "y": 294,
+    "w": 342,
+    "h": 452
+   },
+   "v": 5,
+   "color": {
+    "hex": "#646b45",
+    "name": "Olive"
+   },
+   "colors": [
+    "#646b45",
+    "#363b1b"
+   ],
+   "t": 1793667836003
+  },
+  "starter-light-blue-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 300,
+    "w": 342,
+    "h": 414
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a7d9f9",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#a7d9f9"
+   ],
+   "t": 1793667839492
+  },
+  "starter-butter-yellow-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 260,
+    "y": 302,
+    "w": 420,
+    "h": 704
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5e8aa",
+    "name": "Beige"
+   },
+   "colors": [
+    "#f5e8aa",
+    "#c6b979"
+   ],
+   "t": 1793667848932
   }
  },
  "failed": {
@@ -5846,30 +8175,6 @@
   "starter-black-tailored-vest": [
    "it added shorts or trousers to the top"
   ],
-  "starter-black-ribbed-tank": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-sage-green-ribbed-tank": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-navy-fitted-tee": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-chocolate-brown-corset-top": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c16ae430-67c1-4fb6-a065-b81d53db5f89)"
-  ],
-  "starter-navy-button-down-shirt": [
-   "taken out on review: it added trousers to the shirt"
-  ],
-  "starter-grey-button-down-shirt": [
-   "taken out on review: it added trousers to the shirt"
-  ],
-  "starter-grey-ribbed-tank": [
-   "taken out on review: blotches on the piece"
-  ],
-  "starter-white-satin-cami": [
-   "taken out on review: it added shorts to the top"
-  ],
   "starter-black-strapless-tube-top": [
    "taken out on review: drawn as a long-sleeve top, twice"
   ],
@@ -5904,7 +8209,7 @@
    "only the toes came out (left out by review)"
   ],
   "starter-beige-tailored-vest": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (29a8c474-5ff2-4037-ba82-e93718f33695)"
+   "it added shorts or trousers to the top"
   ],
   "starter-tan-halter-top": [
    "taken out on review: pale arms kept with the piece, twice"
@@ -5912,17 +8217,11 @@
   "starter-tan-scoop-bodysuit": [
    "taken out on review: pale arms kept with the piece, twice"
   ],
-  "starter-chocolate-brown-satin-cami": [
-   "taken out on review: pale arms kept with the piece"
-  ],
   "starter-chocolate-brown-fitted-tee": [
    "it added shorts or trousers to the top"
   ],
-  "starter-beige-button-down-shirt": [
-   "taken out on review: it added trousers to the shirt"
-  ],
   "starter-chocolate-brown-button-down-shirt": [
-   "taken out on review: it added trousers to the shirt"
+   "it added shorts or trousers to the top"
   ],
   "starter-brown-leather-blazer": [
    "a stub of trousers kept under it (left out by review)"
@@ -5932,15 +8231,6 @@
   ],
   "starter-champagne-satin-slip-maxi": [
    "her arm and neck kept with the dress (left out by review)"
-  ],
-  "starter-butter-yellow-corset-top": [
-   "chunks missing from the corset (left out by review)"
-  ],
-  "starter-cream-crochet-cami": [
-   "a hole cut through the middle (left out by review)"
-  ],
-  "starter-white-off-shoulder-sweater": [
-   "a blue edge at her sides (left out by review)"
   ],
   "starter-black-leather-mini-skirt": [
    "holes at the sides (left out by review)"
@@ -5953,6 +8243,21 @@
   ],
   "starter-cream-pleated-trousers": [
    "holes at the side of the trousers (left out by review)"
+  ],
+  "starter-light-blue-v-neck-bodysuit": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (1825e1a6-c730-4fd6-8640-70c137fc701e)"
+  ],
+  "starter-beige-square-neck-tank": [
+   "it added shorts or trousers to the top"
+  ],
+  "starter-burgundy-square-neck-tank": [
+   "it added shorts or trousers to the top"
+  ],
+  "starter-red-square-neck-tank": [
+   "it added shorts or trousers to the top"
+  ],
+  "starter-oatmeal-racerback-tank": [
+   "it added shorts or trousers to the top"
   ]
  },
  "blocked": {
