@@ -381,25 +381,6 @@
    ],
    "t": 1793457190812
   },
-  "starter-white-denim-straight-jeans": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 634,
-    "w": 454,
-    "h": 974
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e7e5ec",
-    "name": "White"
-   },
-   "colors": [
-    "#e7e5ec",
-    "#d8bbd3"
-   ],
-   "t": 1793457191817
-  },
   "starter-black-bike-shorts": {
    "kind": "worn",
    "box": {
@@ -857,25 +838,6 @@
    ],
    "t": 1793642339795
   },
-  "starter-white-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 268,
-    "w": 638,
-    "h": 714
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f4f5f5",
-    "name": "White"
-   },
-   "colors": [
-    "#f4f5f5",
-    "#b9b9b8"
-   ],
-   "t": 1793498649045
-  },
   "starter-grey-plaid-blazer": {
    "kind": "worn",
    "box": {
@@ -991,26 +953,6 @@
     "#1a1916"
    ],
    "t": 1793498676203
-  },
-  "starter-camel-cropped-jacket": {
-   "kind": "worn",
-   "box": {
-    "x": 110,
-    "y": 242,
-    "w": 680,
-    "h": 644
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d48649",
-    "name": "Orange"
-   },
-   "colors": [
-    "#d48649",
-    "#975829",
-    "#56290b"
-   ],
-   "t": 1793642340579
   },
   "starter-ivory-tweed-jacket": {
    "kind": "worn",
@@ -1566,26 +1508,6 @@
    ],
    "t": 1793411939495
   },
-  "starter-white-silk-v-neck-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 306,
-    "w": 636,
-    "h": 580
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f7f7f7",
-    "name": "White"
-   },
-   "colors": [
-    "#f7f7f7",
-    "#c8c9c9",
-    "#989998"
-   ],
-   "t": 1793498806962
-  },
   "starter-black-satin-wrap-blouse": {
    "kind": "worn",
    "box": {
@@ -1848,43 +1770,6 @@
    ],
    "t": 1793498911196
   },
-  "starter-white-v-neck-cable-sweater": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 288,
-    "w": 632,
-    "h": 598
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f9f8f6",
-    "name": "White"
-   },
-   "colors": [
-    "#f9f8f6"
-   ],
-   "t": 1793498930978
-  },
-  "starter-grey-cashmere-sweater": {
-   "kind": "worn",
-   "box": {
-    "x": 118,
-    "y": 282,
-    "w": 654,
-    "h": 678
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a4a5aa",
-    "name": "Grey"
-   },
-   "colors": [
-    "#a4a5aa",
-    "#74777c"
-   ],
-   "t": 1793498959837
-  },
   "starter-cream-cropped-cardigan-top": {
    "kind": "worn",
    "box": {
@@ -2089,25 +1974,6 @@
     "#f7ebd5"
    ],
    "t": 1793499033079
-  },
-  "starter-white-crochet-crop-top": {
-   "kind": "worn",
-   "box": {
-    "x": 284,
-    "y": 300,
-    "w": 332,
-    "h": 374
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f9f9f8",
-    "name": "White"
-   },
-   "colors": [
-    "#f9f9f8",
-    "#c9c7c8"
-   ],
-   "t": 1793499035739
   },
   "starter-white-strapless-corset-top": {
    "kind": "worn",
@@ -2500,25 +2366,6 @@
     "#380615"
    ],
    "t": 1793499162722
-  },
-  "starter-white-lace-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 246,
-    "w": 620,
-    "h": 636
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f7f7f9",
-    "name": "White"
-   },
-   "colors": [
-    "#f7f7f9",
-    "#d8c9c7"
-   ],
-   "t": 1793499170958
   },
   "starter-black-lace-cami": {
    "kind": "worn",
@@ -3114,24 +2961,6 @@
    ],
    "t": 1793580614402
   },
-  "starter-olive-scoop-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 304,
-    "w": 462,
-    "h": 670
-   },
-   "v": 5,
-   "color": {
-    "hex": "#5a5b36",
-    "name": "Olive"
-   },
-   "colors": [
-    "#5a5b36"
-   ],
-   "t": 1793580621295
-  },
   "starter-burgundy-scoop-bodysuit": {
    "kind": "worn",
    "box": {
@@ -3243,25 +3072,6 @@
     "#190002"
    ],
    "t": 1793580657316
-  },
-  "starter-olive-square-neck-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 308,
-    "w": 628,
-    "h": 666
-   },
-   "v": 5,
-   "color": {
-    "hex": "#5c633b",
-    "name": "Olive"
-   },
-   "colors": [
-    "#5c633b",
-    "#373b23"
-   ],
-   "t": 1793580660663
   },
   "starter-grey-square-neck-bodysuit": {
    "kind": "worn",
@@ -3415,25 +3225,6 @@
    ],
    "t": 1793580722083
   },
-  "starter-navy-strapless-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 414,
-    "w": 466,
-    "h": 560
-   },
-   "v": 5,
-   "color": {
-    "hex": "#131d55",
-    "name": "Navy"
-   },
-   "colors": [
-    "#131d55",
-    "#070928"
-   ],
-   "t": 1793580730125
-  },
   "starter-navy-ribbed-tank": {
    "kind": "worn",
    "box": {
@@ -3453,24 +3244,6 @@
     "#010007"
    ],
    "t": 1793580784140
-  },
-  "starter-burgundy-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 242,
-    "y": 306,
-    "w": 404,
-    "h": 608
-   },
-   "v": 5,
-   "color": {
-    "hex": "#570225",
-    "name": "Burgundy"
-   },
-   "colors": [
-    "#570225"
-   ],
-   "t": 1793580795967
   },
   "starter-light-blue-ribbed-tank": {
    "kind": "worn",
@@ -3875,25 +3648,6 @@
     "#646a39"
    ],
    "t": 1793580970635
-  },
-  "starter-white-button-down-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 140,
-    "y": 260,
-    "w": 622,
-    "h": 720
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e4e3ed",
-    "name": "White"
-   },
-   "colors": [
-    "#e4e3ed",
-    "#b9b4bb"
-   ],
-   "t": 1793580974855
   },
   "starter-cream-button-down-shirt": {
    "kind": "worn",
@@ -4609,25 +4363,6 @@
    ],
    "t": 1793498852849
   },
-  "starter-beige-sleeveless-knit-top": {
-   "kind": "worn",
-   "box": {
-    "x": 268,
-    "y": 278,
-    "w": 362,
-    "h": 630
-   },
-   "v": 5,
-   "color": {
-    "hex": "#ebcbb4",
-    "name": "Beige"
-   },
-   "colors": [
-    "#ebcbb4",
-    "#c49c87"
-   ],
-   "t": 1793580523280
-  },
   "starter-brown-chunky-turtleneck": {
    "kind": "worn",
    "box": {
@@ -4742,44 +4477,6 @@
     "#97846b"
    ],
    "t": 1793498984392
-  },
-  "starter-tan-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 188,
-    "y": 236,
-    "w": 502,
-    "h": 536
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c59b75",
-    "name": "Camel"
-   },
-   "colors": [
-    "#c59b75",
-    "#876849"
-   ],
-   "t": 1793580543519
-  },
-  "starter-tan-corset-top": {
-   "kind": "worn",
-   "box": {
-    "x": 276,
-    "y": 418,
-    "w": 332,
-    "h": 366
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c69a77",
-    "name": "Camel"
-   },
-   "colors": [
-    "#c69a77",
-    "#956a4a"
-   ],
-   "t": 1793499044774
   },
   "starter-champagne-satin-corset-top": {
    "kind": "worn",
@@ -4980,27 +4677,6 @@
     "#4a2624"
    ],
    "t": 1793580584825
-  },
-  "starter-leopard-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 304,
-    "w": 628,
-    "h": 670
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b79987",
-    "name": "Beige"
-   },
-   "colors": [
-    "#b79987",
-    "#573b36",
-    "#86675a",
-    "#e7cab4"
-   ],
-   "t": 1793580604690
   },
   "starter-chocolate-brown-scoop-bodysuit": {
    "kind": "worn",
@@ -8952,6 +8628,57 @@
   ],
   "starter-ecru-tube-top": [
    "drawn with straps or sleeves, not a tube top (left out by review)"
+  ],
+  "starter-beige-sleeveless-knit-top": [
+   "knickers drawn under it (left out by review)"
+  ],
+  "starter-tan-ribbed-tank": [
+   "her arms kept, tinted green (left out by review)"
+  ],
+  "starter-burgundy-ribbed-tank": [
+   "a dark patch below the hem (left out by review)"
+  ],
+  "starter-camel-cropped-jacket": [
+   "a dark patch at the waist (left out by review)"
+  ],
+  "starter-grey-cashmere-sweater": [
+   "grey scraps hanging at the hips (left out by review)"
+  ],
+  "starter-leopard-bodysuit": [
+   "a pale patch at the neck (left out by review)"
+  ],
+  "starter-olive-scoop-bodysuit": [
+   "a skin patch on the thigh (left out by review)"
+  ],
+  "starter-olive-square-neck-bodysuit": [
+   "a gap at the waist (left out by review)"
+  ],
+  "starter-navy-strapless-bodysuit": [
+   "a magenta patch (left out by review)"
+  ],
+  "starter-tan-corset-top": [
+   "green patch at the side (left out by review)"
+  ],
+  "starter-white-crochet-crop-top": [
+   "blue background through the mesh (left out by review)"
+  ],
+  "starter-white-denim-straight-jeans": [
+   "tinted pink (left out by review)"
+  ],
+  "starter-white-lace-blouse": [
+   "blue and green tint through the lace (left out by review)"
+  ],
+  "starter-white-linen-blazer": [
+   "blue background by the sleeve (left out by review)"
+  ],
+  "starter-white-v-neck-cable-sweater": [
+   "blue background by the sleeve (left out by review)"
+  ],
+  "starter-white-button-down-shirt": [
+   "tinted blue at the hem (left out by review)"
+  ],
+  "starter-white-silk-v-neck-blouse": [
+   "blue background by the sleeve (left out by review)"
   ]
  },
  "blocked": {
