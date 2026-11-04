@@ -1,4 +1,4 @@
-85 pins looked at (0 this run) · stopped: Today’s free Cloudflare allowance is used up.
+86 pins looked at (1 this run) · stopped: Today’s free Cloudflare allowance is used up.
 
 ## accessories (52)
 19× Gold necklace — thin chain with pendant
@@ -15,6 +15,7 @@
 3× Black sunglasses — cat-eye shape
 3× Gold pendant necklace — delicate chain with small pendant
 3× Silver bracelet — thin band on wrist
+2× Gold necklaces — layered delicate chains
 2× Dark sunglasses — large, square frame
 2× Sunglasses — dark lenses, classic frame
 2× Gold rings — minimalist band style
@@ -23,7 +24,6 @@
 2× Ring — simple band on finger
 2× Gold bracelets — stacked delicate bracelets on wrist
 2× Tan belt — wide with large gold buckle
-1× Gold necklaces — layered delicate chains
 1× Oversized sunglasses — large square frames
 1× Black smartphone — held in hand
 1× Gold teardrop earrings — teardrop shape, chunky metal
@@ -55,7 +55,7 @@
 1× Black Gucci belt — gold GG buckle, slim width
 
 ## bags (40)
-6× Black handbag — structured top handle, gold hardware
+7× Black handbag — structured top handle, gold hardware
 4× Black shoulder bag — small, leather, thin strap
 3× Black quilted handbag — shoulder bag with chain strap and gold hardware
 3× Brown suede handbag — shoulder bag, suede fabric, structured
@@ -190,6 +190,7 @@
 3× White sneakers — low top, casual
 3× Brown leather slides — flat sandals, leather, wide strap
 2× White strappy sandals — strappy design, open toe, flat or low heel
+2× Black pumps — pointed toe, stiletto heel
 2× Beige pointed-toe pumps — stiletto heel, pointed toe
 2× Tan pointed-toe pumps — pointed toe, high heel
 2× Clear pointed heels — pointed toe, transparent material, stiletto heel
@@ -210,7 +211,6 @@
 1× Beige pointed heels — pointed toe, stiletto heel
 1× Black pointed-toe heels — pointed toe, stiletto heel
 1× Burgundy pointed toe heels — pointed toe, stiletto heel
-1× Black pumps — pointed toe, stiletto heel
 1× White pumps — pointed toe, stiletto heel
 1× Nude pointed-toe heels — stiletto, ankle strap, pointed toe
 1× Cream pointed pumps — pointed toe, high stiletto heel
@@ -231,7 +231,7 @@
 1× Beige pointed-toe heels — pointed toe, closed
 1× Brown lace-up boots — platform, lace-up, ankle height
 
-## skirts (12)
+## skirts (13)
 4× Blue denim maxi skirt — high-waisted, long length, front slit, denim fabric
 4× Champagne satin midi skirt — satin fabric, midi length, slim fit, flared hem
 2× Olive green midi skirt — high-waisted, wrap style, midi length, front slit
@@ -244,6 +244,7 @@
 1× Tan leather skirt — mini length, leather, high waisted
 1× Tan checkered mini skirt — mini length, small slit, checkered pattern
 1× Beige midi pencil skirt — high waisted, tight fit, midi length
+1× Olive midi skirt — high-waisted, pencil cut, midi length
 
 ## tanks (7)
 3× White ribbed tank top — scoop neckline, sleeveless, fitted
@@ -265,6 +266,7 @@
 2× White top — crew neck, fitted, short sleeves
 2× Champagne satin vest — sleeveless, button-down, v-neck, cropped
 2× White button-down shirt — long sleeves, v-neckline, loose fit
+2× Black long sleeve top — fitted, crew neck, long sleeves
 1× Light blue button-down shirt — long sleeve, collared, button-up
 1× White scoop neck tank top — ribbed fabric, sleeveless, scoop neckline
 1× Tan corset top — strapless, sweetheart neckline, structured bodice
@@ -299,4 +301,3 @@
 1× White cable knit sweater — long sleeve, v-neck, chunky knit
 1× Pink chunky knit sweater — oversized, textured knit, long sleeves, crew neck
 1× Tan ribbed crop top — ribbed fabric, short sleeves, cropped length
-1× Black long sleeve top — fitted, crew neck, long sleeves

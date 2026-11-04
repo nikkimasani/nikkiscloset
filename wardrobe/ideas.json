@@ -4467,6 +4467,53 @@
    "image": "https://i.pinimg.com/564x/be/fd/42/befd4217171fddfd8b224b5ef0ac2fea.jpg",
    "text": " ",
    "pieces": []
+  },
+  "1407443631457473": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/8a/f4/56/8af456034c2b55390a549f356474adf6.jpg",
+   "text": "30 Office Outfits With Pencil Skirt for Polished Days",
+   "pieces": [
+    {
+     "name": "Black long sleeve top",
+     "type": "tops",
+     "colors": [
+      "black"
+     ],
+     "detail": "crew neckline, long sleeves, fitted"
+    },
+    {
+     "name": "Olive midi skirt",
+     "type": "skirts",
+     "colors": [
+      "olive green"
+     ],
+     "detail": "high-waisted, pencil cut, midi length"
+    },
+    {
+     "name": "Black pumps",
+     "type": "shoes",
+     "colors": [
+      "black"
+     ],
+     "detail": "pointed toe, high heel"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured tote with top handles"
+    },
+    {
+     "name": "Gold necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "layered delicate chains with pendants"
+    }
+   ]
   }
  }
 }
