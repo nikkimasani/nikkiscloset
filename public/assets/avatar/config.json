@@ -758,7 +758,7 @@
     ],
     "marksVersion": 2
   },
-  "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules. 'off' moves the point, 'squash' draws the picture as a band (height = width x squash, for a bracelet or watch), and 'variants' change the size or anchor for pieces whose name or description matches.",
+  "accAbout": "Accessories and bags snap to a body point instead of a box: 'at' is the point (or two points for a pair: the left half of the picture goes on the first, the right half on the second), 'w' or 'h' the size in picture pixels, 'anchor' the spot on the cutout (fractions of its width and height) that sits on the point. Shoes keep the feet box under rules. 'off' moves the point, 'squash' draws the picture as a band (height = width x squash, for a bracelet or watch), and 'variants' change the size or anchor for pieces whose name or description matches. 'draw': 'cuff' draws a watch or bracelet as a band round the wrist in the piece's metal colour ('c' the middle of the wrist, 'w' its width, 'angle' the forearm's tilt, 't' the band's thickness, 'face' a watch face), since a photo taken from above can't be squashed onto an arm.",
   "accRules": {
     "earrings": {
       "at": [
@@ -790,30 +790,25 @@
       ]
     },
     "watch": {
-      "at": "wristL",
-      "off": [
-        6,
-        -22
+      "draw": "cuff",
+      "c": [
+        170,
+        853
       ],
-      "w": 50,
-      "squash": 0.42,
-      "anchor": [
-        0.5,
-        0.5
-      ]
+      "w": 40,
+      "angle": 17,
+      "t": 6,
+      "face": true
     },
     "bracelet": {
-      "at": "wristR",
-      "off": [
-        -6,
-        -22
+      "draw": "cuff",
+      "c": [
+        722,
+        853
       ],
-      "w": 50,
-      "squash": 0.42,
-      "anchor": [
-        0.5,
-        0.5
-      ]
+      "w": 40,
+      "angle": -17,
+      "t": 4
     },
     "rings": {
       "at": "handR",

@@ -290,8 +290,9 @@ test('several accessories are drawn together, each on its own body point', () =>
   const u = new Map([['e', 'blob:e'], ['w', 'blob:w'], ['s', 'blob:s']]), meta = new Map([['e', { iw: 200, ih: 100 }], ['w', { iw: 100, ih: 100 }], ['s', { iw: 300, ih: 100 }]]);
   const svg = dollSVG({ pack, items: { 'acc:earrings': mkItem('e', 'accessories', { acc: 'earrings', name: 'Gold hoops' }), 'acc:watch': mkItem('w', 'accessories', { acc: 'watch' }), 'acc:sunglasses': mkItem('s', 'accessories', { acc: 'sunglasses' }) }, urls: u, meta });
   assert.deepEqual([...svg.matchAll(/class="gar acc[^"]*" data-id="(\w)"/g)].map((m) => m[1]), ['e', 'w', 's']);
-  const watch = svg.slice(svg.indexOf('data-id="w"')), [, ww, wh] = watch.match(/<svg [^>]*width="([\d.]+)" height="([\d.]+)"/);
-  assert.ok(+wh < +ww * 0.5, 'a watch is drawn as a band round the wrist, not a flat circle');
+  const watch = svg.slice(svg.indexOf('data-id="w"'), svg.indexOf('data-id="s"')), W = config.accRules.watch;
+  assert.ok(watch.includes(`translate(${W.c[0]} ${W.c[1]}) rotate(${W.angle})`) && /<path d="M-[\d.]+ 0Q0 [\d.]+ [\d.]+ 0"/.test(watch) && /<rect /.test(watch) && !/<image /.test(watch), 'a watch is drawn as a band round the wrist (with a face), not its flat photo');
+  assert.ok(/stroke="#c9a227"/.test(dollSVG({ pack, items: { 'acc:watch': mkItem('w', 'accessories', { acc: 'watch', name: 'Gold watch' }) }, urls: u, meta })), 'in its metal (gold)');
   const studs = dollSVG({ pack, items: { 'acc:earrings': mkItem('e', 'accessories', { acc: 'earrings', name: 'Pearl earrings' }) }, urls: u, meta });
   assert.ok(+studs.match(/<svg [^>]*width="([\d.]+)"/)[1] < 25, 'studs are smaller than hoops');
 });
@@ -575,7 +576,7 @@ test('accessories and bags snap to their body points: earrings split onto both e
   assert.ok(Math.abs(pics[0][0] + r.anchor[0] * r.w - eL[0]) < 0.2 && Math.abs(pics[1][0] + r.anchor[0] * r.w - eR[0]) < 0.2, 'centred on the ear points');
   assert.deepEqual([pics[0][4], pics[1][4]], [0, 100], 'left half, right half');
   for (const k of ['head', 'eyes', 'earL', 'earR', 'necklace', 'handL', 'handR', 'belt']) assert.ok(config.points[k], `${k} point`);
-  for (const [k, rule] of Object.entries(config.accRules)) for (const p of [].concat(rule.at)) assert.ok(config.points[p], `${k} -> ${p}`);
+  for (const [k, rule] of Object.entries(config.accRules)) if (rule.draw === 'cuff') assert.ok(rule.c?.length === 2 && rule.w > 0, `${k}: a band round the wrist`); else if (rule.draw !== 'band') for (const p of [].concat(rule.at)) assert.ok(config.points[p], `${k} -> ${p}`);
 });
 test('a corset or tube top sits on the bust line, its sides on the bust and waist points (not on the shoulders)', async () => {
   const { plan, isStrapless } = await import('../public/js/garment.js');

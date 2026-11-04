@@ -1470,18 +1470,6 @@
    ],
    "t": 1793411725968
   },
-  "starter-gold-dome-earrings": {
-   "kind": "photo",
-   "color": {
-    "hex": "#e8b764",
-    "name": "Gold"
-   },
-   "colors": [
-    "#e8b764",
-    "#fcfce7"
-   ],
-   "t": 1793411738754
-  },
   "starter-gold-drop-earrings": {
    "kind": "photo",
    "color": {
@@ -1710,25 +1698,6 @@
     "#c7c4cb"
    ],
    "t": 1793498831898
-  },
-  "starter-cream-satin-button-down": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 260,
-    "w": 650,
-    "h": 626
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f8f8f4",
-    "name": "White"
-   },
-   "colors": [
-    "#f8f8f4",
-    "#d6c8b8"
-   ],
-   "t": 1793498835365
   },
   "starter-black-satin-cami": {
    "kind": "worn",
@@ -3464,24 +3433,6 @@
     "#070928"
    ],
    "t": 1793580730125
-  },
-  "starter-butter-yellow-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 292,
-    "y": 300,
-    "w": 320,
-    "h": 440
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f4eaa8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#f4eaa8"
-   ],
-   "t": 1793580781037
   },
   "starter-navy-ribbed-tank": {
    "kind": "worn",
@@ -5785,26 +5736,6 @@
    ],
    "t": 1793667226955
   },
-  "starter-butter-yellow-corset-top": {
-   "kind": "worn",
-   "box": {
-    "x": 280,
-    "y": 312,
-    "w": 336,
-    "h": 454
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f9e6a8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#f9e6a8",
-    "#d7b768",
-    "#a88546"
-   ],
-   "t": 1793667231594
-  },
   "starter-black-ribbed-tank": {
    "kind": "worn",
    "box": {
@@ -7764,6 +7695,18 @@
   ],
   "starter-butter-yellow-racerback-tank": [
    "her legs kept in shreds (left out by review)"
+  ],
+  "starter-butter-yellow-ribbed-tank": [
+   "her navel and skin show through the knit (left out by review)"
+  ],
+  "starter-butter-yellow-corset-top": [
+   "skin patches inside the cups (left out by review)"
+  ],
+  "starter-cream-satin-button-down": [
+   "a hole at the collar (left out by review)"
+  ],
+  "starter-gold-dome-earrings": [
+   "cut through: half of each earring missing (left out by review)"
   ]
  },
  "blocked": {
