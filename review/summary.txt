@@ -1,4 +1,4 @@
-0 made this run · 401 of 3044 in the wardrobe · 80 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+106 made this run · 503 of 3044 in the wardrobe · 57 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -35,7 +35,6 @@ starter-white-pointed-kitten-heels: only the toes came out (left out by review)
 starter-beige-tailored-vest: it added shorts or trousers to the top
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
-starter-chocolate-brown-fitted-tee: it added shorts or trousers to the top
 starter-chocolate-brown-button-down-shirt: it added shorts or trousers to the top
 starter-brown-leather-blazer: a stub of trousers kept under it (left out by review)
 starter-camel-wool-coat: dark patches inside the coat (left out by review)
@@ -44,38 +43,16 @@ starter-black-leather-mini-skirt: holes at the sides (left out by review)
 starter-cream-knit-midi-skirt: a brown patch at the hip (left out by review)
 starter-camel-sweater-dress: her legs kept with the dress (left out by review)
 starter-cream-pleated-trousers: holes at the side of the trousers (left out by review)
-starter-light-blue-v-neck-bodysuit: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (1825e1a6-c730-4fd6-8640-70c137fc701e)
-starter-beige-square-neck-tank: it added shorts or trousers to the top
-starter-burgundy-square-neck-tank: it added shorts or trousers to the top
 starter-red-square-neck-tank: it added shorts or trousers to the top
-starter-oatmeal-racerback-tank: it added shorts or trousers to the top
-starter-chocolate-brown-satin-cami: knickers added under the cami (left out by review)
-starter-white-off-shoulder-sweater: drawn as a long crew-neck jumper with a fuzzy hem, not off-shoulder (left out by review)
-starter-white-cap-sleeve-bodysuit: a yellow patch on the chest and skin-pink legs (left out by review)
-starter-camel-cap-sleeve-bodysuit: a pale arm kept beside it (left out by review)
-starter-sage-green-cap-sleeve-bodysuit: a hole at the neckline (left out by review)
-starter-beige-cap-sleeve-bodysuit: stray strips at the sleeves (left out by review)
-starter-camel-one-shoulder-bodysuit: bare midriff and an extra arm kept (left out by review)
-starter-champagne-one-shoulder-bodysuit: a pale arm kept beside it (left out by review)
-starter-oatmeal-one-shoulder-bodysuit: a stray strip at the arm (left out by review)
-starter-espresso-one-shoulder-bodysuit: a dark patch at the armpit (left out by review)
-starter-white-mock-neck-bodysuit: a hole at the waist (left out by review)
-starter-mocha-mock-neck-bodysuit: a patch at the neck (left out by review)
-starter-chocolate-brown-mock-neck-bodysuit: her bare chest kept in a mock neck (left out by review)
-starter-burgundy-mock-neck-bodysuit: her bare chest kept in a mock neck (left out by review)
-starter-camel-v-neck-bodysuit: her neck and chest kept with it (left out by review)
-starter-stone-thong-back-tank-bodysuit: a flap beside the waist (left out by review)
-starter-oatmeal-thong-back-tank-bodysuit: a blue patch at the crotch (left out by review)
-starter-ivory-lace-trim-cami: a smudge on the side (left out by review)
-starter-oatmeal-lace-trim-cami: knickers added under the cami (left out by review)
-starter-mocha-lace-trim-cami: knickers added under the cami (left out by review)
-starter-espresso-lace-trim-cami: holes and knickers added (left out by review)
-starter-stone-lace-trim-cami: cut out in shreds (left out by review)
-starter-ecru-lace-trim-cami: an orange smudge at the hem (left out by review)
-starter-sage-green-lace-trim-cami: dark patches beside the arms (left out by review)
-starter-navy-square-neck-tank: dark patches at the armpits (left out by review)
-starter-camel-square-neck-tank: knickers added under the tank (left out by review)
-starter-navy-button-down-shirt: a magenta patch on the arm (left out by review)
-starter-camel-racerback-tank: knickers added under the tank (left out by review)
-starter-grey-racerback-tank: holes and knickers added (left out by review)
-starter-butter-yellow-racerback-tank: her legs kept in shreds (left out by review)
+starter-champagne-one-shoulder-bodysuit: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (a411ff9e-33b8-433d-9fea-20b49c254a86)
+starter-camel-square-neck-tank: it added shorts or trousers to the top
+starter-navy-button-down-shirt: it added shorts or trousers to the top
+starter-camel-racerback-tank: it added shorts or trousers to the top
+starter-gold-dome-earrings: cut through: half of each earring missing (left out by review)
+starter-beige-tube-top: it added shorts or trousers to the top
+starter-camel-tube-top: it added shorts or trousers to the top
+starter-navy-tube-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (440af9fd-0397-4b73-b7f4-4b87d894607a)
+starter-chocolate-brown-one-shoulder-top: it added shorts or trousers to the top
+starter-olive-baby-tee: it added shorts or trousers to the top
+starter-sage-green-baby-tee: it added shorts or trousers to the top
+starter-black-v-neck-tee: it added shorts or trousers to the top
