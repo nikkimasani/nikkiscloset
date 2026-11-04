@@ -115,10 +115,11 @@ const breather = () => new Promise((r) => (window.requestIdleCallback ? requestI
 function composeWorker() {
   if (typeof Worker === 'undefined' || typeof OffscreenCanvas === 'undefined' || !OffscreenCanvas.prototype.convertToBlob) return null;
   let w; try { w = new Worker('/js/compose-worker.js'); } catch { return null; }
-  const waiting = new Map();
+  const waiting = new Map(); let dead = false;
+  const fail = () => { dead = true; for (const [, f] of waiting) f[1](new Error('worker failed')); waiting.clear(); try { w.terminate(); } catch { /* gone */ } }; // (once it fails, every later piece uses the main-thread way straight away)
   w.onmessage = (e) => { const f = waiting.get(e.data.id); if (f) { waiting.delete(e.data.id); e.data.error ? f[1](new Error(e.data.error)) : f[0]({ cutout: e.data.cutout, worn: e.data.worn || undefined }); } };
-  w.onerror = () => { for (const [, f] of waiting) f[1](new Error('worker failed')); waiting.clear(); };
-  return (id, url, box, size) => new Promise((ok, no) => { waiting.set(id, [ok, no]); w.postMessage({ id, url: new URL(url, location.href).href, box, size }); setTimeout(() => waiting.has(id) && (waiting.delete(id), no(new Error('timeout'))), 30000); });
+  w.onerror = fail;
+  return (id, url, box, size) => dead ? Promise.reject(new Error('worker failed')) : new Promise((ok, no) => { waiting.set(id, [ok, no]); w.postMessage({ id, url: new URL(url, location.href).href, box, size }); setTimeout(() => waiting.has(id) && fail(), 30000); });
 }
 
 async function importPreloaded() {

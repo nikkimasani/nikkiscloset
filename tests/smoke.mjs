@@ -861,6 +861,17 @@ try {
     await pI.context().close();
   }
 
+  // if the background worker can't start, every preloaded piece falls back to the main thread at once (no 30 s wait per piece)
+  {
+    const pW = await mk(); const box = { x: 220, y: 240, w: 460, h: 760 }, pic = readFileSync(new URL('./fixtures/white/blazer.png', import.meta.url));
+    await pW.context().route('**/js/compose-worker.js', (r) => r.fulfill({ status: 404, body: 'gone' }));
+    await pW.context().route('**/starter/made/index.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ version: 7, pieces: { 'starter-black-fitted-tee': { kind: 'worn', box, t: 70, color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] }, 'starter-white-ribbed-tank': { kind: 'worn', box, t: 70, color: { hex: '#f6f7f7', name: 'White' }, colors: ['#f6f7f7'] }, 'starter-black-clutch': { kind: 'photo', color: { hex: '#1c1c1c', name: 'Black' }, colors: ['#1c1c1c'] } }, failed: {} }) }));
+    await pW.context().route('**/starter/made/*.webp*', (r) => r.fulfill({ contentType: 'image/png', body: pic }));
+    const t0 = Date.now(); await pW.reload(); const done = await pW.waitForFunction(() => window.__closet?.items.length === 3, null, { timeout: 15000 }).then(() => true, () => false);
+    ok(done && await pW.evaluate(() => window.__closet.items.filter((i) => i.worn?.size).length) === 2, `with the worker unavailable, new preloaded pieces are still added quickly (${Date.now() - t0} ms)`);
+    await pW.context().close();
+  }
+
   // the preloaded wardrobe: pieces made once by the preload workflow are added on first open, with no generating; removed ones stay removed
   {
     const pP = await mk(); let ver = 1;

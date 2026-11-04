@@ -1,4 +1,4 @@
-93 made this run (30 more left out by review) · 401 of 3044 in the wardrobe · 80 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+64 made this run (42 more left out by review) · 461 of 3044 in the wardrobe · 99 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -35,7 +35,6 @@ starter-white-pointed-kitten-heels: only the toes came out (left out by review)
 starter-beige-tailored-vest: it added shorts or trousers to the top
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
-starter-chocolate-brown-fitted-tee: it added shorts or trousers to the top
 starter-chocolate-brown-button-down-shirt: it added shorts or trousers to the top
 starter-brown-leather-blazer: a stub of trousers kept under it (left out by review)
 starter-camel-wool-coat: dark patches inside the coat (left out by review)
@@ -44,8 +43,16 @@ starter-black-leather-mini-skirt: holes at the sides (left out by review)
 starter-cream-knit-midi-skirt: a brown patch at the hip (left out by review)
 starter-camel-sweater-dress: her legs kept with the dress (left out by review)
 starter-cream-pleated-trousers: holes at the side of the trousers (left out by review)
-starter-light-blue-v-neck-bodysuit: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (1825e1a6-c730-4fd6-8640-70c137fc701e)
-starter-beige-square-neck-tank: it added shorts or trousers to the top
-starter-burgundy-square-neck-tank: it added shorts or trousers to the top
 starter-red-square-neck-tank: it added shorts or trousers to the top
-starter-oatmeal-racerback-tank: it added shorts or trousers to the top
+starter-champagne-one-shoulder-bodysuit: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (a411ff9e-33b8-433d-9fea-20b49c254a86)
+starter-camel-square-neck-tank: it added shorts or trousers to the top
+starter-navy-button-down-shirt: it added shorts or trousers to the top
+starter-camel-racerback-tank: it added shorts or trousers to the top
+starter-gold-dome-earrings: cut through: half of each earring missing (left out by review)
+starter-beige-tube-top: it added shorts or trousers to the top
+starter-camel-tube-top: it added shorts or trousers to the top
+starter-navy-tube-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (440af9fd-0397-4b73-b7f4-4b87d894607a)
+starter-chocolate-brown-one-shoulder-top: it added shorts or trousers to the top
+starter-olive-baby-tee: it added shorts or trousers to the top
+starter-sage-green-baby-tee: it added shorts or trousers to the top
+starter-black-v-neck-tee: it added shorts or trousers to the top
