@@ -4203,28 +4203,6 @@
    ],
    "t": 1793642334929
   },
-  "starter-brown-leopard-corset-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 310,
-    "w": 484,
-    "h": 698
-   },
-   "v": 5,
-   "color": {
-    "hex": "#59342a",
-    "name": "Brown"
-   },
-   "colors": [
-    "#59342a",
-    "#ba7955",
-    "#966a57",
-    "#daa686",
-    "#260c07"
-   ],
-   "t": 1793498778609
-  },
   "starter-oatmeal-knit-sweater-vest": {
    "kind": "worn",
    "box": {
@@ -4656,27 +4634,6 @@
     "#c88a94"
    ],
    "t": 1793499289679
-  },
-  "starter-chocolate-halter-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 286,
-    "w": 638,
-    "h": 716
-   },
-   "v": 5,
-   "color": {
-    "hex": "#190704",
-    "name": "Black"
-   },
-   "colors": [
-    "#190704",
-    "#c68759",
-    "#794845",
-    "#4a2624"
-   ],
-   "t": 1793580584825
   },
   "starter-chocolate-brown-scoop-bodysuit": {
    "kind": "worn",
@@ -8356,25 +8313,6 @@
    ],
    "t": 1793839689290
   },
-  "starter-beige-sleeveless-knit-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 270,
-    "w": 524,
-    "h": 732
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c3ab98",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c3ab98",
-    "#ba8a65"
-   ],
-   "t": 1793839716694
-  },
   "starter-white-crochet-crop-top": {
    "kind": "worn",
    "box": {
@@ -9288,6 +9226,15 @@
   ],
   "starter-mocha-oversized-tee": [
    "shorts or knickers added (left out by review)"
+  ],
+  "starter-beige-sleeveless-knit-top": [
+   "her left arm kept with the top (left out by review)"
+  ],
+  "starter-chocolate-halter-top": [
+   "both her arms kept with the top (left out by review)"
+  ],
+  "starter-brown-leopard-corset-top": [
+   "her arm kept with the top (left out by review)"
   ]
  },
  "blocked": {
