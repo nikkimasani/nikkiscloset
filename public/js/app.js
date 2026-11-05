@@ -1612,7 +1612,7 @@ async function describeInspo(d, pass) {
     const c = toCanvas((await loadImage(d.blob)).img, 512), img = c.toDataURL('image/jpeg', 0.85);
     const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ describe: true, image: img }) });
     const j = await r.json().catch(() => ({})); if (Number.isFinite(j.used)) starter.setUsed(j.used);
-    if (!r.ok) throw new Error(j.error || `Failed (${r.status})`);
+    if (!r.ok) throw new Error((j.error || `Failed (${r.status})`) + (j.limit && j.resetAt ? ` It comes back at ${new Date(j.resetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}; until then the matches below go by colour only.` : ''));
     d.ideas = j.pieces || [];
     if (d.ideas.length) d.wanted = [...new Set(d.ideas.map((p) => slotOf(p.type)))];
   } catch (e) { d.ideas = { error: e.message }; if (/passcode/i.test(e.message)) store.set('aipass', ''); }

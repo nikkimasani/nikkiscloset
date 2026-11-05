@@ -2,7 +2,7 @@
 // Make the preloaded wardrobe: every starter piece, made once, saved into the app (public/starter/made/), so every device opens with the
 // whole closet and nothing is generated on a phone. Run by .github/workflows/preload.yml with the Cloudflare secrets kept in GitHub.
 //
-//   CF_ACCOUNT_ID=... CF_API_TOKEN=... node scripts/preload.mjs                 make what isn't made yet (stops at the day's free allowance)
+//   CF_ACCOUNT_ID=... CF_API_TOKEN=... node scripts/preload.mjs                 make what isn't made yet (stops at PRELOAD_NEURONS, default 6500 of the 10000 free a day)
 //   ... --redo starter-black-fitted-tee,starter-camel-ribbed-turtleneck          make these again
 //   ... --redo worn                                                             make every piece drawn on the model again
 //   ... --batch tops                                                            just one category
@@ -47,8 +47,12 @@ page.on('pageerror', (e) => console.error('page error:', e.message));
 await page.goto(`http://localhost:${PORT}/`); await page.evaluate(() => localStorage.setItem('aipass', ''));
 const save = () => { index.version = Date.now(); writeFileSync(INDEX, JSON.stringify(index, null, 1) + '\n'); };
 
+// The nightly run leaves part of the day's free allowance for using the app (Inspo, making a piece): it stops at PRELOAD_NEURONS (default 6500 of 10000).
+const BUDGET = Number(process.env.PRELOAD_NEURONS) || 6500, PER = { worn: 57.5, photo: 57.6 + 10.7 }; let spent = 0;
 let made = 0, stopped = '';
 for (const it of todo) {
+  const one = PER[isWornType(it.type) ? 'worn' : 'photo'];
+  if (!reextract && spent + one * 3 > BUDGET) { stopped = `tonight's share of the free Cloudflare allowance is used (${Math.round(spent)} of ${BUDGET} neurons; the rest is kept for the app)`; break; }
   const raw = reextract ? `data:image/jpeg;base64,${readFileSync(`${RAW}/${it.id}.jpg`).toString('base64')}` : '';
   const r = await page.evaluate(async ([id, pass, raw]) => {
     const { starterItem } = await import('/starter/items.js'), W = await import('/js/wear.js'), st = await import('/js/starter.js'), { loadPack } = await import('/js/doll.js');
@@ -60,8 +64,8 @@ for (const it of todo) {
           const blob = raw ? await (await fetch(raw)).blob() : (await W.drawWorn(it, pass, pack)).blob, done = await W.extractWorn(blob, it, pack);
           const keep = raw ? '' : await (async () => { const b = await createImageBitmap(blob), c = document.createElement('canvas'); c.width = b.width; c.height = b.height; c.getContext('2d').drawImage(b, 0, 0); return c.toDataURL('image/jpeg', 0.93); })();
           if (done.check.ok && done.worn) return { ok: true, kind: 'worn', data: await toData(done.cutout), box: done.box, color: done.color, colors: done.colors, tries: attempt + 1, raw: keep };
-          reasons = done.check.reasons; if (raw) return { ok: false, reasons, raw: keep };
-          if (attempt === 2) return { ok: false, reasons, raw: keep };
+          reasons = done.check.reasons; if (raw) return { ok: false, reasons, raw: keep, tries: attempt + 1 };
+          if (attempt === 2) return { ok: false, reasons, raw: keep, tries: 3 };
         } else { // a product photo, checked (pixels and an AI look) like in the app
           const { blob } = await st.generate(it, pass, { attempt });
           let done = await st.process(blob, it);
@@ -71,9 +75,10 @@ for (const it of todo) {
           reasons = done.check.reasons;
         }
       }
-      return { ok: false, reasons };
-    } catch (e) { return { ok: false, limit: !!(e.limit || e instanceof st.DailyLimit), reasons: [e.message] }; }
+      return { ok: false, reasons, tries: 3 };
+    } catch (e) { return { ok: false, tries: 1, limit: !!(e.limit || e instanceof st.DailyLimit), reasons: [e.message] }; }
   }, [it.id, PASS, raw]);
+  if (!reextract) spent += one * (r.tries || 1);
   if (r.raw) writeFileSync(`${RAW}/${it.id}.jpg`, Buffer.from(r.raw.split(',')[1], 'base64'));
   if (r.limit) { stopped = 'the day’s free Cloudflare allowance is used up'; break; }
   if (r.ok) {
