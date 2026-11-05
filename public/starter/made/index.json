@@ -1,5 +1,5 @@
 {
- "version": 1793753938781,
+ "version": 1793840064690,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -4203,28 +4203,6 @@
    ],
    "t": 1793642334929
   },
-  "starter-brown-leopard-corset-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 310,
-    "w": 484,
-    "h": 698
-   },
-   "v": 5,
-   "color": {
-    "hex": "#59342a",
-    "name": "Brown"
-   },
-   "colors": [
-    "#59342a",
-    "#ba7955",
-    "#966a57",
-    "#daa686",
-    "#260c07"
-   ],
-   "t": 1793498778609
-  },
   "starter-oatmeal-knit-sweater-vest": {
    "kind": "worn",
    "box": {
@@ -4656,27 +4634,6 @@
     "#c88a94"
    ],
    "t": 1793499289679
-  },
-  "starter-chocolate-halter-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 286,
-    "w": 638,
-    "h": 716
-   },
-   "v": 5,
-   "color": {
-    "hex": "#190704",
-    "name": "Black"
-   },
-   "colors": [
-    "#190704",
-    "#c68759",
-    "#794845",
-    "#4a2624"
-   ],
-   "t": 1793580584825
   },
   "starter-chocolate-brown-scoop-bodysuit": {
    "kind": "worn",
@@ -8317,6 +8274,722 @@
     "#0d0d0c"
    ],
    "t": 1793753938781
+  },
+  "starter-white-silk-v-neck-blouse": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 306,
+    "w": 626,
+    "h": 580
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f6f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f6f7",
+    "#c6c6ca"
+   ],
+   "t": 1793839685770
+  },
+  "starter-cream-satin-button-down": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 252,
+    "w": 644,
+    "h": 634
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8f5",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8f5",
+    "#c9baa6"
+   ],
+   "t": 1793839689290
+  },
+  "starter-white-crochet-crop-top": {
+   "kind": "worn",
+   "box": {
+    "x": 290,
+    "y": 302,
+    "w": 318,
+    "h": 346
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8f7",
+    "#c8c7c7",
+    "#979798"
+   ],
+   "t": 1793839740704
+  },
+  "starter-white-lace-blouse": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 248,
+    "w": 620,
+    "h": 610
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8f8",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8f8",
+    "#d7c9c7"
+   ],
+   "t": 1793839746812
+  },
+  "starter-olive-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 304,
+    "w": 456,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#565833",
+    "name": "Olive"
+   },
+   "colors": [
+    "#565833"
+   ],
+   "t": 1793839752902
+  },
+  "starter-navy-strapless-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 416,
+    "w": 456,
+    "h": 558
+   },
+   "v": 5,
+   "color": {
+    "hex": "#17144a",
+    "name": "Navy"
+   },
+   "colors": [
+    "#17144a",
+    "#0b0828"
+   ],
+   "t": 1793839760382
+  },
+  "starter-burgundy-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 256,
+    "y": 300,
+    "w": 380,
+    "h": 512
+   },
+   "v": 5,
+   "color": {
+    "hex": "#58031a",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#58031a",
+    "#290003"
+   ],
+   "t": 1793839763888
+  },
+  "starter-chocolate-brown-satin-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 280,
+    "y": 306,
+    "w": 332,
+    "h": 452
+   },
+   "v": 5,
+   "color": {
+    "hex": "#27140c",
+    "name": "Black"
+   },
+   "colors": [
+    "#27140c",
+    "#69433b"
+   ],
+   "t": 1793839768252
+  },
+  "starter-white-button-down-shirt": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 248,
+    "w": 628,
+    "h": 638
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ebeaea",
+    "name": "White"
+   },
+   "colors": [
+    "#ebeaea",
+    "#bab9b7"
+   ],
+   "t": 1793839771263
+  },
+  "starter-navy-button-down-shirt": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 254,
+    "w": 638,
+    "h": 690
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060a47",
+    "name": "Navy"
+   },
+   "colors": [
+    "#060a47",
+    "#040227",
+    "#010006"
+   ],
+   "t": 1793839784035
+  },
+  "starter-oatmeal-one-shoulder-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 308,
+    "w": 466,
+    "h": 666
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d3baa6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d3baa6",
+    "#a78b76"
+   ],
+   "t": 1793839789844
+  },
+  "starter-burgundy-mock-neck-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 296,
+    "w": 632,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#470018",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#470018",
+    "#28000c"
+   ],
+   "t": 1793839793673
+  },
+  "starter-stone-thong-back-tank-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 264,
+    "y": 292,
+    "w": 362,
+    "h": 630
+   },
+   "v": 5,
+   "color": {
+    "hex": "#797976",
+    "name": "Grey"
+   },
+   "colors": [
+    "#797976",
+    "#4a4a47",
+    "#a9a9a4"
+   ],
+   "t": 1793839796758
+  },
+  "starter-ivory-lace-trim-cami": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 354,
+    "w": 336,
+    "h": 346
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f5e9",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f5e9",
+    "#c5b799"
+   ],
+   "t": 1793839799616
+  },
+  "starter-red-square-neck-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 270,
+    "y": 300,
+    "w": 356,
+    "h": 466
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a90818",
+    "name": "Red"
+   },
+   "colors": [
+    "#a90818",
+    "#78020b"
+   ],
+   "t": 1793839823430
+  },
+  "starter-espresso-racerback-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 294,
+    "w": 356,
+    "h": 458
+   },
+   "v": 5,
+   "color": {
+    "hex": "#552c1c",
+    "name": "Brown"
+   },
+   "colors": [
+    "#552c1c",
+    "#2c1506"
+   ],
+   "t": 1793839855127
+  },
+  "starter-cream-halter-top": {
+   "kind": "worn",
+   "box": {
+    "x": 284,
+    "y": 280,
+    "w": 332,
+    "h": 434
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4ead9",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f4ead9"
+   ],
+   "t": 1793839862371
+  },
+  "starter-champagne-halter-top": {
+   "kind": "worn",
+   "box": {
+    "x": 286,
+    "y": 272,
+    "w": 328,
+    "h": 482
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ebdac4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#ebdac4",
+    "#c7a888"
+   ],
+   "t": 1793839870504
+  },
+  "starter-mocha-halter-top": {
+   "kind": "worn",
+   "box": {
+    "x": 248,
+    "y": 282,
+    "w": 394,
+    "h": 548
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5c4235",
+    "name": "Brown"
+   },
+   "colors": [
+    "#5c4235"
+   ],
+   "t": 1793839884542
+  },
+  "starter-beige-one-shoulder-top": {
+   "kind": "worn",
+   "box": {
+    "x": 288,
+    "y": 296,
+    "w": 346,
+    "h": 406
+   },
+   "v": 5,
+   "color": {
+    "hex": "#cbab96",
+    "name": "Beige"
+   },
+   "colors": [
+    "#cbab96",
+    "#987a66"
+   ],
+   "t": 1793839957903
+  },
+  "starter-chocolate-brown-one-shoulder-top": {
+   "kind": "worn",
+   "box": {
+    "x": 276,
+    "y": 296,
+    "w": 334,
+    "h": 450
+   },
+   "v": 5,
+   "color": {
+    "hex": "#492727",
+    "name": "Brown"
+   },
+   "colors": [
+    "#492727"
+   ],
+   "t": 1793839960733
+  },
+  "starter-mocha-one-shoulder-top": {
+   "kind": "worn",
+   "box": {
+    "x": 262,
+    "y": 290,
+    "w": 414,
+    "h": 528
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b292a",
+    "name": "Brown"
+   },
+   "colors": [
+    "#4b292a"
+   ],
+   "t": 1793839967641
+  },
+  "starter-beige-baby-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 298,
+    "w": 472,
+    "h": 366
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e5c8a9",
+    "name": "Beige"
+   },
+   "colors": [
+    "#e5c8a9",
+    "#b89878"
+   ],
+   "t": 1793839971474
+  },
+  "starter-olive-baby-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 296,
+    "w": 490,
+    "h": 354
+   },
+   "v": 5,
+   "color": {
+    "hex": "#586349",
+    "name": "Olive"
+   },
+   "colors": [
+    "#586349",
+    "#343a28"
+   ],
+   "t": 1793839976142
+  },
+  "starter-burgundy-baby-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 288,
+    "w": 480,
+    "h": 414
+   },
+   "v": 5,
+   "color": {
+    "hex": "#560014",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#560014",
+    "#290003"
+   ],
+   "t": 1793839978685
+  },
+  "starter-sage-green-baby-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 294,
+    "w": 472,
+    "h": 386
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a8c396",
+    "name": "Sage"
+   },
+   "colors": [
+    "#a8c396",
+    "#7a8765",
+    "#dcb497"
+   ],
+   "t": 1793839988984
+  },
+  "starter-black-v-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 300,
+    "w": 498,
+    "h": 492
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161618",
+    "name": "Black"
+   },
+   "colors": [
+    "#161618"
+   ],
+   "t": 1793840006180
+  },
+  "starter-white-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 140,
+    "y": 280,
+    "w": 618,
+    "h": 650
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f6f6",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f6f6"
+   ],
+   "t": 1793840020053
+  },
+  "starter-cream-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 144,
+    "y": 284,
+    "w": 608,
+    "h": 636
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f7f2e2",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f7f2e2",
+    "#c7baa7"
+   ],
+   "t": 1793840022871
+  },
+  "starter-beige-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 122,
+    "y": 278,
+    "w": 650,
+    "h": 720
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e3ccb7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#e3ccb7",
+    "#b89a86"
+   ],
+   "t": 1793840026071
+  },
+  "starter-chocolate-brown-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 112,
+    "y": 284,
+    "w": 674,
+    "h": 778
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573a38",
+    "name": "Brown"
+   },
+   "colors": [
+    "#573a38"
+   ],
+   "t": 1793840033453
+  },
+  "starter-grey-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 286,
+    "w": 620,
+    "h": 750
+   },
+   "v": 5,
+   "color": {
+    "hex": "#989ba4",
+    "name": "Grey"
+   },
+   "colors": [
+    "#989ba4",
+    "#686a75"
+   ],
+   "t": 1793840036923
+  },
+  "starter-navy-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 140,
+    "y": 280,
+    "w": 618,
+    "h": 738
+   },
+   "v": 5,
+   "color": {
+    "hex": "#242457",
+    "name": "Navy"
+   },
+   "colors": [
+    "#242457",
+    "#16122c"
+   ],
+   "t": 1793840040193
+  },
+  "starter-sage-green-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 286,
+    "w": 636,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#95b988",
+    "name": "Sage"
+   },
+   "colors": [
+    "#95b988"
+   ],
+   "t": 1793840046412
+  },
+  "starter-light-blue-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 142,
+    "y": 292,
+    "w": 622,
+    "h": 742
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b8daf5",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#b8daf5",
+    "#87a9c7"
+   ],
+   "t": 1793840050866
+  },
+  "starter-oatmeal-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 280,
+    "w": 636,
+    "h": 716
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b4987b",
+    "name": "Camel"
+   },
+   "colors": [
+    "#b4987b",
+    "#846a4c"
+   ],
+   "t": 1793840054605
+  },
+  "starter-stone-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 286,
+    "w": 628,
+    "h": 736
+   },
+   "v": 5,
+   "color": {
+    "hex": "#979599",
+    "name": "Grey"
+   },
+   "colors": [
+    "#979599",
+    "#686768"
+   ],
+   "t": 1793840058936
+  },
+  "starter-espresso-oversized-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 116,
+    "y": 290,
+    "w": 664,
+    "h": 764
+   },
+   "v": 5,
+   "color": {
+    "hex": "#563b28",
+    "name": "Brown"
+   },
+   "colors": [
+    "#563b28"
+   ],
+   "t": 1793840062003
   }
  },
  "failed": {
@@ -8398,9 +9071,6 @@
   "starter-black-tailored-vest": [
    "it added shorts or trousers to the top"
   ],
-  "starter-black-strapless-tube-top": [
-   "taken out on review: drawn as a long-sleeve top, twice"
-  ],
   "starter-gold-sequin-cami": [
    "taken out on review: cut out in shreds, twice"
   ],
@@ -8440,9 +9110,6 @@
   "starter-tan-scoop-bodysuit": [
    "taken out on review: pale arms kept with the piece, twice"
   ],
-  "starter-chocolate-brown-button-down-shirt": [
-   "it added shorts or trousers to the top"
-  ],
   "starter-brown-leather-blazer": [
    "a stub of trousers kept under it (left out by review)"
   ],
@@ -8464,16 +9131,7 @@
   "starter-cream-pleated-trousers": [
    "holes at the side of the trousers (left out by review)"
   ],
-  "starter-red-square-neck-tank": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-champagne-one-shoulder-bodysuit": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (a411ff9e-33b8-433d-9fea-20b49c254a86)"
-  ],
   "starter-camel-square-neck-tank": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-navy-button-down-shirt": [
    "it added shorts or trousers to the top"
   ],
   "starter-camel-racerback-tank": [
@@ -8482,212 +9140,126 @@
   "starter-gold-dome-earrings": [
    "cut through: half of each earring missing (left out by review)"
   ],
-  "starter-beige-tube-top": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-camel-tube-top": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-navy-tube-top": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (440af9fd-0397-4b73-b7f4-4b87d894607a)"
-  ],
-  "starter-chocolate-brown-one-shoulder-top": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-olive-baby-tee": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-sage-green-baby-tee": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-black-v-neck-tee": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-butter-yellow-corset-top": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-white-off-shoulder-sweater": [
-   "blue background left by the sleeve (left out by review)"
-  ],
-  "starter-cream-satin-button-down": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-chocolate-brown-satin-cami": [
-   "knickers or shorts added (left out by review)"
-  ],
-  "starter-oatmeal-one-shoulder-bodysuit": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-burgundy-mock-neck-bodysuit": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-stone-thong-back-tank-bodysuit": [
-   "a brick-like pattern instead of the fabric (left out by review)"
-  ],
-  "starter-ivory-lace-trim-cami": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-mocha-lace-trim-cami": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-ecru-lace-trim-cami": [
-   "knickers or shorts added (left out by review)"
-  ],
-  "starter-beige-square-neck-tank": [
-   "knickers or shorts added (left out by review)"
-  ],
   "starter-oatmeal-racerback-tank": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-stone-racerback-tank": [
-   "knickers or shorts added (left out by review)"
-  ],
-  "starter-espresso-racerback-tank": [
-   "not the piece: patches and shreds (left out by review)"
-  ],
-  "starter-ecru-racerback-tank": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-cream-halter-top": [
-   "knickers or shorts added (left out by review)"
-  ],
-  "starter-beige-halter-top": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-champagne-halter-top": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-oatmeal-halter-top": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-mocha-halter-top": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-beige-one-shoulder-top": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-oatmeal-one-shoulder-top": [
-   "knickers or shorts added (left out by review)"
-  ],
-  "starter-mocha-one-shoulder-top": [
-   "not the piece: patches and shreds (left out by review)"
-  ],
-  "starter-beige-baby-tee": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-burgundy-baby-tee": [
-   "not the piece: patches and shreds (left out by review)"
-  ],
-  "starter-blush-pink-baby-tee": [
-   "a pale arm kept beside it (left out by review)"
-  ],
-  "starter-red-baby-tee": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-butter-yellow-baby-tee": [
-   "a hole in it (left out by review)"
-  ],
-  "starter-mocha-v-neck-tee": [
-   "knickers or shorts added (left out by review)"
-  ],
-  "starter-black-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-white-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-cream-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-chocolate-brown-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-grey-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-olive-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-red-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-blush-pink-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-oatmeal-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-stone-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-espresso-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-mocha-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-ecru-tube-top": [
-   "drawn with straps or sleeves, not a tube top (left out by review)"
-  ],
-  "starter-beige-sleeveless-knit-top": [
-   "knickers drawn under it (left out by review)"
+   "it added shorts or trousers to the top"
   ],
   "starter-tan-ribbed-tank": [
-   "her arms kept, tinted green (left out by review)"
-  ],
-  "starter-burgundy-ribbed-tank": [
-   "a dark patch below the hem (left out by review)"
+   "it added shorts or trousers to the top"
   ],
   "starter-camel-cropped-jacket": [
    "a dark patch at the waist (left out by review)"
   ],
-  "starter-grey-cashmere-sweater": [
-   "grey scraps hanging at the hips (left out by review)"
-  ],
-  "starter-leopard-bodysuit": [
-   "a pale patch at the neck (left out by review)"
-  ],
-  "starter-olive-scoop-bodysuit": [
-   "a skin patch on the thigh (left out by review)"
-  ],
-  "starter-olive-square-neck-bodysuit": [
-   "a gap at the waist (left out by review)"
-  ],
-  "starter-navy-strapless-bodysuit": [
-   "a magenta patch (left out by review)"
-  ],
-  "starter-tan-corset-top": [
-   "green patch at the side (left out by review)"
-  ],
-  "starter-white-crochet-crop-top": [
-   "blue background through the mesh (left out by review)"
-  ],
   "starter-white-denim-straight-jeans": [
    "tinted pink (left out by review)"
   ],
-  "starter-white-lace-blouse": [
-   "blue and green tint through the lace (left out by review)"
-  ],
   "starter-white-linen-blazer": [
+   "blue background by the sleeve (left out by review)"
+  ],
+  "starter-butter-yellow-corset-top": [
+   "skin patches kept (left out by review)"
+  ],
+  "starter-white-off-shoulder-sweater": [
    "blue background by the sleeve (left out by review)"
   ],
   "starter-white-v-neck-cable-sweater": [
    "blue background by the sleeve (left out by review)"
   ],
-  "starter-white-button-down-shirt": [
-   "tinted blue at the hem (left out by review)"
-  ],
-  "starter-white-silk-v-neck-blouse": [
+  "starter-grey-cashmere-sweater": [
    "blue background by the sleeve (left out by review)"
+  ],
+  "starter-tan-corset-top": [
+   "a dark flap beside the body (left out by review)"
+  ],
+  "starter-leopard-bodysuit": [
+   "skin patches kept (left out by review)"
+  ],
+  "starter-olive-square-neck-bodysuit": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-chocolate-brown-button-down-shirt": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-champagne-one-shoulder-bodysuit": [
+   "skin patches kept (left out by review)"
+  ],
+  "starter-mocha-lace-trim-cami": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-ecru-lace-trim-cami": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-beige-square-neck-tank": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-stone-racerback-tank": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-ecru-racerback-tank": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-beige-halter-top": [
+   "a patch at the neck (left out by review)"
+  ],
+  "starter-oatmeal-halter-top": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-oatmeal-one-shoulder-top": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-blush-pink-baby-tee": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-red-baby-tee": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-butter-yellow-baby-tee": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-mocha-v-neck-tee": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-camel-oversized-tee": [
+   "a pale arm kept beside it (left out by review)"
+  ],
+  "starter-olive-oversized-tee": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-mocha-oversized-tee": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-beige-sleeveless-knit-top": [
+   "her left arm kept with the top (left out by review)"
+  ],
+  "starter-chocolate-halter-top": [
+   "both her arms kept with the top (left out by review)"
+  ],
+  "starter-brown-leopard-corset-top": [
+   "her arm kept with the top (left out by review)"
   ]
  },
  "blocked": {
-  "starter-black-strapless-tube-top": "drawn as a long-sleeve top, twice",
+  "starter-black-strapless-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
   "starter-tan-halter-top": "pale arms kept with the piece, twice",
   "starter-tan-scoop-bodysuit": "pale arms kept with the piece, twice",
   "starter-gold-sequin-cami": "cut out in shreds, twice",
   "starter-floral-corset-top": "torn and off colours, twice",
   "starter-floral-corset-bodysuit": "patches on her legs kept, twice",
-  "starter-sage-satin-blouse": "trousers added, twice"
+  "starter-sage-satin-blouse": "trousers added, twice",
+  "starter-black-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-white-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-cream-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-chocolate-brown-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-grey-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-navy-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-olive-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-red-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-blush-pink-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-oatmeal-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-stone-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-espresso-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-mocha-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-ecru-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-beige-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-camel-tube-top": "drawn with straps or sleeves, not a tube top, three nights running"
  }
 }
