@@ -1,4 +1,4 @@
-38 made this run (39 more left out by review) · 482 of 3044 in the wardrobe · 53 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
+27 made this run (25 more left out by review) · 540 of 3044 in the wardrobe · 60 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -21,7 +21,6 @@ starter-gold-anklet: cut-out not clean enough (left out by review)
 starter-brown-crescent-bag: cut-out not clean enough (left out by review)
 starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
 starter-black-tailored-vest: it added shorts or trousers to the top
-starter-black-strapless-tube-top: taken out on review: drawn as a long-sleeve top, twice
 starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
 starter-floral-corset-top: taken out on review: torn and off colours, twice
 starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
@@ -42,13 +41,21 @@ starter-black-leather-mini-skirt: holes at the sides (left out by review)
 starter-cream-knit-midi-skirt: a brown patch at the hip (left out by review)
 starter-camel-sweater-dress: her legs kept with the dress (left out by review)
 starter-cream-pleated-trousers: holes at the side of the trousers (left out by review)
-starter-camel-square-neck-tank: it added shorts or trousers to the top
-starter-camel-racerback-tank: it added shorts or trousers to the top
 starter-gold-dome-earrings: cut through: half of each earring missing (left out by review)
-starter-beige-tube-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (e937faa1-8b8d-4683-a51d-3cee0845f458)
-starter-camel-tube-top: it added shorts or trousers to the top
-starter-oatmeal-racerback-tank: it added shorts or trousers to the top
-starter-tan-ribbed-tank: it added shorts or trousers to the top
 starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
 starter-white-denim-straight-jeans: tinted pink (left out by review)
 starter-white-linen-blazer: blue background by the sleeve (left out by review)
+starter-grey-and-white-striped-long-sleeve-tee: it added shorts or trousers to the top
+starter-stone-mock-neck-top: the piece barely shows (it may not have dressed her)
+starter-black-turtleneck: it added shorts or trousers to the top
+starter-white-turtleneck: it added shorts or trousers to the top
+starter-camel-turtleneck: it added shorts or trousers to the top
+starter-tan-turtleneck: it added shorts or trousers to the top
+starter-chocolate-brown-turtleneck: it added shorts or trousers to the top
+starter-charcoal-grey-turtleneck: it added shorts or trousers to the top
+starter-burgundy-turtleneck: it added shorts or trousers to the top
+starter-light-blue-oversized-button-down: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c2dd61f1-0c89-4bc4-876d-fc017e3b7e55)
+starter-black-and-white-striped-button-down: it added shorts or trousers to the top
+starter-brown-and-white-striped-button-down: it added shorts or trousers to the top
+starter-sage-green-linen-shirt: it added shorts or trousers to the top
+starter-stone-linen-shirt: it added shorts or trousers to the top
