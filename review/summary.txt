@@ -1,4 +1,4 @@
-33 made this run · 513 of 3044 in the wardrobe · 49 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+52 made this run · 565 of 3044 in the wardrobe · 60 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -45,6 +45,17 @@ starter-gold-dome-earrings: cut through: half of each earring missing (left out 
 starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
 starter-white-denim-straight-jeans: tinted pink (left out by review)
 starter-white-linen-blazer: blue background by the sleeve (left out by review)
-starter-champagne-one-shoulder-bodysuit: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (432e7f52-9147-4110-8859-9eaebc6e16cd)
-starter-ecru-racerback-tank: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (e3a61aae-63a4-460a-be6b-bccd2710da81)
-starter-black-and-white-striped-long-sleeve-tee: it added shorts or trousers to the top
+starter-grey-and-white-striped-long-sleeve-tee: it added shorts or trousers to the top
+starter-stone-mock-neck-top: the piece barely shows (it may not have dressed her)
+starter-black-turtleneck: it added shorts or trousers to the top
+starter-white-turtleneck: it added shorts or trousers to the top
+starter-camel-turtleneck: it added shorts or trousers to the top
+starter-tan-turtleneck: it added shorts or trousers to the top
+starter-chocolate-brown-turtleneck: it added shorts or trousers to the top
+starter-charcoal-grey-turtleneck: it added shorts or trousers to the top
+starter-burgundy-turtleneck: it added shorts or trousers to the top
+starter-light-blue-oversized-button-down: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (c2dd61f1-0c89-4bc4-876d-fc017e3b7e55)
+starter-black-and-white-striped-button-down: it added shorts or trousers to the top
+starter-brown-and-white-striped-button-down: it added shorts or trousers to the top
+starter-sage-green-linen-shirt: it added shorts or trousers to the top
+starter-stone-linen-shirt: it added shorts or trousers to the top
