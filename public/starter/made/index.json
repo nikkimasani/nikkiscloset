@@ -10178,27 +10178,6 @@
    ],
    "t": 1793949843130
   },
-  "starter-chocolate-halter-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 290,
-    "w": 638,
-    "h": 718
-   },
-   "v": 5,
-   "color": {
-    "hex": "#281614",
-    "name": "Black"
-   },
-   "colors": [
-    "#281614",
-    "#583836",
-    "#a68868",
-    "#865a58"
-   ],
-   "t": 1793949858127
-  },
   "starter-leopard-bodysuit": {
    "kind": "worn",
    "box": {
@@ -10241,25 +10220,6 @@
    ],
    "t": 1793949864463
   },
-  "starter-oatmeal-racerback-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 256,
-    "y": 296,
-    "w": 380,
-    "h": 618
-   },
-   "v": 5,
-   "color": {
-    "hex": "#aba596",
-    "name": "Grey"
-   },
-   "colors": [
-    "#aba596",
-    "#847b6a"
-   ],
-   "t": 1793949870817
-  },
   "starter-stone-racerback-tank": {
    "kind": "worn",
    "box": {
@@ -10278,25 +10238,6 @@
     "#5b544b"
    ],
    "t": 1793949874321
-  },
-  "starter-ecru-racerback-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 280,
-    "y": 296,
-    "w": 342,
-    "h": 594
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e9dac4",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e9dac4",
-    "#b7ab94"
-   ],
-   "t": 1793949877050
   },
   "starter-beige-halter-top": {
    "kind": "worn",
@@ -10336,24 +10277,6 @@
    ],
    "t": 1793949883310
   },
-  "starter-butter-yellow-baby-tee": {
-   "kind": "worn",
-   "box": {
-    "x": 210,
-    "y": 300,
-    "w": 474,
-    "h": 362
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f9e9b5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#f9e9b5"
-   ],
-   "t": 1793949888723
-  },
   "starter-mocha-v-neck-tee": {
    "kind": "worn",
    "box": {
@@ -10371,42 +10294,6 @@
     "#643b35"
    ],
    "t": 1793949894419
-  },
-  "starter-camel-oversized-tee": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 290,
-    "w": 562,
-    "h": 680
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c88958",
-    "name": "Tan"
-   },
-   "colors": [
-    "#c88958"
-   ],
-   "t": 1793949897662
-  },
-  "starter-mocha-oversized-tee": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 292,
-    "w": 636,
-    "h": 700
-   },
-   "v": 5,
-   "color": {
-    "hex": "#5a3a33",
-    "name": "Brown"
-   },
-   "colors": [
-    "#5a3a33"
-   ],
-   "t": 1793949900466
   },
   "starter-grey-and-white-striped-long-sleeve-tee": {
    "kind": "worn",
@@ -10462,25 +10349,6 @@
     "#f8f9fb"
    ],
    "t": 1793949931328
-  },
-  "starter-camel-turtleneck": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 236,
-    "w": 626,
-    "h": 742
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a8734c",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a8734c",
-    "#6b4629"
-   ],
-   "t": 1793949941000
   },
   "starter-chocolate-brown-turtleneck": {
    "kind": "worn",
@@ -10539,43 +10407,6 @@
    ],
    "t": 1793949973488
   },
-  "starter-butter-yellow-oversized-button-down": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 268,
-    "w": 636,
-    "h": 766
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f4e8b9",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f4e8b9",
-    "#d3bd86"
-   ],
-   "t": 1793949976438
-  },
-  "starter-espresso-oversized-button-down": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 268,
-    "w": 628,
-    "h": 728
-   },
-   "v": 5,
-   "color": {
-    "hex": "#68432c",
-    "name": "Brown"
-   },
-   "colors": [
-    "#68432c"
-   ],
-   "t": 1793949979516
-  },
   "starter-mocha-oversized-button-down": {
    "kind": "worn",
    "box": {
@@ -10594,25 +10425,6 @@
     "#080605"
    ],
    "t": 1793949982799
-  },
-  "starter-brown-and-white-striped-button-down": {
-   "kind": "worn",
-   "box": {
-    "x": 142,
-    "y": 256,
-    "w": 614,
-    "h": 740
-   },
-   "v": 5,
-   "color": {
-    "hex": "#3a2726",
-    "name": "Black"
-   },
-   "colors": [
-    "#3a2726",
-    "#080403"
-   ],
-   "t": 1793949999198
   },
   "starter-sage-green-linen-shirt": {
    "kind": "worn",
@@ -10650,43 +10462,6 @@
     "#191917"
    ],
    "t": 1793950006091
-  },
-  "starter-butter-yellow-linen-shirt": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 264,
-    "w": 632,
-    "h": 668
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f6e7b8",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f6e7b8"
-   ],
-   "t": 1793950009011
-  },
-  "starter-beige-sleeveless-knit-top": {
-   "kind": "worn",
-   "box": {
-    "x": 258,
-    "y": 276,
-    "w": 380,
-    "h": 530
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e4c8a8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#e4c8a8",
-    "#b4997b"
-   ],
-   "t": 1794012946449
   },
   "starter-tan-ribbed-tank": {
    "kind": "worn",
@@ -10804,25 +10579,6 @@
     "#bba696"
    ],
    "t": 1794013040202
-  },
-  "starter-black-satin-button-down": {
-   "kind": "worn",
-   "box": {
-    "x": 136,
-    "y": 266,
-    "w": 620,
-    "h": 638
-   },
-   "v": 5,
-   "color": {
-    "hex": "#040405",
-    "name": "Black"
-   },
-   "colors": [
-    "#040405",
-    "#363638"
-   ],
-   "t": 1794013043729
   },
   "starter-chocolate-brown-satin-button-down": {
    "kind": "worn",
@@ -11044,26 +10800,6 @@
    ],
    "t": 1794013115483
   },
-  "starter-oatmeal-pussy-bow-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 118,
-    "y": 274,
-    "w": 664,
-    "h": 740
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d6bba6",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d6bba6",
-    "#97674a",
-    "#593827"
-   ],
-   "t": 1794013119187
-  },
   "starter-stone-pussy-bow-blouse": {
    "kind": "worn",
    "box": {
@@ -11084,104 +10820,6 @@
     "#ead9d5"
    ],
    "t": 1794013123276
-  },
-  "starter-espresso-pussy-bow-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 116,
-    "y": 284,
-    "w": 658,
-    "h": 602
-   },
-   "v": 5,
-   "color": {
-    "hex": "#150b07",
-    "name": "Black"
-   },
-   "colors": [
-    "#150b07",
-    "#5a4538",
-    "#8b7464"
-   ],
-   "t": 1794013130152
-  },
-  "starter-mocha-pussy-bow-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 136,
-    "y": 270,
-    "w": 628,
-    "h": 612
-   },
-   "v": 5,
-   "color": {
-    "hex": "#2a1915",
-    "name": "Black"
-   },
-   "colors": [
-    "#2a1915",
-    "#77564b"
-   ],
-   "t": 1794013134209
-  },
-  "starter-ecru-pussy-bow-blouse": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 296,
-    "w": 640,
-    "h": 590
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e7e4da",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e7e4da",
-    "#c7b8a8"
-   ],
-   "t": 1794013137540
-  },
-  "starter-ivory-cowl-neck-top": {
-   "kind": "worn",
-   "box": {
-    "x": 274,
-    "y": 256,
-    "w": 350,
-    "h": 494
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fdfdf6",
-    "name": "White"
-   },
-   "colors": [
-    "#fdfdf6",
-    "#e8d4b8",
-    "#c3a47b"
-   ],
-   "t": 1794013140565
-  },
-  "starter-champagne-cowl-neck-top": {
-   "kind": "worn",
-   "box": {
-    "x": 252,
-    "y": 334,
-    "w": 380,
-    "h": 370
-   },
-   "v": 5,
-   "color": {
-    "hex": "#faf6e7",
-    "name": "Cream"
-   },
-   "colors": [
-    "#faf6e7",
-    "#987957",
-    "#baa488"
-   ],
-   "t": 1794013144250
   },
   "starter-black-cowl-neck-top": {
    "kind": "worn",
@@ -11344,65 +10982,6 @@
     "#d6a885"
    ],
    "t": 1794013185483
-  },
-  "starter-espresso-cowl-neck-top": {
-   "kind": "worn",
-   "box": {
-    "x": 248,
-    "y": 252,
-    "w": 380,
-    "h": 470
-   },
-   "v": 5,
-   "color": {
-    "hex": "#27190a",
-    "name": "Black"
-   },
-   "colors": [
-    "#27190a",
-    "#86664b",
-    "#553b27"
-   ],
-   "t": 1794013189820
-  },
-  "starter-mocha-cowl-neck-top": {
-   "kind": "worn",
-   "box": {
-    "x": 274,
-    "y": 256,
-    "w": 342,
-    "h": 516
-   },
-   "v": 5,
-   "color": {
-    "hex": "#885959",
-    "name": "Brown"
-   },
-   "colors": [
-    "#885959",
-    "#2b1813",
-    "#583734"
-   ],
-   "t": 1794013193203
-  },
-  "starter-ecru-cowl-neck-top": {
-   "kind": "worn",
-   "box": {
-    "x": 276,
-    "y": 266,
-    "w": 344,
-    "h": 480
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e7e4d9",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e7e4d9",
-    "#c6b59a"
-   ],
-   "t": 1794013196482
   },
   "starter-cream-puff-sleeve-blouse": {
    "kind": "worn",
@@ -11613,24 +11192,6 @@
    ],
    "t": 1794013254391
   },
-  "starter-black-wrap-top": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 304,
-    "w": 638,
-    "h": 616
-   },
-   "v": 5,
-   "color": {
-    "hex": "#090808",
-    "name": "Black"
-   },
-   "colors": [
-    "#090808"
-   ],
-   "t": 1794013262443
-  },
   "starter-white-wrap-top": {
    "kind": "worn",
    "box": {
@@ -11823,26 +11384,6 @@
    ],
    "t": 1794013353724
   },
-  "starter-stone-wrap-top": {
-   "kind": "worn",
-   "box": {
-    "x": 156,
-    "y": 304,
-    "w": 590,
-    "h": 496
-   },
-   "v": 5,
-   "color": {
-    "hex": "#6b7474",
-    "name": "Grey"
-   },
-   "colors": [
-    "#6b7474",
-    "#464a49",
-    "#181918"
-   ],
-   "t": 1794013358693
-  },
   "starter-espresso-wrap-top": {
    "kind": "worn",
    "box": {
@@ -11879,25 +11420,6 @@
     "#694335"
    ],
    "t": 1794013365728
-  },
-  "starter-ecru-wrap-top": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 312,
-    "w": 634,
-    "h": 568
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e7dbc6",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e7dbc6",
-    "#b7aa95"
-   ],
-   "t": 1794013369760
   },
   "starter-black-peplum-top": {
    "kind": "worn",
@@ -12111,6 +11633,75 @@
   ],
   "starter-red-wrap-top": [
    "it added shorts or trousers to the top"
+  ],
+  "starter-oatmeal-racerback-tank": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-ecru-racerback-tank": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-butter-yellow-baby-tee": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-camel-oversized-tee": [
+   "her arm kept with the piece (left out by review)"
+  ],
+  "starter-mocha-oversized-tee": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-camel-turtleneck": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-butter-yellow-oversized-button-down": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-espresso-oversized-button-down": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-butter-yellow-linen-shirt": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-brown-and-white-striped-button-down": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-black-satin-button-down": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-oatmeal-pussy-bow-blouse": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-espresso-pussy-bow-blouse": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-mocha-pussy-bow-blouse": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-ecru-pussy-bow-blouse": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-ivory-cowl-neck-top": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-champagne-cowl-neck-top": [
+   "a skin patch kept (left out by review)"
+  ],
+  "starter-espresso-cowl-neck-top": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-mocha-cowl-neck-top": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-ecru-cowl-neck-top": [
+   "a hole in it (left out by review)"
+  ],
+  "starter-black-wrap-top": [
+   "shorts or knickers added (left out by review)"
+  ],
+  "starter-stone-wrap-top": [
+   "sleeves cut out in shreds (left out by review)"
+  ],
+  "starter-ecru-wrap-top": [
+   "a skin patch kept (left out by review)"
   ]
  },
  "blocked": {
@@ -12136,6 +11727,8 @@
   "starter-mocha-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
   "starter-ecru-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
   "starter-beige-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
-  "starter-camel-tube-top": "drawn with straps or sleeves, not a tube top, three nights running"
+  "starter-camel-tube-top": "drawn with straps or sleeves, not a tube top, three nights running",
+  "starter-chocolate-halter-top": "arms and knickers kept, three nights running",
+  "starter-beige-sleeveless-knit-top": "arm or knickers kept, three nights running"
  }
 }
