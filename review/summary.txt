@@ -1,4 +1,4 @@
-40 made this run (25 more left out by review) · 608 of 3044 in the wardrobe · 54 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
+29 made this run · 637 of 3044 in the wardrobe · 51 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -45,11 +45,8 @@ starter-gold-dome-earrings: cut through: half of each earring missing (left out 
 starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
 starter-white-denim-straight-jeans: tinted pink (left out by review)
 starter-white-linen-blazer: blue background by the sleeve (left out by review)
-starter-tan-turtleneck: it added shorts or trousers to the top
 starter-charcoal-grey-turtleneck: it added shorts or trousers to the top
-starter-black-and-white-striped-button-down: it added shorts or trousers to the top
-starter-stone-linen-shirt: it added shorts or trousers to the top
 starter-mocha-linen-shirt: it added shorts or trousers to the top
-starter-sage-green-satin-button-down: it added shorts or trousers to the top
 starter-camel-wrap-top: it added shorts or trousers to the top
 starter-red-wrap-top: it added shorts or trousers to the top
+starter-stone-wrap-top: it added shorts or trousers to the top
