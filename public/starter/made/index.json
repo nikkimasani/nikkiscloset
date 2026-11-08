@@ -1,5 +1,5 @@
 {
- "version": 1794099325372,
+ "version": 1794120337971,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -13203,6 +13203,772 @@
     "#292926"
    ],
    "t": 1794099325372
+  },
+  "starter-camel-wrap-top": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 310,
+    "w": 628,
+    "h": 576
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b87744",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b87744",
+    "#864c24"
+   ],
+   "t": 1794120149520
+  },
+  "starter-stone-peplum-top": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 294,
+    "w": 478,
+    "h": 388
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a89797",
+    "name": "Grey"
+   },
+   "colors": [
+    "#a89797",
+    "#574847",
+    "#181617",
+    "#876a66",
+    "#798697"
+   ],
+   "t": 1794120168444
+  },
+  "starter-gold-sequin-top": {
+   "kind": "worn",
+   "box": {
+    "x": 312,
+    "y": 384,
+    "w": 294,
+    "h": 354
+   },
+   "v": 5,
+   "color": {
+    "hex": "#966a37",
+    "name": "Tan"
+   },
+   "colors": [
+    "#966a37",
+    "#fdfcf6",
+    "#b99559",
+    "#685736",
+    "#653b16"
+   ],
+   "t": 1794120172356
+  },
+  "starter-rose-gold-sequin-top": {
+   "kind": "worn",
+   "box": {
+    "x": 288,
+    "y": 384,
+    "w": 324,
+    "h": 362
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a76a75",
+    "name": "Pink"
+   },
+   "colors": [
+    "#a76a75",
+    "#fef7f7",
+    "#d8a5aa",
+    "#78444a"
+   ],
+   "t": 1794120175763
+  },
+  "starter-chocolate-brown-cable-knit-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 114,
+    "y": 282,
+    "w": 666,
+    "h": 822
+   },
+   "v": 5,
+   "color": {
+    "hex": "#492623",
+    "name": "Brown"
+   },
+   "colors": [
+    "#492623",
+    "#190a07"
+   ],
+   "t": 1794120179031
+  },
+  "starter-mocha-cashmere-crewneck": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 276,
+    "w": 632,
+    "h": 598
+   },
+   "v": 5,
+   "color": {
+    "hex": "#553735",
+    "name": "Brown"
+   },
+   "colors": [
+    "#553735",
+    "#281815"
+   ],
+   "t": 1794120182045
+  },
+  "starter-stone-off-shoulder-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 114,
+    "y": 362,
+    "w": 664,
+    "h": 524
+   },
+   "v": 5,
+   "color": {
+    "hex": "#6c7377",
+    "name": "Grey"
+   },
+   "colors": [
+    "#6c7377",
+    "#45484a",
+    "#979da2",
+    "#070706"
+   ],
+   "t": 1794120186954
+  },
+  "starter-navy-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 310,
+    "w": 622,
+    "h": 564
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1c1546",
+    "name": "Navy"
+   },
+   "colors": [
+    "#1c1546",
+    "#070319"
+   ],
+   "t": 1794120190572
+  },
+  "starter-olive-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 302,
+    "w": 622,
+    "h": 560
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4c542c",
+    "name": "Olive"
+   },
+   "colors": [
+    "#4c542c",
+    "#282c12"
+   ],
+   "t": 1794120195242
+  },
+  "starter-burgundy-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 290,
+    "w": 646,
+    "h": 596
+   },
+   "v": 5,
+   "color": {
+    "hex": "#490c23",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#490c23",
+    "#170004"
+   ],
+   "t": 1794120203300
+  },
+  "starter-sage-green-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 300,
+    "w": 642,
+    "h": 574
+   },
+   "v": 5,
+   "color": {
+    "hex": "#76a57a",
+    "name": "Sage"
+   },
+   "colors": [
+    "#76a57a",
+    "#4c7753",
+    "#26472a"
+   ],
+   "t": 1794120206075
+  },
+  "starter-blush-pink-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 288,
+    "w": 636,
+    "h": 586
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4a4ab",
+    "name": "Pink"
+   },
+   "colors": [
+    "#f4a4ab"
+   ],
+   "t": 1794120210193
+  },
+  "starter-red-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 284,
+    "w": 630,
+    "h": 598
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c80018",
+    "name": "Red"
+   },
+   "colors": [
+    "#c80018",
+    "#780008",
+    "#360000"
+   ],
+   "t": 1794120213815
+  },
+  "starter-mocha-cropped-cardigan-top": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 296,
+    "w": 644,
+    "h": 580
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b2a23",
+    "name": "Brown"
+   },
+   "colors": [
+    "#4b2a23",
+    "#090401"
+   ],
+   "t": 1794120216822
+  },
+  "starter-white-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 266,
+    "w": 470,
+    "h": 424
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e8e9",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e8e9",
+    "#b9b8b8"
+   ],
+   "t": 1794120231457
+  },
+  "starter-cream-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 270,
+    "w": 478,
+    "h": 422
+   },
+   "v": 5,
+   "color": {
+    "hex": "#faf6e5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#faf6e5"
+   ],
+   "t": 1794120235014
+  },
+  "starter-beige-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 236,
+    "w": 482,
+    "h": 526
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ccb399",
+    "name": "Beige"
+   },
+   "colors": [
+    "#ccb399",
+    "#8b735b"
+   ],
+   "t": 1794120239000
+  },
+  "starter-camel-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 236,
+    "w": 484,
+    "h": 496
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ba754b",
+    "name": "Tan"
+   },
+   "colors": [
+    "#ba754b",
+    "#864829"
+   ],
+   "t": 1794120242655
+  },
+  "starter-chocolate-brown-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 266,
+    "w": 480,
+    "h": 502
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4a2823",
+    "name": "Brown"
+   },
+   "colors": [
+    "#4a2823"
+   ],
+   "t": 1794120246316
+  },
+  "starter-grey-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 266,
+    "w": 482,
+    "h": 488
+   },
+   "v": 5,
+   "color": {
+    "hex": "#96959a",
+    "name": "Grey"
+   },
+   "colors": [
+    "#96959a",
+    "#686869"
+   ],
+   "t": 1794120249454
+  },
+  "starter-navy-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 260,
+    "w": 476,
+    "h": 534
+   },
+   "v": 5,
+   "color": {
+    "hex": "#26234c",
+    "name": "Navy"
+   },
+   "colors": [
+    "#26234c"
+   ],
+   "t": 1794120252872
+  },
+  "starter-olive-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 266,
+    "w": 468,
+    "h": 518
+   },
+   "v": 5,
+   "color": {
+    "hex": "#545a35",
+    "name": "Olive"
+   },
+   "colors": [
+    "#545a35"
+   ],
+   "t": 1794120256773
+  },
+  "starter-mocha-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 264,
+    "w": 478,
+    "h": 450
+   },
+   "v": 5,
+   "color": {
+    "hex": "#58322d",
+    "name": "Brown"
+   },
+   "colors": [
+    "#58322d",
+    "#29130c"
+   ],
+   "t": 1794120260543
+  },
+  "starter-sage-green-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 264,
+    "w": 466,
+    "h": 488
+   },
+   "v": 5,
+   "color": {
+    "hex": "#9bc6a8",
+    "name": "Sage"
+   },
+   "colors": [
+    "#9bc6a8",
+    "#7a967a"
+   ],
+   "t": 1794120265980
+  },
+  "starter-oatmeal-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 266,
+    "w": 476,
+    "h": 514
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b6a48b",
+    "name": "Beige"
+   },
+   "colors": [
+    "#b6a48b",
+    "#89745b"
+   ],
+   "t": 1794120268576
+  },
+  "starter-stone-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 256,
+    "w": 478,
+    "h": 640
+   },
+   "v": 5,
+   "color": {
+    "hex": "#988786",
+    "name": "Grey"
+   },
+   "colors": [
+    "#988786",
+    "#665b5a"
+   ],
+   "t": 1794120271826
+  },
+  "starter-espresso-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 256,
+    "w": 482,
+    "h": 478
+   },
+   "v": 5,
+   "color": {
+    "hex": "#463623",
+    "name": "Brown"
+   },
+   "colors": [
+    "#463623"
+   ],
+   "t": 1794120275500
+  },
+  "starter-ecru-polo-knit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 254,
+    "w": 462,
+    "h": 558
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e7dbc6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e7dbc6"
+   ],
+   "t": 1794120279621
+  },
+  "starter-black-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 248,
+    "w": 634,
+    "h": 628
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0a0b0b",
+    "name": "Black"
+   },
+   "colors": [
+    "#0a0b0b"
+   ],
+   "t": 1794120283985
+  },
+  "starter-white-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 258,
+    "w": 634,
+    "h": 614
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3f3f5",
+    "name": "White"
+   },
+   "colors": [
+    "#f3f3f5"
+   ],
+   "t": 1794120286706
+  },
+  "starter-beige-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 116,
+    "y": 252,
+    "w": 656,
+    "h": 634
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c6ab95",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c6ab95",
+    "#967a66"
+   ],
+   "t": 1794120290828
+  },
+  "starter-camel-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 236,
+    "w": 652,
+    "h": 650
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ba8557",
+    "name": "Tan"
+   },
+   "colors": [
+    "#ba8557",
+    "#885936",
+    "#57351b"
+   ],
+   "t": 1794120299450
+  },
+  "starter-chocolate-brown-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 252,
+    "w": 632,
+    "h": 628
+   },
+   "v": 5,
+   "color": {
+    "hex": "#381a15",
+    "name": "Black"
+   },
+   "colors": [
+    "#381a15",
+    "#070101"
+   ],
+   "t": 1794120305506
+  },
+  "starter-grey-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 254,
+    "w": 636,
+    "h": 628
+   },
+   "v": 5,
+   "color": {
+    "hex": "#7b8594",
+    "name": "Grey"
+   },
+   "colors": [
+    "#7b8594",
+    "#575c65"
+   ],
+   "t": 1794120310202
+  },
+  "starter-navy-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 244,
+    "w": 644,
+    "h": 642
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1b1547",
+    "name": "Navy"
+   },
+   "colors": [
+    "#1b1547",
+    "#0d0a27"
+   ],
+   "t": 1794120315154
+  },
+  "starter-olive-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 118,
+    "y": 250,
+    "w": 652,
+    "h": 636
+   },
+   "v": 5,
+   "color": {
+    "hex": "#59633c",
+    "name": "Olive"
+   },
+   "colors": [
+    "#59633c",
+    "#343b19",
+    "#171a04"
+   ],
+   "t": 1794120319563
+  },
+  "starter-burgundy-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 254,
+    "w": 642,
+    "h": 632
+   },
+   "v": 5,
+   "color": {
+    "hex": "#45061b",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#45061b"
+   ],
+   "t": 1794120323289
+  },
+  "starter-oatmeal-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 116,
+    "y": 238,
+    "w": 656,
+    "h": 648
+   },
+   "v": 5,
+   "color": {
+    "hex": "#cab39b",
+    "name": "Beige"
+   },
+   "colors": [
+    "#cab39b",
+    "#947b68",
+    "#5a4537"
+   ],
+   "t": 1794120330564
+  },
+  "starter-stone-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 242,
+    "w": 644,
+    "h": 638
+   },
+   "v": 5,
+   "color": {
+    "hex": "#64676b",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#64676b",
+    "#36383a",
+    "#93969a",
+    "#0a0908"
+   ],
+   "t": 1794120334394
+  },
+  "starter-espresso-quarter-zip-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 244,
+    "w": 638,
+    "h": 624
+   },
+   "v": 5,
+   "color": {
+    "hex": "#392819",
+    "name": "Black"
+   },
+   "colors": [
+    "#392819"
+   ],
+   "t": 1794120337971
   }
  },
  "failed": {
@@ -13356,32 +14122,14 @@
   "starter-white-linen-blazer": [
    "blue background by the sleeve (left out by review)"
   ],
-  "starter-camel-wrap-top": [
-   "it added shorts or trousers to the top"
-  ],
   "starter-red-wrap-top": [
    "it added shorts or trousers to the top"
   ],
-  "starter-chocolate-brown-cable-knit-sweater": [
+  "starter-charcoal-grey-turtleneck": [
    "it added shorts or trousers to the top"
   ],
-  "starter-charcoal-grey-turtleneck": [
-   "knickers added (left out by review)"
-  ],
-  "starter-stone-peplum-top": [
-   "a brick-like pattern instead of the fabric (left out by review)"
-  ],
-  "starter-gold-sequin-top": [
-   "holes and shorts added (left out by review)"
-  ],
-  "starter-rose-gold-sequin-top": [
-   "scraps at the hem (left out by review)"
-  ],
-  "starter-mocha-cashmere-crewneck": [
-   "holes (left out by review)"
-  ],
-  "starter-stone-off-shoulder-sweater": [
-   "shredded cuff (left out by review)"
+  "starter-black-polo-knit": [
+   "it added shorts or trousers to the top"
   ]
  },
  "blocked": {
