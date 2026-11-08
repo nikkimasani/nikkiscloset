@@ -133,6 +133,46 @@ let uidN = 0;
  * @param {{pack:object, items:Record<string,object>, urls:Map<string,string>, meta?:Map<string,object>, selected?:string, cls?:string, label?:string, debug?:boolean}} o
  *   items: slot -> item. meta: id -> { iw, ih, bx, by, bw, bh } for the dashed selection box.
  */
+/** Where worn pieces should hide her own body: below the ankle her bare foot shows only inside the outline of the shoes (a shoe drawn for a heeled or
+ * pointed foot otherwise leaves her flat toes and heel sticking out), and at the hips a sliver of her body outside a pair of trousers, a skirt or a
+ * dress drawn a little narrower than her hips is hidden. Returns a <mask> (white = her body shows) or '' when nothing worn needs one. */
+export function bodyCover(pack, items, fits, masks, n) {
+  const [W, H] = pack.size, parts = [];
+  const maskOf = (it) => (it && fits?.get(it.id) && masks?.get(it.id)) || null;
+  const shoes = maskOf(items.shoes), ankle = pack.points.ankleL?.[1];
+  if (shoes && ankle) { // one outline per foot: the convex hull of the shoe below the ankle (the skin between a sandal's straps stays)
+    const { w, h, data, k } = shoes, mid = (pack.points.crotch?.[0] ?? W / 2) / k, sides = [[], []];
+    for (let y = Math.floor(ankle / k) - 4; y < h; y++) for (const [side, x0, x1] of [[0, 0, Math.floor(mid)], [1, Math.ceil(mid), w]]) {
+      let a = -1, b = -1; for (let x = x0; x < x1; x++) if (data[y * w + x]) { if (a < 0) a = x; b = x; }
+      if (a >= 0) sides[side].push([a * k, y * k], [(b + 1) * k, y * k]);
+    }
+    const hulls = sides.filter((pts) => pts.length > 4).map(hull);
+    if (hulls.length) parts.push(`<rect x="0" y="${ankle}" width="${W}" height="${H - ankle}" fill="#000"/>`, ...hulls.map((pts) => `<polygon points="${pts.map(([x, y]) => `${num(x)},${num(y)}`).join(' ')}" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>`));
+  }
+  const low = maskOf(items.dress) || maskOf(items.bottom);
+  if (low && pack.torsoRows) { // a gap of up to 34 px between the piece's edge and her hip
+    const { w, h, data, k } = low;
+    for (const [y, l, r] of pack.torsoRows) {
+      const my = Math.round(y / k); if (my < 0 || my >= h) continue;
+      let a = -1, b = -1; for (let x = 0; x < w; x++) if (data[my * w + x]) { if (a < 0) a = x; b = x; }
+      if (a < 0) continue;
+      const gl = a * k, gr = (b + 1) * k;
+      if (gl > l && gl - l <= 34) parts.push(`<rect x="${l - 3}" y="${y - 2}" width="${num(gl - l + 4)}" height="5" fill="#000"/>`);
+      if (gr < r && r - gr <= 34) parts.push(`<rect x="${num(gr - 1)}" y="${y - 2}" width="${num(r - gr + 4)}" height="5" fill="#000"/>`);
+    }
+  }
+  if (!parts.length) return '';
+  return `<mask id="bodycover-${n}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>${parts.join('')}</mask>`;
+}
+/** Convex hull (monotone chain) of [x, y] points. */
+function hull(pts) {
+  const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]), cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const q of p) { while (lo.length > 1 && cross(lo.at(-2), lo.at(-1), q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of p.reverse()) { while (up.length > 1 && cross(up.at(-2), up.at(-1), q) <= 0) up.pop(); up.push(q); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+
 export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
@@ -205,7 +245,8 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
   const bagIt = items.bag, underArm = !!(bagIt && pack.bagArm && ['shoulder', 'cross'].includes(bagStyle(bagIt)) && !fits?.get(bagIt.id));
   const clothes = order.filter((k) => !(underArm && k === 'bag')).map(garment).join(''), bagLayer = underArm ? garment('bag') : '';
   const armDefs = underArm ? `<clipPath id="armclip-${n}"><polygon points="${pack.bagArm.map(([x, y]) => `${x},${y}`).join(' ')}"/></clipPath><clipPath id="strapclip-${n}"><rect x="0" y="-200" width="${pack.size[0]}" height="${200 + (pack.points.armpitR?.[1] ?? 540)}"/></clipPath>` : '';
-  const body = pack.files[pack.layers.body] ? `<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"/>` : '';
+  const bodyMask = bodyCover(pack, items, fits, masks, n);
+  const body = pack.files[pack.layers.body] ? `${bodyMask ? `<defs>${bodyMask}</defs>` : ''}<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"${bodyMask ? ` mask="url(#bodycover-${n})"` : ''}/>` : '';
   let hairBack = '', hairFront = '', hairDefs = '';
   if (hair && pack.points.crown) { // behind the body: the hair inside the neck column below the jaw, and a soft fill between her skull and the hair's crown
     const P = pack.points, [sx, sy, tx, ty] = hairPlacement(pack, hair.marks), img = `<image class="hairpic" href="${hair.href}" width="${hair.size[0]}" height="${hair.size[1]}" transform="matrix(${num(sx)} 0 0 ${num(sy)} ${num(tx)} ${num(ty)})"/>`;
