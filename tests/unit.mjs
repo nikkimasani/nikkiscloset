@@ -675,3 +675,17 @@ test('inspo: each piece seen in a photo is matched by its own colour and kind, n
   assert.deepEqual(seen.map((s) => s.best?.item.id ?? null), ['b', 'd', 'f', null]);
   assert.ok(pieceScore(items[2], { name: 'Light blue trousers', type: 'bottoms', colors: ['light blue'] }) < 60, 'black flares are not a match for light blue trousers');
 });
+
+test('her bare foot shows only inside the shoes, and a sliver of hip outside trousers drawn narrower than her is hidden', async () => {
+  const { bodyCover } = await import('../public/js/doll.js');
+  const k = 4, w = 224, h = 444, sh = new Uint8Array(w * h), tr = new Uint8Array(w * h);
+  for (let y = 400; y < 440; y++) for (let x = 60; x < 80; x++) { sh[y * w + x] = 1; sh[y * w + x + 90] = 1; } // two small shoes below the ankle
+  for (let y = 180; y < 400; y++) for (let x = 64; x < 160; x++) tr[y * w + x] = 1; // trousers spanning x 256..640
+  const it = (id) => ({ id }), fits = new Map([['s', 'blob:s'], ['t', 'blob:t']]), masks = new Map([['s', { w, h, data: sh, k }], ['t', { w, h, data: tr, k }]]);
+  const m = bodyCover(pack, { shoes: it('s'), bottom: it('t') }, fits, masks, 1);
+  assert.match(m, /<mask id="bodycover-1"/);
+  assert.equal((m.match(/<polygon /g) || []).length, 2, 'one outline per foot');
+  assert.ok(m.includes(`y="${config.points.ankleL[1]}"`), 'feet hidden below the ankle except inside the shoes');
+  assert.ok(/<rect x="2\d\d" y="\d+" width="\d+(\.\d)?" height="5" fill="#000"\/>/.test(m), 'hip sliver outside the trousers hidden');
+  assert.equal(bodyCover(pack, {}, fits, masks, 1), '', 'nothing worn: her body is untouched');
+});
