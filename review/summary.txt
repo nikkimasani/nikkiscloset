@@ -1,4 +1,4 @@
-53 made this run · 933 of 3044 in the wardrobe · 59 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
+18 made this run · 938 of 3044 in the wardrobe · 54 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -45,16 +45,11 @@ starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
 starter-white-denim-straight-jeans: tinted pink (left out by review)
 starter-white-linen-blazer: blue background by the sleeve (left out by review)
 starter-charcoal-grey-turtleneck: it added shorts or trousers to the top
-starter-beige-scoop-neck-tee: it added shorts or trousers to the top
 starter-tan-scoop-neck-tee: it added shorts or trousers to the top
 starter-chocolate-brown-scoop-neck-tee: it added shorts or trousers to the top
-starter-taupe-scoop-neck-tee: it added shorts or trousers to the top
 starter-charcoal-grey-scoop-neck-tee: it added shorts or trousers to the top
 starter-navy-scoop-neck-tee: it added shorts or trousers to the top
-starter-burgundy-scoop-neck-tee: it added shorts or trousers to the top
 starter-sage-green-scoop-neck-tee: it added shorts or trousers to the top
-starter-emerald-green-scoop-neck-tee: it added shorts or trousers to the top
-starter-mocha-scoop-neck-tee: it added shorts or trousers to the top
-starter-butter-yellow-mohair-sweater: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (0d359bc8-4440-4cb7-8516-3e0976adfa00)
-starter-red-ribbed-tank: it added shorts or trousers to the top
-starter-rust-ribbed-tank: it added shorts or trousers to the top
+starter-beige-tailored-vest: it added shorts or trousers to the top
+starter-black-scoop-neck-tee: it added shorts or trousers to the top
+starter-lavender-ribbed-tank: she moved or changed shape in the picture it drew (it couldn’t be lined up)
