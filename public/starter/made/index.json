@@ -1,5 +1,5 @@
 {
- "version": 1794444874129,
+ "version": 1794445168137,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -17466,26 +17466,6 @@
    ],
    "t": 1794380898399
   },
-  "starter-taupe-scoop-neck-tee": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 240,
-    "w": 636,
-    "h": 766
-   },
-   "v": 5,
-   "color": {
-    "hex": "#866b6a",
-    "name": "Grey"
-   },
-   "colors": [
-    "#866b6a",
-    "#c79977",
-    "#976b45"
-   ],
-   "t": 1794380926763
-  },
   "starter-burgundy-scoop-neck-tee": {
    "kind": "worn",
    "box": {
@@ -17655,46 +17635,6 @@
    ],
    "t": 1794381021120
   },
-  "starter-oatmeal-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 248,
-    "y": 302,
-    "w": 420,
-    "h": 654
-   },
-   "v": 5,
-   "color": {
-    "hex": "#6c6c65",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#6c6c65",
-    "#aa9784"
-   ],
-   "t": 1794381028202
-  },
-  "starter-stone-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 282,
-    "y": 304,
-    "w": 334,
-    "h": 438
-   },
-   "v": 5,
-   "color": {
-    "hex": "#9a9695",
-    "name": "Grey"
-   },
-   "colors": [
-    "#9a9695",
-    "#6b6665",
-    "#c9c5c6",
-    "#3c3734"
-   ],
-   "t": 1794381040047
-  },
   "starter-sage-green-scoop-neck-tee": {
    "kind": "worn",
    "box": {
@@ -17731,43 +17671,6 @@
     "#7858b8"
    ],
    "t": 1794444561370
-  },
-  "starter-espresso-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 276,
-    "y": 298,
-    "w": 338,
-    "h": 452
-   },
-   "v": 5,
-   "color": {
-    "hex": "#2b2a14",
-    "name": "Black"
-   },
-   "colors": [
-    "#2b2a14",
-    "#0b0801"
-   ],
-   "t": 1794444566110
-  },
-  "starter-ecru-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 282,
-    "y": 302,
-    "w": 332,
-    "h": 450
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e4d8b9",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e4d8b9"
-   ],
-   "t": 1794444569521
   },
   "starter-black-high-neck-tank": {
    "kind": "worn",
@@ -18278,25 +18181,6 @@
    ],
    "t": 1794444712505
   },
-  "starter-espresso-tie-front-top": {
-   "kind": "worn",
-   "box": {
-    "x": 194,
-    "y": 300,
-    "w": 506,
-    "h": 352
-   },
-   "v": 5,
-   "color": {
-    "hex": "#594327",
-    "name": "Brown"
-   },
-   "colors": [
-    "#594327",
-    "#1a1506"
-   ],
-   "t": 1794444716304
-  },
   "starter-mocha-tie-front-top": {
    "kind": "worn",
    "box": {
@@ -18354,25 +18238,6 @@
     "#483528"
    ],
    "t": 1794444727645
-  },
-  "starter-white-ruched-top": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 296,
-    "w": 626,
-    "h": 584
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f8f8fa",
-    "name": "White"
-   },
-   "colors": [
-    "#f8f8fa",
-    "#d9c9c7"
-   ],
-   "t": 1794444731686
   },
   "starter-chocolate-brown-ruched-top": {
    "kind": "worn",
@@ -18453,25 +18318,6 @@
     "#b86877"
    ],
    "t": 1794444755579
-  },
-  "starter-oatmeal-ruched-top": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 290,
-    "w": 644,
-    "h": 666
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c6a799",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c6a799",
-    "#95786a"
-   ],
-   "t": 1794444764130
   },
   "starter-stone-ruched-top": {
    "kind": "worn",
@@ -18761,25 +18607,6 @@
    ],
    "t": 1794444835073
   },
-  "starter-oatmeal-asymmetric-top": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 316,
-    "w": 638,
-    "h": 570
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d4bca5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d4bca5",
-    "#99836b"
-   ],
-   "t": 1794444841765
-  },
   "starter-stone-asymmetric-top": {
    "kind": "worn",
    "box": {
@@ -18836,25 +18663,6 @@
     "#341c15"
    ],
    "t": 1794444855816
-  },
-  "starter-ecru-asymmetric-top": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 308,
-    "w": 630,
-    "h": 570
-   },
-   "v": 5,
-   "color": {
-    "hex": "#dbd6c3",
-    "name": "Cream"
-   },
-   "colors": [
-    "#dbd6c3",
-    "#aba795"
-   ],
-   "t": 1794444863929
   },
   "starter-taupe-scoop-bodysuit": {
    "kind": "worn",
@@ -19083,6 +18891,33 @@
   ],
   "starter-red-high-neck-tank": [
    "it added shorts or trousers to the top"
+  ],
+  "starter-ecru-ribbed-tank": [
+   "taken out on review: torn, skin patches kept"
+  ],
+  "starter-ecru-asymmetric-top": [
+   "taken out on review: skin patches on the sleeve"
+  ],
+  "starter-espresso-ribbed-tank": [
+   "taken out on review: torn, cut out in shreds"
+  ],
+  "starter-espresso-tie-front-top": [
+   "taken out on review: torn, holes"
+  ],
+  "starter-oatmeal-asymmetric-top": [
+   "taken out on review: briefs added under it"
+  ],
+  "starter-oatmeal-ruched-top": [
+   "taken out on review: shorts added under it"
+  ],
+  "starter-stone-ribbed-tank": [
+   "taken out on review: drawn in a brick-wall texture"
+  ],
+  "starter-white-ruched-top": [
+   "taken out on review: hole through the front"
+  ],
+  "starter-taupe-scoop-neck-tee": [
+   "taken out on review: green-tinted arms kept with it"
   ]
  },
  "blocked": {
@@ -19138,6 +18973,7 @@
   "starter-sage-green-sweater-vest": "taken out on review: drawn with sleeves, not a vest, twice",
   "starter-beige-linen-tank": "taken out on review: torn hem, patch kept between her legs, twice",
   "starter-espresso-sweater-vest": "taken out on review: blue and dark fragments at the sides, twice",
-  "starter-stone-linen-tank": "taken out on review: holes and underwear added, twice"
+  "starter-stone-linen-tank": "taken out on review: holes and underwear added, twice",
+  "starter-oatmeal-ribbed-tank": "taken out on review: shorts added under it, twice"
  }
 }
