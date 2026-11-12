@@ -1,5 +1,5 @@
 {
- "version": 1794445168137,
+ "version": 1794469617457,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -18718,6 +18718,593 @@
     "#87382c"
    ],
    "t": 1794444874129
+  },
+  "starter-charcoal-grey-turtleneck": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 244,
+    "w": 628,
+    "h": 642
+   },
+   "v": 5,
+   "color": {
+    "hex": "#474b54",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#474b54",
+    "#23262c"
+   ],
+   "t": 1794469429302
+  },
+  "starter-navy-scoop-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 306,
+    "w": 478,
+    "h": 448
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171a55",
+    "name": "Navy"
+   },
+   "colors": [
+    "#171a55",
+    "#070728"
+   ],
+   "t": 1794469486458
+  },
+  "starter-stone-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 298,
+    "w": 492,
+    "h": 588
+   },
+   "v": 5,
+   "color": {
+    "hex": "#969799",
+    "name": "Grey"
+   },
+   "colors": [
+    "#969799",
+    "#daab85",
+    "#676668",
+    "#a78877",
+    "#b57c55"
+   ],
+   "t": 1794469492615
+  },
+  "starter-espresso-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 304,
+    "w": 338,
+    "h": 434
+   },
+   "v": 5,
+   "color": {
+    "hex": "#432b1b",
+    "name": "Brown"
+   },
+   "colors": [
+    "#432b1b"
+   ],
+   "t": 1794469495987
+  },
+  "starter-ecru-ribbed-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 278,
+    "y": 300,
+    "w": 350,
+    "h": 480
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e2d5bd",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e2d5bd",
+    "#a89c85"
+   ],
+   "t": 1794469499650
+  },
+  "starter-espresso-tie-front-top": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 256,
+    "w": 480,
+    "h": 468
+   },
+   "v": 5,
+   "color": {
+    "hex": "#67452b",
+    "name": "Brown"
+   },
+   "colors": [
+    "#67452b",
+    "#281709"
+   ],
+   "t": 1794469515884
+  },
+  "starter-white-ruched-top": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 294,
+    "w": 628,
+    "h": 576
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e7e6ea",
+    "name": "White"
+   },
+   "colors": [
+    "#e7e6ea",
+    "#c7b8b6"
+   ],
+   "t": 1794469518678
+  },
+  "starter-oatmeal-ruched-top": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 260,
+    "w": 628,
+    "h": 742
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c9b5a7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c9b5a7",
+    "#9a8576"
+   ],
+   "t": 1794469522078
+  },
+  "starter-oatmeal-asymmetric-top": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 314,
+    "w": 642,
+    "h": 692
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c7b6a7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c7b6a7",
+    "#9a8678"
+   ],
+   "t": 1794469526081
+  },
+  "starter-ecru-asymmetric-top": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 294,
+    "w": 632,
+    "h": 580
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5cbb8",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d5cbb8",
+    "#a89a86"
+   ],
+   "t": 1794469529521
+  },
+  "starter-emerald-green-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 310,
+    "w": 464,
+    "h": 664
+   },
+   "v": 5,
+   "color": {
+    "hex": "#007a47",
+    "name": "Green"
+   },
+   "colors": [
+    "#007a47"
+   ],
+   "t": 1794469537784
+  },
+  "starter-butter-yellow-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 302,
+    "w": 466,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fefccb",
+    "name": "Cream"
+   },
+   "colors": [
+    "#fefccb"
+   ],
+   "t": 1794469540814
+  },
+  "starter-oatmeal-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 302,
+    "w": 456,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d3bca6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d3bca6",
+    "#876a57"
+   ],
+   "t": 1794469547173
+  },
+  "starter-stone-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 304,
+    "w": 464,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#767a85",
+    "name": "Grey"
+   },
+   "colors": [
+    "#767a85",
+    "#484c54"
+   ],
+   "t": 1794469550821
+  },
+  "starter-espresso-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 308,
+    "w": 454,
+    "h": 666
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2a2715",
+    "name": "Black"
+   },
+   "colors": [
+    "#2a2715"
+   ],
+   "t": 1794469553911
+  },
+  "starter-ecru-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 296,
+    "w": 464,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e4d9c9",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e4d9c9",
+    "#b6aa9a",
+    "#88796a"
+   ],
+   "t": 1794469557804
+  },
+  "starter-black-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 142,
+    "y": 306,
+    "w": 618,
+    "h": 668
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171718",
+    "name": "Black"
+   },
+   "colors": [
+    "#171718"
+   ],
+   "t": 1794469561520
+  },
+  "starter-white-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 298,
+    "w": 622,
+    "h": 630
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eaecf2",
+    "name": "White"
+   },
+   "colors": [
+    "#eaecf2"
+   ],
+   "t": 1794469564836
+  },
+  "starter-cream-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 140,
+    "y": 300,
+    "w": 614,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5ecd6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f5ecd6"
+   ],
+   "t": 1794469568247
+  },
+  "starter-ivory-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 306,
+    "w": 626,
+    "h": 668
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3ead5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f3ead5"
+   ],
+   "t": 1794469573042
+  },
+  "starter-beige-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 292,
+    "w": 638,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5baaa",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d5baaa",
+    "#a78b77"
+   ],
+   "t": 1794469577266
+  },
+  "starter-camel-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 144,
+    "y": 236,
+    "w": 616,
+    "h": 738
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ca8954",
+    "name": "Tan"
+   },
+   "colors": [
+    "#ca8954",
+    "#97582a",
+    "#dab586"
+   ],
+   "t": 1794469580955
+  },
+  "starter-tan-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 266,
+    "w": 636,
+    "h": 708
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ca9974",
+    "name": "Camel"
+   },
+   "colors": [
+    "#ca9974",
+    "#976b4a",
+    "#684529"
+   ],
+   "t": 1794469584667
+  },
+  "starter-chocolate-brown-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 300,
+    "w": 628,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#68352a",
+    "name": "Brown"
+   },
+   "colors": [
+    "#68352a",
+    "#35150c"
+   ],
+   "t": 1794469589521
+  },
+  "starter-taupe-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 134,
+    "y": 298,
+    "w": 624,
+    "h": 676
+   },
+   "v": 5,
+   "color": {
+    "hex": "#947c76",
+    "name": "Grey"
+   },
+   "colors": [
+    "#947c76",
+    "#594846"
+   ],
+   "t": 1794469592618
+  },
+  "starter-grey-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 300,
+    "w": 624,
+    "h": 674
+   },
+   "v": 5,
+   "color": {
+    "hex": "#969699",
+    "name": "Grey"
+   },
+   "colors": [
+    "#969699",
+    "#676869"
+   ],
+   "t": 1794469597326
+  },
+  "starter-charcoal-grey-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 304,
+    "w": 640,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#464953",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#464953",
+    "#25252b"
+   ],
+   "t": 1794469599993
+  },
+  "starter-navy-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 306,
+    "w": 644,
+    "h": 668
+   },
+   "v": 5,
+   "color": {
+    "hex": "#131b5b",
+    "name": "Navy"
+   },
+   "colors": [
+    "#131b5b",
+    "#060629"
+   ],
+   "t": 1794469604926
+  },
+  "starter-olive-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 140,
+    "y": 310,
+    "w": 616,
+    "h": 664
+   },
+   "v": 5,
+   "color": {
+    "hex": "#576534",
+    "name": "Olive"
+   },
+   "colors": [
+    "#576534",
+    "#353b17"
+   ],
+   "t": 1794469608623
+  },
+  "starter-burgundy-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 306,
+    "w": 634,
+    "h": 668
+   },
+   "v": 5,
+   "color": {
+    "hex": "#490014",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#490014",
+    "#280006"
+   ],
+   "t": 1794469611966
+  },
+  "starter-sage-green-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 304,
+    "w": 622,
+    "h": 670
+   },
+   "v": 5,
+   "color": {
+    "hex": "#93ad83",
+    "name": "Sage"
+   },
+   "colors": [
+    "#93ad83",
+    "#657a55"
+   ],
+   "t": 1794469617457
   }
  },
  "failed": {
@@ -18868,9 +19455,6 @@
   "starter-white-linen-blazer": [
    "blue background by the sleeve (left out by review)"
   ],
-  "starter-charcoal-grey-turtleneck": [
-   "it added shorts or trousers to the top"
-  ],
   "starter-tan-scoop-neck-tee": [
    "it added shorts or trousers to the top"
   ],
@@ -18878,9 +19462,6 @@
    "it added shorts or trousers to the top"
   ],
   "starter-charcoal-grey-scoop-neck-tee": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-navy-scoop-neck-tee": [
    "it added shorts or trousers to the top"
   ],
   "starter-beige-tailored-vest": [
@@ -18892,32 +19473,11 @@
   "starter-red-high-neck-tank": [
    "it added shorts or trousers to the top"
   ],
-  "starter-ecru-ribbed-tank": [
-   "taken out on review: torn, skin patches kept"
-  ],
-  "starter-ecru-asymmetric-top": [
-   "taken out on review: skin patches on the sleeve"
-  ],
-  "starter-espresso-ribbed-tank": [
-   "taken out on review: torn, cut out in shreds"
-  ],
-  "starter-espresso-tie-front-top": [
-   "taken out on review: torn, holes"
-  ],
-  "starter-oatmeal-asymmetric-top": [
-   "taken out on review: briefs added under it"
-  ],
-  "starter-oatmeal-ruched-top": [
-   "taken out on review: shorts added under it"
-  ],
-  "starter-stone-ribbed-tank": [
-   "taken out on review: drawn in a brick-wall texture"
-  ],
-  "starter-white-ruched-top": [
-   "taken out on review: hole through the front"
-  ],
   "starter-taupe-scoop-neck-tee": [
-   "taken out on review: green-tinted arms kept with it"
+   "it added shorts or trousers to the top"
+  ],
+  "starter-lavender-scoop-bodysuit": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (70de5acb-ed9b-4eac-8030-daec6cc9280c)"
   ]
  },
  "blocked": {
