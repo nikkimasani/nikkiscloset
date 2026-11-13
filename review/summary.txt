@@ -1,4 +1,4 @@
-85 made this run · 1108 of 3044 in the wardrobe · 48 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
+42 made this run · 1131 of 3044 in the wardrobe · 44 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -42,8 +42,4 @@ starter-white-linen-blazer: blue background by the sleeve (left out by review)
 starter-chocolate-brown-scoop-neck-tee: it added shorts or trousers to the top
 starter-charcoal-grey-scoop-neck-tee: it added shorts or trousers to the top
 starter-beige-tailored-vest: it added shorts or trousers to the top
-starter-black-scoop-neck-tee: it added shorts or trousers to the top
-starter-taupe-scoop-neck-tee: it added shorts or trousers to the top
-starter-lavender-scoop-bodysuit: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-lavender-long-sleeve-scoop-bodysuit: she moved or changed shape in the picture it drew (it couldn’t be lined up)
-starter-black-leather-leggings: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (712b443f-7ce0-4121-a998-4988f2f99e23)
+starter-lavender-scoop-bodysuit: she moved or changed shape in the picture it drew (it couldn’t be lined up); the piece barely shows (it may not have dressed her)
