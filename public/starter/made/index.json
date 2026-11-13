@@ -1,5 +1,5 @@
 {
- "version": 1794531256725,
+ "version": 1794531563795,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -18757,28 +18757,6 @@
    ],
    "t": 1794469486458
   },
-  "starter-stone-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 298,
-    "w": 492,
-    "h": 588
-   },
-   "v": 5,
-   "color": {
-    "hex": "#969799",
-    "name": "Grey"
-   },
-   "colors": [
-    "#969799",
-    "#daab85",
-    "#676668",
-    "#a78877",
-    "#b57c55"
-   ],
-   "t": 1794469492615
-  },
   "starter-espresso-ribbed-tank": {
    "kind": "worn",
    "box": {
@@ -18796,25 +18774,6 @@
     "#432b1b"
    ],
    "t": 1794469495987
-  },
-  "starter-ecru-ribbed-tank": {
-   "kind": "worn",
-   "box": {
-    "x": 278,
-    "y": 300,
-    "w": 350,
-    "h": 480
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e2d5bd",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e2d5bd",
-    "#a89c85"
-   ],
-   "t": 1794469499650
   },
   "starter-espresso-tie-front-top": {
    "kind": "worn",
@@ -18892,25 +18851,6 @@
    ],
    "t": 1794469526081
   },
-  "starter-ecru-asymmetric-top": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 294,
-    "w": 632,
-    "h": 580
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d5cbb8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d5cbb8",
-    "#a89a86"
-   ],
-   "t": 1794469529521
-  },
   "starter-emerald-green-scoop-bodysuit": {
    "kind": "worn",
    "box": {
@@ -18929,24 +18869,6 @@
    ],
    "t": 1794469537784
   },
-  "starter-butter-yellow-scoop-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 302,
-    "w": 466,
-    "h": 672
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fefccb",
-    "name": "Cream"
-   },
-   "colors": [
-    "#fefccb"
-   ],
-   "t": 1794469540814
-  },
   "starter-oatmeal-scoop-bodysuit": {
    "kind": "worn",
    "box": {
@@ -18964,7 +18886,7 @@
     "#d3bca6",
     "#876a57"
    ],
-   "t": 1794469547173
+   "t": 1794531563582
   },
   "starter-stone-scoop-bodysuit": {
    "kind": "worn",
@@ -19112,7 +19034,7 @@
     "#d5baaa",
     "#a78b77"
    ],
-   "t": 1794469577266
+   "t": 1794531563097
   },
   "starter-camel-long-sleeve-scoop-bodysuit": {
    "kind": "worn",
@@ -19324,26 +19246,6 @@
    ],
    "t": 1794530821122
   },
-  "starter-tan-scoop-neck-tee": {
-   "kind": "worn",
-   "box": {
-    "x": 212,
-    "y": 294,
-    "w": 474,
-    "h": 736
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b99678",
-    "name": "Camel"
-   },
-   "colors": [
-    "#b99678",
-    "#886849",
-    "#493716"
-   ],
-   "t": 1794530847606
-  },
   "starter-red-high-neck-tank": {
    "kind": "worn",
    "box": {
@@ -19436,7 +19338,7 @@
     "#a80009",
     "#780001"
    ],
-   "t": 1794530917933
+   "t": 1794531563691
   },
   "starter-emerald-green-long-sleeve-scoop-bodysuit": {
    "kind": "worn",
@@ -19455,26 +19357,7 @@
     "#017739",
     "#014916"
    ],
-   "t": 1794530921896
-  },
-  "starter-rust-long-sleeve-scoop-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 308,
-    "w": 640,
-    "h": 666
-   },
-   "v": 5,
-   "color": {
-    "hex": "#88352a",
-    "name": "Rust"
-   },
-   "colors": [
-    "#88352a",
-    "#591d12"
-   ],
-   "t": 1794530936124
+   "t": 1794531563511
   },
   "starter-mocha-long-sleeve-scoop-bodysuit": {
    "kind": "worn",
@@ -19548,7 +19431,7 @@
     "#ede7d3",
     "#b8ab94"
    ],
-   "t": 1794530951798
+   "t": 1794531563413
   },
   "starter-beige-square-neck-tank-bodysuit": {
    "kind": "worn",
@@ -19569,25 +19452,6 @@
    ],
    "t": 1794530955794
   },
-  "starter-camel-square-neck-tank-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 208,
-    "y": 302,
-    "w": 472,
-    "h": 672
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c9834d",
-    "name": "Tan"
-   },
-   "colors": [
-    "#c9834d",
-    "#985a2a"
-   ],
-   "t": 1794530960680
-  },
   "starter-chocolate-brown-square-neck-tank-bodysuit": {
    "kind": "worn",
    "box": {
@@ -19604,7 +19468,7 @@
    "colors": [
     "#38221d"
    ],
-   "t": 1794530965676
+   "t": 1794531563312
   },
   "starter-grey-square-neck-tank-bodysuit": {
    "kind": "worn",
@@ -19719,24 +19583,6 @@
    ],
    "t": 1794530987733
   },
-  "starter-butter-yellow-square-neck-tank-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 302,
-    "w": 460,
-    "h": 672
-   },
-   "v": 5,
-   "color": {
-    "hex": "#faedc5",
-    "name": "Cream"
-   },
-   "colors": [
-    "#faedc5"
-   ],
-   "t": 1794530991239
-  },
   "starter-light-blue-square-neck-tank-bodysuit": {
    "kind": "worn",
    "box": {
@@ -19791,24 +19637,6 @@
     "#00653b"
    ],
    "t": 1794531003752
-  },
-  "starter-lavender-square-neck-tank-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 300,
-    "w": 456,
-    "h": 674
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a585eb",
-    "name": "Purple"
-   },
-   "colors": [
-    "#a585eb"
-   ],
-   "t": 1794531014806
   },
   "starter-rust-square-neck-tank-bodysuit": {
    "kind": "worn",
@@ -19867,24 +19695,6 @@
    ],
    "t": 1794531026072
   },
-  "starter-cream-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 230,
-    "y": 662,
-    "w": 448,
-    "h": 704
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f3ebd4",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f3ebd4"
-   ],
-   "t": 1794531029649
-  },
   "starter-white-denim-straight-jeans": {
    "kind": "worn",
    "box": {
@@ -19942,25 +19752,6 @@
    ],
    "t": 1794531040104
   },
-  "starter-grey-plaid-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 660,
-    "w": 452,
-    "h": 982
-   },
-   "v": 5,
-   "color": {
-    "hex": "#575c63",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#575c63",
-    "#33373c"
-   ],
-   "t": 1794531043401
-  },
   "starter-white-slim-ankle-pants": {
    "kind": "worn",
    "box": {
@@ -20016,7 +19807,7 @@
     "#957869",
     "#c79b75"
    ],
-   "t": 1794531066809
+   "t": 1794531563222
   },
   "starter-camel-knit-lounge-pants": {
    "kind": "worn",
@@ -20336,25 +20127,6 @@
    ],
    "t": 1794531134735
   },
-  "starter-cream-satin-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 176,
-    "y": 652,
-    "w": 542,
-    "h": 800
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f7f7f4",
-    "name": "White"
-   },
-   "colors": [
-    "#f7f7f4",
-    "#d8d3bb"
-   ],
-   "t": 1794531138371
-  },
   "starter-olive-wrap-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -20393,65 +20165,6 @@
     "#666869"
    ],
    "t": 1794531145601
-  },
-  "starter-tan-leather-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 654,
-    "w": 466,
-    "h": 932
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a6785b",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a6785b",
-    "#7a5646",
-    "#c7a996"
-   ],
-   "t": 1794531149013
-  },
-  "starter-tan-check-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 574,
-    "w": 456,
-    "h": 996
-   },
-   "v": 5,
-   "color": {
-    "hex": "#967a57",
-    "name": "Tan"
-   },
-   "colors": [
-    "#967a57",
-    "#775849",
-    "#c3a87a"
-   ],
-   "t": 1794531153127
-  },
-  "starter-beige-pencil-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 650,
-    "w": 456,
-    "h": 928
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c3a996",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c3a996",
-    "#8b7966"
-   ],
-   "t": 1794531157808
   },
   "starter-black-pencil-skirt": {
    "kind": "worn",
@@ -20571,24 +20284,6 @@
    ],
    "t": 1794531180853
   },
-  "starter-butter-yellow-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 670,
-    "w": 438,
-    "h": 978
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5eaab",
-    "name": "Beige"
-   },
-   "colors": [
-    "#f5eaab"
-   ],
-   "t": 1794531185863
-  },
   "starter-light-blue-linen-trousers": {
    "kind": "worn",
    "box": {
@@ -20608,25 +20303,6 @@
    ],
    "t": 1794531190312
   },
-  "starter-white-linen-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 168,
-    "y": 654,
-    "w": 528,
-    "h": 1028
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e4e7ed",
-    "name": "White"
-   },
-   "colors": [
-    "#e4e7ed",
-    "#b5b6b8"
-   ],
-   "t": 1794531192944
-  },
   "starter-black-satin-trousers": {
    "kind": "worn",
    "box": {
@@ -20645,26 +20321,6 @@
     "#373838"
    ],
    "t": 1794531197192
-  },
-  "starter-champagne-satin-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 160,
-    "y": 564,
-    "w": 526,
-    "h": 1126
-   },
-   "v": 5,
-   "color": {
-    "hex": "#987768",
-    "name": "Brown"
-   },
-   "colors": [
-    "#987768",
-    "#fcf8e8",
-    "#c8ab95"
-   ],
-   "t": 1794531201108
   },
   "starter-leopard-satin-trousers": {
    "kind": "worn",
@@ -20725,25 +20381,6 @@
     "#040403"
    ],
    "t": 1794531211519
-  },
-  "starter-cream-cargo-pants": {
-   "kind": "worn",
-   "box": {
-    "x": 210,
-    "y": 654,
-    "w": 470,
-    "h": 976
-   },
-   "v": 5,
-   "color": {
-    "hex": "#eae7d4",
-    "name": "Cream"
-   },
-   "colors": [
-    "#eae7d4",
-    "#bab7b6"
-   ],
-   "t": 1794531215574
   },
   "starter-grey-joggers": {
    "kind": "worn",
@@ -21096,6 +20733,51 @@
   ],
   "starter-black-leather-leggings": [
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (712b443f-7ce0-4121-a998-4988f2f99e23)"
+  ],
+  "starter-beige-pencil-skirt": [
+   "taken out on review: bare legs kept below the skirt"
+  ],
+  "starter-butter-yellow-scoop-bodysuit": [
+   "taken out on review: cut out in shreds"
+  ],
+  "starter-butter-yellow-trousers": [
+   "taken out on review: torn, holes"
+  ],
+  "starter-butter-yellow-square-neck-tank-bodysuit": [
+   "taken out on review: skin patches kept"
+  ],
+  "starter-camel-square-neck-tank-bodysuit": [
+   "taken out on review: skin patch on the shoulder"
+  ],
+  "starter-champagne-satin-trousers": [
+   "taken out on review: skin band kept at the waist"
+  ],
+  "starter-cream-cargo-pants": [
+   "taken out on review: skin patches kept"
+  ],
+  "starter-cream-satin-midi-skirt": [
+   "taken out on review: skin patch at the side"
+  ],
+  "starter-grey-plaid-trousers": [
+   "taken out on review: skin patch at the hip"
+  ],
+  "starter-lavender-square-neck-tank-bodysuit": [
+   "taken out on review: torn, holes"
+  ],
+  "starter-rust-long-sleeve-scoop-bodysuit": [
+   "taken out on review: holes at the side"
+  ],
+  "starter-tan-check-mini-skirt": [
+   "taken out on review: bare legs kept below the skirt"
+  ],
+  "starter-tan-leather-mini-skirt": [
+   "taken out on review: bare legs kept below the skirt"
+  ],
+  "starter-tan-scoop-neck-tee": [
+   "taken out on review: shorts added under it"
+  ],
+  "starter-white-linen-trousers": [
+   "taken out on review: skin patch kept"
   ]
  },
  "blocked": {
@@ -21152,6 +20834,10 @@
   "starter-beige-linen-tank": "taken out on review: torn hem, patch kept between her legs, twice",
   "starter-espresso-sweater-vest": "taken out on review: blue and dark fragments at the sides, twice",
   "starter-stone-linen-tank": "taken out on review: holes and underwear added, twice",
-  "starter-oatmeal-ribbed-tank": "taken out on review: shorts added under it, twice"
+  "starter-oatmeal-ribbed-tank": "taken out on review: shorts added under it, twice",
+  "starter-cream-knit-midi-skirt": "taken out on review: skin patch at the side, twice",
+  "starter-ecru-ribbed-tank": "taken out on review: skin patches kept, twice",
+  "starter-ecru-asymmetric-top": "taken out on review: skin patches on the sleeve, twice",
+  "starter-stone-ribbed-tank": "taken out on review: drawn in a brick-wall texture, twice"
  }
 }
