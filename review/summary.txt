@@ -1,4 +1,4 @@
-64 made this run · 1002 of 3044 in the wardrobe · 53 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
+85 made this run · 1108 of 3044 in the wardrobe · 48 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -20,7 +20,6 @@ starter-brown-belt-bag: cut-out not clean enough (left out by review)
 starter-gold-anklet: cut-out not clean enough (left out by review)
 starter-brown-crescent-bag: cut-out not clean enough (left out by review)
 starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
-starter-black-tailored-vest: it added shorts or trousers to the top
 starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
 starter-floral-corset-top: taken out on review: torn and off colours, twice
 starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
@@ -36,19 +35,15 @@ starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, 
 starter-brown-leather-blazer: a stub of trousers kept under it (left out by review)
 starter-camel-wool-coat: dark patches inside the coat (left out by review)
 starter-champagne-satin-slip-maxi: her arm and neck kept with the dress (left out by review)
-starter-black-leather-mini-skirt: holes at the sides (left out by review)
-starter-cream-knit-midi-skirt: a brown patch at the hip (left out by review)
 starter-camel-sweater-dress: her legs kept with the dress (left out by review)
-starter-cream-pleated-trousers: holes at the side of the trousers (left out by review)
 starter-gold-dome-earrings: cut through: half of each earring missing (left out by review)
 starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
-starter-white-denim-straight-jeans: tinted pink (left out by review)
 starter-white-linen-blazer: blue background by the sleeve (left out by review)
-starter-charcoal-grey-turtleneck: it added shorts or trousers to the top
-starter-tan-scoop-neck-tee: it added shorts or trousers to the top
 starter-chocolate-brown-scoop-neck-tee: it added shorts or trousers to the top
 starter-charcoal-grey-scoop-neck-tee: it added shorts or trousers to the top
-starter-navy-scoop-neck-tee: it added shorts or trousers to the top
 starter-beige-tailored-vest: it added shorts or trousers to the top
 starter-black-scoop-neck-tee: it added shorts or trousers to the top
-starter-red-high-neck-tank: it added shorts or trousers to the top
+starter-taupe-scoop-neck-tee: it added shorts or trousers to the top
+starter-lavender-scoop-bodysuit: she moved or changed shape in the picture it drew (it couldn’t be lined up)
+starter-lavender-long-sleeve-scoop-bodysuit: she moved or changed shape in the picture it drew (it couldn’t be lined up)
+starter-black-leather-leggings: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (712b443f-7ce0-4121-a998-4988f2f99e23)
