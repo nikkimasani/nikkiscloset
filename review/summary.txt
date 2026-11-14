@@ -1,4 +1,4 @@
-42 made this run · 1131 of 3044 in the wardrobe · 44 failed · stopped: the day’s free Cloudflare allowance is used up (the next run carries on)
+100 made this run · 1231 of 3044 in the wardrobe · 44 failed · stopped: tonight's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
 starter-white-shoulder-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
@@ -41,5 +41,5 @@ starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
 starter-white-linen-blazer: blue background by the sleeve (left out by review)
 starter-chocolate-brown-scoop-neck-tee: it added shorts or trousers to the top
 starter-charcoal-grey-scoop-neck-tee: it added shorts or trousers to the top
-starter-beige-tailored-vest: it added shorts or trousers to the top
 starter-lavender-scoop-bodysuit: she moved or changed shape in the picture it drew (it couldn’t be lined up); the piece barely shows (it may not have dressed her)
+starter-navy-satin-midi-skirt: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (9fa19a1a-0df1-4ac1-b3a3-591c2a69c77b)
