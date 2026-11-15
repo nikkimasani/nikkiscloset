@@ -1,5 +1,5 @@
 {
- "version": 1794704411113,
+ "version": 1794759933846,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -664,25 +664,6 @@
     "#161616"
    ],
    "t": 1793457199105
-  },
-  "starter-taupe-ribbed-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 292,
-    "w": 454,
-    "h": 1370
-   },
-   "v": 5,
-   "color": {
-    "hex": "#867c83",
-    "name": "Grey"
-   },
-   "colors": [
-    "#867c83",
-    "#56484a"
-   ],
-   "t": 1793457199449
   },
   "starter-white-eyelet-mini-dress": {
    "kind": "worn",
@@ -25121,6 +25102,9 @@
   ],
   "starter-white-denim-bootcut-jeans": [
    "taken out on review: skin patches kept"
+  ],
+  "starter-taupe-ribbed-maxi-dress": [
+   "taken out on review: drawn as a jumpsuit, not a dress"
   ]
  },
  "blocked": {
