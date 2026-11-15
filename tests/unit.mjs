@@ -322,11 +322,12 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
 });
 
-test('a bodysuit goes under the bottoms by default (no trim at the waist), and can be untucked', () => {
+test('a bodysuit always goes under the bottoms (no trim at the waist), even with an old untucked setting', () => {
   const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
   const svg = dollSVG({ pack, items, urls });
   assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.doesNotMatch(svg, /clip-path="url\(#tuckclip-\d+\)"/);
-  assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['bottom', 'top']);
+  assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['top', 'bottom']);
+  assert.ok(!isTuckable(items.top, pack), 'no Tuck in / Untuck button for a bodysuit');
 });
 
 test('each piece remembers a small fit for this picture only', () => {
@@ -765,7 +766,7 @@ test('Today: looks from Pinterest pins, made from the wardrobe', () => {
   const jeans = it('lj', 'Light blue wide-leg jeans', 'bottoms', '#a9c1dc'), want = { name: 'Light blue denim jeans', type: 'bottoms', colors: ['light blue'] };
   assert.ok(recipeScore(jeans, want) > recipeScore(denimSkirt, want), 'jeans for jeans, not a denim skirt');
 
-  const items = [it('t1', 'Black linen tank', 'tanks', '#111111', 'light'), it('t2', 'White cable-knit sweater', 'tops', '#f4f2ee', 'warm'),
+  const items = [it('t1', 'Black linen tank', 'tanks', '#111111'), it('t2', 'White cable-knit sweater', 'tops', '#f4f2ee', 'warm'),
     it('b1', 'White tailored slacks', 'bottoms', '#f5f4f0'), it('b2', 'Black tailored trousers', 'bottoms', '#121212'), it('s1', 'Black strappy heels', 'shoes', '#101010', 'light'),
     it('s2', 'Black ankle boots', 'shoes', '#121010', 'warm'), it('o1', 'Classic trench coat', 'outerwear', '#c8b08a'), it('g1', 'Black chain-strap bag', 'bags', '#0f0f0f')];
   const pins = [{ id: 'p1', board: 'statement', pieces: [{ name: 'Black sleeveless tank top', type: 'tanks', colors: ['black'] }, { name: 'White high-waisted trousers', type: 'bottoms', colors: ['white'] }, { name: 'Black heeled sandals', type: 'shoes', colors: ['black'] }] },
@@ -774,8 +775,9 @@ test('Today: looks from Pinterest pins, made from the wardrobe', () => {
   assert.equal(hot.length, 1, 'a pin with no close stand-in for a main piece is left out');
   assert.deepEqual([hot[0].look.top.id, hot[0].look.bottom.id, hot[0].look.shoes.id], ['t1', 'b1', 's1']);
   assert.ok(!hot[0].look.outer, 'no coat on a hot day');
-  const wet = pinLooks(items, pins, { band: 'mild', rain: 80, n: 1, random: () => 0 })[0];
-  assert.equal(wet.look.outer?.id, 'o1', 'a trench on a rainy day');
+  assert.ok(!pinLooks(items, pins, { band: 'mild', rain: 80, n: 1, random: () => 0 })[0].look.outer, 'no coat added just for a mild rainy day');
+  const wet = pinLooks(items, pins, { band: 'cool', rain: 80, n: 1, random: () => 0 })[0];
+  assert.equal(wet.look.outer?.id, 'o1', 'a trench on a cool rainy day');
   assert.equal(wet.look.shoes.id, 's2', 'boots, not strappy heels, in the rain');
 
   assert.ok(PINS.length > 40 && PINS.every((p) => p.pieces.length && p.board), 'the pins from her boards are bundled');

@@ -95,7 +95,7 @@ async function load() {
   let profiles;
   profiles = await all('profile'); S.profile = profiles[0] || null;
   if (S.profile?.modelBase) setMyBody(url('mymodel', S.profile.modelBase), S.profile.modelAt || 1); // your own model, made with "Make my model"
-  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); }); // don't hold up the first screen on the doll's art
+  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); fillFigures(); }); // don't hold up the first screen on the doll's art
   [S.items, S.outfits, S.wears, S.inspos, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'plans', 'wishlist'].map(all));
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
@@ -272,8 +272,8 @@ function queueFit(item) {
     if (!r) return;
     const old = S.fits.get(item.id); if (old) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one)
     const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
-    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
-    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
+    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item, { sync: true }); } // (worked out, not an edit: it mustn't win over an edit from another device)
+    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : (S.view === 'plan' && S.planTab === 'diary') || S.view === 'inspo' ? render() : fillFigures(true)), 60); // (elsewhere only the model pictures change, so nothing else on the page is redrawn)
   }).catch(() => S.fitPending.delete(key));
 }
 const usingPhoto = () => false; // (your own photo and the photoreal try-on are off the Dress Up screen: the model is always shown)
@@ -284,6 +284,8 @@ const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped
   const v = String(dollPack?.hair?.marksVersion || 1); if (dollPack && store.get('hairmarks_v', '1') !== v) { store.set('hairmarks', '{}'); store.set('hairmarks_v', v); }
   try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
+/** Model pictures drawn before the model's art had loaded (Today's looks) are filled in once it has, without redrawing the page. */
+function fillFigures(all = false) { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (all || !el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini'); }); }
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
@@ -299,6 +301,13 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
+  // a redraw from the background (pieces finishing an import, the weather arriving) mustn't wipe what she's typing: keep that box's text and cursor
+  const typing = document.activeElement?.matches?.('#main input[id]:not([type=file]):not([type=checkbox]):not([type=radio]), #main textarea[id]') ? document.activeElement : null;
+  const kept = typing && { id: typing.id, value: typing.value, a: typing.selectionStart, b: typing.selectionEnd };
+  renderView();
+  if (kept) { const el = document.getElementById(kept.id); if (el && el !== typing) { el.value = kept.value; el.focus({ preventScroll: true }); try { el.setSelectionRange(kept.a, kept.b); } catch { /* not a text box */ } } }
+}
+function renderView() {
   if (S.view !== 'tryon') S.lastView = S.view;
   document.body.classList.toggle('wic-on', S.view === 'tryon' && S.scene === 'closet');
   if (S.view !== 'tryon' || S.scene === 'closet') document.body.classList.remove('dsheet');
@@ -1966,7 +1975,7 @@ async function openFromLink() {
 // helpers handed to the Plan tab
 /* Editorial look: no emoji. UI text, the clothing-type and occasion labels and older screens still carry some, so they're taken out of
  *  whatever is put on screen (typographic marks the UI relies on, like ♥ ✓ ✕ ✎, stay). */
-const EMOJI = /(?![♥✓✔✕✎☑✦×])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}]*\s?/gu;
+const EMOJI = /(?![♥✓✔✕✎☑✦×◀▶▲▼])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}]*\s?/gu;
 function deEmoji(root) {
   if (root.nodeType === 3) { if (EMOJI.test(root.data)) root.data = root.data.replace(EMOJI, ''); EMOJI.lastIndex = 0; return; }
   if (root.nodeType !== 1 || root.closest?.('svg')) return;
