@@ -99,9 +99,10 @@ export function pointsOverlay(pack, items = {}) {
 export const NO_FIT = { scale: 1, dx: 0, dy: 0, rot: 0, tuck: false };
 /** The remembered fit of an item for this picture (a different base picture keeps its own, because proportions differ). */
 export const fitOf = (item, pack) => ({ ...NO_FIT, ...(item?.fit?.[pack.id] || {}) });
-export const isTuckable = (item, pack) => !!item && pack.tuckable.includes(item.type);
-/** Is a top tucked into the bottoms? A bodysuit is, unless you untuck it (it is worn under them); other tops only when you tuck them. */
-export const tuckOf = (item, pack) => (item?.type === 'bodysuits' ? item.fit?.[pack.id]?.tuck ?? true : fitOf(item, pack).tuck);
+/** Can a top be tucked in or left out? Not a bodysuit: it always goes under the bottoms (left out, its seat would show over them). */
+export const isTuckable = (item, pack) => !!item && item.type !== 'bodysuits' && pack.tuckable.includes(item.type);
+/** Is a top tucked into the bottoms? A bodysuit always is; other tops only when you tuck them. */
+export const tuckOf = (item, pack) => (item?.type === 'bodysuits' ? true : fitOf(item, pack).tuck);
 
 /** The SVG transform that puts an item's picture on its box, then applies the remembered nudge. */
 export function garmentTransform(anchor, fit) {
@@ -204,7 +205,7 @@ function hull(pts) {
 export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
-  const tucked = !!(top && bottom && isTuckable(top, pack) && tuckOf(top, pack)), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
+  const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && tuckOf(top, pack))), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
   const order = tucked ? pack.tuckedOrder : pack.clothesOrder;
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';

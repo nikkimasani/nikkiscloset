@@ -261,8 +261,8 @@ export function pinLooks(items, pins, { occasion = '', wearCounts = {}, band, ra
     const nearest = (slot, extra = () => true) => items.filter((i) => slotOf(i.type) === slot && extra(i))
       .map((i) => ({ i, r: (pal.length && i.color ? Math.max(...pal.map((h) => 100 - hexDist(i.color.hex, h))) : 50) * fits(i, slot) * (added.has(i.id) ? 0.7 : 1) })).sort((a, b) => b.r - a.r)[0]?.i;
     if (!look.shoes) { const s = nearest('shoes', (i) => NEUTRAL_SHOES.test(i.name)) || nearest('shoes'); if (s) { look.shoes = s; added.add(s.id); } }
-    if (!look.outer && (band === 'cold' || band === 'cool' || rain >= 60)) {
-      const coat = nearest('outer', (i) => (rain >= 60 ? /trench|rain|coat|jacket/i : /coat|jacket|blazer|cardigan|trench/i).test(i.name) && (band === 'cold' || !/puffer|parka/i.test(i.name)) && suitsWeather(i, band));
+    if (!look.outer && (band === 'cold' || (band === 'cool' && rain >= 50))) { // a coat only when it's really needed; she can add or drop one
+      const coat = nearest('outer', (i) => (rain >= 50 ? /trench|rain|coat|jacket/i : /coat|jacket|blazer|cardigan|trench/i).test(i.name) && (band === 'cold' || !/puffer|parka/i.test(i.name)) && suitsWeather(i, band));
       if (coat) { look.outer = coat; added.add(coat.id); }
     }
   }

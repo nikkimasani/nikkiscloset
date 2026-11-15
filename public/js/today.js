@@ -1,7 +1,7 @@
 // The Today tab: Vesti, your stylist, hands you a few looks for the day from your own wardrobe,
 // for the weather and what's on (an event you added in Plan, or what you tell her in "Dressing for…").
 // Love or pass on a look and she learns; swap any piece; try it on the model; or wear it (logged in the Diary).
-import { OCCASIONS, SLOT_LABEL, wornSlot } from './data.js';
+import { OCCASIONS, SLOT_LABEL, slotOf, wornSlot } from './data.js';
 import { BANDS, toF } from './weather.js';
 import { dailyLooks, learn, parseAsk, pinLooks, swapPiece } from './stylist.js';
 import { PINS } from './pins.js';
@@ -70,13 +70,15 @@ function lookCard(c, o, i) {
     ${board ? `<p class="t-src muted">From your Pinterest · ${esc(BOARD_NAMES[board] || board.replace(/-/g, ' '))}</p>` : ''}
     <div class="t-fig" aria-hidden="true">${figure(ids, 'mini') || ''}</div>
     <div class="t-pieces">${pieces.map(([s, p]) => `<div class="t-piece"><img src="${url(p.id)}" alt="" loading="lazy"><span class="grow"><small class="muted">${esc(SLOT_LABEL[s] || s)}</small><br>${esc(p.name)}</span>
-      <button class="ghost t-swap" data-act="todayswap" data-i="${i}" data-v="${s}" aria-label="Swap the ${esc(p.name)}"><span aria-hidden="true">⟳</span></button></div>`).join('')}</div>
+      <span class="t-btns"><button class="ghost t-swap" data-act="todayswap" data-i="${i}" data-v="${s}" aria-label="Swap the ${esc(p.name)}"><span aria-hidden="true">⟳</span></button>${DROPPABLE.includes(s) ? `<button class="ghost t-swap" data-act="todaydrop" data-i="${i}" data-v="${s}" aria-label="Remove the ${esc(p.name)}"><span aria-hidden="true">✕</span></button>` : ''}</span></div>`).join('')}</div>
+    ${((adds) => adds ? `<div class="row t-adds">${adds}</div>` : '')(ADDABLE.filter((s) => !o[s] && c.S.items.some((it) => slotOf(it.type) === s)).map((s) => `<button class="ghost t-add" data-act="todayadd" data-i="${i}" data-v="${s}">Add ${ADD_LABEL[s]}</button>`).join(''))}
     <div class="row t-acts"><button class="primary" data-act="todaywear" data-i="${i}">Wear this today</button><button class="ghost" data-act="todaytry" data-i="${i}">Try it on</button>
       <button class="ghost" data-act="todaylove" data-i="${i}" aria-label="Love this look"><span aria-hidden="true">♥</span></button><button class="ghost" data-act="todaynope" data-i="${i}" aria-label="Not for me — show another"><span aria-hidden="true">✕</span></button></div>
   </article>`;
 }
 
 const idsOf = (o) => Object.values(o).map((p) => p.id);
+const DROPPABLE = ['outer', 'bag', 'shoes'], ADDABLE = ['outer', 'shoes', 'bag'], ADD_LABEL = { outer: 'a jacket', shoes: 'shoes', bag: 'a bag' }; // (a top, bottom or dress can only be swapped)
 const BOARD_NAMES = { statement: 'Statement', outfits: 'Outfits', 'stylish-corporate-outfit': 'Stylish corporate outfit' };
 const look = (c, el) => c.S.today.looks[Number(el.dataset.i)];
 
@@ -89,6 +91,8 @@ export const todayActs = {
     c.S.today.looks[i] = swapPiece(c.S.items, c.S.today.looks[i], el.dataset.v, { occasion: b.occasion, wearCounts: c.wearCounts(), band: b.band, prefs: prefsOf(c) });
     renderToday(c);
   },
+  todaydrop(c, el) { const o = { ...look(c, el) }; delete o[el.dataset.v]; c.S.today.looks[Number(el.dataset.i)] = o; renderToday(c); },
+  todayadd(c, el) { const b = brief(c), i = Number(el.dataset.i); c.S.today.looks[i] = swapPiece(c.S.items, c.S.today.looks[i], el.dataset.v, { occasion: b.occasion, wearCounts: c.wearCounts(), band: b.band, prefs: prefsOf(c) }); renderToday(c); },
   todaylove(c, el) { savePrefs(c, learn(prefsOf(c), idsOf(look(c, el)), true)); c.toast('Saved to your likes'); },
   todaynope(c, el) {
     const i = Number(el.dataset.i), b = brief(c);

@@ -95,7 +95,7 @@ async function load() {
   let profiles;
   profiles = await all('profile'); S.profile = profiles[0] || null;
   if (S.profile?.modelBase) setMyBody(url('mymodel', S.profile.modelBase), S.profile.modelAt || 1); // your own model, made with "Make my model"
-  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); }); // don't hold up the first screen on the doll's art
+  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); else if ((S.view === 'today' || S.view === 'plan') && S.items.length) render(); }); // (Today and the Diary draw the model too, once the wardrobe is read) // don't hold up the first screen on the doll's art
   [S.items, S.outfits, S.wears, S.inspos, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'plans', 'wishlist'].map(all));
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
@@ -1966,7 +1966,7 @@ async function openFromLink() {
 // helpers handed to the Plan tab
 /* Editorial look: no emoji. UI text, the clothing-type and occasion labels and older screens still carry some, so they're taken out of
  *  whatever is put on screen (typographic marks the UI relies on, like ♥ ✓ ✕ ✎, stay). */
-const EMOJI = /(?![♥✓✔✕✎☑✦×])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}]*\s?/gu;
+const EMOJI = /(?![♥✓✔✕✎☑✦×◀▶▲▼])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}]*\s?/gu;
 function deEmoji(root) {
   if (root.nodeType === 3) { if (EMOJI.test(root.data)) root.data = root.data.replace(EMOJI, ''); EMOJI.lastIndex = 0; return; }
   if (root.nodeType !== 1 || root.closest?.('svg')) return;
