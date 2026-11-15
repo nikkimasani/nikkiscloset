@@ -9,12 +9,16 @@ const packs = new Map();
 const num = (n) => Math.round(n * 10) / 10;
 
 /** Fetch the base picture's config (cached). Resolves to the pack, or null if it can't be loaded. */
+/** Your own model ("Make my model"): its picture replaces base.png; the points and rules stay (its outline matches the standard figure). */
+let myBody = null;
+export function setMyBody(href, tag) { myBody = href ? { href, tag } : null; }
 export function loadPack(id = DEFAULT_PACK) {
   if (packs.has(id)) return packs.get(id).promise;
   const entry = { pack: null };
   entry.promise = (async () => {
     const base = '/assets/avatar/', meta = await (await fetch(base + 'config.json')).json(), files = {};
     await Promise.all(Object.values(meta.layers).map(async (f) => { const r = await fetch(base + f, { method: 'HEAD' }); if (!r.ok) throw new Error(f); files[f] = base + f + (meta.version ? `?v=${meta.version}` : ''); })); // (the version makes a phone fetch a replaced picture instead of its cached copy)
+    if (myBody) { files[meta.layers.body] = myBody.href; meta.id = `${meta.id}:me-${myBody.tag}`; } // (a new id refits pieces fitted to the old picture)
     return (entry.pack = withPoints({ ...meta, files, base }));
   })().catch(() => { packs.delete(id); return null; });
   packs.set(id, entry);

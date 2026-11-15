@@ -18,7 +18,8 @@ import { groupOf } from './landmarks.js';
 import * as starter from './starter.js';
 import * as wearAI from './wear.js';
 import { BATCHES as STARTER_BATCHES, ITEMS as STARTER_ITEMS, seedFor } from '../starter/items.js';
-import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, tuckOf, imageRect, bagBody } from './doll.js';
+import * as myModel from './mymodel.js';
+import { loadPack, setMyBody, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, tuckOf, imageRect, bagBody } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, usePhoto } from './game.js';
 import { BACKGROUNDS, POSES, composePhoto, photoBlob } from './photo.js';
@@ -92,9 +93,10 @@ function paintSheet(html, title) {
 
 async function load() {
   let profiles;
+  profiles = await all('profile'); S.profile = profiles[0] || null;
+  if (S.profile?.modelBase) setMyBody(url('mymodel', S.profile.modelBase), S.profile.modelAt || 1); // your own model, made with "Make my model"
   loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); }); // don't hold up the first screen on the doll's art
-  [S.items, S.outfits, S.wears, S.inspos, profiles, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist'].map(all));
-  S.profile = profiles[0] || null;
+  [S.items, S.outfits, S.wears, S.inspos, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'plans', 'wishlist'].map(all));
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
   S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
@@ -820,6 +822,61 @@ async function importBackup(file) {
   } catch (e) { toast(e.message || 'Could not read that file'); }
 }
 
+/* ───────────────────────── make my model (look like you) ───────────────────────── */
+const TATTOO_HINT = 'Include my tattoos: a small script tattoo on the front of one shoulder, a lotus tattoo on my sternum, a small script tattoo on my hip';
+function openMyModel() {
+  const prof = S.profile, d = { face: '', body: '', made: null, busy: false, msg: '' };
+  const std = () => (dollPack ? `${dollPack.base}${dollPack.layers.body}${dollPack.version ? `?v=${dollPack.version}` : ''}` : '/assets/avatar/base.png'); // always the standard figure (its pose and outline)
+  openModal();
+  const paint = () => {
+    const now = prof?.modelBase ? url('mymodel') : std();
+    paintSheet(`
+      <p class="muted">Vesti redraws your model with your face, skin tone and tattoos, keeping her pose and shape so every piece in your wardrobe still fits her. Your photos are only sent to Cloudflare to draw the picture; they aren’t saved anywhere.</p>
+      <label class="f" for="mmface">A clear photo of your face</label><input type="file" id="mmface" accept="image/*">
+      <label class="f" for="mmbody">A photo showing your body and tattoos (optional)</label><input type="file" id="mmbody" accept="image/*">
+      <label class="f" for="mmnotes">Anything to add</label><textarea id="mmnotes" rows="3" maxlength="200">${esc(store.get('mmnotes', TATTOO_HINT))}</textarea>
+      ${store.get('aipass', '') ? '' : '<label class="f" for="mmpass">Passcode</label><input type="password" id="mmpass" autocomplete="current-password">'}
+      <div class="mm-pair">${[['Now', now], ['New', d.made?.url]].map(([l, u]) => `<figure><figcaption class="muted">${l}</figcaption><div class="mm-pic">${u ? `<img src="${u}" alt="${l === 'Now' ? 'Your model now' : 'Your new model'}">` : '<span class="muted">Your new model shows here</span>'}</div></figure>`).join('')}</div>
+      ${d.made && d.made.match < myModel.GOOD_MATCH ? `<div class="gap" role="alert">This one changed her shape (${Math.round(d.made.match * 100)}% the same outline), so clothes may not line up. Try again for a closer one.</div>` : ''}
+      <div id="mmstatus" class="muted" role="status" aria-live="polite">${esc(d.msg)}</div>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+        <button class="primary" id="mmgo" ${d.busy || !d.face ? 'disabled' : ''}>${d.made ? '🔄 Try again' : '✨ Make my model'}</button>
+        ${d.made ? '<button class="primary" id="mmuse">Use this model</button>' : ''}
+        ${prof?.modelBase ? '<button class="ghost danger" id="mmreset">Back to the standard model</button>' : ''}
+        <button class="ghost" id="mmcancel">Close</button></div>
+      <p class="muted" style="margin-top:8px">Each try uses about 150 of today’s 10,000 free Cloudflare credits.</p>`, 'Make my model');
+    $('#mmcancel').onclick = closeModal;
+    const pick = (id, key) => ($(id).onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { d[key] = await myModel.photoInput(f); d.msg = key === 'face' ? 'Face photo ready ✓' : 'Body photo ready ✓'; } catch (err) { d.msg = err.message; } keep(); paint(); });
+    const keep = () => { const n = $('#mmnotes'); if (n) store.set('mmnotes', n.value.trim() || ' '); };
+    pick('#mmface', 'face'); pick('#mmbody', 'body');
+    $('#mmgo').onclick = async () => {
+      keep(); const pass = store.get('aipass', '') || $('#mmpass')?.value.trim();
+      if (!pass) { d.msg = 'Enter your passcode first.'; return paint(); }
+      d.busy = true; d.msg = 'Drawing your model… (about 20 seconds)'; paint();
+      try {
+        const image = await myModel.figureInput(std());
+        const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ model: true, image, face: d.face, body: d.body || undefined, notes: store.get('mmnotes', TATTOO_HINT).trim() }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || `The server said ${r.status}`);
+        store.set('aipass', pass);
+        if (d.made) URL.revokeObjectURL(d.made.url);
+        d.made = await myModel.finishModel(j.image, std()); d.msg = 'Here she is. Use this model, or try again.';
+      } catch (e) { d.msg = e.message || 'That didn’t work — try again.'; }
+      d.busy = false; paint();
+    };
+    if ($('#mmuse')) $('#mmuse').onclick = async () => {
+      const rec = { ...(S.profile || { id: 'me', display: 'model' }), id: 'me', modelBase: d.made.blob, modelAt: Date.now(), modelMatch: Math.round(d.made.match * 1000) / 1000 };
+      await put('profile', rec); S.profile = rec; toast('Your model is saved ✓'); setTimeout(() => location.reload(), 600); // (the model, its outline and fitted pieces are rebuilt for the new picture)
+    };
+    if ($('#mmreset')) $('#mmreset').onclick = async () => {
+      if (!confirm('Go back to the standard model?')) return;
+      const rec = { ...S.profile }; delete rec.modelBase; delete rec.modelAt; delete rec.modelMatch;
+      if (rec.photo) { await put('profile', rec); } else { await del('profile', 'me'); } setTimeout(() => location.reload(), 300);
+    };
+  };
+  paint();
+}
+
 /* ───────────────────────── my photo (for the photoreal try-on) ───────────────────────── */
 function openModelModal() {
   const prof = S.profile, d = { canvas: null, photoUrl: prof?.photo ? url('profile') : '', display: prof?.display || 'model' };
@@ -845,14 +902,15 @@ function openModelModal() {
     };
     $('#msave').onclick = async () => {
       const photo = d.canvas ? await canvasToBlob(d.canvas, 'image/jpeg', 0.9) : prof?.photo || null;
-      const rec = { id: 'me', rev: d.canvas ? Date.now() : prof?.rev || Date.now(), W: d.canvas?.width || prof?.W || 0, H: d.canvas?.height || prof?.H || 0, photo, display: photo ? d.display : 'model' };
+      const rec = { ...(prof || {}), id: 'me', rev: d.canvas ? Date.now() : prof?.rev || Date.now(), W: d.canvas?.width || prof?.W || 0, H: d.canvas?.height || prof?.H || 0, photo, display: photo ? d.display : 'model' };
       await put('profile', rec); S.profile = rec;
       S.urls.delete('profile'); if (rec.photo) url('profile', rec.photo);
       closeModal(); toast('Saved ✓'); render();
     };
     if ($('#mreset')) $('#mreset').onclick = async () => {
       if (!confirm('Remove your saved photo?')) return;
-      await del('profile', 'me'); S.profile = null; S.urls.delete('profile'); closeModal(); render();
+      if (prof?.modelBase) { const rec = { ...prof, photo: null, display: 'model' }; await put('profile', rec); S.profile = rec; } else { await del('profile', 'me'); S.profile = null; } // (your own model stays)
+      S.urls.delete('profile'); closeModal(); render();
     };
   };
   paint();
@@ -961,7 +1019,8 @@ function casHTML() {
   };
   return `<div class="cas" role="region" aria-label="Customize your model">
     <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => tabs.includes(k)).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}${close}</div>
-    <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div></div>`;
+    <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div>
+    <button class="chip cas-me" data-act="mymodel"><span aria-hidden="true">✨</span> ${S.profile?.modelBase ? 'Remake my model' : 'Make my model look like me'}</button></div>`;
 }
 
 /** "Adjust fit" for a hairstyle: drag its four landmarks on the picture (crown, hairline, temples); the head preview follows. Saved per style. */
@@ -1812,6 +1871,7 @@ async function handleClick(e) {
     case 'wearToday': S.date = iso(new Date()); S.month = new Date(); await logWear(S.date, S.mood); return renderTryon();
     case 'tab-tryon': return go('tryon');
     case 'plantab': S.planTab = v; return render();
+    case 'mymodel': return openMyModel();
     case 'month': S.month = new Date(S.month.getFullYear(), S.month.getMonth() + +v, 1); return render();
     case 'pickday': S.date = v; return render();
     case 'logday': await logWear(S.date, $('#wocc').value, $('#wnote').value.trim()); return render();
