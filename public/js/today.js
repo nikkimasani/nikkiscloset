@@ -68,7 +68,7 @@ function lookCard(c, o, i) {
   const ids = pieces.map(([, p]) => p.id), names = pieces.map(([, p]) => p.name).join(', '), board = c.S.today.pins?.[i];
   return `<article class="panel t-look" aria-label="Look ${i + 1}: ${esc(names)}">
     ${board ? `<p class="t-src muted">From your Pinterest · ${esc(BOARD_NAMES[board] || board.replace(/-/g, ' '))}</p>` : ''}
-    <div class="t-fig" aria-hidden="true">${figure(ids, 'mini') || ''}</div>
+    <div class="t-fig" aria-hidden="true" data-fig="${esc(ids.join(','))}">${figure(ids, 'mini') || ''}</div>
     <div class="t-pieces">${pieces.map(([s, p]) => `<div class="t-piece"><img src="${url(p.id)}" alt="" loading="lazy"><span class="grow"><small class="muted">${esc(SLOT_LABEL[s] || s)}</small><br>${esc(p.name)}</span>
       <span class="t-btns"><button class="ghost t-swap" data-act="todayswap" data-i="${i}" data-v="${s}" aria-label="Swap the ${esc(p.name)}"><span aria-hidden="true">⟳</span></button>${DROPPABLE.includes(s) ? `<button class="ghost t-swap" data-act="todaydrop" data-i="${i}" data-v="${s}" aria-label="Remove the ${esc(p.name)}"><span aria-hidden="true">✕</span></button>` : ''}</span></div>`).join('')}</div>
     ${((adds) => adds ? `<div class="row t-adds">${adds}</div>` : '')(ADDABLE.filter((s) => !o[s] && c.S.items.some((it) => slotOf(it.type) === s)).map((s) => `<button class="ghost t-add" data-act="todayadd" data-i="${i}" data-v="${s}">Add ${ADD_LABEL[s]}</button>`).join(''))}

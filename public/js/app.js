@@ -95,7 +95,7 @@ async function load() {
   let profiles;
   profiles = await all('profile'); S.profile = profiles[0] || null;
   if (S.profile?.modelBase) setMyBody(url('mymodel', S.profile.modelBase), S.profile.modelAt || 1); // your own model, made with "Make my model"
-  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); else if ((S.view === 'today' || (S.view === 'plan' && S.planTab === 'diary')) && S.items.length && !document.activeElement?.matches('input, textarea, select')) render(); }); // (Today and the Diary draw the model too, once the wardrobe is read; never while she's typing) // don't hold up the first screen on the doll's art
+  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); fillFigures(); }); // don't hold up the first screen on the doll's art
   [S.items, S.outfits, S.wears, S.inspos, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'plans', 'wishlist'].map(all));
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
@@ -284,6 +284,8 @@ const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped
   const v = String(dollPack?.hair?.marksVersion || 1); if (dollPack && store.get('hairmarks_v', '1') !== v) { store.set('hairmarks', '{}'); store.set('hairmarks_v', v); }
   try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
+/** Model pictures drawn before the model's art had loaded (Today's looks) are filled in once it has, without redrawing the page. */
+function fillFigures() { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (!el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini'); }); }
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
