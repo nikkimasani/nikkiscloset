@@ -938,4 +938,4 @@ body.dsheet .undobar { display: none; }
 .mm-pair figure { margin: 0; }
 .mm-pic { background: var(--tile); border-radius: 12px; aspect-ratio: 1 / 2; display: grid; place-items: center; overflow: hidden; text-align: center; padding: 6px; }
 .mm-pic img { width: 100%; height: 100%; object-fit: contain; }
-.cas-me { margin-top: 8px; width: 100%; }
+.cas-me { margin: 4px 0 10px; width: 100%; min-height: 48px; }

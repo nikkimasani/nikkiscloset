@@ -1019,8 +1019,8 @@ function casHTML() {
   };
   return `<div class="cas" role="region" aria-label="Customize your model">
     <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => tabs.includes(k)).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}${close}</div>
-    <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div>
-    <button class="chip cas-me" data-act="mymodel"><span aria-hidden="true">✨</span> ${S.profile?.modelBase ? 'Remake my model' : 'Make my model look like me'}</button></div>`;
+    <button class="primary cas-me" data-act="mymodel"><span aria-hidden="true">✨</span> ${S.profile?.modelBase ? 'Remake my model' : 'Make my model look like me'}</button>
+    <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div></div>`;
 }
 
 /** "Adjust fit" for a hairstyle: drag its four landmarks on the picture (crown, hairline, temples); the head preview follows. Saved per style. */
