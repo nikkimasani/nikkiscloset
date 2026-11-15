@@ -301,6 +301,13 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
+  // a redraw from the background (pieces finishing an import, the weather arriving) mustn't wipe what she's typing: keep that box's text and cursor
+  const typing = document.activeElement?.matches?.('#main input[id]:not([type=file]):not([type=checkbox]):not([type=radio]), #main textarea[id]') ? document.activeElement : null;
+  const kept = typing && { id: typing.id, value: typing.value, a: typing.selectionStart, b: typing.selectionEnd };
+  renderView();
+  if (kept) { const el = document.getElementById(kept.id); if (el && el !== typing) { el.value = kept.value; el.focus({ preventScroll: true }); try { el.setSelectionRange(kept.a, kept.b); } catch { /* not a text box */ } } }
+}
+function renderView() {
   if (S.view !== 'tryon') S.lastView = S.view;
   document.body.classList.toggle('wic-on', S.view === 'tryon' && S.scene === 'closet');
   if (S.view !== 'tryon' || S.scene === 'closet') document.body.classList.remove('dsheet');
