@@ -857,6 +857,7 @@ function openMyModel() {
         const image = await myModel.figureInput(std());
         const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ model: true, image, face: d.face, body: d.body || undefined, notes: store.get('mmnotes', TATTOO_HINT).trim() }) });
         const j = await r.json().catch(() => ({}));
+        if (j.limit) throw new Error(`Today’s free Cloudflare credits are used up${j.resetAt ? ` — try again after ${new Date(j.resetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ' — try again tomorrow'}. Nothing was charged.`);
         if (!r.ok) throw new Error(j.error || `The server said ${r.status}`);
         store.set('aipass', pass);
         if (d.made) URL.revokeObjectURL(d.made.url);
