@@ -743,3 +743,14 @@ test('Make my model: the prompt keeps her pose and outline, and takes your notes
   assert.match(p, /pose, body outline and proportions/); assert.match(p, /magenta background/);
   assert.doesNotMatch(modelPrompt('', false), /Also:/);
 });
+
+test('boots under long trousers show only below the hem; under a short skirt they show whole', async () => {
+  const { shoeClip } = await import('../public/js/doll.js');
+  const pack = { size: [100, 200], points: { kneeL: [40, 120], kneeR: [60, 120], crotch: [50, 90] } };
+  const mk = (hem) => { const w = 100, h = 200, data = new Uint8Array(w * h); for (let y = 80; y < hem; y++) for (let x = 30; x < 70; x++) data[y * w + x] = 1; return { w, h, data, k: 1 }; };
+  const items = { bottom: { id: 'b' }, shoes: { id: 's' } }, fits = new Map([['b', 'u'], ['s', 'u']]);
+  const long = shoeClip(pack, items, fits, new Map([['b', mk(195)]]), 1);
+  assert.match(long, /<clipPath id="shoeclip-1"/); assert.match(long, /y="180"/, 'cut 14 px above the lowest row of each leg');
+  assert.equal(shoeClip(pack, items, fits, new Map([['b', mk(140)]]), 1), '', 'a hem above knee + 60: boots whole');
+  assert.equal(shoeClip(pack, { bottom: { id: 'b' } }, fits, new Map([['b', mk(195)]]), 1), '', 'no shoes: nothing to clip');
+});
