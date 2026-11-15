@@ -1,11 +1,11 @@
 // Service worker: lets the app install on a phone and open offline.
 // App code/styles are network-first (so updates show up right away); the big, never-changing pictures and libraries are cache-first.
-const CACHE = 'vesti-v2'; // raise to drop every cached file on the next visit
+const CACHE = 'vesti-v3'; // raise to drop every cached file on the next visit
 const HEAVY = ['/vendor/', '/assets/'];
 
 // The app shell is cached at install so the very next visit (even offline) works. tests/smoke.mjs checks this list covers every file in js/.
 const SHELL = ['/', '/styles.css', '/starter/items.js', '/starter/wardrobe.js', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
-  '/js/aitryon.js', '/js/app.js', '/js/bodymap.js', '/js/closet.js', '/js/color.js', '/js/compose-worker.js', '/js/cutmask.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/doll.js', '/js/editor.js', '/js/fitting.js', '/js/game.js', '/js/garment.js', '/js/insights.js', '/js/intake.js', '/js/landmarks.js', '/js/meters.js', '/js/mymodel.js', '/js/photo.js', '/js/plan.js', '/js/planner.js', '/js/segment.js', '/js/sharecard.js', '/js/starter.js', '/js/stylist.js', '/js/sync.js', '/js/today.js', '/js/warp.js', '/js/wear.js', '/js/weather.js'];
+  '/js/aitryon.js', '/js/app.js', '/fonts/playfair-display-latin-500-normal.woff2', '/fonts/playfair-display-latin-600-normal.woff2', '/fonts/playfair-display-latin-500-italic.woff2', '/fonts/inter-latin-400-normal.woff2', '/fonts/inter-latin-500-normal.woff2', '/fonts/inter-latin-600-normal.woff2', '/js/bodymap.js', '/js/closet.js', '/js/color.js', '/js/compose-worker.js', '/js/cutmask.js', '/js/cutout.js', '/js/data.js', '/js/db.js', '/js/doll.js', '/js/editor.js', '/js/fitting.js', '/js/game.js', '/js/garment.js', '/js/insights.js', '/js/intake.js', '/js/landmarks.js', '/js/meters.js', '/js/mymodel.js', '/js/photo.js', '/js/plan.js', '/js/planner.js', '/js/segment.js', '/js/sharecard.js', '/js/starter.js', '/js/stylist.js', '/js/sync.js', '/js/today.js', '/js/warp.js', '/js/wear.js', '/js/weather.js'];
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

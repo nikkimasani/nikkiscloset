@@ -161,7 +161,7 @@ try {
   writeFileSync(photo, Buffer.from(dataUrl.split(',')[1], 'base64'));
 
   await page.click('header [data-act=add]');
-  ok(await page.locator('.modechips [data-mode]').count() === 3 && /Recommended/.test(await page.locator('.modechips .on').innerText()), 'step 1: how it was taken (Flat lay recommended) and where the photo comes from');
+  ok(await page.locator('.modechips [data-mode]').count() === 3 && /Recommended/i.test(await page.locator('.modechips .on').innerText()), 'step 1: how it was taken (Flat lay recommended) and where the photo comes from');
   ok(await page.locator('#tol').count() === 0, 'no background-removal strength slider any more');
   await page.setInputFiles('#file', photo);
   await throughEditor(page);

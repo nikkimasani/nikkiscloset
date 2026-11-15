@@ -15,11 +15,11 @@ function ellipsize(g, text, maxW) { let t = text; while (t.length > 3 && g.measu
 export async function lookCard({ title, sub = '', items, model = null }) {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const g = c.getContext('2d');
-  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#123a5c'); bg.addColorStop(1, '#3a2a6b');
-  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  await Promise.all(['500 66px "Playfair Display"', '500 30px Inter'].map((f) => document.fonts?.load(f).catch(() => {}))); // (the editorial fonts, if the page has them)
+  g.fillStyle = '#f6f1ea'; g.fillRect(0, 0, W, H);
 
-  g.fillStyle = '#ffffff'; g.font = '700 66px Georgia, serif'; g.fillText(ellipsize(g, title, W - 120), 60, 112);
-  g.fillStyle = '#b7d3ea'; g.font = '32px system-ui, sans-serif'; g.fillText(ellipsize(g, sub, W - 120), 60, 162);
+  g.fillStyle = '#1c1915'; g.font = '500 66px "Playfair Display", Georgia, serif'; g.fillText(ellipsize(g, title, W - 120), 60, 112);
+  g.fillStyle = '#6f665c'; g.font = '32px Inter, system-ui, sans-serif'; g.fillText(ellipsize(g, sub, W - 120), 60, 162);
 
   const imgs = await Promise.all(items.slice(0, 7).map((i) => load(i.url)));
 
@@ -27,7 +27,7 @@ export async function lookCard({ title, sub = '', items, model = null }) {
   const sx = 60, sy = 200, sw = 520, sh = 980;
   g.save(); rrect(g, sx, sy, sw, sh, 40); g.clip();
   const room = g.createLinearGradient(0, sy, 0, sy + sh);
-  room.addColorStop(0, '#ddd3f8'); room.addColorStop(0.64, '#cfc4f3'); room.addColorStop(0.64, '#c98f5a'); room.addColorStop(1, '#b87d46');
+  room.addColorStop(0, '#efe8dd'); room.addColorStop(1, '#e6ddcf');
   g.fillStyle = room; g.fillRect(sx, sy, sw, sh);
   if (model) { const m = trimTransparent(model, 12), [w, h] = fit(m, sw - 60, sh - 70); g.drawImage(m, sx + (sw - w) / 2, sy + sh - 40 - h, w, h); } // feet on the floor
   else {
@@ -38,14 +38,13 @@ export async function lookCard({ title, sub = '', items, model = null }) {
 
   items.slice(0, 7).forEach((it, k) => {
     const y = 200 + k * 140;
-    g.fillStyle = 'rgba(255,255,255,.1)'; rrect(g, 620, y, 400, 124, 24); g.fill();
-    g.fillStyle = '#eef5ff'; rrect(g, 634, y + 12, 100, 100, 16); g.fill();
-    if (imgs[k]) { const [w, h] = fit(imgs[k], 88, 88); g.drawImage(imgs[k], 640 + (88 - w) / 2, y + 18 + (88 - h) / 2, w, h); }
-    g.fillStyle = '#ffffff'; g.font = '600 30px system-ui, sans-serif'; g.fillText(ellipsize(g, it.name, 250), 752, y + 72);
+    g.strokeStyle = '#e2d9cc'; g.lineWidth = 2; g.beginPath(); g.moveTo(620, y + 132); g.lineTo(1020, y + 132); g.stroke(); // hairline rules between pieces
+    g.fillStyle = '#efe8dd'; rrect(g, 620, y + 12, 100, 100, 12); g.fill();
+    if (imgs[k]) { const [w, h] = fit(imgs[k], 88, 88); g.drawImage(imgs[k], 626 + (88 - w) / 2, y + 18 + (88 - h) / 2, w, h); }
+    g.fillStyle = '#1c1915'; g.font = '500 30px Inter, system-ui, sans-serif'; g.fillText(ellipsize(g, it.name, 270), 742, y + 72);
   });
 
-  g.fillStyle = '#b7d3ea'; g.font = '30px system-ui, sans-serif'; g.fillText('Vesti', 60, 1270);
-  g.fillStyle = '#ff7aa8'; g.beginPath(); g.moveTo(W - 90, 1240); g.lineTo(W - 62, 1262); g.lineTo(W - 90, 1292); g.lineTo(W - 118, 1262); g.closePath(); g.fill();
+  g.fillStyle = '#1c1915'; g.font = '500 30px "Playfair Display", Georgia, serif'; if ('letterSpacing' in g) g.letterSpacing = '10px'; g.fillText('VESTI', 60, 1270); if ('letterSpacing' in g) g.letterSpacing = '0px';
   return new Promise((res) => c.toBlob(res, 'image/png'));
 }
 

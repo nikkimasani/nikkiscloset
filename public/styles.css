@@ -1,12 +1,19 @@
-/* Nikki's Closet — game-style dress-up theme (dark glass UI, bright room) */
+/* Vesti — editorial theme: warm ivory paper, black ink, serif headings, hairline rules */
+@font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 500; font-display: swap; src: url(fonts/playfair-display-latin-500-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Playfair Display'; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/playfair-display-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Playfair Display'; font-style: italic; font-weight: 500; font-display: swap; src: url(fonts/playfair-display-latin-500-italic.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/inter-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url(fonts/inter-latin-500-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/inter-latin-600-normal.woff2) format('woff2'); }
 :root {
-  --bg: #0b2540; --bg2: #123a5c; --panel: rgba(14, 48, 80, .88); --panel-solid: #123a5c; --line: #2f6a98;
-  --ink: #f2f8ff; --muted: #b7d3ea; --accent: #5ad1ff; --accent-ink: #052133;
-  --hot: #ff7aa8; --hot-ink: #2a0a18; --tile: #eef5ff; --tile-ink: #10253a; --tile-muted: #44607a;
-  --check: #dfe9f5; --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  --bg: #f6f1ea; --bg2: #efe8dd; --panel: #fffdf9; --panel-solid: #fffdf9; --line: #e2d9cc;
+  --ink: #1c1915; --muted: #6f665c; --accent: #1c1915; --accent-ink: #fbf8f3;
+  --hot: #1c1915; --hot-ink: #fbf8f3; --tile: #f3ede4; --tile-ink: #1c1915; --tile-muted: #6f665c;
+  --check: #ece5da; --shadow: 0 10px 30px rgba(60, 45, 30, .10);
+  --serif: 'Playfair Display', 'Didot', Georgia, serif; --sans: 'Inter', -apple-system, system-ui, sans-serif;
   /* legacy names used by a few inline styles */
-  --plum: var(--accent); --plum-d: #8fe0ff; --card: var(--panel-solid); --rose: #1c4f7a;
-  color-scheme: dark;
+  --plum: var(--accent); --plum-d: #3a342c; --card: var(--panel-solid); --rose: #efe8dd;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -939,3 +946,85 @@ body.dsheet .undobar { display: none; }
 .mm-pic { background: var(--tile); border-radius: 12px; aspect-ratio: 1 / 2; display: grid; place-items: center; overflow: hidden; text-align: center; padding: 6px; }
 .mm-pic img { width: 100%; height: 100%; object-fit: contain; }
 .cas-me { margin: 4px 0 10px; width: 100%; min-height: 48px; }
+
+/* ═════════ Vesti editorial layer: overrides the old game styling (keep at the end of the file) ═════════ */
+body { font: 15px/1.5 var(--sans); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: 0; color: var(--ink); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.skip { background: var(--ink); color: var(--accent-ink); border-radius: 0; }
+
+/* header + nav */
+.top { background: rgba(246, 241, 234, .94); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.brand { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacing: .32em; text-transform: uppercase; }
+.brand-gem { display: none; }
+#nav { background: rgba(251, 248, 243, .97); border-top: 1px solid var(--line); backdrop-filter: blur(10px); gap: 0; }
+#nav button { color: var(--muted); font-weight: 500; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; border-radius: 0; min-height: 54px; }
+#nav .ic { font-size: 0; filter: none; width: 22px; height: 22px; }
+#nav .ic svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+#nav button.on { background: none; color: var(--ink); box-shadow: inset 0 2px 0 var(--ink); }
+
+/* buttons, chips, inputs */
+.primary { background: var(--ink); color: var(--accent-ink); border-radius: 99px; font-weight: 500; letter-spacing: .04em; box-shadow: none; }
+.primary:active { transform: none; box-shadow: none; opacity: .85; }
+.ghost { background: transparent; border: 1px solid var(--ink); color: var(--ink); font-weight: 500; }
+.ghost:hover { border-color: var(--ink); background: #1c191508; }
+.danger { color: #9b2c2c; }
+.ghost.danger { border-color: #c9a3a3; }
+.link { color: var(--ink); }
+.muted { color: var(--muted); }
+input[type=text], input[type=search], input[type=url], input[type=password], input[type=date], input[type=number], select, textarea { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; }
+input::placeholder, textarea::placeholder { color: #9b9184; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--ink); }
+input[type=range] { accent-color: var(--ink); }
+label.f { color: var(--muted); font-weight: 500; letter-spacing: .02em; }
+.chip { background: transparent; border: 1px solid var(--line); color: var(--ink); font-weight: 500; }
+.chip.on { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: none; }
+.panel h3, .drawer h3 { font-family: var(--serif); font-size: 18px; font-weight: 500; }
+.view-title { font-family: var(--serif); font-weight: 500; }
+.gap { background: #f7ece2; color: #6b3d1f; border: 1px solid #ead2bd; }
+.seg { background: var(--bg2); }
+.seg button { color: var(--muted); font-weight: 500; }
+.seg button.on { background: var(--ink); color: var(--accent-ink); }
+
+/* modals */
+.modal { background: rgba(40, 32, 24, .35); }
+.sheet { background: var(--panel); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 20px 60px rgba(40, 30, 20, .18); }
+.sheet h2 { font-family: var(--serif); font-weight: 500; }
+
+/* Today */
+.t-hero .view-title { font-size: 34px; line-height: 1.1; }
+.t-hero > .muted { text-transform: uppercase; letter-spacing: .14em; font-size: 11px; }
+.t-lede { font-family: var(--serif); font-style: italic; font-size: 18px; color: #3a342c; }
+.t-fig, .t-piece img, .mm-pic { background: var(--tile); }
+.t-swap { border-color: var(--line); }
+
+/* the dressing room: keep the room art, quiet the chrome around it */
+.room { border: 1px solid var(--line); box-shadow: none; border-radius: 16px; }
+.tools button { background: var(--panel); border: 1px solid var(--line); color: var(--ink); box-shadow: none; font-weight: 500; border-radius: 12px; }
+.tools button.on, .tools .go { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
+.tools button span[aria-hidden] { filter: grayscale(1); }
+.cas, .dsheet-body, .drawer { background: var(--panel); color: var(--ink); }
+.tools .lic svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.tools button span[aria-hidden] { filter: none; }
+
+/* on-stage controls: ivory glass, ink text */
+.closetbtn, .dolltoggle, .tuckbtn, .tuckchip, .undobar button, .gb-closet { background: rgba(251, 248, 243, .9) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; font-weight: 500 !important; box-shadow: 0 2px 10px rgba(40, 30, 20, .08); }
+.undobar button:disabled { opacity: .45; }
+.toast { background: var(--ink); color: var(--accent-ink); font-weight: 500; box-shadow: 0 8px 30px rgba(40, 30, 20, .2); }
+.toast-undo { background: var(--accent-ink); color: var(--ink); font-weight: 600; }
+.piece .edit, .piece .del { background: rgba(251, 248, 243, .92); color: var(--ink); border: 1px solid var(--line); }
+.tile-x { background: rgba(251, 248, 243, .92); color: var(--ink); }
+.tile-x:hover, .tile-x:focus-visible { background: #fff; }
+.car-btn { background: transparent; border-color: var(--line); }
+.drop { border: 1px dashed #b9ad9c; border-radius: 14px; }
+.drop.over { background: var(--bg2); }
+.aibox { border: 1px solid var(--line); background: transparent; }
+.aibox summary { font-weight: 500; }
+.modechips button, .srcbtn { background: transparent; font-weight: 500; }
+.modechips button.on { border-color: var(--ink); background: #1c19150a; box-shadow: inset 0 0 0 1px var(--ink); }
+.modechips small { color: var(--muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; font-size: 10px; }
+.srcbtn.on { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
+.tipbox h3 { font-family: var(--serif); font-weight: 500; font-size: 16px; }
+.rail-h, .car-h, .rail h3 { font-family: var(--serif); font-weight: 500; }
+.rail-h small, .car-h small { font-family: var(--sans); color: var(--muted); font-weight: 400; }
