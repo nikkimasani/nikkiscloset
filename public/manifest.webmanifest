@@ -1,7 +1,7 @@
 {
-  "name": "Nikki's Closet",
-  "short_name": "Closet",
-  "description": "Dress up your real wardrobe in 3D, plan your OOTD, and match inspo to what you own.",
+  "name": "Vesti",
+  "short_name": "Vesti",
+  "description": "Your digital stylist: a look for every day from your own wardrobe, for the weather and your plans.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

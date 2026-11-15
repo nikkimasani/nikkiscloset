@@ -45,4 +45,4 @@ createServer(async (req, res) => {
     res.writeHead(404, { 'content-type': 'text/plain' });
     res.end('Not found');
   }
-}).listen(port, () => console.log(`Nikki's Closet running at http://localhost:${port}`));
+}).listen(port, () => console.log(`Vesti running at http://localhost:${port}`));
