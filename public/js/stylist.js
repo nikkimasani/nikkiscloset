@@ -177,3 +177,94 @@ export function learn(prefs = {}, ids = [], liked = true) {
 
 export const suggestionLabel = (slot, hexName) => `${hexName} ${TYPES[Object.keys(TYPES).find((t) => TYPES[t].slot === slot)].label.toLowerCase()}`;
 export { palette };
+
+/* ───────────── Looks from her Pinterest pins ───────────── */
+
+// Details that make two pieces the same piece, beyond colour and kind: a satin midi skirt for a satin midi skirt, not any skirt.
+const DETAILS = ['satin', 'silk', 'linen', 'leather', 'suede', 'denim', 'knit', 'ribbed', 'cable', 'sheer', 'lace', 'sequin', 'tweed', 'midi', 'mini', 'maxi',
+  'cropped', 'oversized', 'strapless', 'sleeveless', 'long-sleeve', 'short sleeve', 'halter', 'wide-leg', 'straight-leg', 'skinny', 'flared', 'pleated', 'tailored',
+  'puff', 'wrap', 'square-neck', 'v-neck', 'scoop', 'pointed', 'strappy', 'block', 'platform', 'quilted', 'woven', 'chain', 'tote', 'clutch', 'shoulder bag'];
+const detailsIn = (text) => { const s = String(text || '').toLowerCase().replace(/long sleeve/g, 'long-sleeve').replace(/wide leg/g, 'wide-leg'); return DETAILS.filter((d) => s.includes(d)); };
+
+/** The kinds of garment named, where "denim" only means jeans when nothing else is named (a denim skirt is a skirt). */
+const garmentKinds = (text) => { const k = kindsIn(text); return k.length > 1 && k.includes('jeans') && !/\bjeans?\b/i.test(text) ? k.filter((x) => x !== 'jeans') : k; };
+
+/** 0-100: how well a closet piece stands in for one in a pin. The same colour and the same kind of garment are both needed; shared details count a little. */
+export function recipeScore(item, piece) {
+  const want = (piece.colors || []).map(hexOfName).filter(Boolean);
+  const color = want.length && item.color ? Math.max(...want.map((h) => Math.max(0, 100 - hexDist(item.color.hex, h) * 2.2))) : 40;
+  const pk = garmentKinds(`${piece.name} ${piece.detail || ''}`), ik = garmentKinds(item.name);
+  const kind = pk.length && ik.length ? (ik.some((k) => pk.includes(k)) ? 1 : 0.5) : item.type === piece.type ? 0.85 : 0.7;
+  const pd = detailsIn(`${piece.name} ${piece.detail || ''}`), id = new Set(detailsIn(`${item.name} ${item.detail || ''}`));
+  const detail = pd.length ? 0.85 + 0.15 * pd.filter((d) => id.has(d)).length / pd.length : 1;
+  const len = (set) => ['mini', 'midi', 'maxi'].find((l) => set.includes(l)), pl = len(pd), il = len([...id]);
+  const length = pl && il && pl !== il && (pl === 'mini' || il === 'mini') ? 0.75 : 1; // a mini skirt is no stand-in for a long one
+  return Math.round(color * kind * detail * length);
+}
+
+const CORE = ['top', 'dress', 'bottom'];
+const NEUTRAL_SHOES = /black|white|nude|tan|beige|cream|brown|camel|taupe/i;
+const wet = (item) => /suede|satin|silk|sandal|strappy|slide|flip|espadrille|canvas|mule/i.test(item.name);
+
+/**
+ * Today's looks, each one an outfit from a pin on her Pinterest boards made from her own wardrobe: { look, pin, score }[].
+ * A pin only becomes a look when every main piece (top and bottom, or dress) has a close stand-in; weather, the occasion and her loves/passes weigh in.
+ */
+export function pinLooks(items, pins, { occasion = '', wearCounts = {}, band, rain = 0, prefs = {}, recent = new Set(), n = 3, random = Math.random } = {}) {
+  const boost = prefBoost(prefs);
+  const fits = (item, slot) => {
+    let f = suitsWeather(item, band) ? 1 : CORE.includes(slot) || slot === 'outer' ? 0.6 : 0.85;
+    if (rain >= 50 && (slot === 'shoes' || slot === 'outer') && wet(item)) f *= 0.6; // no suede or sandals in the rain
+    if (occasion && !item.occasions?.includes(occasion)) f *= 0.8;
+    return f * Math.min(1.25, boost[item.id] ?? 1) * (recent.has(item.id) ? 0.75 : 1) * (item.source === 'starter' ? 1 : 1.08) / (1 + 0.03 * (wearCounts[item.id] || 0));
+  };
+  const best = (piece, slot, taken) => items.filter((i) => slotOf(i.type) === slot && !taken.has(i.id))
+    .map((item) => { const s = recipeScore(item, piece); return { item, s, r: s * fits(item, slot) }; }).sort((a, b) => b.r - a.r)[0];
+
+  const options = [];
+  for (const pin of pins) {
+    const look = {}, scores = {}, taken = new Set();
+    for (const piece of pin.pieces) {
+      const slot = slotOf(piece.type);
+      if (slot === 'outer' && (band === 'hot' || band === 'warm')) continue; // the pin's jacket stays home on a hot day
+      if (look[slot] || (slot === 'dress' && (look.top || look.bottom)) || ((slot === 'top' || slot === 'bottom') && look.dress)) continue;
+      const b = best(piece, slot, taken); if (!b) continue;
+      if (!CORE.includes(slot) && b.s < 55) continue; // no close stand-in for the shoes or the bag: leave it to the fallback below
+      look[slot] = b.item; scores[slot] = b.r; taken.add(b.item.id);
+    }
+    const core = CORE.filter((s) => look[s]);
+    if (!(look.dress || (look.top && look.bottom))) continue;
+    const coreMin = Math.min(...core.map((s) => scores[s]));
+    if (coreMin < 62) continue; // a main piece isn't close enough to read as this pin
+    options.push({ look, pin, scores, score: coreMin * 0.7 + (Object.values(scores).reduce((a, b) => a + b, 0) / Object.keys(scores).length) * 0.3 });
+  }
+  options.sort((a, b) => b.score - a.score);
+
+  // pick from the best ones with a little chance, so each day differs; never the same main piece twice in one day
+  const picked = [], used = new Set();
+  let pool = options.slice();
+  while (picked.length < n && pool.length) {
+    const top = pool.slice(0, 8), w = top.map((o, i) => Math.pow(o.score / 100, 4) / (1 + i * 0.15));
+    let r = random() * w.reduce((a, b) => a + b, 0), k = w.findIndex((x) => (r -= x) < 0); if (k < 0) k = 0;
+    const o = top[k];
+    pool = pool.filter((x) => x !== o && !CORE.some((s) => x.look[s] && o.look[s] && x.look[s].id === o.look[s].id) && x.pin.id !== o.pin.id);
+    if (CORE.some((s) => o.look[s] && used.has(o.look[s].id))) continue;
+    CORE.forEach((s) => o.look[s] && used.add(o.look[s].id));
+    picked.push(o);
+  }
+
+  // finish each look: shoes if the pin had none to match, a layer when it's cold or wet
+  const added = new Set(); // (a different pair of shoes or coat for each look, where there's a choice)
+  for (const o of picked) {
+    const look = o.look, base = Object.values(look);
+    const pal = base.filter((i) => i.color).map((i) => i.color.hex);
+    const nearest = (slot, extra = () => true) => items.filter((i) => slotOf(i.type) === slot && extra(i))
+      .map((i) => ({ i, r: (pal.length && i.color ? Math.max(...pal.map((h) => 100 - hexDist(i.color.hex, h))) : 50) * fits(i, slot) * (added.has(i.id) ? 0.7 : 1) })).sort((a, b) => b.r - a.r)[0]?.i;
+    if (!look.shoes) { const s = nearest('shoes', (i) => NEUTRAL_SHOES.test(i.name)) || nearest('shoes'); if (s) { look.shoes = s; added.add(s.id); } }
+    if (!look.outer && (band === 'cold' || band === 'cool' || rain >= 60)) {
+      const coat = nearest('outer', (i) => (rain >= 60 ? /trench|rain|coat|jacket/i : /coat|jacket|blazer|cardigan|trench/i).test(i.name) && (band === 'cold' || !/puffer|parka/i.test(i.name)) && suitsWeather(i, band));
+      if (coat) { look.outer = coat; added.add(coat.id); }
+    }
+  }
+  return picked;
+}

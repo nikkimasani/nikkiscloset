@@ -1634,7 +1634,7 @@ function renderInspo() {
     <div class="chips" id="iwant" role="group" aria-labelledby="iwl">${['dress', 'top', 'bottom', 'outer', 'shoes', 'bag'].map((s) => `<button class="chip ${(d?.wanted || ['top', 'bottom', 'shoes']).includes(s) ? 'on' : ''}" aria-pressed="${(d?.wanted || ['top', 'bottom', 'shoes']).includes(s)}" data-s="${s}">${SLOT_LABEL[s]}</button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="primary" data-act="saveinspo" ${d ? '' : 'disabled'}>📌 Save inspo</button></div>
     ${S.inspos.length ? `<h3 style="margin-top:16px">Saved inspo</h3><div class="inspo-saved">${S.inspos.map((n) => `<button class="thumbbtn" data-act="loadinspo" data-id="${n.id}" aria-label="Open saved inspo${n.occasion ? ' for ' + esc(n.occasion) : ''}"><img src="${url('inspo:' + n.id)}" alt=""></button>`).join('')}</div>` : ''}
-  </div><div id="iresult" aria-live="polite">${d ? '' : '<div class="empty"><h2>Shop your own wardrobe</h2><p class="muted">Upload an outfit you love. I’ll pull its colour palette and rebuild the closest look from pieces you already own — and tell you what’s missing.</p></div>'}</div></div>`;
+  </div><div id="iresult" aria-live="polite">${d ? '' : '<div class="empty"><h2>Shop your own wardrobe</h2><p class="muted">Upload an outfit photo to recreate it from pieces you own and see what’s missing.</p></div>'}</div></div>`;
 
   const drop = $('#drop'), file = $('#ifile');
   drop.onclick = () => file.click();
