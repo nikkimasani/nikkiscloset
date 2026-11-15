@@ -72,7 +72,9 @@ const mock = createServer((req, res) => {
   else if (req.method === 'POST' && req.url === '/client/v4/accounts/0123456789abcdef0123456789abcdef/ai/run/@cf/black-forest-labs/flux-2-klein-4b') { // the model wearing a piece
     const parts = []; req.on('data', (d) => parts.push(d)).on('end', async () => {
       const fd = await new Request('http://x/', { method: 'POST', headers: { 'content-type': req.headers['content-type'] }, body: Buffer.concat(parts) }).formData();
-      const prompt = fd.get('prompt'), img = Buffer.from(await fd.get('input_image_0').arrayBuffer()), key = /painted flat magenta/.test(prompt) ? 'magenta' : 'green', bg = /plain magenta background/.test(prompt) ? 'magenta' : 'blue';
+      const prompt = fd.get('prompt'), img = Buffer.from(await fd.get('input_image_0').arrayBuffer());
+      if (/^Image 1 is a full-length fashion figure/.test(prompt)) { (cf.models ||= []).push({ prompt, fields: [...fd.keys()].sort().join(), size: [fd.get('width'), fd.get('height')] }); return send({ success: true, result: { image: img.toString('base64') } }); } // "Make my model": hands the figure back
+      const key = /painted flat magenta/.test(prompt) ? 'magenta' : 'green', bg = /plain magenta background/.test(prompt) ? 'magenta' : 'blue';
       const it = SITEMS.find((i) => wearPrompt(i, key, bg) === prompt) || { id: 'inspo:' + (prompt.match(/Dress her in (?:a |an )?([^;.]+)/)?.[1] || ''), type: /coat/.test(prompt) ? 'outerwear' : 'bottoms' };
       cf.wears.push({ bg, auth: req.headers.authorization, prompt, png: img.slice(1, 4).toString() === 'PNG', size: [fd.get('width'), fd.get('height')], fields: [...fd.keys()].sort().join(), id: it?.id, key });
       if (cf.wears.length > cf.wearLimitAt) return send({ success: false, errors: [{ code: 4006, message: 'you have used up your daily free allocation of 10,000 neurons' }] }, 429);
@@ -927,6 +929,18 @@ try {
   await p2.click('[data-view=plan]'); await p2.click('[data-act=plantab][data-v=diary]'); await axe('diary');
   await p2.click('[data-view=closet]'); await p2.click('header [data-act=add]'); await axe('add dialog'); await p2.keyboard.press('Escape');
   ok(await p2.evaluate(() => !document.querySelector('main').inert), 'Esc closes dialog and restores the page');
+
+  // "Make my model": your face on the model (the stand-in Cloudflare hands the figure back), saved, and drawn after a reload
+  const pM = await (await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })).newPage(); pM.setDefaultTimeout(60000); pM.on('pageerror', (e) => errors.push(e.message));
+  await pM.goto(`http://localhost:${PORT}/`); await pM.evaluate(() => localStorage.setItem('aipass', 'letmein')); await pM.click('[data-view=tryon]'); await pM.waitForSelector('svg.doll');
+  await pM.click('[data-act=drawer][data-v=look]'); await pM.click('[data-act=mymodel]'); await pM.waitForSelector('#mmface');
+  await pM.setInputFiles('#mmface', join(out, 'photo.jpg')); await pM.waitForFunction(() => !document.querySelector('#mmgo')?.disabled);
+  await pM.click('#mmgo'); await pM.waitForSelector('#mmuse');
+  const mm = cf.models?.at(-1);
+  ok(mm && mm.fields === 'height,input_image_0,input_image_1,prompt,width' && mm.size.join('x') === '768x1520' && /tattoo/i.test(mm.prompt), `Make my model: the figure and your face go to FLUX.2 with your notes (${mm?.fields}, ${mm?.size})`);
+  ok(!(await pM.locator('.sheet .gap').count()), 'Make my model: a model with the same outline is not flagged');
+  await pM.click('#mmuse'); await pM.waitForEvent('load'); await pM.click('[data-view=tryon]'); await pM.waitForSelector('svg.doll');
+  ok(await pM.evaluate(() => /^blob:/.test(document.querySelector('#stage .basepic')?.getAttribute('href') || '') && !!window.__closet.profile?.modelBase), 'Make my model: your model is saved and drawn on Try On after a reload');
 } catch (e) { console.error(e); failed++; }
 
 ok(errors.length === 0, `no console/page errors ${errors.join(' | ')}`);

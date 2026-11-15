@@ -720,3 +720,26 @@ test('Vesti: loving and passing on looks steers the picks', async () => {
   for (let k = 0; k < 20; k++) assert.notEqual(swapPiece(closet, look, 'top').top.id, 't1', 'a swap is always a different piece');
   assert.equal(swapPiece([closet[0]], look, 'top'), look, 'nothing else to swap in → unchanged');
 });
+
+test('Make my model: the magenta backdrop is keyed out, skin and nude fabric are kept, stray specks go', async () => {
+  const { keyAmount, keyOut, overlap } = await import('../public/js/mymodel.js');
+  assert.equal(keyAmount(255, 0, 255), 1);
+  assert.equal(keyAmount(198, 140, 110), 0, 'skin');
+  assert.equal(keyAmount(222, 184, 160), 0, 'nude fabric');
+  assert.equal(keyAmount(40, 30, 28), 0, 'dark hair');
+  const w = 20, h = 20, data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4, fig = x >= 5 && x < 15 && y >= 2 && y < 18, speck = x === 1 && y === 1; data.set(fig || speck ? [198, 140, 110, 255] : [255, 0, 255, 255], i); }
+  const img = keyOut({ data, width: w, height: h });
+  assert.equal(img.data[(0 * w + 0) * 4 + 3], 0, 'backdrop transparent');
+  assert.equal(img.data[(10 * w + 10) * 4 + 3], 255, 'figure solid');
+  assert.equal(img.data[(1 * w + 1) * 4 + 3], 0, 'speck removed');
+  assert.equal(overlap(img, img), 1);
+});
+
+test('Make my model: the prompt keeps her pose and outline, and takes your notes (cleaned)', async () => {
+  const { modelPrompt } = await import('../lib/ai.js');
+  const p = modelPrompt('lotus tattoo on my sternum <script>', true);
+  assert.match(p, /images 2 and 3/); assert.match(p, /lotus tattoo on my sternum/); assert.doesNotMatch(p, /[<>]/);
+  assert.match(p, /pose, body outline and proportions/); assert.match(p, /magenta background/);
+  assert.doesNotMatch(modelPrompt('', false), /Also:/);
+});
