@@ -272,8 +272,8 @@ function queueFit(item) {
     if (!r) return;
     const old = S.fits.get(item.id); if (old) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one)
     const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
-    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
-    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
+    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item, { sync: true }); } // (worked out, not an edit: it mustn't win over an edit from another device)
+    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : (S.view === 'plan' && S.planTab === 'diary') || S.view === 'inspo' ? render() : fillFigures(true)), 60); // (elsewhere only the model pictures change, so nothing else on the page is redrawn)
   }).catch(() => S.fitPending.delete(key));
 }
 const usingPhoto = () => false; // (your own photo and the photoreal try-on are off the Dress Up screen: the model is always shown)
@@ -285,7 +285,7 @@ const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped
   try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
 /** Model pictures drawn before the model's art had loaded (Today's looks) are filled in once it has, without redrawing the page. */
-function fillFigures() { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (!el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini'); }); }
+function fillFigures(all = false) { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (all || !el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini'); }); }
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
