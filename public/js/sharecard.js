@@ -44,7 +44,7 @@ export async function lookCard({ title, sub = '', items, model = null }) {
     g.fillStyle = '#ffffff'; g.font = '600 30px system-ui, sans-serif'; g.fillText(ellipsize(g, it.name, 250), 752, y + 72);
   });
 
-  g.fillStyle = '#b7d3ea'; g.font = '30px system-ui, sans-serif'; g.fillText("Nikki's Closet", 60, 1270);
+  g.fillStyle = '#b7d3ea'; g.font = '30px system-ui, sans-serif'; g.fillText('Vesti', 60, 1270);
   g.fillStyle = '#ff7aa8'; g.beginPath(); g.moveTo(W - 90, 1240); g.lineTo(W - 62, 1262); g.lineTo(W - 90, 1292); g.lineTo(W - 118, 1262); g.closePath(); g.fill();
   return new Promise((res) => c.toBlob(res, 'image/png'));
 }

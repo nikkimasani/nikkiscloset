@@ -1,6 +1,6 @@
-# Nikki's Closet 👗
+# Vesti ✨
 
-A digital closet built from the clothes you actually own. Photograph each piece, and the app turns it into a model-ready cutout you can browse, try on, plan, and log.
+Your digital stylist, working from the clothes you actually own. Every day Vesti puts together a few looks for the weather and what's on (an event, or whatever you tell it you're dressing for), learns from the looks you love or pass on, and lets you try them on the model, wear one (logged in your Diary), plan the week or pack for a trip. Photograph each piece and the app turns it into a model-ready cutout.
 
 
 ### Cutting out and fitting a piece

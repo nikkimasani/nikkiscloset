@@ -903,3 +903,34 @@ body.dsheet .undobar { display: none; }
 .idea button { justify-self: start; }
 .score.meh { color: #ffd27a; }
 @media (min-width: 700px) { .idea { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; } }
+
+/* ───── Today: Vesti, your stylist ───── */
+.today { max-width: 760px; margin: 0 auto; display: grid; gap: 4px; }
+.t-hero { padding: 6px 2px 2px; }
+.t-hero .view-title { font-size: 26px; margin: 2px 0 4px; }
+.t-lede { font-size: 16px; margin: 0 0 10px; }
+.t-ask .row { gap: 8px; }
+.t-occ { flex-wrap: nowrap; overflow-x: auto; margin-top: 10px; padding-bottom: 2px; }
+.t-occ .chip { flex: 0 0 auto; }
+.t-looks { display: grid; gap: 0; }
+.t-look { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: start; }
+.t-fig { background: var(--tile); border-radius: 14px; aspect-ratio: 1 / 2; overflow: hidden; display: grid; place-items: center; }
+.t-fig svg { width: 100%; height: 100%; }
+.t-pieces { display: grid; gap: 6px; min-width: 0; }
+.t-piece { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; }
+.t-piece img { width: 44px; height: 44px; object-fit: contain; background: var(--tile); border-radius: 10px; flex: 0 0 auto; }
+.t-piece .grow { min-width: 0; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+.t-swap { min-width: 40px; min-height: 40px; padding: 0; font-size: 18px; }
+.t-acts { grid-column: 1 / -1; gap: 8px; flex-wrap: wrap; }
+.t-acts .primary { flex: 1 1 auto; }
+.t-more { justify-content: center; margin-top: 10px; }
+.t-next .row { gap: 8px; flex-wrap: wrap; }
+.plan-seg { max-width: 760px; margin: 0 auto 12px; }
+@media (max-width: 380px) { .t-look { grid-template-columns: 92px 1fr; } }
+.t-ask .row { flex-wrap: nowrap; }
+.t-ask input { min-width: 0; width: auto; }
+.t-ask .primary { flex: 0 0 auto; }
+.today > *, .t-look > *, .t-ask .row > * { min-width: 0; }
+.today { grid-template-columns: minmax(0, 1fr); }
+.t-acts .primary { flex: 1 1 100%; }
+.t-acts .ghost:not([aria-label]) { flex: 1 1 auto; }

@@ -689,3 +689,34 @@ test('her bare foot shows only inside the shoes, and a sliver of hip outside tro
   assert.ok(/<rect x="2\d\d" y="\d+" width="\d+(\.\d)?" height="5" fill="#000"\/>/.test(m), 'hip sliver outside the trousers hidden');
   assert.equal(bodyCover(pack, {}, fits, masks, 1), '', 'nothing worn: her body is untouched');
 });
+
+test('Vesti: "dressing for…" understands occasions and weather words', async () => {
+  const { parseAsk } = await import('../public/js/stylist.js');
+  assert.deepEqual(parseAsk('brunch with the girls, it’s hot'), { occasion: 'Brunch', band: 'hot', rain: 0 });
+  assert.equal(parseAsk('big client meeting').occasion, 'Work / Office');
+  assert.equal(parseAsk('wedding in the rain').occasion, 'Formal / Event');
+  assert.equal(parseAsk('wedding in the rain').rain, 80);
+  assert.equal(parseAsk('chilly errands').band, 'cool');
+  assert.deepEqual(parseAsk('something nice'), { occasion: '', band: '', rain: 0 });
+});
+
+test('Vesti: daily looks are different from each other and each is wearable', async () => {
+  const { dailyLooks } = await import('../public/js/stylist.js');
+  const looks = dailyLooks(closet, { n: 3, band: 'mild' });
+  assert.ok(looks.length >= 2);
+  const keys = looks.map((o) => Object.values(o).map((i) => i.id).sort().join());
+  assert.equal(new Set(keys).size, keys.length, 'no repeated look');
+  for (const o of looks) assert.ok(o.dress || (o.top && o.bottom), 'a dress, or a top and a bottom');
+  assert.deepEqual(dailyLooks([], {}), [], 'nothing to wear yet');
+  assert.ok(dailyLooks(closet, { occasion: 'Brunch', n: 1 }).length, 'nothing tagged for the occasion → relaxed');
+});
+
+test('Vesti: loving and passing on looks steers the picks', async () => {
+  const { learn, prefBoost, swapPiece } = await import('../public/js/stylist.js');
+  let p = learn({}, ['t1', 'b1'], true); p = learn(p, ['t2'], false);
+  const b = prefBoost(p);
+  assert.ok(b.t1 > 1 && b.t2 < 1);
+  const look = { top: closet[0], bottom: closet[3] };
+  for (let k = 0; k < 20; k++) assert.notEqual(swapPiece(closet, look, 'top').top.id, 't1', 'a swap is always a different piece');
+  assert.equal(swapPiece([closet[0]], look, 'top'), look, 'nothing else to swap in → unchanged');
+});
