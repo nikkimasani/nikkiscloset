@@ -304,7 +304,7 @@ function render() {
   if (S.view !== 'tryon' || S.scene === 'closet') document.body.classList.remove('dsheet');
   if (S.view === 'planner') { S.view = 'plan'; S.planTab = 'diary'; } // (the Diary lives in Plan now)
   ({ today: () => renderToday(ctx), closet: renderCloset, tryon: renderTryon, plan: () => (S.planTab === 'diary' ? renderPlanner() : renderPlan(ctx)), inspo: renderInspo })[S.view]();
-  if (S.view === 'plan') $('#main').insertAdjacentHTML('afterbegin', `<div class="seg plan-seg" role="tablist" aria-label="Plan">${[['week', '🗓️ Week & trips'], ['diary', '📖 Diary']].map(([k, l]) => `<button role="tab" aria-selected="${S.planTab === k}" class="${S.planTab === k ? 'on' : ''}" data-act="plantab" data-v="${k}">${l}</button>`).join('')}</div>`);
+  if (S.view === 'plan') $('#main').insertAdjacentHTML('afterbegin', `<div class="seg plan-seg" role="tablist" aria-label="Plan">${[['week', 'Week & trips'], ['diary', 'Diary']].map(([k, l]) => `<button role="tab" aria-selected="${S.planTab === k}" class="${S.planTab === k ? 'on' : ''}" data-act="plantab" data-v="${k}">${l}</button>`).join('')}</div>`);
 }
 
 /* ───────────────────────── closet ───────────────────────── */
@@ -362,7 +362,7 @@ function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
-    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your wardrobe"><span aria-hidden="true">🗑</span></button>`}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your wardrobe"><span aria-hidden="true">×</span></button>`}
     <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt="" loading="lazy" decoding="async"></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
@@ -995,6 +995,14 @@ function stageHTML() {
 function mountStage() { if (S.scene === 'closet' && S.view === 'tryon') return wicRefresh(); const el = $('#stage'); if (el) el.innerHTML = stageHTML(); }
 const refreshStage = mountStage;
 
+/** Thin line icons for the Try On tools (editorial look: no emoji). */
+const ico = (d) => `<span class="lic" aria-hidden="true"><svg viewBox="0 0 24 24">${d}</svg></span>`;
+const LINE = {
+  style: ico('<path d="M12 3.5 13.9 9l5.6.2-4.4 3.5 1.6 5.5L12 15l-4.7 3.2 1.6-5.5-4.4-3.5L10.1 9z"/>'),
+  clear: ico('<path d="M5 7h14M10 7V4.5h4V7M6.5 7l1 12.5h9L17.5 7"/>'),
+  model: ico('<circle cx="12" cy="6" r="2.6"/><path d="M8 21v-6.5L6.5 9.5h11L16 14.5V21"/>'),
+  save: ico('<path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/>'),
+};
 const DRAWERS = [['fit', '📏 Fit'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
 
 function metersHTML(worn) {
@@ -1113,7 +1121,7 @@ function gameBarHTML(big) {
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
   const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. Tap End the day to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
   return `<div class="gamebar ${big ? 'big' : ''} ${S.gbOpen ? 'open' : ''}" role="region" aria-label="Today’s challenge">
-    ${big ? '' : `<div class="gb-pillrow"><button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>${d.phase === 'done' ? '' : `<button class="gb-ratebtn" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate</button>`}<button class="gb-closet" data-act="scene" data-v="closet" aria-label="Walk-in closet"><span aria-hidden="true">✨</span></button></div>`}
+    ${big ? '' : `<div class="gb-pillrow"><button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>${d.phase === 'done' ? '' : `<button class="gb-ratebtn" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate</button>`}<button class="gb-closet" data-act="scene" data-v="closet" aria-label="Walk-in closet"><span aria-hidden="true">✦</span></button></div>`}
     <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span><button class="gb-shop" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
@@ -1366,10 +1374,10 @@ function renderMirror() {
       </div>
       ${dollOn() ? dollFitHTML(worn, fit) : ''}
       <div class="tools" role="group" aria-label="Outfit">
-        <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
-        <button data-act="clear"><span aria-hidden="true">🧺</span>Clear</button>
-        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">💇</span>Hair</button>
-        <button class="go" data-act="gosave"><span aria-hidden="true">💾</span>Save look</button>
+        <button data-act="styleme">${LINE.style}Style me</button>
+        <button data-act="clear">${LINE.clear}Clear</button>
+        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look">${LINE.model}Model</button>
+        <button class="go" data-act="gosave">${LINE.save}Save look</button>
       </div>
     </div>
     <div class="dress-right">${finderHTML()}${looksHTML()}</div></div>`;
@@ -1956,6 +1964,20 @@ async function openFromLink() {
 }
 
 // helpers handed to the Plan tab
+/* Editorial look: no emoji. UI text, the clothing-type and occasion labels and older screens still carry some, so they're taken out of
+ *  whatever is put on screen (typographic marks the UI relies on, like ♥ ✓ ✕ ✎, stay). */
+const EMOJI = /(?![♥✓✔✕✎☑✦×])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}]*\s?/gu;
+function deEmoji(root) {
+  if (root.nodeType === 3) { if (EMOJI.test(root.data)) root.data = root.data.replace(EMOJI, ''); EMOJI.lastIndex = 0; return; }
+  if (root.nodeType !== 1 || root.closest?.('svg')) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) { EMOJI.lastIndex = 0; if (EMOJI.test(n.data)) { EMOJI.lastIndex = 0; n.data = n.data.replace(EMOJI, ''); } }
+  EMOJI.lastIndex = 0;
+}
+new MutationObserver((list) => { for (const m of list) { if (m.type === 'characterData') deEmoji(m.target); else m.addedNodes.forEach(deEmoji); } })
+  .observe(document.body, { childList: true, subtree: true, characterData: true });
+deEmoji(document.body);
+
 const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure, wearCounts, go, wearIds, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
 
 (async () => {

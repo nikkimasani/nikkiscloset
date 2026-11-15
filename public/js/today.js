@@ -1,8 +1,8 @@
 // The Today tab: Vesti, your stylist, hands you a few looks for the day from your own wardrobe,
 // for the weather and what's on (an event you added in Plan, or what you tell her in "Dressing for…").
 // Love or pass on a look and she learns; swap any piece; try it on the model; or wear it (logged in the Diary).
-import { OCCASIONS, OCCASION_EMOJI, SLOT_LABEL, wornSlot } from './data.js';
-import { BANDS, toF, weatherEmoji } from './weather.js';
+import { OCCASIONS, SLOT_LABEL, wornSlot } from './data.js';
+import { BANDS, toF } from './weather.js';
 import { dailyLooks, learn, parseAsk, swapPiece } from './stylist.js';
 import { todayWeather, loadForecast } from './plan.js';
 
@@ -40,22 +40,22 @@ export function renderToday(c) {
     S.forecastLoading = true;
     loadForecast(c).then(() => { S.forecastLoading = false; if (S.view === 'today') { build(c); renderToday(c); } });
   }
-  const wx = b.f ? `<span class="chip on" aria-label="Today: ${toF(b.f.hiC)} degrees, ${BANDS[b.f.band].label}${b.f.rain >= 40 ? `, ${b.f.rain}% chance of rain` : ''}"><span aria-hidden="true">${weatherEmoji(b.f.code)}</span> ${toF(b.f.hiC)}° · ${BANDS[b.f.band].label}${b.f.rain >= 40 ? ` · 💧${b.f.rain}%` : ''}</span>`
-    : `<button class="chip" data-act="todaywx"><span aria-hidden="true">📍</span> Add your city for weather-smart looks</button>`;
-  const why = [b.occasion && `${OCCASION_EMOJI[b.occasion] || ''} ${b.occasion}`, b.event?.title && `for ${esc(b.event.title)}`].filter(Boolean).join(' ');
+  const wx = b.f ? `<span class="chip on" aria-label="Today: ${toF(b.f.hiC)} degrees, ${BANDS[b.f.band].label}${b.f.rain >= 40 ? `, ${b.f.rain}% chance of rain` : ''}">${toF(b.f.hiC)}° · ${BANDS[b.f.band].label}${b.f.rain >= 40 ? ` · ${b.f.rain}% rain` : ''}</span>`
+    : `<button class="chip" data-act="todaywx">Add your city for weather-smart looks</button>`;
+  const why = [b.occasion && b.occasion.toLowerCase(), b.event?.title && `for ${esc(b.event.title)}`].filter(Boolean).join(' ');
   const looks = t.looks.map((o, i) => lookCard(c, o, i)).join('');
   $('#main').innerHTML = `<div class="today">
     <section class="t-hero"><p class="muted">${new Date().toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-      <h2 class="view-title">${greeting()} ✨</h2>
+      <h2 class="view-title">${greeting()}</h2>
       <p class="t-lede">${S.items.length ? `Here’s what I’d wear today${why ? ` — ${why}` : ''}.` : 'Add a few pieces to your wardrobe and I’ll style you every day.'}</p>
-      <div class="chips">${wx}${b.event ? `<span class="chip"><span aria-hidden="true">📌</span> ${esc(b.event.title || b.event.occasion)}</span>` : ''}</div></section>
+      <div class="chips">${wx}${b.event ? `<span class="chip">${esc(b.event.title || b.event.occasion)}</span>` : ''}</div></section>
     <section class="panel t-ask" aria-label="Ask your stylist"><label class="f" for="askq">What are you dressing for?</label>
       <div class="row"><input type="text" id="askq" class="grow" maxlength="80" placeholder="e.g. brunch with the girls, it’s hot" value="${esc(t.ask)}" enterkeyhint="go"><button class="primary" data-act="todayask">Style me</button></div>
-      <div class="chips t-occ" role="group" aria-label="Or pick an occasion">${OCCASIONS.map((o) => `<button class="chip ${b.occasion === o ? 'on' : ''}" aria-pressed="${b.occasion === o}" data-act="todayocc" data-v="${esc(o)}"><span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${esc(o)}</button>`).join('')}</div></section>
-    ${looks ? `<div class="t-looks">${looks}</div>` : S.items.length ? `<p class="muted">I couldn’t put a full look together yet — add a top and a bottom, or a dress.</p>` : `<button class="primary" data-act="add"><span aria-hidden="true">＋</span> Add your first piece</button>`}
-    ${looks ? '<div class="row t-more"><button class="ghost" data-act="todaymore"><span aria-hidden="true">🔄</span> Show me different looks</button></div>' : ''}
+      <div class="chips t-occ" role="group" aria-label="Or pick an occasion">${OCCASIONS.map((o) => `<button class="chip ${b.occasion === o ? 'on' : ''}" aria-pressed="${b.occasion === o}" data-act="todayocc" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></section>
+    ${looks ? `<div class="t-looks">${looks}</div>` : S.items.length ? `<p class="muted">I couldn’t put a full look together yet — add a top and a bottom, or a dress.</p>` : `<button class="primary" data-act="add">Add your first piece</button>`}
+    ${looks ? '<div class="row t-more"><button class="ghost" data-act="todaymore">Show me different looks</button></div>' : ''}
     <section class="panel t-next" aria-label="Planning ahead"><h3>Planning ahead</h3>
-      <div class="row"><button class="ghost" data-act="todayplan" data-v="week"><span aria-hidden="true">🗓️</span> My week</button><button class="ghost" data-act="todayplan" data-v="pack"><span aria-hidden="true">🧳</span> Pack for a trip</button><button class="ghost" data-act="todayplan" data-v="event"><span aria-hidden="true">📌</span> Add an event</button></div></section>
+      <div class="row"><button class="ghost" data-act="todayplan" data-v="week">My week</button><button class="ghost" data-act="todayplan" data-v="pack">Pack for a trip</button><button class="ghost" data-act="todayplan" data-v="event">Add an event</button></div></section>
   </div>`;
   $('#askq')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); todayActs.todayask(c); } });
 }
