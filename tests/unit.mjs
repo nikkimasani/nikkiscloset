@@ -322,11 +322,12 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
 });
 
-test('a bodysuit goes under the bottoms by default (no trim at the waist), and can be untucked', () => {
+test('a bodysuit always goes under the bottoms (no trim at the waist), even with an old untucked setting', () => {
   const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
   const svg = dollSVG({ pack, items, urls });
   assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.doesNotMatch(svg, /clip-path="url\(#tuckclip-\d+\)"/);
-  assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['bottom', 'top']);
+  assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['top', 'bottom']);
+  assert.ok(!isTuckable(items.top, pack), 'no Tuck in / Untuck button for a bodysuit');
 });
 
 test('each piece remembers a small fit for this picture only', () => {
@@ -688,4 +689,96 @@ test('her bare foot shows only inside the shoes, and a sliver of hip outside tro
   assert.ok(m.includes(`y="${config.points.ankleL[1]}"`), 'feet hidden below the ankle except inside the shoes');
   assert.ok(/<rect x="2\d\d" y="\d+" width="\d+(\.\d)?" height="5" fill="#000"\/>/.test(m), 'hip sliver outside the trousers hidden');
   assert.equal(bodyCover(pack, {}, fits, masks, 1), '', 'nothing worn: her body is untouched');
+});
+
+test('Vesti: "dressing for…" understands occasions and weather words', async () => {
+  const { parseAsk } = await import('../public/js/stylist.js');
+  assert.deepEqual(parseAsk('brunch with the girls, it’s hot'), { occasion: 'Brunch', band: 'hot', rain: 0 });
+  assert.equal(parseAsk('big client meeting').occasion, 'Work / Office');
+  assert.equal(parseAsk('wedding in the rain').occasion, 'Formal / Event');
+  assert.equal(parseAsk('wedding in the rain').rain, 80);
+  assert.equal(parseAsk('chilly errands').band, 'cool');
+  assert.deepEqual(parseAsk('something nice'), { occasion: '', band: '', rain: 0 });
+});
+
+test('Vesti: daily looks are different from each other and each is wearable', async () => {
+  const { dailyLooks } = await import('../public/js/stylist.js');
+  const looks = dailyLooks(closet, { n: 3, band: 'mild' });
+  assert.ok(looks.length >= 2);
+  const keys = looks.map((o) => Object.values(o).map((i) => i.id).sort().join());
+  assert.equal(new Set(keys).size, keys.length, 'no repeated look');
+  for (const o of looks) assert.ok(o.dress || (o.top && o.bottom), 'a dress, or a top and a bottom');
+  assert.deepEqual(dailyLooks([], {}), [], 'nothing to wear yet');
+  assert.ok(dailyLooks(closet, { occasion: 'Brunch', n: 1 }).length, 'nothing tagged for the occasion → relaxed');
+});
+
+test('Vesti: loving and passing on looks steers the picks', async () => {
+  const { learn, prefBoost, swapPiece } = await import('../public/js/stylist.js');
+  let p = learn({}, ['t1', 'b1'], true); p = learn(p, ['t2'], false);
+  const b = prefBoost(p);
+  assert.ok(b.t1 > 1 && b.t2 < 1);
+  const look = { top: closet[0], bottom: closet[3] };
+  for (let k = 0; k < 20; k++) assert.notEqual(swapPiece(closet, look, 'top').top.id, 't1', 'a swap is always a different piece');
+  assert.equal(swapPiece([closet[0]], look, 'top'), look, 'nothing else to swap in → unchanged');
+});
+
+test('Make my model: the magenta backdrop is keyed out, skin and nude fabric are kept, stray specks go', async () => {
+  const { keyAmount, keyOut, overlap } = await import('../public/js/mymodel.js');
+  assert.equal(keyAmount(255, 0, 255), 1);
+  assert.equal(keyAmount(198, 140, 110), 0, 'skin');
+  assert.equal(keyAmount(222, 184, 160), 0, 'nude fabric');
+  assert.equal(keyAmount(40, 30, 28), 0, 'dark hair');
+  const w = 20, h = 20, data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4, fig = x >= 5 && x < 15 && y >= 2 && y < 18, speck = x === 1 && y === 1; data.set(fig || speck ? [198, 140, 110, 255] : [255, 0, 255, 255], i); }
+  const img = keyOut({ data, width: w, height: h });
+  assert.equal(img.data[(0 * w + 0) * 4 + 3], 0, 'backdrop transparent');
+  assert.equal(img.data[(10 * w + 10) * 4 + 3], 255, 'figure solid');
+  assert.equal(img.data[(1 * w + 1) * 4 + 3], 0, 'speck removed');
+  assert.equal(overlap(img, img), 1);
+});
+
+test('Make my model: the prompt keeps her pose and outline, and takes your notes (cleaned)', async () => {
+  const { modelPrompt } = await import('../lib/ai.js');
+  const p = modelPrompt('lotus tattoo on my sternum <script>', true);
+  assert.match(p, /images 2 and 3/); assert.match(p, /lotus tattoo on my sternum/); assert.doesNotMatch(p, /[<>]/);
+  assert.match(p, /pose, body outline and proportions/); assert.match(p, /magenta background/);
+  assert.doesNotMatch(modelPrompt('', false), /Also:/);
+});
+
+test('boots under long trousers show only below the hem; under a short skirt they show whole', async () => {
+  const { shoeClip } = await import('../public/js/doll.js');
+  const pack = { size: [100, 200], points: { kneeL: [40, 120], kneeR: [60, 120], crotch: [50, 90] } };
+  const mk = (hem) => { const w = 100, h = 200, data = new Uint8Array(w * h); for (let y = 80; y < hem; y++) for (let x = 30; x < 70; x++) data[y * w + x] = 1; return { w, h, data, k: 1 }; };
+  const items = { bottom: { id: 'b' }, shoes: { id: 's' } }, fits = new Map([['b', 'u'], ['s', 'u']]);
+  const long = shoeClip(pack, items, fits, new Map([['b', mk(195)]]), 1);
+  assert.match(long, /<clipPath id="shoeclip-1"/); assert.match(long, /y="180"/, 'cut 14 px above the lowest row of each leg');
+  assert.equal(shoeClip(pack, items, fits, new Map([['b', mk(140)]]), 1), '', 'a hem above knee + 60: boots whole');
+  assert.equal(shoeClip(pack, { bottom: { id: 'b' } }, fits, new Map([['b', mk(195)]]), 1), '', 'no shoes: nothing to clip');
+});
+
+import { recipeScore, pinLooks } from '../public/js/stylist.js';
+import { PINS } from '../public/js/pins.js';
+test('Today: looks from Pinterest pins, made from the wardrobe', () => {
+  const it = (id, name, type, hex, season = 'all', occasions = ['Casual Outing', 'Work / Office', 'Date Night']) => ({ id, name, type, season, occasions, source: 'starter', color: { hex } });
+  const satinMidi = it('sm', 'Cream satin midi skirt', 'skirts', '#efe6d2'), mini = it('mn', 'Cream mini skirt', 'skirts', '#efe6d2'), denimSkirt = it('ds', 'Light denim maxi skirt', 'skirts', '#a9c1dc');
+  const piece = { name: 'Champagne satin midi skirt', type: 'skirts', colors: ['champagne'] };
+  assert.ok(recipeScore(satinMidi, piece) > recipeScore(mini, piece), 'a satin midi skirt beats a mini skirt for a satin midi skirt');
+  const jeans = it('lj', 'Light blue wide-leg jeans', 'bottoms', '#a9c1dc'), want = { name: 'Light blue denim jeans', type: 'bottoms', colors: ['light blue'] };
+  assert.ok(recipeScore(jeans, want) > recipeScore(denimSkirt, want), 'jeans for jeans, not a denim skirt');
+
+  const items = [it('t1', 'Black linen tank', 'tanks', '#111111'), it('t2', 'White cable-knit sweater', 'tops', '#f4f2ee', 'warm'),
+    it('b1', 'White tailored slacks', 'bottoms', '#f5f4f0'), it('b2', 'Black tailored trousers', 'bottoms', '#121212'), it('s1', 'Black strappy heels', 'shoes', '#101010', 'light'),
+    it('s2', 'Black ankle boots', 'shoes', '#121010', 'warm'), it('o1', 'Classic trench coat', 'outerwear', '#c8b08a'), it('g1', 'Black chain-strap bag', 'bags', '#0f0f0f')];
+  const pins = [{ id: 'p1', board: 'statement', pieces: [{ name: 'Black sleeveless tank top', type: 'tanks', colors: ['black'] }, { name: 'White high-waisted trousers', type: 'bottoms', colors: ['white'] }, { name: 'Black heeled sandals', type: 'shoes', colors: ['black'] }] },
+    { id: 'p2', board: 'outfits', pieces: [{ name: 'Red corset top', type: 'tops', colors: ['red'] }, { name: 'Red mini skirt', type: 'skirts', colors: ['red'] }] }];
+  const hot = pinLooks(items, pins, { band: 'hot', n: 3, random: () => 0 });
+  assert.equal(hot.length, 1, 'a pin with no close stand-in for a main piece is left out');
+  assert.deepEqual([hot[0].look.top.id, hot[0].look.bottom.id, hot[0].look.shoes.id], ['t1', 'b1', 's1']);
+  assert.ok(!hot[0].look.outer, 'no coat on a hot day');
+  assert.ok(!pinLooks(items, pins, { band: 'mild', rain: 80, n: 1, random: () => 0 })[0].look.outer, 'no coat added just for a mild rainy day');
+  const wet = pinLooks(items, pins, { band: 'cool', rain: 80, n: 1, random: () => 0 })[0];
+  assert.equal(wet.look.outer?.id, 'o1', 'a trench on a cool rainy day');
+  assert.equal(wet.look.shoes.id, 's2', 'boots, not strappy heels, in the rain');
+
+  assert.ok(PINS.length > 40 && PINS.every((p) => p.pieces.length && p.board), 'the pins from her boards are bundled');
 });

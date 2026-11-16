@@ -48,11 +48,17 @@ await page.goto(`http://localhost:${PORT}/`); await page.evaluate(() => localSto
 const save = () => { index.version = Date.now(); writeFileSync(INDEX, JSON.stringify(index, null, 1) + '\n'); };
 
 // The nightly run leaves part of the day's free allowance for using the app (Inspo, making a piece): it stops at PRELOAD_NEURONS (default 6500 of 10000).
+// The cap is for the whole day (the shared usage counter), not each run: GitHub's own scheduled run often starts hours late, and two runs
+// each taking 6,500 used to leave nothing for the app.
 const BUDGET = Number(process.env.PRELOAD_NEURONS) || 6500, PER = { worn: 57.5, photo: 57.6 + 10.7 }; let spent = 0;
+const usedAtStart = reextract ? 0 : await fetch(`http://localhost:${PORT}/api/starter`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': PASS }, body: JSON.stringify({ usage: true }) })
+  .then((r) => r.json()).then((j) => Number(j.used) || 0).catch(() => 0);
+const ROOM = Math.max(0, BUDGET - usedAtStart);
+if (usedAtStart) console.log(`${Math.round(usedAtStart)} neurons already used today; this run may use ${Math.round(ROOM)}`);
 let made = 0, stopped = '';
 for (const it of todo) {
   const one = PER[isWornType(it.type) ? 'worn' : 'photo'];
-  if (!reextract && spent + one * 3 > BUDGET) { stopped = `tonight's share of the free Cloudflare allowance is used (${Math.round(spent)} of ${BUDGET} neurons; the rest is kept for the app)`; break; }
+  if (!reextract && spent + one * 3 > ROOM) { stopped = `today's share of the free Cloudflare allowance is used (${Math.round(usedAtStart + spent)} of ${BUDGET} neurons; the rest is kept for the app)`; break; }
   const raw = reextract ? `data:image/jpeg;base64,${readFileSync(`${RAW}/${it.id}.jpg`).toString('base64')}` : '';
   const r = await page.evaluate(async ([id, pass, raw]) => {
     const { starterItem } = await import('/starter/items.js'), W = await import('/js/wear.js'), st = await import('/js/starter.js'), { loadPack } = await import('/js/doll.js');

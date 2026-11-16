@@ -68,7 +68,7 @@ function weekCard(c) {
     </div>`;
   }).join('');
   return `<section class="panel" aria-label="This week"><h3>🗓 This week’s outfits</h3>
-    <p class="muted">${S.mood ? `Planned for the mood “${esc(S.mood)}” (change it on Dress Up).` : 'Planned from your whole closet. Pick a mood on Dress Up to focus it.'} Pieces aren’t repeated if you have alternatives.</p>
+    <p class="muted">${S.mood ? `Planned for the mood “${esc(S.mood)}” (change it on Dress Up).` : 'Planned from your whole wardrobe. Pick a mood on Dress Up to focus it.'} Pieces aren’t repeated if you have alternatives.</p>
     <button class="primary" data-act="planweek" ${S.items.length ? '' : 'disabled'}>✨ Plan my week</button>${S.plans.length ? ' <button class="ghost danger" data-act="planclear">Clear plan</button>' : ''}
     <div class="plan-list">${rows}</div></section>`;
 }

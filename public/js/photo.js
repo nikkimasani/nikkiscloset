@@ -40,7 +40,7 @@ export function composePhoto({ doll, bg = 'blush', pose = 'stand', title = '', s
     g.drawImage(doll, -dw / 2, -dh, dw, dh); g.restore();
   }
   g.fillStyle = B.ink; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.shadowColor = B.ink === '#fff' ? '#0008' : '#fff9'; g.shadowBlur = 8;
-  g.font = '700 30px system-ui, sans-serif'; g.globalAlpha = 0.85; g.fillText("Nikki's Closet", 36, 58); g.globalAlpha = 1;
+  g.font = '500 30px "Playfair Display", Georgia, serif'; g.globalAlpha = 0.85; if ('letterSpacing' in g) g.letterSpacing = '8px'; g.fillText('VESTI', 36, 58); if ('letterSpacing' in g) g.letterSpacing = '0px'; g.globalAlpha = 1;
   if (title) { g.font = '800 44px system-ui, "Apple Color Emoji", sans-serif'; g.fillText(title.length > 26 ? title.slice(0, 25) + '…' : title, 36, H - 70); }
   if (sub) { g.font = '500 26px system-ui, sans-serif'; g.globalAlpha = 0.9; g.fillText(sub, 36, H - 30); g.globalAlpha = 1; }
   return c;

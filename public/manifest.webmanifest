@@ -1,13 +1,13 @@
 {
-  "name": "Nikki's Closet",
-  "short_name": "Closet",
-  "description": "Dress up your real wardrobe in 3D, plan your OOTD, and match inspo to what you own.",
+  "name": "Vesti",
+  "short_name": "Vesti",
+  "description": "Your digital stylist: a look for every day from your own wardrobe, for the weather and your plans.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b2540",
-  "theme_color": "#0b2540",
+  "background_color": "#f6f1ea",
+  "theme_color": "#f6f1ea",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -1,5 +1,5 @@
 {
- "version": 1794726863875,
+ "version": 1794791822205,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -664,25 +664,6 @@
     "#161616"
    ],
    "t": 1793457199105
-  },
-  "starter-taupe-ribbed-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 292,
-    "w": 454,
-    "h": 1370
-   },
-   "v": 5,
-   "color": {
-    "hex": "#867c83",
-    "name": "Grey"
-   },
-   "colors": [
-    "#867c83",
-    "#56484a"
-   ],
-   "t": 1793457199449
   },
   "starter-white-eyelet-mini-dress": {
    "kind": "worn",
@@ -26028,9 +26009,6 @@
   "starter-beige-quilted-crossbody": [
    "cut-out not clean enough (left out by review)"
   ],
-  "starter-white-shoulder-bag": [
-   "more than the item in the picture (text, a hanger or a prop?)"
-  ],
   "starter-tan-bucket-bag": [
    "skin-coloured areas (a person or a body form?)"
   ],
@@ -26156,6 +26134,9 @@
   ],
   "starter-white-linen-blazer": [
    "blue background by the sleeve (left out by review)"
+  ],
+  "starter-taupe-ribbed-maxi-dress": [
+   "taken out on review: drawn as a jumpsuit, not a dress"
   ]
  },
  "blocked": {
