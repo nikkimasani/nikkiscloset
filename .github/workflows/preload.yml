@@ -33,8 +33,21 @@ jobs:
           if git fetch origin preload-wardrobe; then
             git checkout -B preload-wardrobe origin/preload-wardrobe
             if ! git merge --no-edit origin/main; then
-              # contact sheets are made again every run: main's do; anything else that clashes means starting fresh from main
+              # contact sheets are made again every run: main's do
               git checkout origin/main -- review && git add review
+              # the piece list changed on both sides (new pieces here, pieces taken out or an app fix on main): join the two (scripts/merge-index.mjs),
+              # and settle clashing pictures the same way, so a clash never throws pieces away
+              IDX=public/starter/made/index.json
+              if git diff --name-only --diff-filter=U | grep -qx "$IDX"; then
+                git show ":1:$IDX" > "$RUNNER_TEMP/base.json" 2>/dev/null || echo '{}' > "$RUNNER_TEMP/base.json"
+                git show ":2:$IDX" > "$RUNNER_TEMP/ours.json"; git show ":3:$IDX" > "$RUNNER_TEMP/theirs.json"
+                node scripts/merge-index.mjs "$RUNNER_TEMP/base.json" "$RUNNER_TEMP/ours.json" "$RUNNER_TEMP/theirs.json" > "$IDX" 2> "$RUNNER_TEMP/sides.txt" && git add "$IDX"
+                for f in $(git diff --name-only --diff-filter=U | grep '^public/starter/made/.*\.webp$' || true); do
+                  s=$(grep " $(basename "$f" .webp)\$" "$RUNNER_TEMP/sides.txt" | cut -d' ' -f1)
+                  if [ "$s" = ours ] || [ "$s" = theirs ]; then { git checkout "--$s" -- "$f" 2>/dev/null && git add "$f"; } || git rm -q -- "$f"; else git rm -q -- "$f"; fi
+                done
+              fi
+              # anything else that still clashes means starting fresh from main
               if git diff --name-only --diff-filter=U | grep -q .; then git merge --abort; git checkout -B preload-wardrobe origin/main; echo '::notice::The wardrobe branch clashed with main, so this run starts fresh from main.'; else git commit --no-edit; fi
             fi
           else git checkout -b preload-wardrobe; fi
@@ -57,7 +70,12 @@ jobs:
           git add public/starter/made review $(ls starter-raw/*.jpg >/dev/null 2>&1 && echo starter-raw)
           if git diff --cached --quiet; then echo 'Nothing new.'; exit 0; fi
           git commit -m "Preloaded wardrobe: $(head -1 review/summary.txt)"
-          git push origin preload-wardrobe
+          if ! git push origin preload-wardrobe; then # (the branch was started fresh from main above and the old one can't be overwritten): keep the pieces on their own branch
+            B="preload-wardrobe-${{ github.run_id }}"; git push origin "HEAD:refs/heads/$B"
+            echo "::warning::This run's pieces are on the $B branch (the wardrobe branch had pieces of its own that aren't in main yet)."
+            gh pr create --base main --head "$B" --draft --title 'Preloaded wardrobe (separate branch)' --body "Pieces made by the preload wardrobe workflow, kept on their own branch because preload-wardrobe has pieces that aren't in main yet. Contact sheets are in review/." || true
+            exit 0
+          fi
           gh pr view preload-wardrobe --json state -q .state 2>/dev/null | grep -q OPEN || gh pr create --base main --head preload-wardrobe --draft \
             --title 'Preloaded wardrobe' --body 'Pieces made by the preload wardrobe workflow. Contact sheets are in review/ (one per category); failed pieces and why are in review/summary.txt. Check them before merging.' \
             || echo "::notice::Pieces saved on the preload-wardrobe branch (open the pull request from there): https://github.com/${{ github.repository }}/compare/main...preload-wardrobe"

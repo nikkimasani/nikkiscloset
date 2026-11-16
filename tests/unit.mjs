@@ -782,3 +782,17 @@ test('Today: looks from Pinterest pins, made from the wardrobe', () => {
 
   assert.ok(PINS.length > 40 && PINS.every((p) => p.pieces.length && p.board), 'the pins from her boards are bundled');
 });
+
+import { mergeIndex } from '../scripts/merge-index.mjs';
+test('the wardrobe list: a clash with main joins both sides instead of throwing pieces away', () => {
+  const p = (t) => ({ kind: 'worn', t, v: 5 });
+  const base = { version: 1, pieces: { a: p(1), b: p(1), c: p(1) }, failed: {}, blocked: {} };
+  const ours = { version: 3, pieces: { a: p(1), b: p(1), c: p(5), n: p(4), f: p(4) }, failed: {}, blocked: {} };     // the branch: new n and f, c remade
+  const theirs = { version: 2, pieces: { a: p(1), c: p(1) }, failed: { b: ['taken out on review'], f: ['failed before'] }, blocked: { x: 'twice' } }; // main took out b
+  const { result, side } = mergeIndex(base, ours, theirs);
+  assert.deepEqual(Object.keys(result.pieces).sort(), ['a', 'c', 'f', 'n'], 'new pieces stay, the one main took out goes');
+  assert.equal(result.pieces.c.t, 5, 'a remade piece keeps the newer drawing');
+  assert.equal(side.b, 'drop'); assert.equal(side.n, 'ours');
+  assert.deepEqual(result.failed, { b: ['taken out on review'] }, 'failed list joined, minus pieces that are in');
+  assert.deepEqual(result.blocked, { x: 'twice' });
+});
