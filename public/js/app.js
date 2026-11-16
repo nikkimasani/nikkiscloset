@@ -841,8 +841,8 @@ function openMyModel() {
     const now = prof?.modelBase ? url('mymodel') : std();
     paintSheet(`
       <p class="muted">Vesti redraws your model with your face, skin tone and tattoos, keeping her pose and shape so every piece in your wardrobe still fits her. Your photos are only sent to Cloudflare to draw the picture; they aren’t saved anywhere.</p>
-      <label class="f" for="mmface">A clear photo of your face</label><input type="file" id="mmface" accept="image/*">
-      <label class="f" for="mmbody">A photo showing your body and tattoos (optional)</label><input type="file" id="mmbody" accept="image/*">
+      ${[['mmface', 'face', 'A clear photo of your face'], ['mmbody', 'body', 'A photo showing your tattoos (optional; a top and shorts or leggings, not swimwear)']].map(([id, k, l]) => `<label class="f" for="${id}">${l}</label>
+        <div class="mm-pick">${d[k] ? `<img src="${d[k]}" alt="" class="mm-thumb"><span>✓ ${k === 'face' ? 'Face' : 'Body'} photo added</span>` : ''}<input type="file" id="${id}" accept="image/*" aria-label="${d[k] ? 'Choose a different photo' : l}"></div>`).join('')}
       <label class="f" for="mmnotes">Anything to add</label><textarea id="mmnotes" rows="3" maxlength="200">${esc(store.get('mmnotes', TATTOO_HINT))}</textarea>
       ${store.get('aipass', '') ? '' : '<label class="f" for="mmpass">Passcode</label><input type="password" id="mmpass" autocomplete="current-password">'}
       <div class="mm-pair">${[['Now', now], ['New', d.made?.url]].map(([l, u]) => `<figure><figcaption class="muted">${l}</figcaption><div class="mm-pic">${u ? `<img src="${u}" alt="${l === 'Now' ? 'Your model now' : 'Your new model'}">` : '<span class="muted">Your new model shows here</span>'}</div></figure>`).join('')}</div>
@@ -868,9 +868,10 @@ function openMyModel() {
         const j = await r.json().catch(() => ({}));
         if (j.limit) throw new Error(`Today’s free Cloudflare credits are used up${j.resetAt ? ` — try again after ${new Date(j.resetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ' — try again tomorrow'}. Nothing was charged.`);
         if (!r.ok) throw new Error(j.error || `The server said ${r.status}`);
+        if (j.withoutBody) d.body = ''; // (Cloudflare's filter refused it: this one is from the face photo alone)
         store.set('aipass', pass);
         if (d.made) URL.revokeObjectURL(d.made.url);
-        d.made = await myModel.finishModel(j.image, std()); d.msg = 'Here she is. Use this model, or try again.';
+        d.made = await myModel.finishModel(j.image, std()); d.msg = j.withoutBody ? 'Cloudflare’s safety filter refused the body photo, so this one is made from your face photo alone. Use it, or add a body photo in a top and shorts and try again.' : 'Here she is. Use this model, or try again.';
       } catch (e) { d.msg = e.message || 'That didn’t work — try again.'; }
       d.busy = false; paint();
     };
