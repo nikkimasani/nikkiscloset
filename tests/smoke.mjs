@@ -73,7 +73,7 @@ const mock = createServer((req, res) => {
     const parts = []; req.on('data', (d) => parts.push(d)).on('end', async () => {
       const fd = await new Request('http://x/', { method: 'POST', headers: { 'content-type': req.headers['content-type'] }, body: Buffer.concat(parts) }).formData();
       const prompt = fd.get('prompt'), img = Buffer.from(await fd.get('input_image_0').arrayBuffer());
-      if (/^Image 1 is a full-length fashion figure/.test(prompt)) { (cf.models ||= []).push({ prompt, fields: [...fd.keys()].sort().join(), size: [fd.get('width'), fd.get('height')] }); if (fd.get('input_image_2')) return send({ success: false, errors: [{ code: 3030, message: 'AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination' }] }, 400); return send({ success: true, result: { image: img.toString('base64') } }); } // (a body photo stands in for one the safety filter stops) // "Make my model": hands the figure back
+      if (/^Image 1 is a head-and-shoulders portrait/.test(prompt)) { (cf.models ||= []).push({ prompt, fields: [...fd.keys()].sort().join(), size: [fd.get('width'), fd.get('height')] }); if (/flagme/.test(prompt)) return send({ success: false, errors: [{ code: 3030, message: 'AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination' }] }, 400); return send({ success: true, result: { image: img.toString('base64') } }); } // "Make my model": hands the portrait back ("flagme" in the notes stands in for a picture the safety filter stops) // "Make my model": hands the figure back
       const key = /painted flat magenta/.test(prompt) ? 'magenta' : 'green', bg = /plain magenta background/.test(prompt) ? 'magenta' : 'blue';
       const it = SITEMS.find((i) => wearPrompt(i, key, bg) === prompt) || { id: 'inspo:' + (prompt.match(/Dress her in (?:a |an )?([^;.]+)/)?.[1] || ''), type: /coat/.test(prompt) ? 'outerwear' : 'bottoms' };
       cf.wears.push({ bg, auth: req.headers.authorization, prompt, png: img.slice(1, 4).toString() === 'PNG', size: [fd.get('width'), fd.get('height')], fields: [...fd.keys()].sort().join(), id: it?.id, key });
@@ -936,13 +936,11 @@ try {
   await pM.click('[data-act=drawer][data-v=look]'); await pM.click('[data-act=mymodel]'); await pM.waitForSelector('#mmface');
   await pM.setInputFiles('#mmface', join(out, 'photo.jpg')); await pM.waitForFunction(() => !document.querySelector('#mmgo')?.disabled);
   ok(/Face photo added/.test(await pM.locator('.mm-pick').first().innerText()) && (await pM.locator('.mm-pick img.mm-thumb').count()) === 1, 'Make my model: a chosen photo shows as a thumbnail, marked added');
-  await pM.setInputFiles('#mmbody', join(out, 'photo.jpg')); await pM.waitForFunction(() => document.querySelectorAll('.mm-pick img.mm-thumb').length === 2);
-  const before = cf.models?.length || 0;
-  await pM.click('#mmgo'); await pM.waitForSelector('#mmuse');
-  ok(cf.models.length - before === 2 && /input_image_2/.test(cf.models[before].fields) && !/input_image_2/.test(cf.models[before + 1].fields) && /face photo alone/.test(await pM.locator('#mmstatus').innerText()),
-    'Make my model: when the safety filter stops the picture with the body photo, it is made again from the face alone, and says so');
+  await pM.fill('#mmnotes', 'flagme'); await pM.click('#mmgo'); await pM.waitForFunction(() => /safety filter/.test(document.querySelector('#mmstatus')?.textContent || ''));
+  ok(!(await pM.locator('#mmuse').count()) && !/AiError|3030/.test(await pM.locator('#mmstatus').innerText()), 'Make my model: a picture the safety filter stops gets a plain explanation, not the raw error');
+  await pM.fill('#mmnotes', 'freckles'); await pM.click('#mmgo'); await pM.waitForSelector('#mmuse');
   const mm = cf.models?.at(-1);
-  ok(mm && mm.fields === 'height,input_image_0,input_image_1,prompt,width' && mm.size.join('x') === '768x1520' && /tattoo/i.test(mm.prompt), `Make my model: the figure and your face go to FLUX.2 with your notes (${mm?.fields}, ${mm?.size})`);
+  ok(mm && mm.fields === 'height,input_image_0,input_image_1,prompt,width' && mm.size.join('x') === '768x768' && /freckles/.test(mm.prompt), `Make my model: only her head and shoulders and your face go to FLUX.2, with your notes (${mm?.fields}, ${mm?.size})`);
   ok(!(await pM.locator('.sheet .gap').count()), 'Make my model: a model with the same outline is not flagged');
   await pM.click('#mmuse'); await pM.waitForEvent('load'); await pM.click('[data-view=tryon]'); await pM.waitForSelector('svg.doll');
   ok(await pM.evaluate(() => /^blob:/.test(document.querySelector('#stage .basepic')?.getAttribute('href') || '') && !!window.__closet.profile?.modelBase), 'Make my model: your model is saved and drawn on Try On after a reload');
