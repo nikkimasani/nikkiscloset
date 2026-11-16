@@ -737,12 +737,26 @@ test('Make my model: the magenta backdrop is keyed out, skin and nude fabric are
   assert.equal(overlap(img, img), 1);
 });
 
-test('Make my model: the prompt keeps her pose and outline, and takes your notes (cleaned)', async () => {
-  const { modelPrompt } = await import('../lib/ai.js');
-  const p = modelPrompt('lotus tattoo on my sternum <script>', true);
-  assert.match(p, /images 2 and 3/); assert.match(p, /lotus tattoo on my sternum/); assert.doesNotMatch(p, /[<>]/);
-  assert.match(p, /pose, body outline and proportions/); assert.match(p, /magenta background/);
-  assert.doesNotMatch(modelPrompt('', false), /Also:/);
+test('Make my model: only her head is redrawn; the prompt keeps it in place and takes your notes (cleaned)', async () => {
+  const { modelPrompt, MODEL_W, MODEL_H } = await import('../lib/ai.js');
+  const p = modelPrompt('freckles <script>');
+  assert.match(p, /head-and-shoulders portrait/); assert.match(p, /face of the woman in image 2/); assert.match(p, /freckles/); assert.doesNotMatch(p, /[<>]/);
+  assert.match(p, /size, position and angle of her head/); assert.doesNotMatch(p, /image 3|tattoo|sports bra/);
+  assert.doesNotMatch(modelPrompt(''), /Also:/); assert.deepEqual([MODEL_W, MODEL_H], [768, 768]);
+});
+
+test('Make my model: the new head blends in on an ellipse, and her skin follows its tone (within reason)', async () => {
+  const { headMask, HEAD_MASK: m, toneRatio, meanColor, HEAD, CHEEKS } = await import('../public/js/mymodel.js');
+  assert.equal(headMask(m.cx, m.cy), 1, 'the middle of her face is all new');
+  assert.equal(headMask(m.cx + m.rx + 1, m.cy), 0, 'outside the ellipse is all her');
+  const edge = headMask(m.cx + m.rx - m.soft / 2, m.cy); assert.ok(edge > 0 && edge < 1, 'soft across the edge');
+  assert.ok(headMask(448, 330) === 0, 'her shoulders and chest are never replaced');
+  assert.ok(CHEEKS.x >= HEAD.x && CHEEKS.y + CHEEKS.h <= HEAD.h && headMask(CHEEKS.x, CHEEKS.y) === 1, 'the cheeks are read inside the new head');
+  assert.deepEqual(toneRatio([200, 150, 120], [100, 75, 60]), [0.65, 0.65, 0.65], 'a much darker reading is held back');
+  assert.deepEqual(toneRatio([200, 150, 120], [180, 135, 108]).map((x) => Math.round(x * 100) / 100), [0.9, 0.9, 0.9]);
+  assert.deepEqual(toneRatio(null, [1, 2, 3]), [1, 1, 1]);
+  const img = { width: 2, height: 1, data: new Uint8ClampedArray([10, 20, 30, 255, 30, 40, 50, 0]) };
+  assert.deepEqual(meanColor(img, { x: 5, y: 7, w: 2, h: 1 }, 5, 7), [10, 20, 30], 'only solid pixels, at an offset');
 });
 
 test('boots under long trousers show only below the hem; under a short skirt they show whole', async () => {
