@@ -1,5 +1,5 @@
 {
- "version": 1794791891962,
+ "version": 1794792107889,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -24998,67 +24998,6 @@
    ],
    "t": 1794726734797
   },
-  "starter-beige-bike-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 586,
-    "w": 452,
-    "h": 1034
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d6bba2",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d6bba2",
-    "#b7876a",
-    "#875a49"
-   ],
-   "t": 1794726738221
-  },
-  "starter-oatmeal-bike-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 644,
-    "w": 456,
-    "h": 926
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c5a987",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c5a987",
-    "#a76945",
-    "#79442a"
-   ],
-   "t": 1794726741693
-  },
-  "starter-beige-linen-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 208,
-    "y": 640,
-    "w": 476,
-    "h": 930
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d6c9ba",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d6c9ba",
-    "#b7785a",
-    "#875846",
-    "#a7978a"
-   ],
-   "t": 1794726754073
-  },
   "starter-mocha-linen-shorts": {
    "kind": "worn",
    "box": {
@@ -25096,27 +25035,6 @@
    ],
    "t": 1794726772249
   },
-  "starter-beige-bermuda-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 206,
-    "y": 640,
-    "w": 478,
-    "h": 932
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d9c6b5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d9c6b5",
-    "#b78768",
-    "#875a45",
-    "#ab9786"
-   ],
-   "t": 1794726775162
-  },
   "starter-navy-bermuda-shorts": {
    "kind": "worn",
    "box": {
@@ -25153,48 +25071,6 @@
     "#383b25"
    ],
    "t": 1794726782361
-  },
-  "starter-chocolate-brown-bermuda-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 650,
-    "w": 468,
-    "h": 920
-   },
-   "v": 5,
-   "color": {
-    "hex": "#4b2a23",
-    "name": "Brown"
-   },
-   "colors": [
-    "#4b2a23",
-    "#d79879",
-    "#180b05",
-    "#a76a54"
-   ],
-   "t": 1794726785101
-  },
-  "starter-oatmeal-bermuda-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 202,
-    "y": 650,
-    "w": 484,
-    "h": 972
-   },
-   "v": 5,
-   "color": {
-    "hex": "#87563c",
-    "name": "Brown"
-   },
-   "colors": [
-    "#87563c",
-    "#cbb397",
-    "#583828",
-    "#9c8367"
-   ],
-   "t": 1794726788316
   },
   "starter-stone-bermuda-shorts": {
    "kind": "worn",
@@ -25446,28 +25322,6 @@
    ],
    "t": 1794726846121
   },
-  "starter-chocolate-brown-leather-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 224,
-    "y": 576,
-    "w": 446,
-    "h": 968
-   },
-   "v": 5,
-   "color": {
-    "hex": "#492318",
-    "name": "Brown"
-   },
-   "colors": [
-    "#492318",
-    "#c88964",
-    "#97593c",
-    "#8a7875",
-    "#684a46"
-   ],
-   "t": 1794726851809
-  },
   "starter-burgundy-leather-mini-skirt": {
    "kind": "worn",
    "box": {
@@ -25652,6 +25506,18 @@
   ],
   "starter-ecru-denim-denim-mini-skirt": [
    "pink fringe at the edges (left out by review)"
+  ],
+  "starter-beige-bermuda-shorts": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-chocolate-brown-bermuda-shorts": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-chocolate-brown-leather-mini-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-oatmeal-bermuda-shorts": [
+   "legs kept with the piece (left out by review)"
   ]
  },
  "blocked": {
@@ -25751,6 +25617,9 @@
   "starter-stone-leather-pants": "stone texture, torn side, twice",
   "starter-stone-joggers": "torn side, twice",
   "starter-white-cargo-pants": "torn side, blue cast, twice",
-  "starter-white-denim-bootcut-jeans": "feet kept, twice"
+  "starter-white-denim-bootcut-jeans": "feet kept, twice",
+  "starter-beige-bike-shorts": "legs kept with the piece, twice",
+  "starter-beige-linen-shorts": "legs kept with the piece, twice",
+  "starter-oatmeal-bike-shorts": "legs kept with the piece, twice"
  }
 }
