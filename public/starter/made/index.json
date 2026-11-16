@@ -1,5 +1,5 @@
 {
- "version": 1794759933846,
+ "version": 1794792107889,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -24865,14 +24865,506 @@
     "#b8b8b8"
    ],
    "t": 1794704070352
+  },
+  "starter-white-denim-barrel-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 652,
+    "w": 464,
+    "h": 964
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e8ea",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e8ea",
+    "#c4b6bc"
+   ],
+   "t": 1794726662297
+  },
+  "starter-cream-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 650,
+    "w": 458,
+    "h": 952
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6dbc8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e6dbc8",
+    "#baa489"
+   ],
+   "t": 1794726687662
+  },
+  "starter-ecru-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 646,
+    "w": 454,
+    "h": 950
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dad7c4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#dad7c4",
+    "#a8a69b"
+   ],
+   "t": 1794726694583
+  },
+  "starter-black-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 646,
+    "w": 452,
+    "h": 984
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080808",
+    "name": "Black"
+   },
+   "colors": [
+    "#080808"
+   ],
+   "t": 1794726698590
+  },
+  "starter-grey-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 654,
+    "w": 546,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#656b75",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#656b75",
+    "#3d434b"
+   ],
+   "t": 1794726717041
+  },
+  "starter-stone-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 670,
+    "w": 608,
+    "h": 1020
+   },
+   "v": 5,
+   "color": {
+    "hex": "#73767b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#73767b",
+    "#4a4c53"
+   ],
+   "t": 1794726720680
+  },
+  "starter-chocolate-brown-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 656,
+    "w": 454,
+    "h": 400
+   },
+   "v": 5,
+   "color": {
+    "hex": "#44261b",
+    "name": "Brown"
+   },
+   "colors": [
+    "#44261b",
+    "#180902"
+   ],
+   "t": 1794726734797
+  },
+  "starter-mocha-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 660,
+    "w": 472,
+    "h": 382
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b3834",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#4b3834"
+   ],
+   "t": 1794726765061
+  },
+  "starter-cream-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 654,
+    "w": 464,
+    "h": 390
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3edd8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f3edd8",
+    "#cabaa5"
+   ],
+   "t": 1794726772249
+  },
+  "starter-navy-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 646,
+    "w": 472,
+    "h": 394
+   },
+   "v": 5,
+   "color": {
+    "hex": "#13194a",
+    "name": "Navy"
+   },
+   "colors": [
+    "#13194a"
+   ],
+   "t": 1794726778029
+  },
+  "starter-olive-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 646,
+    "w": 480,
+    "h": 404
+   },
+   "v": 5,
+   "color": {
+    "hex": "#66694c",
+    "name": "Olive"
+   },
+   "colors": [
+    "#66694c",
+    "#383b25"
+   ],
+   "t": 1794726782361
+  },
+  "starter-stone-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 642,
+    "w": 466,
+    "h": 480
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a4a8ac",
+    "name": "Grey"
+   },
+   "colors": [
+    "#a4a8ac",
+    "#767c85",
+    "#584a47"
+   ],
+   "t": 1794726791074
+  },
+  "starter-espresso-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 650,
+    "w": 468,
+    "h": 394
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573a28",
+    "name": "Brown"
+   },
+   "colors": [
+    "#573a28",
+    "#291508"
+   ],
+   "t": 1794726794469
+  },
+  "starter-mocha-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 648,
+    "w": 458,
+    "h": 418
+   },
+   "v": 5,
+   "color": {
+    "hex": "#583735",
+    "name": "Brown"
+   },
+   "colors": [
+    "#583735"
+   ],
+   "t": 1794726797703
+  },
+  "starter-light-wash-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 622,
+    "w": 502,
+    "h": 806
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97b9d8",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#97b9d8",
+    "#7a8796"
+   ],
+   "t": 1794726805097
+  },
+  "starter-medium-wash-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 622,
+    "w": 502,
+    "h": 752
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1b4588",
+    "name": "Denim"
+   },
+   "colors": [
+    "#1b4588",
+    "#040307",
+    "#0a2459",
+    "#4377b4"
+   ],
+   "t": 1794726809015
+  },
+  "starter-dark-wash-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 640,
+    "w": 518,
+    "h": 726
+   },
+   "v": 5,
+   "color": {
+    "hex": "#283658",
+    "name": "Navy"
+   },
+   "colors": [
+    "#283658",
+    "#0d1329",
+    "#060607"
+   ],
+   "t": 1794726812679
+  },
+  "starter-black-denim-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 656,
+    "w": 496,
+    "h": 734
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171717",
+    "name": "Black"
+   },
+   "colors": [
+    "#171717"
+   ],
+   "t": 1794726815559
+  },
+  "starter-white-denim-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 648,
+    "w": 452,
+    "h": 720
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8fc",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8fc"
+   ],
+   "t": 1794726820329
+  },
+  "starter-light-wash-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 636,
+    "w": 466,
+    "h": 420
+   },
+   "v": 5,
+   "color": {
+    "hex": "#99b9e8",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#99b9e8",
+    "#6988b8",
+    "#7b8a97"
+   ],
+   "t": 1794726829691
+  },
+  "starter-medium-wash-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 618,
+    "w": 464,
+    "h": 410
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2865a9",
+    "name": "Denim"
+   },
+   "colors": [
+    "#2865a9",
+    "#0a3678",
+    "#041947",
+    "#153658"
+   ],
+   "t": 1794726834520
+  },
+  "starter-dark-wash-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 658,
+    "w": 450,
+    "h": 378
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171738",
+    "name": "Navy"
+   },
+   "colors": [
+    "#171738",
+    "#474867"
+   ],
+   "t": 1794726838335
+  },
+  "starter-black-denim-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 646,
+    "w": 474,
+    "h": 398
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080808",
+    "name": "Black"
+   },
+   "colors": [
+    "#080808"
+   ],
+   "t": 1794726842482
+  },
+  "starter-white-denim-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 620,
+    "w": 460,
+    "h": 410
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4f5f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f4f5f7",
+    "#a9a9a8"
+   ],
+   "t": 1794726846121
+  },
+  "starter-burgundy-leather-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 654,
+    "w": 450,
+    "h": 416
+   },
+   "v": 5,
+   "color": {
+    "hex": "#470818",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#470818",
+    "#673846",
+    "#87656b"
+   ],
+   "t": 1794726855669
+  },
+  "starter-chocolate-brown-leather-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 646,
+    "w": 484,
+    "h": 726
+   },
+   "v": 5,
+   "color": {
+    "hex": "#371c16",
+    "name": "Black"
+   },
+   "colors": [
+    "#371c16",
+    "#5c4544"
+   ],
+   "t": 1794726863875
   }
  },
  "failed": {
   "starter-beige-quilted-crossbody": [
    "cut-out not clean enough (left out by review)"
-  ],
-  "starter-white-shoulder-bag": [
-   "more than the item in the picture (text, a hanger or a prop?)"
   ],
   "starter-tan-bucket-bag": [
    "skin-coloured areas (a person or a body form?)"
@@ -25000,111 +25492,32 @@
   "starter-white-linen-blazer": [
    "blue background by the sleeve (left out by review)"
   ],
-  "starter-lavender-scoop-bodysuit": [
-   "she moved or changed shape in the picture it drew (it couldn’t be lined up)",
-   "the piece barely shows (it may not have dressed her)"
-  ],
-  "starter-beige-bike-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-beige-linen-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-chocolate-brown-bike-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-chocolate-brown-linen-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-mocha-linen-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-oatmeal-bike-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-oatmeal-linen-shorts": [
-   "taken out on review: legs kept below it"
-  ],
-  "starter-black-leather-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-cream-joggers": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-ecru-denim-barrel-leg-jeans": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-ecru-flare-leggings": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-ecru-joggers": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-ecru-knit-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-ecru-leather-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-espresso-cargo-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-grey-knit-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-stone-bike-shorts": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-stone-flare-leggings": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-stone-joggers": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-stone-knit-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-stone-leather-pants": [
-   "taken out on review: torn, skin showing through"
-  ],
-  "starter-cream-bermuda-shorts": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-cream-linen-shorts": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-cream-leather-pants": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-ecru-bike-shorts": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-ecru-cargo-pants": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-ecru-denim-bootcut-jeans": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-ecru-linen-shorts": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-ecru-palazzo-pants": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-ecru-satin-pants": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-white-cargo-pants": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-white-denim-barrel-leg-jeans": [
-   "taken out on review: skin patches kept"
-  ],
-  "starter-white-denim-bootcut-jeans": [
-   "taken out on review: skin patches kept"
-  ],
   "starter-taupe-ribbed-maxi-dress": [
    "taken out on review: drawn as a jumpsuit, not a dress"
+  ],
+  "starter-cream-leather-mini-skirt": [
+   "light colour torn against skin (left out by review)"
+  ],
+  "starter-ecru-bermuda-shorts": [
+   "light colour torn against skin (left out by review)"
+  ],
+  "starter-ecru-denim-denim-midi-skirt": [
+   "light colour torn against skin (left out by review)"
+  ],
+  "starter-ecru-denim-denim-mini-skirt": [
+   "pink fringe at the edges (left out by review)"
+  ],
+  "starter-beige-bermuda-shorts": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-chocolate-brown-bermuda-shorts": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-chocolate-brown-leather-mini-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-oatmeal-bermuda-shorts": [
+   "legs kept with the piece (left out by review)"
   ]
  },
  "blocked": {
@@ -25182,6 +25595,31 @@
   "starter-cream-wide-leg-linen-pants": "taken out on review: torn, skin showing through, twice",
   "starter-ecru-wide-leg-linen-pants": "taken out on review: torn, skin showing through, twice",
   "starter-beige-tailored-vest": "taken out on review: tinted arm and shorts added, twice",
-  "starter-gold-sequin-mini-skirt": "taken out on review: cut out in shreds, twice"
+  "starter-gold-sequin-mini-skirt": "taken out on review: cut out in shreds, twice",
+  "starter-chocolate-brown-linen-shorts": "legs kept with the shorts, twice",
+  "starter-cream-leather-pants": "light colour torn against skin, twice",
+  "starter-cream-linen-shorts": "light colour torn against skin, twice",
+  "starter-ecru-bike-shorts": "light colour torn against skin, twice",
+  "starter-ecru-cargo-pants": "light colour torn against skin, twice",
+  "starter-ecru-denim-barrel-leg-jeans": "came out pink, not ecru, twice",
+  "starter-ecru-denim-bootcut-jeans": "feet kept, holes, twice",
+  "starter-ecru-flare-leggings": "light colour torn against skin, twice",
+  "starter-ecru-knit-pants": "light colour torn against skin, twice",
+  "starter-ecru-leather-pants": "light colour torn against skin, twice",
+  "starter-ecru-linen-shorts": "light colour torn against skin, twice",
+  "starter-ecru-palazzo-pants": "light colour torn against skin, twice",
+  "starter-ecru-satin-pants": "light colour torn against skin, twice",
+  "starter-espresso-cargo-pants": "broken: mostly missing, twice",
+  "starter-lavender-scoop-bodysuit": "hole at the strap, torn hem, twice",
+  "starter-oatmeal-linen-shorts": "legs kept with the shorts, twice",
+  "starter-stone-bike-shorts": "stone-wall texture, not fabric, twice",
+  "starter-stone-flare-leggings": "broken: mostly missing, twice",
+  "starter-stone-leather-pants": "stone texture, torn side, twice",
+  "starter-stone-joggers": "torn side, twice",
+  "starter-white-cargo-pants": "torn side, blue cast, twice",
+  "starter-white-denim-bootcut-jeans": "feet kept, twice",
+  "starter-beige-bike-shorts": "legs kept with the piece, twice",
+  "starter-beige-linen-shorts": "legs kept with the piece, twice",
+  "starter-oatmeal-bike-shorts": "legs kept with the piece, twice"
  }
 }
