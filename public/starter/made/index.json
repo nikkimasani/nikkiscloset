@@ -1,5 +1,5 @@
 {
- "version": 1794876920550,
+ "version": 1794878174751,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -25361,66 +25361,6 @@
    ],
    "t": 1794726863875
   },
-  "starter-beige-bermuda-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 206,
-    "y": 646,
-    "w": 470,
-    "h": 1060
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d6c7b8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d6c7b8",
-    "#896545",
-    "#a89889",
-    "#583628"
-   ],
-   "t": 1794876505918
-  },
-  "starter-chocolate-brown-bermuda-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 188,
-    "y": 668,
-    "w": 530,
-    "h": 902
-   },
-   "v": 5,
-   "color": {
-    "hex": "#492818",
-    "name": "Brown"
-   },
-   "colors": [
-    "#492818",
-    "#d49877"
-   ],
-   "t": 1794876509134
-  },
-  "starter-oatmeal-bermuda-shorts": {
-   "kind": "worn",
-   "box": {
-    "x": 212,
-    "y": 650,
-    "w": 464,
-    "h": 928
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e5cab4",
-    "name": "Beige"
-   },
-   "colors": [
-    "#e5cab4",
-    "#b78768",
-    "#86563b"
-   ],
-   "t": 1794876512545
-  },
   "starter-ecru-bermuda-shorts": {
    "kind": "worn",
    "box": {
@@ -25439,65 +25379,6 @@
     "#b5aa9a"
    ],
    "t": 1794876516571
-  },
-  "starter-ecru-denim-denim-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 226,
-    "y": 636,
-    "w": 462,
-    "h": 774
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e5e2cd",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e5e2cd",
-    "#b8aa95"
-   ],
-   "t": 1794876521319
-  },
-  "starter-ecru-denim-denim-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 226,
-    "y": 622,
-    "w": 450,
-    "h": 400
-   },
-   "v": 5,
-   "color": {
-    "hex": "#dcd6c7",
-    "name": "Cream"
-   },
-   "colors": [
-    "#dcd6c7",
-    "#b7a899"
-   ],
-   "t": 1794876524930
-  },
-  "starter-chocolate-brown-leather-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 650,
-    "w": 450,
-    "h": 920
-   },
-   "v": 5,
-   "color": {
-    "hex": "#381d14",
-    "name": "Black"
-   },
-   "colors": [
-    "#381d14",
-    "#97664a",
-    "#685858",
-    "#663c2a"
-   ],
-   "t": 1794876529607
   },
   "starter-cream-leather-mini-skirt": {
    "kind": "worn",
@@ -25537,27 +25418,6 @@
    ],
    "t": 1794876537679
   },
-  "starter-tan-leather-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 206,
-    "y": 664,
-    "w": 482,
-    "h": 924
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a47d53",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a47d53",
-    "#442b1c",
-    "#6a543a",
-    "#c4a689"
-   ],
-   "t": 1794876543487
-  },
   "starter-olive-leather-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -25596,25 +25456,6 @@
    ],
    "t": 1794876553550
   },
-  "starter-cream-pleated-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 156,
-    "y": 628,
-    "w": 582,
-    "h": 806
-   },
-   "v": 5,
-   "color": {
-    "hex": "#faf8e9",
-    "name": "White"
-   },
-   "colors": [
-    "#faf8e9",
-    "#dac4a9"
-   ],
-   "t": 1794876556517
-  },
   "starter-beige-pleated-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -25635,27 +25476,6 @@
    ],
    "t": 1794876560615
   },
-  "starter-camel-pleated-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 166,
-    "y": 624,
-    "w": 570,
-    "h": 974
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a86845",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a86845",
-    "#794529",
-    "#4a2714",
-    "#280c01"
-   ],
-   "t": 1794876564416
-  },
   "starter-chocolate-brown-pleated-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -25674,26 +25494,6 @@
     "#080503"
    ],
    "t": 1794876567958
-  },
-  "starter-grey-pleated-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 166,
-    "y": 632,
-    "w": 544,
-    "h": 818
-   },
-   "v": 5,
-   "color": {
-    "hex": "#777b82",
-    "name": "Grey"
-   },
-   "colors": [
-    "#777b82",
-    "#494b54",
-    "#15171a"
-   ],
-   "t": 1794876573113
   },
   "starter-olive-pleated-midi-skirt": {
    "kind": "worn",
@@ -25866,45 +25666,6 @@
    ],
    "t": 1794876604993
   },
-  "starter-beige-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 638,
-    "w": 460,
-    "h": 910
-   },
-   "v": 5,
-   "color": {
-    "hex": "#bba795",
-    "name": "Beige"
-   },
-   "colors": [
-    "#bba795",
-    "#88776a"
-   ],
-   "t": 1794876608770
-  },
-  "starter-camel-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 652,
-    "w": 452,
-    "h": 936
-   },
-   "v": 5,
-   "color": {
-    "hex": "#745c33",
-    "name": "Brown"
-   },
-   "colors": [
-    "#745c33",
-    "#483717",
-    "#a56c49"
-   ],
-   "t": 1794876611841
-  },
   "starter-chocolate-brown-knit-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -25941,24 +25702,6 @@
    ],
    "t": 1794876620067
   },
-  "starter-navy-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 210,
-    "y": 564,
-    "w": 466,
-    "h": 792
-   },
-   "v": 5,
-   "color": {
-    "hex": "#22185c",
-    "name": "Navy"
-   },
-   "colors": [
-    "#22185c"
-   ],
-   "t": 1794876623640
-  },
   "starter-olive-knit-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -25976,43 +25719,6 @@
     "#565936"
    ],
    "t": 1794876626710
-  },
-  "starter-mocha-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 642,
-    "w": 444,
-    "h": 808
-   },
-   "v": 5,
-   "color": {
-    "hex": "#362828",
-    "name": "Black"
-   },
-   "colors": [
-    "#362828"
-   ],
-   "t": 1794876630316
-  },
-  "starter-oatmeal-knit-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 168,
-    "y": 642,
-    "w": 552,
-    "h": 934
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b49b84",
-    "name": "Beige"
-   },
-   "colors": [
-    "#b49b84",
-    "#a77659"
-   ],
-   "t": 1794876633872
   },
   "starter-stone-knit-midi-skirt": {
    "kind": "worn",
@@ -26087,24 +25793,6 @@
     "#080807"
    ],
    "t": 1794876647946
-  },
-  "starter-ivory-slip-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 188,
-    "y": 638,
-    "w": 538,
-    "h": 1026
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d9d6c6",
-    "name": "Cream"
-   },
-   "colors": [
-    "#d9d6c6"
-   ],
-   "t": 1794876651100
   },
   "starter-champagne-slip-maxi-skirt": {
    "kind": "worn",
@@ -26185,25 +25873,6 @@
    ],
    "t": 1794876666197
   },
-  "starter-navy-slip-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 158,
-    "y": 590,
-    "w": 588,
-    "h": 1116
-   },
-   "v": 5,
-   "color": {
-    "hex": "#071748",
-    "name": "Navy"
-   },
-   "colors": [
-    "#071748",
-    "#040317"
-   ],
-   "t": 1794876670566
-  },
   "starter-oatmeal-slip-maxi-skirt": {
    "kind": "worn",
    "box": {
@@ -26243,65 +25912,6 @@
     "#958d93"
    ],
    "t": 1794876678122
-  },
-  "starter-espresso-slip-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 142,
-    "y": 636,
-    "w": 596,
-    "h": 1070
-   },
-   "v": 5,
-   "color": {
-    "hex": "#371904",
-    "name": "Brown"
-   },
-   "colors": [
-    "#371904",
-    "#180400",
-    "#6c4328"
-   ],
-   "t": 1794876681462
-  },
-  "starter-mocha-slip-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 174,
-    "y": 630,
-    "w": 534,
-    "h": 1076
-   },
-   "v": 5,
-   "color": {
-    "hex": "#36241c",
-    "name": "Black"
-   },
-   "colors": [
-    "#36241c",
-    "#65433b",
-    "#966b64"
-   ],
-   "t": 1794876684776
-  },
-  "starter-ecru-slip-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 150,
-    "y": 620,
-    "w": 578,
-    "h": 1066
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d6c9b9",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d6c9b9",
-    "#fdfce4"
-   ],
-   "t": 1794876688732
   },
   "starter-white-tennis-skirt": {
    "kind": "worn",
@@ -26433,25 +26043,6 @@
    ],
    "t": 1794876714522
   },
-  "starter-chocolate-brown-wrap-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 638,
-    "w": 456,
-    "h": 986
-   },
-   "v": 5,
-   "color": {
-    "hex": "#291b1a",
-    "name": "Black"
-   },
-   "colors": [
-    "#291b1a",
-    "#543733"
-   ],
-   "t": 1794876717804
-  },
   "starter-olive-wrap-skirt": {
    "kind": "worn",
    "box": {
@@ -26508,45 +26099,6 @@
    ],
    "t": 1794876730284
   },
-  "starter-oatmeal-wrap-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 274,
-    "y": 698,
-    "w": 392,
-    "h": 726
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a4936e",
-    "name": "Camel"
-   },
-   "colors": [
-    "#a4936e"
-   ],
-   "t": 1794876734021
-  },
-  "starter-stone-wrap-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 656,
-    "w": 450,
-    "h": 810
-   },
-   "v": 5,
-   "color": {
-    "hex": "#767779",
-    "name": "Grey"
-   },
-   "colors": [
-    "#767779",
-    "#474749",
-    "#a5a6a9",
-    "#171719"
-   ],
-   "t": 1794876738118
-  },
   "starter-espresso-wrap-skirt": {
    "kind": "worn",
    "box": {
@@ -26564,24 +26116,6 @@
     "#472d2a"
    ],
    "t": 1794876741361
-  },
-  "starter-mocha-wrap-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 650,
-    "w": 450,
-    "h": 876
-   },
-   "v": 5,
-   "color": {
-    "hex": "#4d312d",
-    "name": "Brown"
-   },
-   "colors": [
-    "#4d312d"
-   ],
-   "t": 1794876744312
   },
   "starter-ecru-wrap-skirt": {
    "kind": "worn",
@@ -26636,24 +26170,6 @@
     "#f4f4f4"
    ],
    "t": 1794876756907
-  },
-  "starter-cream-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 236,
-    "y": 652,
-    "w": 504,
-    "h": 1054
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5ebd7",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f5ebd7"
-   ],
-   "t": 1794876760371
   },
   "starter-beige-maxi-skirt": {
    "kind": "worn",
@@ -26748,26 +26264,6 @@
    ],
    "t": 1794876777567
   },
-  "starter-stone-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 122,
-    "y": 648,
-    "w": 602,
-    "h": 1058
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a39b94",
-    "name": "Grey"
-   },
-   "colors": [
-    "#a39b94",
-    "#746c65",
-    "#2a2824"
-   ],
-   "t": 1794876781806
-  },
   "starter-espresso-maxi-skirt": {
    "kind": "worn",
    "box": {
@@ -26785,43 +26281,6 @@
     "#362419"
    ],
    "t": 1794876785094
-  },
-  "starter-mocha-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 156,
-    "y": 648,
-    "w": 592,
-    "h": 1058
-   },
-   "v": 5,
-   "color": {
-    "hex": "#593534",
-    "name": "Brown"
-   },
-   "colors": [
-    "#593534",
-    "#180c0a"
-   ],
-   "t": 1794876789324
-  },
-  "starter-ecru-maxi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 152,
-    "y": 654,
-    "w": 584,
-    "h": 1052
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d8d5c7",
-    "name": "Cream"
-   },
-   "colors": [
-    "#d8d5c7"
-   ],
-   "t": 1794876794493
   },
   "starter-black-tweed-mini-skirt": {
    "kind": "worn",
@@ -26858,26 +26317,6 @@
     "#f9f5e9"
    ],
    "t": 1794876804395
-  },
-  "starter-pink-tweed-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 208,
-    "y": 640,
-    "w": 474,
-    "h": 930
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f3b7ca",
-    "name": "Pink"
-   },
-   "colors": [
-    "#f3b7ca",
-    "#a6785a",
-    "#684737"
-   ],
-   "t": 1794876808669
   },
   "starter-grey-tweed-mini-skirt": {
    "kind": "worn",
@@ -26956,44 +26395,6 @@
    ],
    "t": 1794876821683
   },
-  "starter-blush-pink-straight-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 224,
-    "y": 648,
-    "w": 450,
-    "h": 994
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f4aab8",
-    "name": "Pink"
-   },
-   "colors": [
-    "#f4aab8",
-    "#c77a87"
-   ],
-   "t": 1794876825155
-  },
-  "starter-butter-yellow-straight-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 652,
-    "w": 446,
-    "h": 1054
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f4ebb8",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f4ebb8",
-    "#cabb86"
-   ],
-   "t": 1794876828937
-  },
   "starter-light-blue-straight-trousers": {
    "kind": "worn",
    "box": {
@@ -27051,25 +26452,6 @@
     "#012a17"
    ],
    "t": 1794876838057
-  },
-  "starter-lavender-straight-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 210,
-    "y": 650,
-    "w": 462,
-    "h": 994
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a687c9",
-    "name": "Lavender"
-   },
-   "colors": [
-    "#a687c9",
-    "#765aa9"
-   ],
-   "t": 1794876845987
   },
   "starter-rust-straight-trousers": {
    "kind": "worn",
@@ -27146,63 +26528,6 @@
     "#474848"
    ],
    "t": 1794876860905
-  },
-  "starter-espresso-straight-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 224,
-    "y": 658,
-    "w": 456,
-    "h": 986
-   },
-   "v": 5,
-   "color": {
-    "hex": "#342a14",
-    "name": "Black"
-   },
-   "colors": [
-    "#342a14",
-    "#0c0903"
-   ],
-   "t": 1794876864648
-  },
-  "starter-ecru-straight-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 654,
-    "w": 444,
-    "h": 986
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d3cbb8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d3cbb8",
-    "#a69c89"
-   ],
-   "t": 1794876868345
-  },
-  "starter-olive-wide-leg-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 170,
-    "y": 656,
-    "w": 552,
-    "h": 1050
-   },
-   "v": 5,
-   "color": {
-    "hex": "#595a38",
-    "name": "Olive"
-   },
-   "colors": [
-    "#595a38",
-    "#32361d"
-   ],
-   "t": 1794876872729
   },
   "starter-sage-green-wide-leg-trousers": {
    "kind": "worn",
@@ -27317,25 +26642,6 @@
    ],
    "t": 1794876896020
   },
-  "starter-ecru-wide-leg-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 198,
-    "y": 628,
-    "w": 494,
-    "h": 1066
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d4cab9",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d4cab9",
-    "#a79989"
-   ],
-   "t": 1794876899549
-  },
   "starter-black-drawstring-trousers": {
    "kind": "worn",
    "box": {
@@ -27391,25 +26697,6 @@
     "#bcb3a8"
    ],
    "t": 1794876910283
-  },
-  "starter-beige-drawstring-trousers": {
-   "kind": "worn",
-   "box": {
-    "x": 174,
-    "y": 672,
-    "w": 526,
-    "h": 1034
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c5b9a9",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c5b9a9",
-    "#968678"
-   ],
-   "t": 1794876913134
   },
   "starter-camel-drawstring-trousers": {
    "kind": "worn",
@@ -27583,6 +26870,99 @@
   ],
   "starter-taupe-ribbed-maxi-dress": [
    "taken out on review: drawn as a jumpsuit, not a dress"
+  ],
+  "starter-beige-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-camel-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-camel-pleated-midi-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-chocolate-brown-wrap-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-mocha-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-mocha-wrap-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-navy-slip-maxi-skirt": [
+   "feet kept below the hem (left out by review)"
+  ],
+  "starter-oatmeal-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-pink-tweed-mini-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-stone-maxi-skirt": [
+   "feet kept below the hem (left out by review)"
+  ],
+  "starter-tan-leather-midi-skirt": [
+   "legs kept with the piece (left out by review)"
+  ],
+  "starter-beige-drawstring-trousers": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-butter-yellow-straight-trousers": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-cream-maxi-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-cream-pleated-midi-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-ecru-maxi-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-ecru-slip-maxi-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-ecru-straight-trousers": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-ecru-wide-leg-trousers": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-ivory-slip-maxi-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-grey-pleated-midi-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-blush-pink-straight-trousers": [
+   "blue patch (left out by review)"
+  ],
+  "starter-espresso-slip-maxi-skirt": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-espresso-straight-trousers": [
+   "broken: mostly missing (left out by review)"
+  ],
+  "starter-lavender-straight-trousers": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-mocha-maxi-skirt": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-mocha-slip-maxi-skirt": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-navy-knit-midi-skirt": [
+   "part of a top kept above the waist (left out by review)"
+  ],
+  "starter-oatmeal-wrap-skirt": [
+   "broken: mostly missing (left out by review)"
+  ],
+  "starter-olive-wide-leg-trousers": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-stone-wrap-skirt": [
+   "stone texture, not fabric (left out by review)"
   ]
  },
  "blocked": {
@@ -27685,6 +27065,12 @@
   "starter-white-denim-bootcut-jeans": "feet kept, twice",
   "starter-beige-bike-shorts": "legs kept with the piece, twice",
   "starter-beige-linen-shorts": "legs kept with the piece, twice",
-  "starter-oatmeal-bike-shorts": "legs kept with the piece, twice"
+  "starter-oatmeal-bike-shorts": "legs kept with the piece, twice",
+  "starter-beige-bermuda-shorts": "legs kept with the piece, again",
+  "starter-chocolate-brown-bermuda-shorts": "legs kept with the piece, again",
+  "starter-chocolate-brown-leather-mini-skirt": "legs kept with the piece, again",
+  "starter-oatmeal-bermuda-shorts": "legs kept with the piece, again",
+  "starter-ecru-denim-denim-midi-skirt": "torn edge against skin, again",
+  "starter-ecru-denim-denim-mini-skirt": "pink cast on ecru, again"
  }
 }
