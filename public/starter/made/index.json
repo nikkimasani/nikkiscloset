@@ -1,5 +1,5 @@
 {
- "version": 1794531563795,
+ "version": 1794878174751,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -664,25 +664,6 @@
     "#161616"
    ],
    "t": 1793457199105
-  },
-  "starter-taupe-ribbed-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 292,
-    "w": 454,
-    "h": 1370
-   },
-   "v": 5,
-   "color": {
-    "hex": "#867c83",
-    "name": "Grey"
-   },
-   "colors": [
-    "#867c83",
-    "#56484a"
-   ],
-   "t": 1793457199449
   },
   "starter-white-eyelet-mini-dress": {
    "kind": "worn",
@@ -20575,14 +20556,6191 @@
     "#e999b6"
    ],
    "t": 1794531256725
+  },
+  "starter-black-scoop-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 300,
+    "w": 478,
+    "h": 458
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171614",
+    "name": "Black"
+   },
+   "colors": [
+    "#171614"
+   ],
+   "t": 1794554226161
+  },
+  "starter-tan-scoop-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 286,
+    "w": 500,
+    "h": 518
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c89a75",
+    "name": "Camel"
+   },
+   "colors": [
+    "#c89a75",
+    "#986a48"
+   ],
+   "t": 1794554234387
+  },
+  "starter-taupe-scoop-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 302,
+    "w": 484,
+    "h": 562
+   },
+   "v": 5,
+   "color": {
+    "hex": "#978684",
+    "name": "Grey"
+   },
+   "colors": [
+    "#978684",
+    "#6a5857"
+   ],
+   "t": 1794554253629
+  },
+  "starter-butter-yellow-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 230,
+    "y": 296,
+    "w": 450,
+    "h": 678
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8e9b8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f8e9b8"
+   ],
+   "t": 1794554281079
+  },
+  "starter-rust-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 302,
+    "w": 640,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#78281a",
+    "name": "Rust"
+   },
+   "colors": [
+    "#78281a",
+    "#4b1208"
+   ],
+   "t": 1794554292211
+  },
+  "starter-grey-plaid-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 230,
+    "y": 670,
+    "w": 428,
+    "h": 982
+   },
+   "v": 5,
+   "color": {
+    "hex": "#6a737b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#6a737b",
+    "#444c55",
+    "#9aa4aa"
+   ],
+   "t": 1794554308351
+  },
+  "starter-black-leather-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 658,
+    "w": 464,
+    "h": 958
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060605",
+    "name": "Black"
+   },
+   "colors": [
+    "#060605"
+   ],
+   "t": 1794554311193
+  },
+  "starter-white-linen-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 168,
+    "y": 648,
+    "w": 526,
+    "h": 1024
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6e7ec",
+    "name": "White"
+   },
+   "colors": [
+    "#e6e7ec",
+    "#b5b4b8"
+   ],
+   "t": 1794554333100
+  },
+  "starter-champagne-satin-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 174,
+    "y": 650,
+    "w": 522,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#957a78",
+    "name": "Grey"
+   },
+   "colors": [
+    "#957a78",
+    "#e8e5d8",
+    "#b9a599"
+   ],
+   "t": 1794554336534
+  },
+  "starter-cream-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 636,
+    "w": 478,
+    "h": 984
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e5e5d9",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e5e5d9",
+    "#b5b5aa"
+   ],
+   "t": 1794554339688
+  },
+  "starter-black-lace-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 650,
+    "w": 498,
+    "h": 848
+   },
+   "v": 5,
+   "color": {
+    "hex": "#070506",
+    "name": "Black"
+   },
+   "colors": [
+    "#070506"
+   ],
+   "t": 1794554342953
+  },
+  "starter-burgundy-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 168,
+    "y": 664,
+    "w": 546,
+    "h": 792
+   },
+   "v": 5,
+   "color": {
+    "hex": "#590d26",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#590d26",
+    "#270006"
+   ],
+   "t": 1794554346431
+  },
+  "starter-sage-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 168,
+    "y": 662,
+    "w": 562,
+    "h": 764
+   },
+   "v": 5,
+   "color": {
+    "hex": "#66846c",
+    "name": "Sage"
+   },
+   "colors": [
+    "#66846c",
+    "#8ab49a",
+    "#c3edd8",
+    "#4b5c42"
+   ],
+   "t": 1794554349697
+  },
+  "starter-houndstooth-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 172,
+    "y": 650,
+    "w": 546,
+    "h": 438
+   },
+   "v": 5,
+   "color": {
+    "hex": "#050507",
+    "name": "Black"
+   },
+   "colors": [
+    "#050507",
+    "#f8f9f9",
+    "#363739",
+    "#c6c8c8",
+    "#666769"
+   ],
+   "t": 1794554353583
+  },
+  "starter-brown-suede-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 654,
+    "w": 536,
+    "h": 442
+   },
+   "v": 5,
+   "color": {
+    "hex": "#56291c",
+    "name": "Brown"
+   },
+   "colors": [
+    "#56291c",
+    "#87573a"
+   ],
+   "t": 1794554358745
+  },
+  "starter-black-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 652,
+    "w": 442,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#141413",
+    "name": "Black"
+   },
+   "colors": [
+    "#141413"
+   ],
+   "t": 1794554372173
+  },
+  "starter-navy-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 644,
+    "w": 460,
+    "h": 1008
+   },
+   "v": 5,
+   "color": {
+    "hex": "#091946",
+    "name": "Navy"
+   },
+   "colors": [
+    "#091946"
+   ],
+   "t": 1794554376360
+  },
+  "starter-camel-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 228,
+    "y": 626,
+    "w": 448,
+    "h": 1006
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a7785a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a7785a",
+    "#785945"
+   ],
+   "t": 1794554386697
+  },
+  "starter-beige-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 650,
+    "w": 454,
+    "h": 1002
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c4ab97",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c4ab97",
+    "#88776a",
+    "#584c45"
+   ],
+   "t": 1794554389850
+  },
+  "starter-white-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 646,
+    "w": 454,
+    "h": 992
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e9e8",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e9e8"
+   ],
+   "t": 1794554399643
+  },
+  "starter-chocolate-brown-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 644,
+    "w": 444,
+    "h": 1000
+   },
+   "v": 5,
+   "color": {
+    "hex": "#442d2a",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#442d2a"
+   ],
+   "t": 1794554403008
+  },
+  "starter-olive-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 650,
+    "w": 458,
+    "h": 1010
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b5435",
+    "name": "Olive"
+   },
+   "colors": [
+    "#4b5435",
+    "#242b18"
+   ],
+   "t": 1794554408137
+  },
+  "starter-burgundy-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 644,
+    "w": 456,
+    "h": 1000
+   },
+   "v": 5,
+   "color": {
+    "hex": "#661a38",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#661a38",
+    "#380719"
+   ],
+   "t": 1794554411627
+  },
+  "starter-taupe-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 630,
+    "w": 444,
+    "h": 1018
+   },
+   "v": 5,
+   "color": {
+    "hex": "#776869",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#776869",
+    "#4c424b"
+   ],
+   "t": 1794554416942
+  },
+  "starter-cream-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 628,
+    "w": 532,
+    "h": 1068
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dbd5c5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#dbd5c5",
+    "#a89987"
+   ],
+   "t": 1794554420343
+  },
+  "starter-beige-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 642,
+    "w": 536,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#baa696",
+    "name": "Beige"
+   },
+   "colors": [
+    "#baa696",
+    "#877877"
+   ],
+   "t": 1794554423522
+  },
+  "starter-camel-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 628,
+    "w": 528,
+    "h": 1078
+   },
+   "v": 5,
+   "color": {
+    "hex": "#995739",
+    "name": "Rust"
+   },
+   "colors": [
+    "#995739",
+    "#6a3824"
+   ],
+   "t": 1794554427821
+  },
+  "starter-chocolate-brown-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 646,
+    "w": 546,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#34241c",
+    "name": "Black"
+   },
+   "colors": [
+    "#34241c"
+   ],
+   "t": 1794617322685
+  },
+  "starter-grey-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 646,
+    "w": 486,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#686d73",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#686d73",
+    "#3d4348"
+   ],
+   "t": 1794617325651
+  },
+  "starter-navy-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 644,
+    "w": 546,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0a1447",
+    "name": "Navy"
+   },
+   "colors": [
+    "#0a1447",
+    "#060929"
+   ],
+   "t": 1794617329834
+  },
+  "starter-white-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 160,
+    "y": 636,
+    "w": 540,
+    "h": 1070
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f6f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f6f7"
+   ],
+   "t": 1794617332681
+  },
+  "starter-burgundy-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 646,
+    "w": 532,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#570726",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#570726",
+    "#2a0013"
+   ],
+   "t": 1794617336422
+  },
+  "starter-olive-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 656,
+    "w": 500,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#394828",
+    "name": "Olive"
+   },
+   "colors": [
+    "#394828"
+   ],
+   "t": 1794617339495
+  },
+  "starter-light-blue-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 644,
+    "w": 476,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#99c7fc",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#99c7fc",
+    "#7a96da"
+   ],
+   "t": 1794617342604
+  },
+  "starter-blush-pink-flared-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 568,
+    "w": 524,
+    "h": 1138
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4a9b9",
+    "name": "Pink"
+   },
+   "colors": [
+    "#f4a9b9",
+    "#c57b98",
+    "#ddb786"
+   ],
+   "t": 1794617346756
+  },
+  "starter-black-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 642,
+    "w": 530,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#131313",
+    "name": "Black"
+   },
+   "colors": [
+    "#131313"
+   ],
+   "t": 1794617351203
+  },
+  "starter-navy-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 642,
+    "w": 540,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#252954",
+    "name": "Navy"
+   },
+   "colors": [
+    "#252954",
+    "#16152b"
+   ],
+   "t": 1794617358463
+  },
+  "starter-grey-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 656,
+    "w": 544,
+    "h": 1038
+   },
+   "v": 5,
+   "color": {
+    "hex": "#858888",
+    "name": "Grey"
+   },
+   "colors": [
+    "#858888",
+    "#565959"
+   ],
+   "t": 1794617364067
+  },
+  "starter-camel-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 638,
+    "w": 546,
+    "h": 1068
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a87b53",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a87b53",
+    "#7a5437",
+    "#4c3323"
+   ],
+   "t": 1794617368282
+  },
+  "starter-olive-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 646,
+    "w": 518,
+    "h": 1026
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5b6542",
+    "name": "Olive"
+   },
+   "colors": [
+    "#5b6542",
+    "#373c26"
+   ],
+   "t": 1794617371813
+  },
+  "starter-burgundy-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 618,
+    "w": 528,
+    "h": 1084
+   },
+   "v": 5,
+   "color": {
+    "hex": "#470624",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#470624",
+    "#1c010b"
+   ],
+   "t": 1794617374702
+  },
+  "starter-cream-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 174,
+    "y": 634,
+    "w": 524,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6dac7",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e6dac7",
+    "#b4aca3"
+   ],
+   "t": 1794617378285
+  },
+  "starter-grey-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 652,
+    "w": 504,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#666769",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#666769",
+    "#393a3a"
+   ],
+   "t": 1794617382190
+  },
+  "starter-chocolate-brown-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 642,
+    "w": 510,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#351d12",
+    "name": "Black"
+   },
+   "colors": [
+    "#351d12"
+   ],
+   "t": 1794617385432
+  },
+  "starter-taupe-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 630,
+    "w": 480,
+    "h": 1068
+   },
+   "v": 5,
+   "color": {
+    "hex": "#78646b",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#78646b"
+   ],
+   "t": 1794617389471
+  },
+  "starter-light-blue-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 652,
+    "w": 512,
+    "h": 1042
+   },
+   "v": 5,
+   "color": {
+    "hex": "#87b8f4",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#87b8f4",
+    "#6c76a6"
+   ],
+   "t": 1794617392264
+  },
+  "starter-blush-pink-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 646,
+    "w": 486,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e69bb2",
+    "name": "Pink"
+   },
+   "colors": [
+    "#e69bb2",
+    "#a86886"
+   ],
+   "t": 1794617395113
+  },
+  "starter-light-wash-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 610,
+    "w": 464,
+    "h": 1078
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b7c8db",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#b7c8db",
+    "#869ab8"
+   ],
+   "t": 1794617397996
+  },
+  "starter-medium-wash-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 650,
+    "w": 452,
+    "h": 1008
+   },
+   "v": 5,
+   "color": {
+    "hex": "#353b75",
+    "name": "Navy"
+   },
+   "colors": [
+    "#353b75",
+    "#65679a",
+    "#251d45",
+    "#474768"
+   ],
+   "t": 1794617401402
+  },
+  "starter-dark-wash-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 640,
+    "w": 456,
+    "h": 1030
+   },
+   "v": 5,
+   "color": {
+    "hex": "#050317",
+    "name": "Black"
+   },
+   "colors": [
+    "#050317",
+    "#242649"
+   ],
+   "t": 1794617404442
+  },
+  "starter-black-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 648,
+    "w": 460,
+    "h": 990
+   },
+   "v": 5,
+   "color": {
+    "hex": "#030302",
+    "name": "Black"
+   },
+   "colors": [
+    "#030302"
+   ],
+   "t": 1794617408486
+  },
+  "starter-white-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 642,
+    "w": 456,
+    "h": 1002
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e9e8",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e9e8",
+    "#b9b9b9"
+   ],
+   "t": 1794617412214
+  },
+  "starter-cream-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 640,
+    "w": 452,
+    "h": 986
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e9e5d6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e9e5d6",
+    "#b9ab97"
+   ],
+   "t": 1794617415061
+  },
+  "starter-light-wash-flared-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 632,
+    "w": 522,
+    "h": 1074
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a6b8d7",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#a6b8d7",
+    "#7885a9",
+    "#d5e2ed"
+   ],
+   "t": 1794617420923
+  },
+  "starter-medium-wash-flared-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 634,
+    "w": 500,
+    "h": 1072
+   },
+   "v": 5,
+   "color": {
+    "hex": "#354a87",
+    "name": "Denim"
+   },
+   "colors": [
+    "#354a87",
+    "#7687b9",
+    "#252858",
+    "#474869"
+   ],
+   "t": 1794617424735
+  },
+  "starter-black-flared-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 644,
+    "w": 484,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0a0a0a",
+    "name": "Black"
+   },
+   "colors": [
+    "#0a0a0a"
+   ],
+   "t": 1794617429093
+  },
+  "starter-white-flared-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 648,
+    "w": 484,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dbe3ea",
+    "name": "Silver"
+   },
+   "colors": [
+    "#dbe3ea",
+    "#a8acb3"
+   ],
+   "t": 1794617432840
+  },
+  "starter-cream-flared-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 630,
+    "w": 502,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5e9d5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f5e9d5",
+    "#c7b9a9"
+   ],
+   "t": 1794617436137
+  },
+  "starter-black-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 654,
+    "w": 458,
+    "h": 966
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080809",
+    "name": "Black"
+   },
+   "colors": [
+    "#080809"
+   ],
+   "t": 1794617438860
+  },
+  "starter-grey-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 662,
+    "w": 464,
+    "h": 952
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8a8784",
+    "name": "Grey"
+   },
+   "colors": [
+    "#8a8784"
+   ],
+   "t": 1794617441388
+  },
+  "starter-chocolate-brown-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 660,
+    "w": 462,
+    "h": 964
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3b231a",
+    "name": "Black"
+   },
+   "colors": [
+    "#3b231a"
+   ],
+   "t": 1794617444179
+  },
+  "starter-navy-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 660,
+    "w": 462,
+    "h": 978
+   },
+   "v": 5,
+   "color": {
+    "hex": "#232657",
+    "name": "Navy"
+   },
+   "colors": [
+    "#232657"
+   ],
+   "t": 1794617447934
+  },
+  "starter-olive-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 668,
+    "w": 458,
+    "h": 960
+   },
+   "v": 5,
+   "color": {
+    "hex": "#575b39",
+    "name": "Olive"
+   },
+   "colors": [
+    "#575b39"
+   ],
+   "t": 1794617451227
+  },
+  "starter-chocolate-brown-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 638,
+    "w": 548,
+    "h": 930
+   },
+   "v": 5,
+   "color": {
+    "hex": "#361a14",
+    "name": "Black"
+   },
+   "colors": [
+    "#361a14",
+    "#663b33",
+    "#0c0603"
+   ],
+   "t": 1794617457315
+  },
+  "starter-blush-pink-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 648,
+    "w": 622,
+    "h": 830
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e9abb4",
+    "name": "Pink"
+   },
+   "colors": [
+    "#e9abb4",
+    "#fedbe2",
+    "#ca7a87"
+   ],
+   "t": 1794617463759
+  },
+  "starter-red-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 630,
+    "w": 524,
+    "h": 846
+   },
+   "v": 5,
+   "color": {
+    "hex": "#970009",
+    "name": "Red"
+   },
+   "colors": [
+    "#970009",
+    "#680000",
+    "#f33a49"
+   ],
+   "t": 1794617466426
+  },
+  "starter-grey-pencil-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 642,
+    "w": 450,
+    "h": 694
+   },
+   "v": 5,
+   "color": {
+    "hex": "#696c74",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#696c74"
+   ],
+   "t": 1794617471613
+  },
+  "starter-navy-pencil-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 640,
+    "w": 458,
+    "h": 644
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161a4b",
+    "name": "Navy"
+   },
+   "colors": [
+    "#161a4b"
+   ],
+   "t": 1794617475954
+  },
+  "starter-chocolate-brown-pencil-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 650,
+    "w": 450,
+    "h": 920
+   },
+   "v": 5,
+   "color": {
+    "hex": "#462a23",
+    "name": "Brown"
+   },
+   "colors": [
+    "#462a23",
+    "#ab7456"
+   ],
+   "t": 1794617479920
+  },
+  "starter-white-pencil-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 614,
+    "w": 446,
+    "h": 716
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e9eaeb",
+    "name": "White"
+   },
+   "colors": [
+    "#e9eaeb",
+    "#b8b8b9"
+   ],
+   "t": 1794617485620
+  },
+  "starter-burgundy-pencil-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 652,
+    "w": 454,
+    "h": 704
+   },
+   "v": 5,
+   "color": {
+    "hex": "#530323",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#530323"
+   ],
+   "t": 1794617489204
+  },
+  "starter-red-pencil-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 610,
+    "w": 460,
+    "h": 724
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d70015",
+    "name": "Red"
+   },
+   "colors": [
+    "#d70015",
+    "#97000a"
+   ],
+   "t": 1794617493023
+  },
+  "starter-black-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 654,
+    "w": 554,
+    "h": 446
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0b0a09",
+    "name": "Black"
+   },
+   "colors": [
+    "#0b0a09"
+   ],
+   "t": 1794617495903
+  },
+  "starter-white-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 166,
+    "y": 658,
+    "w": 566,
+    "h": 440
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f6f6",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f6f6"
+   ],
+   "t": 1794617499396
+  },
+  "starter-chocolate-brown-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 648,
+    "w": 484,
+    "h": 418
+   },
+   "v": 5,
+   "color": {
+    "hex": "#44251d",
+    "name": "Brown"
+   },
+   "colors": [
+    "#44251d"
+   ],
+   "t": 1794617503223
+  },
+  "starter-grey-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 172,
+    "y": 668,
+    "w": 550,
+    "h": 436
+   },
+   "v": 5,
+   "color": {
+    "hex": "#76777b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#76777b"
+   ],
+   "t": 1794617509504
+  },
+  "starter-navy-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 174,
+    "y": 636,
+    "w": 550,
+    "h": 448
+   },
+   "v": 5,
+   "color": {
+    "hex": "#111a42",
+    "name": "Navy"
+   },
+   "colors": [
+    "#111a42",
+    "#060a18"
+   ],
+   "t": 1794617512906
+  },
+  "starter-cream-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 626,
+    "w": 514,
+    "h": 428
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f2edda",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f2edda",
+    "#c8b49a"
+   ],
+   "t": 1794617516535
+  },
+  "starter-black-tailored-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 640,
+    "w": 472,
+    "h": 382
+   },
+   "v": 5,
+   "color": {
+    "hex": "#181818",
+    "name": "Black"
+   },
+   "colors": [
+    "#181818"
+   ],
+   "t": 1794617520450
+  },
+  "starter-white-tailored-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 632,
+    "w": 452,
+    "h": 392
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f6f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f6f7",
+    "#c8c9c8"
+   ],
+   "t": 1794617525453
+  },
+  "starter-cream-tailored-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 658,
+    "w": 476,
+    "h": 374
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6e6da",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e6e6da"
+   ],
+   "t": 1794617528752
+  },
+  "starter-navy-tailored-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 646,
+    "w": 494,
+    "h": 400
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1c1947",
+    "name": "Navy"
+   },
+   "colors": [
+    "#1c1947",
+    "#050119"
+   ],
+   "t": 1794617533276
+  },
+  "starter-olive-tailored-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 654,
+    "w": 486,
+    "h": 382
+   },
+   "v": 5,
+   "color": {
+    "hex": "#545b39",
+    "name": "Olive"
+   },
+   "colors": [
+    "#545b39",
+    "#363925"
+   ],
+   "t": 1794617540373
+  },
+  "starter-white-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 632,
+    "w": 456,
+    "h": 948
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e7e8e9",
+    "name": "White"
+   },
+   "colors": [
+    "#e7e8e9",
+    "#b9b9b8"
+   ],
+   "t": 1794617543471
+  },
+  "starter-cream-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 624,
+    "w": 458,
+    "h": 954
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eae6d4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#eae6d4",
+    "#bbb5a6"
+   ],
+   "t": 1794617548227
+  },
+  "starter-ivory-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 232,
+    "y": 634,
+    "w": 442,
+    "h": 960
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e6da",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e8e6da",
+    "#bab3aa"
+   ],
+   "t": 1794617551134
+  },
+  "starter-beige-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 654,
+    "w": 466,
+    "h": 962
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5baa5",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d5baa5",
+    "#a68a78"
+   ],
+   "t": 1794617555859
+  },
+  "starter-camel-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 564,
+    "w": 450,
+    "h": 1142
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b67b55",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b67b55",
+    "#774937",
+    "#d3b989"
+   ],
+   "t": 1794617560515
+  },
+  "starter-tan-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 618,
+    "w": 462,
+    "h": 1088
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a7876a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a7876a"
+   ],
+   "t": 1794617564234
+  },
+  "starter-chocolate-brown-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 646,
+    "w": 456,
+    "h": 1002
+   },
+   "v": 5,
+   "color": {
+    "hex": "#462925",
+    "name": "Brown"
+   },
+   "colors": [
+    "#462925",
+    "#190c09"
+   ],
+   "t": 1794617568009
+  },
+  "starter-taupe-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 648,
+    "w": 458,
+    "h": 1012
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8a7873",
+    "name": "Grey"
+   },
+   "colors": [
+    "#8a7873"
+   ],
+   "t": 1794617571493
+  },
+  "starter-grey-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 648,
+    "w": 458,
+    "h": 952
+   },
+   "v": 5,
+   "color": {
+    "hex": "#787b83",
+    "name": "Grey"
+   },
+   "colors": [
+    "#787b83"
+   ],
+   "t": 1794617574844
+  },
+  "starter-charcoal-grey-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 648,
+    "w": 444,
+    "h": 940
+   },
+   "v": 5,
+   "color": {
+    "hex": "#494a53",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#494a53",
+    "#24252c"
+   ],
+   "t": 1794617578697
+  },
+  "starter-navy-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 648,
+    "w": 466,
+    "h": 982
+   },
+   "v": 5,
+   "color": {
+    "hex": "#141746",
+    "name": "Navy"
+   },
+   "colors": [
+    "#141746",
+    "#05031a"
+   ],
+   "t": 1794617581997
+  },
+  "starter-olive-cigarette-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 654,
+    "w": 458,
+    "h": 972
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b5439",
+    "name": "Olive"
+   },
+   "colors": [
+    "#4b5439",
+    "#242b19"
+   ],
+   "t": 1794617585372
+  },
+  "starter-white-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 662,
+    "w": 502,
+    "h": 1044
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8eaf2",
+    "name": "White"
+   },
+   "colors": [
+    "#e8eaf2",
+    "#b6bbc9"
+   ],
+   "t": 1794617589015
+  },
+  "starter-olive-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 646,
+    "w": 548,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#68734b",
+    "name": "Olive"
+   },
+   "colors": [
+    "#68734b",
+    "#434c2b"
+   ],
+   "t": 1794617600675
+  },
+  "starter-sage-green-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 658,
+    "w": 532,
+    "h": 1048
+   },
+   "v": 5,
+   "color": {
+    "hex": "#769a88",
+    "name": "Sage"
+   },
+   "colors": [
+    "#769a88",
+    "#47695a"
+   ],
+   "t": 1794617604429
+  },
+  "starter-chocolate-brown-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 644,
+    "w": 506,
+    "h": 1000
+   },
+   "v": 5,
+   "color": {
+    "hex": "#371713",
+    "name": "Black"
+   },
+   "colors": [
+    "#371713",
+    "#0c0402"
+   ],
+   "t": 1794617607621
+  },
+  "starter-black-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 614,
+    "w": 544,
+    "h": 1092
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0b0b09",
+    "name": "Black"
+   },
+   "colors": [
+    "#0b0b09"
+   ],
+   "t": 1794617611124
+  },
+  "starter-navy-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 142,
+    "y": 640,
+    "w": 536,
+    "h": 1066
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0b1546",
+    "name": "Navy"
+   },
+   "colors": [
+    "#0b1546",
+    "#070927"
+   ],
+   "t": 1794617615315
+  },
+  "starter-light-blue-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 642,
+    "w": 560,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a7d6f7",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#a7d6f7",
+    "#669ac8"
+   ],
+   "t": 1794617620094
+  },
+  "starter-oatmeal-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 664,
+    "w": 510,
+    "h": 1042
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d3bca4",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d3bca4",
+    "#aa8b74",
+    "#7a5a46"
+   ],
+   "t": 1794617623034
+  },
+  "starter-stone-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 156,
+    "y": 658,
+    "w": 588,
+    "h": 1048
+   },
+   "v": 5,
+   "color": {
+    "hex": "#989797",
+    "name": "Grey"
+   },
+   "colors": [
+    "#989797",
+    "#585658"
+   ],
+   "t": 1794617628209
+  },
+  "starter-espresso-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 158,
+    "y": 656,
+    "w": 550,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#493416",
+    "name": "Brown"
+   },
+   "colors": [
+    "#493416"
+   ],
+   "t": 1794617630886
+  },
+  "starter-mocha-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 656,
+    "w": 498,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#55362b",
+    "name": "Brown"
+   },
+   "colors": [
+    "#55362b",
+    "#2a140c"
+   ],
+   "t": 1794617634355
+  },
+  "starter-black-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 644,
+    "w": 528,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#090a0a",
+    "name": "Black"
+   },
+   "colors": [
+    "#090a0a"
+   ],
+   "t": 1794617640758
+  },
+  "starter-beige-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 650,
+    "w": 502,
+    "h": 1056
+   },
+   "v": 5,
+   "color": {
+    "hex": "#bba596",
+    "name": "Beige"
+   },
+   "colors": [
+    "#bba596",
+    "#94796b"
+   ],
+   "t": 1794617646773
+  },
+  "starter-chocolate-brown-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 652,
+    "w": 502,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2c1612",
+    "name": "Black"
+   },
+   "colors": [
+    "#2c1612"
+   ],
+   "t": 1794617649734
+  },
+  "starter-olive-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 650,
+    "w": 524,
+    "h": 1038
+   },
+   "v": 5,
+   "color": {
+    "hex": "#565b33",
+    "name": "Olive"
+   },
+   "colors": [
+    "#565b33",
+    "#23270d"
+   ],
+   "t": 1794617652767
+  },
+  "starter-navy-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 640,
+    "w": 498,
+    "h": 1066
+   },
+   "v": 5,
+   "color": {
+    "hex": "#151945",
+    "name": "Navy"
+   },
+   "colors": [
+    "#151945"
+   ],
+   "t": 1794617656753
+  },
+  "starter-blush-pink-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 620,
+    "w": 488,
+    "h": 1084
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e4a8b7",
+    "name": "Pink"
+   },
+   "colors": [
+    "#e4a8b7",
+    "#986786",
+    "#b9647a"
+   ],
+   "t": 1794617661653
+  },
+  "starter-sage-green-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 666,
+    "w": 520,
+    "h": 1036
+   },
+   "v": 5,
+   "color": {
+    "hex": "#79947b",
+    "name": "Sage"
+   },
+   "colors": [
+    "#79947b",
+    "#5a6a55"
+   ],
+   "t": 1794617664719
+  },
+  "starter-oatmeal-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 650,
+    "w": 508,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b7967a",
+    "name": "Camel"
+   },
+   "colors": [
+    "#b7967a",
+    "#876a56",
+    "#e5c5a7"
+   ],
+   "t": 1794617668735
+  },
+  "starter-espresso-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 648,
+    "w": 522,
+    "h": 1058
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3b220e",
+    "name": "Brown"
+   },
+   "colors": [
+    "#3b220e",
+    "#170401"
+   ],
+   "t": 1794617675674
+  },
+  "starter-chocolate-brown-scoop-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 300,
+    "w": 478,
+    "h": 478
+   },
+   "v": 5,
+   "color": {
+    "hex": "#48271c",
+    "name": "Brown"
+   },
+   "colors": [
+    "#48271c"
+   ],
+   "t": 1794639647138
+  },
+  "starter-lavender-long-sleeve-scoop-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 142,
+    "y": 302,
+    "w": 608,
+    "h": 672
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a98be7",
+    "name": "Purple"
+   },
+   "colors": [
+    "#a98be7",
+    "#9479b9"
+   ],
+   "t": 1794639673708
+  },
+  "starter-light-blue-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 636,
+    "w": 478,
+    "h": 402
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b7cbe4",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#b7cbe4",
+    "#869bb9"
+   ],
+   "t": 1794639682011
+  },
+  "starter-navy-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 152,
+    "y": 622,
+    "w": 606,
+    "h": 798
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c1649",
+    "name": "Navy"
+   },
+   "colors": [
+    "#0c1649",
+    "#0a0b28",
+    "#020107"
+   ],
+   "t": 1794639684841
+  },
+  "starter-grey-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 652,
+    "w": 436,
+    "h": 980
+   },
+   "v": 5,
+   "color": {
+    "hex": "#64676a",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#64676a",
+    "#38393a"
+   ],
+   "t": 1794639689840
+  },
+  "starter-charcoal-grey-tailored-slacks": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 662,
+    "w": 438,
+    "h": 974
+   },
+   "v": 5,
+   "color": {
+    "hex": "#454649",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#454649"
+   ],
+   "t": 1794639693371
+  },
+  "starter-white-pleated-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 660,
+    "w": 514,
+    "h": 1002
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6e7ea",
+    "name": "White"
+   },
+   "colors": [
+    "#e6e7ea",
+    "#b5bac9"
+   ],
+   "t": 1794639701010
+  },
+  "starter-grey-straight-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 654,
+    "w": 446,
+    "h": 956
+   },
+   "v": 5,
+   "color": {
+    "hex": "#76767a",
+    "name": "Grey"
+   },
+   "colors": [
+    "#76767a",
+    "#a6a5a9",
+    "#45474b"
+   ],
+   "t": 1794639705343
+  },
+  "starter-white-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 160,
+    "y": 638,
+    "w": 574,
+    "h": 838
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fbfcfc",
+    "name": "White"
+   },
+   "colors": [
+    "#fbfcfc",
+    "#cbcac7"
+   ],
+   "t": 1794639709637
+  },
+  "starter-navy-satin-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 640,
+    "w": 538,
+    "h": 804
+   },
+   "v": 5,
+   "color": {
+    "hex": "#181439",
+    "name": "Navy"
+   },
+   "colors": [
+    "#181439",
+    "#2c3575",
+    "#090519"
+   ],
+   "t": 1794639714660
+  },
+  "starter-beige-wide-leg-linen-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 646,
+    "w": 534,
+    "h": 1038
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d4caba",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d4caba",
+    "#a69789"
+   ],
+   "t": 1794639734284
+  },
+  "starter-stone-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 652,
+    "w": 522,
+    "h": 1032
+   },
+   "v": 5,
+   "color": {
+    "hex": "#797976",
+    "name": "Grey"
+   },
+   "colors": [
+    "#797976",
+    "#494947"
+   ],
+   "t": 1794639746217
+  },
+  "starter-mocha-palazzo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 162,
+    "y": 652,
+    "w": 550,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#452d26",
+    "name": "Brown"
+   },
+   "colors": [
+    "#452d26"
+   ],
+   "t": 1794639749423
+  },
+  "starter-light-wash-barrel-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 648,
+    "w": 478,
+    "h": 1012
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97a9ca",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#97a9ca",
+    "#776885",
+    "#6c84b4"
+   ],
+   "t": 1794639756270
+  },
+  "starter-medium-wash-barrel-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 638,
+    "w": 458,
+    "h": 928
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2a4685",
+    "name": "Denim"
+   },
+   "colors": [
+    "#2a4685",
+    "#5879b7",
+    "#26365a"
+   ],
+   "t": 1794639759677
+  },
+  "starter-dark-wash-barrel-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 652,
+    "w": 478,
+    "h": 1002
+   },
+   "v": 5,
+   "color": {
+    "hex": "#191429",
+    "name": "Navy"
+   },
+   "colors": [
+    "#191429",
+    "#3a3555"
+   ],
+   "t": 1794639763136
+  },
+  "starter-black-denim-barrel-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 642,
+    "w": 470,
+    "h": 950
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c080d",
+    "name": "Black"
+   },
+   "colors": [
+    "#0c080d"
+   ],
+   "t": 1794639766876
+  },
+  "starter-medium-wash-wide-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 644,
+    "w": 512,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#273769",
+    "name": "Navy"
+   },
+   "colors": [
+    "#273769",
+    "#576698",
+    "#1a143a"
+   ],
+   "t": 1794639776487
+  },
+  "starter-black-denim-wide-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 168,
+    "y": 644,
+    "w": 542,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0b0b0a",
+    "name": "Black"
+   },
+   "colors": [
+    "#0b0b0a"
+   ],
+   "t": 1794639779325
+  },
+  "starter-white-denim-wide-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 640,
+    "w": 510,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ece8f3",
+    "name": "White"
+   },
+   "colors": [
+    "#ece8f3",
+    "#dab9d7"
+   ],
+   "t": 1794639782502
+  },
+  "starter-ecru-denim-wide-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 644,
+    "w": 550,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8d9c4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e8d9c4",
+    "#c4aa98"
+   ],
+   "t": 1794639785832
+  },
+  "starter-light-wash-bootcut-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 646,
+    "w": 450,
+    "h": 926
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c6d8eb",
+    "name": "Silver"
+   },
+   "colors": [
+    "#c6d8eb",
+    "#96b5db",
+    "#898699"
+   ],
+   "t": 1794639789957
+  },
+  "starter-medium-wash-bootcut-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 654,
+    "w": 490,
+    "h": 1018
+   },
+   "v": 5,
+   "color": {
+    "hex": "#264878",
+    "name": "Denim"
+   },
+   "colors": [
+    "#264878",
+    "#5879a7",
+    "#18264a",
+    "#88a5c8"
+   ],
+   "t": 1794639793307
+  },
+  "starter-dark-wash-bootcut-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 638,
+    "w": 458,
+    "h": 1030
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060518",
+    "name": "Black"
+   },
+   "colors": [
+    "#060518",
+    "#252849"
+   ],
+   "t": 1794639796756
+  },
+  "starter-black-denim-bootcut-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 642,
+    "w": 462,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080507",
+    "name": "Black"
+   },
+   "colors": [
+    "#080507"
+   ],
+   "t": 1794639809074
+  },
+  "starter-light-wash-skinny-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 634,
+    "w": 456,
+    "h": 964
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a9c4d9",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#a9c4d9",
+    "#8896b9",
+    "#866788"
+   ],
+   "t": 1794639819319
+  },
+  "starter-medium-wash-skinny-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 646,
+    "w": 446,
+    "h": 972
+   },
+   "v": 5,
+   "color": {
+    "hex": "#243b77",
+    "name": "Navy"
+   },
+   "colors": [
+    "#243b77",
+    "#5876a8",
+    "#181949",
+    "#374769"
+   ],
+   "t": 1794639823787
+  },
+  "starter-dark-wash-skinny-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 640,
+    "w": 454,
+    "h": 986
+   },
+   "v": 5,
+   "color": {
+    "hex": "#191726",
+    "name": "Black"
+   },
+   "colors": [
+    "#191726",
+    "#383756"
+   ],
+   "t": 1794639827325
+  },
+  "starter-black-denim-skinny-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 636,
+    "w": 462,
+    "h": 994
+   },
+   "v": 5,
+   "color": {
+    "hex": "#070707",
+    "name": "Black"
+   },
+   "colors": [
+    "#070707"
+   ],
+   "t": 1794639830661
+  },
+  "starter-white-denim-skinny-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 638,
+    "w": 464,
+    "h": 974
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f7f8",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f7f8",
+    "#c7c8cb"
+   ],
+   "t": 1794639834284
+  },
+  "starter-ecru-denim-skinny-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 232,
+    "y": 642,
+    "w": 446,
+    "h": 950
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d8c9b6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d8c9b6",
+    "#b99a85"
+   ],
+   "t": 1794639837495
+  },
+  "starter-light-wash-mom-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 642,
+    "w": 448,
+    "h": 1016
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b8c9e5",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#b8c9e5",
+    "#8799c8",
+    "#6a5789"
+   ],
+   "t": 1794639841227
+  },
+  "starter-medium-wash-mom-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 640,
+    "w": 456,
+    "h": 1028
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2866a7",
+    "name": "Denim"
+   },
+   "colors": [
+    "#2866a7",
+    "#638cc6",
+    "#183768",
+    "#385677"
+   ],
+   "t": 1794639845447
+  },
+  "starter-dark-wash-mom-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 630,
+    "w": 458,
+    "h": 1036
+   },
+   "v": 5,
+   "color": {
+    "hex": "#181528",
+    "name": "Black"
+   },
+   "colors": [
+    "#181528",
+    "#3a3755"
+   ],
+   "t": 1794639849061
+  },
+  "starter-black-denim-mom-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 638,
+    "w": 468,
+    "h": 1018
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060507",
+    "name": "Black"
+   },
+   "colors": [
+    "#060507"
+   ],
+   "t": 1794639852542
+  },
+  "starter-white-denim-mom-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 642,
+    "w": 468,
+    "h": 1000
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f6f8",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f6f8",
+    "#c8b8b8"
+   ],
+   "t": 1794639855612
+  },
+  "starter-charcoal-grey-scoop-neck-tee": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 302,
+    "w": 498,
+    "h": 470
+   },
+   "v": 5,
+   "color": {
+    "hex": "#46454b",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#46454b"
+   ],
+   "t": 1794703682761
+  },
+  "starter-ecru-denim-mom-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 632,
+    "w": 472,
+    "h": 1016
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e3d9cc",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e3d9cc",
+    "#b79a94"
+   ],
+   "t": 1794703698101
+  },
+  "starter-khaki-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 672,
+    "w": 500,
+    "h": 998
+   },
+   "v": 5,
+   "color": {
+    "hex": "#979878",
+    "name": "Sage"
+   },
+   "colors": [
+    "#979878",
+    "#575a46",
+    "#28291a"
+   ],
+   "t": 1794703701468
+  },
+  "starter-beige-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 666,
+    "w": 480,
+    "h": 1002
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c9b9a7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c9b9a7",
+    "#9a8a78"
+   ],
+   "t": 1794703704743
+  },
+  "starter-chocolate-brown-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 680,
+    "w": 506,
+    "h": 974
+   },
+   "v": 5,
+   "color": {
+    "hex": "#583634",
+    "name": "Brown"
+   },
+   "colors": [
+    "#583634",
+    "#2a1816"
+   ],
+   "t": 1794703711519
+  },
+  "starter-grey-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 666,
+    "w": 490,
+    "h": 990
+   },
+   "v": 5,
+   "color": {
+    "hex": "#84888b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#84888b",
+    "#54585b",
+    "#2d3237"
+   ],
+   "t": 1794703714994
+  },
+  "starter-oatmeal-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 670,
+    "w": 474,
+    "h": 972
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d7c7b7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d7c7b7",
+    "#998977"
+   ],
+   "t": 1794703719095
+  },
+  "starter-stone-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 676,
+    "w": 482,
+    "h": 972
+   },
+   "v": 5,
+   "color": {
+    "hex": "#787878",
+    "name": "Grey"
+   },
+   "colors": [
+    "#787878",
+    "#a8a7a6",
+    "#484848"
+   ],
+   "t": 1794703724676
+  },
+  "starter-mocha-cargo-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 676,
+    "w": 488,
+    "h": 944
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4a3733",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#4a3733",
+    "#1c1914"
+   ],
+   "t": 1794703735519
+  },
+  "starter-black-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 662,
+    "w": 462,
+    "h": 942
+   },
+   "v": 5,
+   "color": {
+    "hex": "#09090a",
+    "name": "Black"
+   },
+   "colors": [
+    "#09090a"
+   ],
+   "t": 1794703743608
+  },
+  "starter-chocolate-brown-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 654,
+    "w": 460,
+    "h": 948
+   },
+   "v": 5,
+   "color": {
+    "hex": "#381916",
+    "name": "Black"
+   },
+   "colors": [
+    "#381916",
+    "#090100"
+   ],
+   "t": 1794703750673
+  },
+  "starter-navy-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 670,
+    "w": 480,
+    "h": 964
+   },
+   "v": 5,
+   "color": {
+    "hex": "#12133a",
+    "name": "Navy"
+   },
+   "colors": [
+    "#12133a",
+    "#06041a"
+   ],
+   "t": 1794703754056
+  },
+  "starter-olive-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 668,
+    "w": 460,
+    "h": 972
+   },
+   "v": 5,
+   "color": {
+    "hex": "#444b2a",
+    "name": "Olive"
+   },
+   "colors": [
+    "#444b2a",
+    "#6b7349",
+    "#151a06"
+   ],
+   "t": 1794703757819
+  },
+  "starter-sage-green-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 674,
+    "w": 466,
+    "h": 926
+   },
+   "v": 5,
+   "color": {
+    "hex": "#85aa95",
+    "name": "Sage"
+   },
+   "colors": [
+    "#85aa95",
+    "#587866"
+   ],
+   "t": 1794703761041
+  },
+  "starter-oatmeal-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 230,
+    "y": 566,
+    "w": 452,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e4dcd3",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e4dcd3",
+    "#a69689",
+    "#e9b897"
+   ],
+   "t": 1794703765193
+  },
+  "starter-espresso-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 664,
+    "w": 458,
+    "h": 980
+   },
+   "v": 5,
+   "color": {
+    "hex": "#372619",
+    "name": "Black"
+   },
+   "colors": [
+    "#372619"
+   ],
+   "t": 1794703772963
+  },
+  "starter-mocha-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 682,
+    "w": 462,
+    "h": 1018
+   },
+   "v": 5,
+   "color": {
+    "hex": "#492826",
+    "name": "Brown"
+   },
+   "colors": [
+    "#492826",
+    "#754945",
+    "#170c08"
+   ],
+   "t": 1794703775723
+  },
+  "starter-chocolate-brown-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 650,
+    "w": 450,
+    "h": 992
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472419",
+    "name": "Brown"
+   },
+   "colors": [
+    "#472419",
+    "#684a45",
+    "#1a0b05"
+   ],
+   "t": 1794703790779
+  },
+  "starter-burgundy-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 648,
+    "w": 446,
+    "h": 1058
+   },
+   "v": 5,
+   "color": {
+    "hex": "#57041b",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#57041b",
+    "#290107",
+    "#7a3845"
+   ],
+   "t": 1794703794229
+  },
+  "starter-olive-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 662,
+    "w": 452,
+    "h": 980
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5c643a",
+    "name": "Olive"
+   },
+   "colors": [
+    "#5c643a",
+    "#353b1b"
+   ],
+   "t": 1794703801131
+  },
+  "starter-tan-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 654,
+    "w": 448,
+    "h": 1012
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a88465",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a88465",
+    "#795a45"
+   ],
+   "t": 1794703805281
+  },
+  "starter-oatmeal-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 642,
+    "w": 456,
+    "h": 996
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ba9469",
+    "name": "Camel"
+   },
+   "colors": [
+    "#ba9469",
+    "#896749"
+   ],
+   "t": 1794703808756
+  },
+  "starter-espresso-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 662,
+    "w": 436,
+    "h": 962
+   },
+   "v": 5,
+   "color": {
+    "hex": "#28160b",
+    "name": "Black"
+   },
+   "colors": [
+    "#28160b",
+    "#4b3a33"
+   ],
+   "t": 1794703814607
+  },
+  "starter-mocha-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 232,
+    "y": 646,
+    "w": 438,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#392325",
+    "name": "Black"
+   },
+   "colors": [
+    "#392325",
+    "#644b48"
+   ],
+   "t": 1794703818283
+  },
+  "starter-black-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 644,
+    "w": 528,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#020201",
+    "name": "Black"
+   },
+   "colors": [
+    "#020201",
+    "#363736"
+   ],
+   "t": 1794703825881
+  },
+  "starter-champagne-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 620,
+    "w": 500,
+    "h": 1086
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ab9596",
+    "name": "Grey"
+   },
+   "colors": [
+    "#ab9596",
+    "#fdfbf5",
+    "#d7c5ba",
+    "#87686a"
+   ],
+   "t": 1794703829273
+  },
+  "starter-ivory-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 654,
+    "w": 520,
+    "h": 1044
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d9d4bb",
+    "name": "Cream"
+   },
+   "colors": [
+    "#d9d4bb",
+    "#fcfcf5"
+   ],
+   "t": 1794703833745
+  },
+  "starter-chocolate-brown-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 624,
+    "w": 542,
+    "h": 1082
+   },
+   "v": 5,
+   "color": {
+    "hex": "#170b0c",
+    "name": "Black"
+   },
+   "colors": [
+    "#170b0c",
+    "#482a24",
+    "#95675b"
+   ],
+   "t": 1794703837831
+  },
+  "starter-emerald-green-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 172,
+    "y": 636,
+    "w": 540,
+    "h": 1070
+   },
+   "v": 5,
+   "color": {
+    "hex": "#003701",
+    "name": "Olive"
+   },
+   "colors": [
+    "#003701",
+    "#005609",
+    "#078835"
+   ],
+   "t": 1794703841909
+  },
+  "starter-navy-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 644,
+    "w": 500,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#070328",
+    "name": "Navy"
+   },
+   "colors": [
+    "#070328",
+    "#070c45",
+    "#02000b"
+   ],
+   "t": 1794703845791
+  },
+  "starter-oatmeal-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 148,
+    "y": 650,
+    "w": 570,
+    "h": 1056
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a68878",
+    "name": "Grey"
+   },
+   "colors": [
+    "#a68878",
+    "#79646a",
+    "#e8d4bb"
+   ],
+   "t": 1794703849020
+  },
+  "starter-stone-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 644,
+    "w": 544,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#5a545b",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#5a545b",
+    "#aba3a9",
+    "#29252b"
+   ],
+   "t": 1794703852809
+  },
+  "starter-espresso-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 160,
+    "y": 636,
+    "w": 556,
+    "h": 1070
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0a0000",
+    "name": "Black"
+   },
+   "colors": [
+    "#0a0000",
+    "#37160b"
+   ],
+   "t": 1794703856606
+  },
+  "starter-mocha-satin-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 658,
+    "w": 502,
+    "h": 1048
+   },
+   "v": 5,
+   "color": {
+    "hex": "#271415",
+    "name": "Black"
+   },
+   "colors": [
+    "#271415",
+    "#593735"
+   ],
+   "t": 1794703860081
+  },
+  "starter-black-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 164,
+    "y": 666,
+    "w": 560,
+    "h": 1040
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080807",
+    "name": "Black"
+   },
+   "colors": [
+    "#080807"
+   ],
+   "t": 1794703868068
+  },
+  "starter-white-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 162,
+    "y": 662,
+    "w": 530,
+    "h": 1040
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6f8fb",
+    "name": "White"
+   },
+   "colors": [
+    "#f6f8fb"
+   ],
+   "t": 1794703870996
+  },
+  "starter-cream-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 630,
+    "w": 506,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dbd4c8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#dbd4c8",
+    "#a9a4a5"
+   ],
+   "t": 1794703874423
+  },
+  "starter-beige-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 174,
+    "y": 648,
+    "w": 526,
+    "h": 1058
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c8b7a5",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c8b7a5",
+    "#97877a"
+   ],
+   "t": 1794703877450
+  },
+  "starter-camel-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 658,
+    "w": 514,
+    "h": 1048
+   },
+   "v": 5,
+   "color": {
+    "hex": "#995c33",
+    "name": "Rust"
+   },
+   "colors": [
+    "#995c33"
+   ],
+   "t": 1794703880965
+  },
+  "starter-chocolate-brown-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 160,
+    "y": 642,
+    "w": 574,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#341d18",
+    "name": "Black"
+   },
+   "colors": [
+    "#341d18"
+   ],
+   "t": 1794703883712
+  },
+  "starter-navy-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 656,
+    "w": 516,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c0929",
+    "name": "Navy"
+   },
+   "colors": [
+    "#0c0929",
+    "#02010a"
+   ],
+   "t": 1794703891314
+  },
+  "starter-olive-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 650,
+    "w": 500,
+    "h": 1056
+   },
+   "v": 5,
+   "color": {
+    "hex": "#656b43",
+    "name": "Olive"
+   },
+   "colors": [
+    "#656b43",
+    "#242814"
+   ],
+   "t": 1794703895211
+  },
+  "starter-mocha-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 668,
+    "w": 526,
+    "h": 1028
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b3327",
+    "name": "Brown"
+   },
+   "colors": [
+    "#4b3327"
+   ],
+   "t": 1794703898464
+  },
+  "starter-oatmeal-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 150,
+    "y": 634,
+    "w": 560,
+    "h": 1072
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c8a995",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c8a995",
+    "#977a65"
+   ],
+   "t": 1794703901976
+  },
+  "starter-espresso-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 666,
+    "w": 518,
+    "h": 1040
+   },
+   "v": 5,
+   "color": {
+    "hex": "#37251c",
+    "name": "Black"
+   },
+   "colors": [
+    "#37251c"
+   ],
+   "t": 1794703909548
+  },
+  "starter-grey-pinstripe-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 662,
+    "w": 504,
+    "h": 1036
+   },
+   "v": 5,
+   "color": {
+    "hex": "#555b64",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#555b64",
+    "#2d3239",
+    "#858b93"
+   ],
+   "t": 1794703919027
+  },
+  "starter-navy-pinstripe-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 622,
+    "w": 458,
+    "h": 1084
+   },
+   "v": 5,
+   "color": {
+    "hex": "#141439",
+    "name": "Navy"
+   },
+   "colors": [
+    "#141439",
+    "#080518"
+   ],
+   "t": 1794703923671
+  },
+  "starter-black-pinstripe-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 640,
+    "w": 530,
+    "h": 1066
+   },
+   "v": 5,
+   "color": {
+    "hex": "#15171a",
+    "name": "Black"
+   },
+   "colors": [
+    "#15171a"
+   ],
+   "t": 1794703930874
+  },
+  "starter-chocolate-brown-pinstripe-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 650,
+    "w": 498,
+    "h": 1056
+   },
+   "v": 5,
+   "color": {
+    "hex": "#352629",
+    "name": "Black"
+   },
+   "colors": [
+    "#352629",
+    "#0b0a09"
+   ],
+   "t": 1794703934435
+  },
+  "starter-cream-pinstripe-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 648,
+    "w": 484,
+    "h": 1020
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d7d6c8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#d7d6c8",
+    "#a6a59a"
+   ],
+   "t": 1794703937716
+  },
+  "starter-black-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 654,
+    "w": 504,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060608",
+    "name": "Black"
+   },
+   "colors": [
+    "#060608"
+   ],
+   "t": 1794703940534
+  },
+  "starter-grey-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 632,
+    "w": 538,
+    "h": 1074
+   },
+   "v": 5,
+   "color": {
+    "hex": "#868689",
+    "name": "Grey"
+   },
+   "colors": [
+    "#868689",
+    "#585857"
+   ],
+   "t": 1794703944317
+  },
+  "starter-chocolate-brown-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 660,
+    "w": 530,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4c3327",
+    "name": "Brown"
+   },
+   "colors": [
+    "#4c3327",
+    "#1b0c04"
+   ],
+   "t": 1794703948070
+  },
+  "starter-navy-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 656,
+    "w": 526,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#05184a",
+    "name": "Navy"
+   },
+   "colors": [
+    "#05184a",
+    "#050a28"
+   ],
+   "t": 1794703950785
+  },
+  "starter-olive-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 662,
+    "w": 552,
+    "h": 1044
+   },
+   "v": 5,
+   "color": {
+    "hex": "#58633c",
+    "name": "Olive"
+   },
+   "colors": [
+    "#58633c",
+    "#1b2617"
+   ],
+   "t": 1794703954526
+  },
+  "starter-beige-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 648,
+    "w": 504,
+    "h": 1058
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b9a695",
+    "name": "Beige"
+   },
+   "colors": [
+    "#b9a695",
+    "#867b77"
+   ],
+   "t": 1794703957822
+  },
+  "starter-oatmeal-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 656,
+    "w": 534,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b8a696",
+    "name": "Grey"
+   },
+   "colors": [
+    "#b8a696",
+    "#897869"
+   ],
+   "t": 1794703961632
+  },
+  "starter-espresso-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 654,
+    "w": 518,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#47271a",
+    "name": "Brown"
+   },
+   "colors": [
+    "#47271a",
+    "#260a07"
+   ],
+   "t": 1794703968087
+  },
+  "starter-mocha-flare-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 646,
+    "w": 516,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4c3227",
+    "name": "Brown"
+   },
+   "colors": [
+    "#4c3227"
+   ],
+   "t": 1794703970912
+  },
+  "starter-grey-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 650,
+    "w": 448,
+    "h": 402
+   },
+   "v": 5,
+   "color": {
+    "hex": "#696b76",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#696b76",
+    "#484648"
+   ],
+   "t": 1794703977118
+  },
+  "starter-navy-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 664,
+    "w": 450,
+    "h": 404
+   },
+   "v": 5,
+   "color": {
+    "hex": "#16194b",
+    "name": "Navy"
+   },
+   "colors": [
+    "#16194b",
+    "#050728",
+    "#000004"
+   ],
+   "t": 1794703986736
+  },
+  "starter-olive-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 658,
+    "w": 450,
+    "h": 370
+   },
+   "v": 5,
+   "color": {
+    "hex": "#767b49",
+    "name": "Olive"
+   },
+   "colors": [
+    "#767b49"
+   ],
+   "t": 1794703990281
+  },
+  "starter-white-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 720,
+    "w": 454,
+    "h": 318
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4f5f5",
+    "name": "White"
+   },
+   "colors": [
+    "#f4f5f5",
+    "#aeaba5"
+   ],
+   "t": 1794703993582
+  },
+  "starter-espresso-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 648,
+    "w": 442,
+    "h": 408
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573b28",
+    "name": "Brown"
+   },
+   "colors": [
+    "#573b28",
+    "#271908"
+   ],
+   "t": 1794704004035
+  },
+  "starter-mocha-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 628,
+    "w": 456,
+    "h": 402
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573839",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#573839"
+   ],
+   "t": 1794704007430
+  },
+  "starter-light-wash-denim-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 642,
+    "w": 456,
+    "h": 378
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c8d8e8",
+    "name": "Silver"
+   },
+   "colors": [
+    "#c8d8e8",
+    "#96b8d8",
+    "#6787a9"
+   ],
+   "t": 1794704014653
+  },
+  "starter-medium-wash-denim-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 628,
+    "w": 468,
+    "h": 390
+   },
+   "v": 5,
+   "color": {
+    "hex": "#264a86",
+    "name": "Denim"
+   },
+   "colors": [
+    "#264a86",
+    "#5778a9",
+    "#8699b8",
+    "#374968",
+    "#152648"
+   ],
+   "t": 1794704018374
+  },
+  "starter-black-denim-denim-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 636,
+    "w": 472,
+    "h": 404
+   },
+   "v": 5,
+   "color": {
+    "hex": "#050505",
+    "name": "Black"
+   },
+   "colors": [
+    "#050505"
+   ],
+   "t": 1794704021608
+  },
+  "starter-white-denim-denim-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 640,
+    "w": 472,
+    "h": 386
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8eaf5",
+    "name": "White"
+   },
+   "colors": [
+    "#e8eaf5",
+    "#b9bbc6"
+   ],
+   "t": 1794704025132
+  },
+  "starter-olive-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 654,
+    "w": 490,
+    "h": 412
+   },
+   "v": 5,
+   "color": {
+    "hex": "#757c53",
+    "name": "Olive"
+   },
+   "colors": [
+    "#757c53",
+    "#46492b"
+   ],
+   "t": 1794704035132
+  },
+  "starter-black-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 668,
+    "w": 492,
+    "h": 414
+   },
+   "v": 5,
+   "color": {
+    "hex": "#17161b",
+    "name": "Black"
+   },
+   "colors": [
+    "#17161b"
+   ],
+   "t": 1794704038696
+  },
+  "starter-sage-green-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 666,
+    "w": 496,
+    "h": 380
+   },
+   "v": 5,
+   "color": {
+    "hex": "#86b5ab",
+    "name": "Sage"
+   },
+   "colors": [
+    "#86b5ab",
+    "#758b85"
+   ],
+   "t": 1794704041726
+  },
+  "starter-stone-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 648,
+    "w": 498,
+    "h": 406
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a4a6ab",
+    "name": "Grey"
+   },
+   "colors": [
+    "#a4a6ab",
+    "#787c83",
+    "#47464a"
+   ],
+   "t": 1794704051003
+  },
+  "starter-espresso-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 650,
+    "w": 466,
+    "h": 376
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573923",
+    "name": "Brown"
+   },
+   "colors": [
+    "#573923",
+    "#2a1504"
+   ],
+   "t": 1794704055265
+  },
+  "starter-black-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 646,
+    "w": 474,
+    "h": 398
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080809",
+    "name": "Black"
+   },
+   "colors": [
+    "#080809"
+   ],
+   "t": 1794704066658
+  },
+  "starter-white-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 632,
+    "w": 474,
+    "h": 396
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f5f5",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f5f5",
+    "#b8b8b8"
+   ],
+   "t": 1794704070352
+  },
+  "starter-white-denim-barrel-leg-jeans": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 652,
+    "w": 464,
+    "h": 964
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e8ea",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e8ea",
+    "#c4b6bc"
+   ],
+   "t": 1794726662297
+  },
+  "starter-cream-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 650,
+    "w": 458,
+    "h": 952
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6dbc8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e6dbc8",
+    "#baa489"
+   ],
+   "t": 1794726687662
+  },
+  "starter-ecru-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 646,
+    "w": 454,
+    "h": 950
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dad7c4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#dad7c4",
+    "#a8a69b"
+   ],
+   "t": 1794726694583
+  },
+  "starter-black-leather-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 646,
+    "w": 452,
+    "h": 984
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080808",
+    "name": "Black"
+   },
+   "colors": [
+    "#080808"
+   ],
+   "t": 1794726698590
+  },
+  "starter-grey-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 654,
+    "w": 546,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#656b75",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#656b75",
+    "#3d434b"
+   ],
+   "t": 1794726717041
+  },
+  "starter-stone-knit-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 670,
+    "w": 608,
+    "h": 1020
+   },
+   "v": 5,
+   "color": {
+    "hex": "#73767b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#73767b",
+    "#4a4c53"
+   ],
+   "t": 1794726720680
+  },
+  "starter-chocolate-brown-bike-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 656,
+    "w": 454,
+    "h": 400
+   },
+   "v": 5,
+   "color": {
+    "hex": "#44261b",
+    "name": "Brown"
+   },
+   "colors": [
+    "#44261b",
+    "#180902"
+   ],
+   "t": 1794726734797
+  },
+  "starter-mocha-linen-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 660,
+    "w": 472,
+    "h": 382
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b3834",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#4b3834"
+   ],
+   "t": 1794726765061
+  },
+  "starter-cream-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 654,
+    "w": 464,
+    "h": 390
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3edd8",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f3edd8",
+    "#cabaa5"
+   ],
+   "t": 1794726772249
+  },
+  "starter-navy-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 646,
+    "w": 472,
+    "h": 394
+   },
+   "v": 5,
+   "color": {
+    "hex": "#13194a",
+    "name": "Navy"
+   },
+   "colors": [
+    "#13194a"
+   ],
+   "t": 1794726778029
+  },
+  "starter-olive-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 646,
+    "w": 480,
+    "h": 404
+   },
+   "v": 5,
+   "color": {
+    "hex": "#66694c",
+    "name": "Olive"
+   },
+   "colors": [
+    "#66694c",
+    "#383b25"
+   ],
+   "t": 1794726782361
+  },
+  "starter-stone-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 642,
+    "w": 466,
+    "h": 480
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a4a8ac",
+    "name": "Grey"
+   },
+   "colors": [
+    "#a4a8ac",
+    "#767c85",
+    "#584a47"
+   ],
+   "t": 1794726791074
+  },
+  "starter-espresso-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 650,
+    "w": 468,
+    "h": 394
+   },
+   "v": 5,
+   "color": {
+    "hex": "#573a28",
+    "name": "Brown"
+   },
+   "colors": [
+    "#573a28",
+    "#291508"
+   ],
+   "t": 1794726794469
+  },
+  "starter-mocha-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 648,
+    "w": 458,
+    "h": 418
+   },
+   "v": 5,
+   "color": {
+    "hex": "#583735",
+    "name": "Brown"
+   },
+   "colors": [
+    "#583735"
+   ],
+   "t": 1794726797703
+  },
+  "starter-light-wash-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 622,
+    "w": 502,
+    "h": 806
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97b9d8",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#97b9d8",
+    "#7a8796"
+   ],
+   "t": 1794726805097
+  },
+  "starter-medium-wash-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 622,
+    "w": 502,
+    "h": 752
+   },
+   "v": 5,
+   "color": {
+    "hex": "#1b4588",
+    "name": "Denim"
+   },
+   "colors": [
+    "#1b4588",
+    "#040307",
+    "#0a2459",
+    "#4377b4"
+   ],
+   "t": 1794726809015
+  },
+  "starter-dark-wash-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 640,
+    "w": 518,
+    "h": 726
+   },
+   "v": 5,
+   "color": {
+    "hex": "#283658",
+    "name": "Navy"
+   },
+   "colors": [
+    "#283658",
+    "#0d1329",
+    "#060607"
+   ],
+   "t": 1794726812679
+  },
+  "starter-black-denim-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 656,
+    "w": 496,
+    "h": 734
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171717",
+    "name": "Black"
+   },
+   "colors": [
+    "#171717"
+   ],
+   "t": 1794726815559
+  },
+  "starter-white-denim-denim-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 648,
+    "w": 452,
+    "h": 720
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8fc",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8fc"
+   ],
+   "t": 1794726820329
+  },
+  "starter-light-wash-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 636,
+    "w": 466,
+    "h": 420
+   },
+   "v": 5,
+   "color": {
+    "hex": "#99b9e8",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#99b9e8",
+    "#6988b8",
+    "#7b8a97"
+   ],
+   "t": 1794726829691
+  },
+  "starter-medium-wash-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 618,
+    "w": 464,
+    "h": 410
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2865a9",
+    "name": "Denim"
+   },
+   "colors": [
+    "#2865a9",
+    "#0a3678",
+    "#041947",
+    "#153658"
+   ],
+   "t": 1794726834520
+  },
+  "starter-dark-wash-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 658,
+    "w": 450,
+    "h": 378
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171738",
+    "name": "Navy"
+   },
+   "colors": [
+    "#171738",
+    "#474867"
+   ],
+   "t": 1794726838335
+  },
+  "starter-black-denim-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 646,
+    "w": 474,
+    "h": 398
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080808",
+    "name": "Black"
+   },
+   "colors": [
+    "#080808"
+   ],
+   "t": 1794726842482
+  },
+  "starter-white-denim-denim-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 620,
+    "w": 460,
+    "h": 410
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4f5f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f4f5f7",
+    "#a9a9a8"
+   ],
+   "t": 1794726846121
+  },
+  "starter-burgundy-leather-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 654,
+    "w": 450,
+    "h": 416
+   },
+   "v": 5,
+   "color": {
+    "hex": "#470818",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#470818",
+    "#673846",
+    "#87656b"
+   ],
+   "t": 1794726855669
+  },
+  "starter-chocolate-brown-leather-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 646,
+    "w": 484,
+    "h": 726
+   },
+   "v": 5,
+   "color": {
+    "hex": "#371c16",
+    "name": "Black"
+   },
+   "colors": [
+    "#371c16",
+    "#5c4544"
+   ],
+   "t": 1794726863875
+  },
+  "starter-ecru-bermuda-shorts": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 640,
+    "w": 460,
+    "h": 394
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ece5d4",
+    "name": "Cream"
+   },
+   "colors": [
+    "#ece5d4",
+    "#b5aa9a"
+   ],
+   "t": 1794876516571
+  },
+  "starter-cream-leather-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 246,
+    "y": 664,
+    "w": 416,
+    "h": 386
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eae7d6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#eae7d6"
+   ],
+   "t": 1794876532715
+  },
+  "starter-burgundy-leather-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 654,
+    "w": 450,
+    "h": 714
+   },
+   "v": 5,
+   "color": {
+    "hex": "#591627",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#591627",
+    "#7a4658",
+    "#997a84"
+   ],
+   "t": 1794876537679
+  },
+  "starter-olive-leather-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 646,
+    "w": 450,
+    "h": 700
+   },
+   "v": 5,
+   "color": {
+    "hex": "#59633a",
+    "name": "Olive"
+   },
+   "colors": [
+    "#59633a",
+    "#434734",
+    "#889578"
+   ],
+   "t": 1794876549313
+  },
+  "starter-black-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 156,
+    "y": 622,
+    "w": 576,
+    "h": 796
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161715",
+    "name": "Black"
+   },
+   "colors": [
+    "#161715"
+   ],
+   "t": 1794876553550
+  },
+  "starter-beige-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 624,
+    "w": 560,
+    "h": 814
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d3ba9d",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d3ba9d",
+    "#685747",
+    "#9a8773"
+   ],
+   "t": 1794876560615
+  },
+  "starter-chocolate-brown-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 122,
+    "y": 652,
+    "w": 646,
+    "h": 824
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3b2822",
+    "name": "Black"
+   },
+   "colors": [
+    "#3b2822",
+    "#080503"
+   ],
+   "t": 1794876567958
+  },
+  "starter-olive-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 104,
+    "y": 666,
+    "w": 686,
+    "h": 732
+   },
+   "v": 5,
+   "color": {
+    "hex": "#64694b",
+    "name": "Olive"
+   },
+   "colors": [
+    "#64694b",
+    "#363a27",
+    "#15170b"
+   ],
+   "t": 1794876576954
+  },
+  "starter-burgundy-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 162,
+    "y": 634,
+    "w": 572,
+    "h": 780
+   },
+   "v": 5,
+   "color": {
+    "hex": "#58122b",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#58122b",
+    "#1a0208"
+   ],
+   "t": 1794876580859
+  },
+  "starter-sage-green-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 664,
+    "w": 558,
+    "h": 740
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8aa48b",
+    "name": "Sage"
+   },
+   "colors": [
+    "#8aa48b",
+    "#576b56"
+   ],
+   "t": 1794876583872
+  },
+  "starter-blush-pink-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 640,
+    "w": 640,
+    "h": 834
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d69a9a",
+    "name": "Pink"
+   },
+   "colors": [
+    "#d69a9a",
+    "#a8656a"
+   ],
+   "t": 1794876588656
+  },
+  "starter-light-blue-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 648,
+    "w": 610,
+    "h": 784
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97c8ec",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#97c8ec",
+    "#6896c8",
+    "#3669a9"
+   ],
+   "t": 1794876591749
+  },
+  "starter-red-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 164,
+    "y": 650,
+    "w": 560,
+    "h": 782
+   },
+   "v": 5,
+   "color": {
+    "hex": "#980018",
+    "name": "Red"
+   },
+   "colors": [
+    "#980018",
+    "#68000a"
+   ],
+   "t": 1794876595241
+  },
+  "starter-mocha-pleated-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 634,
+    "w": 620,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3c2822",
+    "name": "Black"
+   },
+   "colors": [
+    "#3c2822",
+    "#130d09"
+   ],
+   "t": 1794876598686
+  },
+  "starter-black-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 654,
+    "w": 446,
+    "h": 706
+   },
+   "v": 5,
+   "color": {
+    "hex": "#121316",
+    "name": "Black"
+   },
+   "colors": [
+    "#121316"
+   ],
+   "t": 1794876601612
+  },
+  "starter-white-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 642,
+    "w": 454,
+    "h": 720
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f7f8f8",
+    "name": "White"
+   },
+   "colors": [
+    "#f7f8f8"
+   ],
+   "t": 1794876604993
+  },
+  "starter-chocolate-brown-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 668,
+    "w": 450,
+    "h": 680
+   },
+   "v": 5,
+   "color": {
+    "hex": "#432c25",
+    "name": "Black"
+   },
+   "colors": [
+    "#432c25"
+   ],
+   "t": 1794876617224
+  },
+  "starter-grey-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 234,
+    "y": 628,
+    "w": 430,
+    "h": 732
+   },
+   "v": 5,
+   "color": {
+    "hex": "#656b74",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#656b74"
+   ],
+   "t": 1794876620067
+  },
+  "starter-olive-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 656,
+    "w": 464,
+    "h": 716
+   },
+   "v": 5,
+   "color": {
+    "hex": "#565936",
+    "name": "Olive"
+   },
+   "colors": [
+    "#565936"
+   ],
+   "t": 1794876626710
+  },
+  "starter-stone-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 636,
+    "w": 454,
+    "h": 742
+   },
+   "v": 5,
+   "color": {
+    "hex": "#85888a",
+    "name": "Grey"
+   },
+   "colors": [
+    "#85888a",
+    "#56595a",
+    "#b3b7b9"
+   ],
+   "t": 1794876637045
+  },
+  "starter-espresso-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 628,
+    "w": 458,
+    "h": 696
+   },
+   "v": 5,
+   "color": {
+    "hex": "#392b22",
+    "name": "Black"
+   },
+   "colors": [
+    "#392b22"
+   ],
+   "t": 1794876641093
+  },
+  "starter-ecru-knit-midi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 660,
+    "w": 450,
+    "h": 778
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e5dac5",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e5dac5"
+   ],
+   "t": 1794876644721
+  },
+  "starter-black-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 668,
+    "w": 540,
+    "h": 1038
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080807",
+    "name": "Black"
+   },
+   "colors": [
+    "#080807"
+   ],
+   "t": 1794876647946
+  },
+  "starter-champagne-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 142,
+    "y": 618,
+    "w": 622,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c9b8a7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c9b8a7",
+    "#f7f4ea",
+    "#a88a75"
+   ],
+   "t": 1794876654233
+  },
+  "starter-chocolate-brown-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 154,
+    "y": 648,
+    "w": 598,
+    "h": 1058
+   },
+   "v": 5,
+   "color": {
+    "hex": "#281919",
+    "name": "Black"
+   },
+   "colors": [
+    "#281919",
+    "#573835"
+   ],
+   "t": 1794876658229
+  },
+  "starter-sage-green-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 148,
+    "y": 658,
+    "w": 596,
+    "h": 1036
+   },
+   "v": 5,
+   "color": {
+    "hex": "#779785",
+    "name": "Sage"
+   },
+   "colors": [
+    "#779785",
+    "#a7cab4"
+   ],
+   "t": 1794876661207
+  },
+  "starter-burgundy-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 172,
+    "y": 652,
+    "w": 592,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#580924",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#580924",
+    "#270009",
+    "#090101",
+    "#942b48"
+   ],
+   "t": 1794876666197
+  },
+  "starter-oatmeal-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 634,
+    "w": 550,
+    "h": 1072
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b7957b",
+    "name": "Camel"
+   },
+   "colors": [
+    "#b7957b",
+    "#896854",
+    "#dac4a7"
+   ],
+   "t": 1794876674723
+  },
+  "starter-stone-slip-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 628,
+    "w": 552,
+    "h": 1078
+   },
+   "v": 5,
+   "color": {
+    "hex": "#6b6369",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#6b6369",
+    "#c4babb",
+    "#958d93"
+   ],
+   "t": 1794876678122
+  },
+  "starter-white-tennis-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 666,
+    "w": 498,
+    "h": 380
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8f8f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f8f7",
+    "#c8c8c7"
+   ],
+   "t": 1794876693026
+  },
+  "starter-black-tennis-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 670,
+    "w": 530,
+    "h": 404
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161512",
+    "name": "Black"
+   },
+   "colors": [
+    "#161512"
+   ],
+   "t": 1794876696539
+  },
+  "starter-cream-tennis-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 668,
+    "w": 492,
+    "h": 370
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f7f3d7",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f7f3d7"
+   ],
+   "t": 1794876700353
+  },
+  "starter-grey-tennis-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 660,
+    "w": 512,
+    "h": 394
+   },
+   "v": 5,
+   "color": {
+    "hex": "#83848c",
+    "name": "Grey"
+   },
+   "colors": [
+    "#83848c",
+    "#5a5b65"
+   ],
+   "t": 1794876703566
+  },
+  "starter-navy-tennis-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 662,
+    "w": 530,
+    "h": 392
+   },
+   "v": 5,
+   "color": {
+    "hex": "#23265b",
+    "name": "Navy"
+   },
+   "colors": [
+    "#23265b",
+    "#12142c"
+   ],
+   "t": 1794876707224
+  },
+  "starter-black-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 230,
+    "y": 664,
+    "w": 444,
+    "h": 842
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171717",
+    "name": "Black"
+   },
+   "colors": [
+    "#171717"
+   ],
+   "t": 1794876711085
+  },
+  "starter-cream-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 628,
+    "w": 468,
+    "h": 792
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ece3cc",
+    "name": "Cream"
+   },
+   "colors": [
+    "#ece3cc",
+    "#c5b59b"
+   ],
+   "t": 1794876714522
+  },
+  "starter-olive-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 674,
+    "w": 452,
+    "h": 784
+   },
+   "v": 5,
+   "color": {
+    "hex": "#545b35",
+    "name": "Olive"
+   },
+   "colors": [
+    "#545b35",
+    "#838353",
+    "#44371b"
+   ],
+   "t": 1794876721249
+  },
+  "starter-burgundy-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 200,
+    "y": 640,
+    "w": 480,
+    "h": 788
+   },
+   "v": 5,
+   "color": {
+    "hex": "#570019",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#570019"
+   ],
+   "t": 1794876724761
+  },
+  "starter-navy-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 656,
+    "w": 450,
+    "h": 748
+   },
+   "v": 5,
+   "color": {
+    "hex": "#17184a",
+    "name": "Navy"
+   },
+   "colors": [
+    "#17184a"
+   ],
+   "t": 1794876730284
+  },
+  "starter-espresso-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 644,
+    "w": 448,
+    "h": 806
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472d2a",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#472d2a"
+   ],
+   "t": 1794876741361
+  },
+  "starter-ecru-wrap-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 662,
+    "w": 472,
+    "h": 804
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d6cab6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d6cab6"
+   ],
+   "t": 1794876747311
+  },
+  "starter-black-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 158,
+    "y": 626,
+    "w": 604,
+    "h": 1080
+   },
+   "v": 5,
+   "color": {
+    "hex": "#090907",
+    "name": "Black"
+   },
+   "colors": [
+    "#090907"
+   ],
+   "t": 1794876753997
+  },
+  "starter-white-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 154,
+    "y": 658,
+    "w": 598,
+    "h": 1034
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4f4f4",
+    "name": "White"
+   },
+   "colors": [
+    "#f4f4f4"
+   ],
+   "t": 1794876756907
+  },
+  "starter-beige-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 154,
+    "y": 632,
+    "w": 584,
+    "h": 1074
+   },
+   "v": 5,
+   "color": {
+    "hex": "#cab8a9",
+    "name": "Beige"
+   },
+   "colors": [
+    "#cab8a9"
+   ],
+   "t": 1794876763602
+  },
+  "starter-olive-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 154,
+    "y": 666,
+    "w": 584,
+    "h": 1040
+   },
+   "v": 5,
+   "color": {
+    "hex": "#6c7243",
+    "name": "Olive"
+   },
+   "colors": [
+    "#6c7243",
+    "#252a05"
+   ],
+   "t": 1794876767136
+  },
+  "starter-chocolate-brown-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 104,
+    "y": 626,
+    "w": 698,
+    "h": 1080
+   },
+   "v": 5,
+   "color": {
+    "hex": "#553829",
+    "name": "Brown"
+   },
+   "colors": [
+    "#553829",
+    "#291914"
+   ],
+   "t": 1794876770691
+  },
+  "starter-sage-green-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 176,
+    "y": 644,
+    "w": 538,
+    "h": 1052
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8ca389",
+    "name": "Sage"
+   },
+   "colors": [
+    "#8ca389"
+   ],
+   "t": 1794876774972
+  },
+  "starter-oatmeal-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 162,
+    "y": 634,
+    "w": 588,
+    "h": 1042
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c5ab8c",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c5ab8c",
+    "#8a7555"
+   ],
+   "t": 1794876777567
+  },
+  "starter-espresso-maxi-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 122,
+    "y": 642,
+    "w": 636,
+    "h": 1064
+   },
+   "v": 5,
+   "color": {
+    "hex": "#362419",
+    "name": "Black"
+   },
+   "colors": [
+    "#362419"
+   ],
+   "t": 1794876785094
+  },
+  "starter-black-tweed-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 630,
+    "w": 454,
+    "h": 462
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080608",
+    "name": "Black"
+   },
+   "colors": [
+    "#080608"
+   ],
+   "t": 1794876800769
+  },
+  "starter-cream-tweed-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 636,
+    "w": 458,
+    "h": 434
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9f5e9",
+    "name": "White"
+   },
+   "colors": [
+    "#f9f5e9"
+   ],
+   "t": 1794876804395
+  },
+  "starter-grey-tweed-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 652,
+    "w": 484,
+    "h": 432
+   },
+   "v": 5,
+   "color": {
+    "hex": "#757b86",
+    "name": "Grey"
+   },
+   "colors": [
+    "#757b86",
+    "#a4aab5",
+    "#464c57"
+   ],
+   "t": 1794876811518
+  },
+  "starter-navy-tweed-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 628,
+    "w": 448,
+    "h": 418
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0b0c46",
+    "name": "Navy"
+   },
+   "colors": [
+    "#0b0c46",
+    "#050529"
+   ],
+   "t": 1794876814407
+  },
+  "starter-burgundy-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 654,
+    "w": 454,
+    "h": 994
+   },
+   "v": 5,
+   "color": {
+    "hex": "#36001d",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#36001d",
+    "#1c010d"
+   ],
+   "t": 1794876817619
+  },
+  "starter-sage-green-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 664,
+    "w": 458,
+    "h": 976
+   },
+   "v": 5,
+   "color": {
+    "hex": "#7c9584",
+    "name": "Sage"
+   },
+   "colors": [
+    "#7c9584",
+    "#556c66"
+   ],
+   "t": 1794876821683
+  },
+  "starter-light-blue-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 656,
+    "w": 462,
+    "h": 964
+   },
+   "v": 5,
+   "color": {
+    "hex": "#86b8fb",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#86b8fb",
+    "#98d3fe",
+    "#6788d8"
+   ],
+   "t": 1794876831854
+  },
+  "starter-red-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 662,
+    "w": 460,
+    "h": 970
+   },
+   "v": 5,
+   "color": {
+    "hex": "#880001",
+    "name": "Red"
+   },
+   "colors": [
+    "#880001",
+    "#5a0105"
+   ],
+   "t": 1794876835177
+  },
+  "starter-emerald-green-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 664,
+    "w": 472,
+    "h": 984
+   },
+   "v": 5,
+   "color": {
+    "hex": "#035839",
+    "name": "Green"
+   },
+   "colors": [
+    "#035839",
+    "#012a17"
+   ],
+   "t": 1794876838057
+  },
+  "starter-rust-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 644,
+    "w": 456,
+    "h": 996
+   },
+   "v": 5,
+   "color": {
+    "hex": "#762913",
+    "name": "Rust"
+   },
+   "colors": [
+    "#762913",
+    "#491407"
+   ],
+   "t": 1794876849340
+  },
+  "starter-mocha-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 650,
+    "w": 452,
+    "h": 998
+   },
+   "v": 5,
+   "color": {
+    "hex": "#53372c",
+    "name": "Brown"
+   },
+   "colors": [
+    "#53372c",
+    "#26140c"
+   ],
+   "t": 1794876853452
+  },
+  "starter-oatmeal-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 652,
+    "w": 460,
+    "h": 1000
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ba947a",
+    "name": "Camel"
+   },
+   "colors": [
+    "#ba947a",
+    "#86654b"
+   ],
+   "t": 1794876856838
+  },
+  "starter-stone-straight-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 642,
+    "w": 444,
+    "h": 992
+   },
+   "v": 5,
+   "color": {
+    "hex": "#787977",
+    "name": "Grey"
+   },
+   "colors": [
+    "#787977",
+    "#474848"
+   ],
+   "t": 1794876860905
+  },
+  "starter-sage-green-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 654,
+    "w": 522,
+    "h": 1028
+   },
+   "v": 5,
+   "color": {
+    "hex": "#95b7aa",
+    "name": "Sage"
+   },
+   "colors": [
+    "#95b7aa",
+    "#6a8a84"
+   ],
+   "t": 1794876876206
+  },
+  "starter-mocha-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 642,
+    "w": 520,
+    "h": 1056
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472b26",
+    "name": "Brown"
+   },
+   "colors": [
+    "#472b26"
+   ],
+   "t": 1794876879941
+  },
+  "starter-rust-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 648,
+    "w": 502,
+    "h": 1058
+   },
+   "v": 5,
+   "color": {
+    "hex": "#772716",
+    "name": "Rust"
+   },
+   "colors": [
+    "#772716",
+    "#2a0706"
+   ],
+   "t": 1794876884668
+  },
+  "starter-oatmeal-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 644,
+    "w": 510,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a7947b",
+    "name": "Camel"
+   },
+   "colors": [
+    "#a7947b",
+    "#695947"
+   ],
+   "t": 1794876889213
+  },
+  "starter-stone-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 652,
+    "w": 536,
+    "h": 1054
+   },
+   "v": 5,
+   "color": {
+    "hex": "#565a65",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#565a65",
+    "#33353c"
+   ],
+   "t": 1794876893121
+  },
+  "starter-espresso-wide-leg-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 198,
+    "y": 640,
+    "w": 504,
+    "h": 1050
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3a2813",
+    "name": "Brown"
+   },
+   "colors": [
+    "#3a2813",
+    "#180d01"
+   ],
+   "t": 1794876896020
+  },
+  "starter-black-drawstring-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 644,
+    "w": 528,
+    "h": 1062
+   },
+   "v": 5,
+   "color": {
+    "hex": "#090909",
+    "name": "Black"
+   },
+   "colors": [
+    "#090909"
+   ],
+   "t": 1794876903071
+  },
+  "starter-white-drawstring-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 664,
+    "w": 512,
+    "h": 1008
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e7e8eb",
+    "name": "White"
+   },
+   "colors": [
+    "#e7e8eb",
+    "#b6bbca"
+   ],
+   "t": 1794876906290
+  },
+  "starter-cream-drawstring-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 670,
+    "w": 528,
+    "h": 1036
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e4e3db",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e4e3db",
+    "#bcb3a8"
+   ],
+   "t": 1794876910283
+  },
+  "starter-camel-drawstring-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 180,
+    "y": 674,
+    "w": 532,
+    "h": 1016
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b87a47",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b87a47",
+    "#895a35",
+    "#573517"
+   ],
+   "t": 1794876916544
+  },
+  "starter-chocolate-brown-drawstring-trousers": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 634,
+    "w": 530,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#462c28",
+    "name": "Black"
+   },
+   "colors": [
+    "#462c28",
+    "#1c110d"
+   ],
+   "t": 1794876920550
   }
  },
  "failed": {
   "starter-beige-quilted-crossbody": [
    "cut-out not clean enough (left out by review)"
-  ],
-  "starter-white-shoulder-bag": [
-   "more than the item in the picture (text, a hanger or a prop?)"
   ],
   "starter-tan-bucket-bag": [
    "skin-coloured areas (a person or a body form?)"
@@ -20710,74 +26868,101 @@
   "starter-white-linen-blazer": [
    "blue background by the sleeve (left out by review)"
   ],
-  "starter-chocolate-brown-scoop-neck-tee": [
-   "it added shorts or trousers to the top"
+  "starter-taupe-ribbed-maxi-dress": [
+   "taken out on review: drawn as a jumpsuit, not a dress"
   ],
-  "starter-charcoal-grey-scoop-neck-tee": [
-   "it added shorts or trousers to the top"
+  "starter-beige-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-beige-tailored-vest": [
-   "it added shorts or trousers to the top"
+  "starter-camel-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-black-scoop-neck-tee": [
-   "it added shorts or trousers to the top"
+  "starter-camel-pleated-midi-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-taupe-scoop-neck-tee": [
-   "it added shorts or trousers to the top"
+  "starter-chocolate-brown-wrap-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-lavender-scoop-bodysuit": [
-   "she moved or changed shape in the picture it drew (it couldn’t be lined up)"
+  "starter-mocha-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-lavender-long-sleeve-scoop-bodysuit": [
-   "she moved or changed shape in the picture it drew (it couldn’t be lined up)"
+  "starter-mocha-wrap-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-black-leather-leggings": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (712b443f-7ce0-4121-a998-4988f2f99e23)"
+  "starter-navy-slip-maxi-skirt": [
+   "feet kept below the hem (left out by review)"
   ],
-  "starter-beige-pencil-skirt": [
-   "taken out on review: bare legs kept below the skirt"
+  "starter-oatmeal-knit-midi-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-butter-yellow-scoop-bodysuit": [
-   "taken out on review: cut out in shreds"
+  "starter-pink-tweed-mini-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-butter-yellow-trousers": [
-   "taken out on review: torn, holes"
+  "starter-stone-maxi-skirt": [
+   "feet kept below the hem (left out by review)"
   ],
-  "starter-butter-yellow-square-neck-tank-bodysuit": [
-   "taken out on review: skin patches kept"
+  "starter-tan-leather-midi-skirt": [
+   "legs kept with the piece (left out by review)"
   ],
-  "starter-camel-square-neck-tank-bodysuit": [
-   "taken out on review: skin patch on the shoulder"
+  "starter-beige-drawstring-trousers": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-champagne-satin-trousers": [
-   "taken out on review: skin band kept at the waist"
+  "starter-butter-yellow-straight-trousers": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-cream-cargo-pants": [
-   "taken out on review: skin patches kept"
+  "starter-cream-maxi-skirt": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-cream-satin-midi-skirt": [
-   "taken out on review: skin patch at the side"
+  "starter-cream-pleated-midi-skirt": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-grey-plaid-trousers": [
-   "taken out on review: skin patch at the hip"
+  "starter-ecru-maxi-skirt": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-lavender-square-neck-tank-bodysuit": [
-   "taken out on review: torn, holes"
+  "starter-ecru-slip-maxi-skirt": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-rust-long-sleeve-scoop-bodysuit": [
-   "taken out on review: holes at the side"
+  "starter-ecru-straight-trousers": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-tan-check-mini-skirt": [
-   "taken out on review: bare legs kept below the skirt"
+  "starter-ecru-wide-leg-trousers": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-tan-leather-mini-skirt": [
-   "taken out on review: bare legs kept below the skirt"
+  "starter-ivory-slip-maxi-skirt": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-tan-scoop-neck-tee": [
-   "taken out on review: shorts added under it"
+  "starter-grey-pleated-midi-skirt": [
+   "torn edge against skin (left out by review)"
   ],
-  "starter-white-linen-trousers": [
-   "taken out on review: skin patch kept"
+  "starter-blush-pink-straight-trousers": [
+   "blue patch (left out by review)"
+  ],
+  "starter-espresso-slip-maxi-skirt": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-espresso-straight-trousers": [
+   "broken: mostly missing (left out by review)"
+  ],
+  "starter-lavender-straight-trousers": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-mocha-maxi-skirt": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-mocha-slip-maxi-skirt": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-navy-knit-midi-skirt": [
+   "part of a top kept above the waist (left out by review)"
+  ],
+  "starter-oatmeal-wrap-skirt": [
+   "broken: mostly missing (left out by review)"
+  ],
+  "starter-olive-wide-leg-trousers": [
+   "holes in the piece (left out by review)"
+  ],
+  "starter-stone-wrap-skirt": [
+   "stone texture, not fabric (left out by review)"
   ]
  },
  "blocked": {
@@ -20838,6 +27023,54 @@
   "starter-cream-knit-midi-skirt": "taken out on review: skin patch at the side, twice",
   "starter-ecru-ribbed-tank": "taken out on review: skin patches kept, twice",
   "starter-ecru-asymmetric-top": "taken out on review: skin patches on the sleeve, twice",
-  "starter-stone-ribbed-tank": "taken out on review: drawn in a brick-wall texture, twice"
+  "starter-stone-ribbed-tank": "taken out on review: drawn in a brick-wall texture, twice",
+  "starter-beige-pencil-skirt": "taken out on review: legs kept below it, twice",
+  "starter-butter-yellow-square-neck-tank-bodysuit": "taken out on review: skin patches kept, twice",
+  "starter-butter-yellow-trousers": "taken out on review: skin patches kept, twice",
+  "starter-camel-square-neck-tank-bodysuit": "taken out on review: tinted arms and neck kept, twice",
+  "starter-cream-satin-midi-skirt": "taken out on review: torn down the side, twice",
+  "starter-lavender-square-neck-tank-bodysuit": "taken out on review: torn, holes, twice",
+  "starter-tan-check-mini-skirt": "taken out on review: shorts added under it, twice",
+  "starter-tan-leather-mini-skirt": "taken out on review: legs kept below it, twice",
+  "starter-camel-mini-skirt": "taken out on review: legs kept below it, twice",
+  "starter-camel-pencil-skirt": "taken out on review: legs kept below it, twice",
+  "starter-chocolate-brown-tailored-shorts": "taken out on review: legs kept below it, twice",
+  "starter-cream-palazzo-pants": "taken out on review: torn, skin showing through, twice",
+  "starter-cream-tailored-slacks": "taken out on review: torn, skin showing through, twice",
+  "starter-cream-wide-leg-linen-pants": "taken out on review: torn, skin showing through, twice",
+  "starter-ecru-wide-leg-linen-pants": "taken out on review: torn, skin showing through, twice",
+  "starter-beige-tailored-vest": "taken out on review: tinted arm and shorts added, twice",
+  "starter-gold-sequin-mini-skirt": "taken out on review: cut out in shreds, twice",
+  "starter-chocolate-brown-linen-shorts": "legs kept with the shorts, twice",
+  "starter-cream-leather-pants": "light colour torn against skin, twice",
+  "starter-cream-linen-shorts": "light colour torn against skin, twice",
+  "starter-ecru-bike-shorts": "light colour torn against skin, twice",
+  "starter-ecru-cargo-pants": "light colour torn against skin, twice",
+  "starter-ecru-denim-barrel-leg-jeans": "came out pink, not ecru, twice",
+  "starter-ecru-denim-bootcut-jeans": "feet kept, holes, twice",
+  "starter-ecru-flare-leggings": "light colour torn against skin, twice",
+  "starter-ecru-knit-pants": "light colour torn against skin, twice",
+  "starter-ecru-leather-pants": "light colour torn against skin, twice",
+  "starter-ecru-linen-shorts": "light colour torn against skin, twice",
+  "starter-ecru-palazzo-pants": "light colour torn against skin, twice",
+  "starter-ecru-satin-pants": "light colour torn against skin, twice",
+  "starter-espresso-cargo-pants": "broken: mostly missing, twice",
+  "starter-lavender-scoop-bodysuit": "hole at the strap, torn hem, twice",
+  "starter-oatmeal-linen-shorts": "legs kept with the shorts, twice",
+  "starter-stone-bike-shorts": "stone-wall texture, not fabric, twice",
+  "starter-stone-flare-leggings": "broken: mostly missing, twice",
+  "starter-stone-leather-pants": "stone texture, torn side, twice",
+  "starter-stone-joggers": "torn side, twice",
+  "starter-white-cargo-pants": "torn side, blue cast, twice",
+  "starter-white-denim-bootcut-jeans": "feet kept, twice",
+  "starter-beige-bike-shorts": "legs kept with the piece, twice",
+  "starter-beige-linen-shorts": "legs kept with the piece, twice",
+  "starter-oatmeal-bike-shorts": "legs kept with the piece, twice",
+  "starter-beige-bermuda-shorts": "legs kept with the piece, again",
+  "starter-chocolate-brown-bermuda-shorts": "legs kept with the piece, again",
+  "starter-chocolate-brown-leather-mini-skirt": "legs kept with the piece, again",
+  "starter-oatmeal-bermuda-shorts": "legs kept with the piece, again",
+  "starter-ecru-denim-denim-midi-skirt": "torn edge against skin, again",
+  "starter-ecru-denim-denim-mini-skirt": "pink cast on ecru, again"
  }
 }

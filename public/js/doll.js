@@ -9,12 +9,16 @@ const packs = new Map();
 const num = (n) => Math.round(n * 10) / 10;
 
 /** Fetch the base picture's config (cached). Resolves to the pack, or null if it can't be loaded. */
+/** Your own model ("Make my model"): its picture replaces base.png; the points and rules stay (its outline matches the standard figure). */
+let myBody = null;
+export function setMyBody(href, tag) { myBody = href ? { href, tag } : null; }
 export function loadPack(id = DEFAULT_PACK) {
   if (packs.has(id)) return packs.get(id).promise;
   const entry = { pack: null };
   entry.promise = (async () => {
     const base = '/assets/avatar/', meta = await (await fetch(base + 'config.json')).json(), files = {};
     await Promise.all(Object.values(meta.layers).map(async (f) => { const r = await fetch(base + f, { method: 'HEAD' }); if (!r.ok) throw new Error(f); files[f] = base + f + (meta.version ? `?v=${meta.version}` : ''); })); // (the version makes a phone fetch a replaced picture instead of its cached copy)
+    if (myBody) { files[meta.layers.body] = myBody.href; meta.id = `${meta.id}:me-${myBody.tag}`; } // (a new id refits pieces fitted to the old picture)
     return (entry.pack = withPoints({ ...meta, files, base }));
   })().catch(() => { packs.delete(id); return null; });
   packs.set(id, entry);
@@ -95,9 +99,10 @@ export function pointsOverlay(pack, items = {}) {
 export const NO_FIT = { scale: 1, dx: 0, dy: 0, rot: 0, tuck: false };
 /** The remembered fit of an item for this picture (a different base picture keeps its own, because proportions differ). */
 export const fitOf = (item, pack) => ({ ...NO_FIT, ...(item?.fit?.[pack.id] || {}) });
-export const isTuckable = (item, pack) => !!item && pack.tuckable.includes(item.type);
-/** Is a top tucked into the bottoms? A bodysuit is, unless you untuck it (it is worn under them); other tops only when you tuck them. */
-export const tuckOf = (item, pack) => (item?.type === 'bodysuits' ? item.fit?.[pack.id]?.tuck ?? true : fitOf(item, pack).tuck);
+/** Can a top be tucked in or left out? Not a bodysuit: it always goes under the bottoms (left out, its seat would show over them). */
+export const isTuckable = (item, pack) => !!item && item.type !== 'bodysuits' && pack.tuckable.includes(item.type);
+/** Is a top tucked into the bottoms? A bodysuit always is; other tops only when you tuck them. */
+export const tuckOf = (item, pack) => (item?.type === 'bodysuits' ? true : fitOf(item, pack).tuck);
 
 /** The SVG transform that puts an item's picture on its box, then applies the remembered nudge. */
 export function garmentTransform(anchor, fit) {
@@ -161,8 +166,32 @@ export function bodyCover(pack, items, fits, masks, n) {
       if (gr < r && r - gr <= 34) parts.push(`<rect x="${num(gr - 1)}" y="${y - 2}" width="${num(r - gr + 4)}" height="5" fill="#000"/>`);
     }
   }
+  if (low && pack.points.crotch) { // down each leg of a pair of trousers or a long dress: a sliver of her leg (up to 24 px) beside the piece's edge
+    const { w, h, data, k } = low, start = Math.round(Math.max(pack.points.crotch[1], (pack.torsoRows?.at(-1)?.[0] ?? 0) + 4) / k), mid = Math.round(pack.points.crotch[0] / k), step = Math.max(1, Math.round(4 / k));
+    for (let my = start; my < h; my += step) {
+      for (const [x0, x1] of [[0, mid], [mid, w]]) {
+        let a = -1, b = -1; for (let x = x0; x < x1; x++) if (data[my * w + x]) { if (a < 0) a = x; b = x; }
+        if (a < 0) continue;
+        const y = my * k, hh = step * k + 1;
+        parts.push(`<rect x="${num(a * k - 24)}" y="${num(y)}" width="25" height="${num(hh)}" fill="#000"/><rect x="${num((b + 1) * k - 1)}" y="${num(y)}" width="25" height="${num(hh)}" fill="#000"/>`);
+      }
+    }
+  }
   if (!parts.length) return '';
   return `<mask id="bodycover-${n}" maskUnits="userSpaceOnUse" x="0" y="0" width="${W}" height="${H}"><rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>${parts.join('')}</mask>`;
+}
+/** Shoes under long trousers or a long dress: the part of a boot above the hem is inside the trousers (or under the skirt), so only what is below
+ *  each leg's hem shows; otherwise a knee-high boot drawn wider than a slim trouser leg pokes out beside it. Applies when the piece reaches below
+ *  the knee. Returns a <clipPath> (or '' when the shoes show whole). */
+export function shoeClip(pack, items, fits, masks, n) {
+  const [W, H] = pack.size, P = pack.points, it = items.dress || items.bottom;
+  const low = it && items.shoes && fits?.get(it.id) && masks?.get(it.id); if (!low || !P.kneeL) return '';
+  const { w, h, data, k } = low, mid = Math.round((P.crotch?.[0] ?? W / 2) / k), knee = (P.kneeL[1] + P.kneeR[1]) / 2;
+  const hems = [[0, mid], [mid, w]].map(([x0, x1]) => { for (let y = h - 1; y >= 0; y--) for (let x = x0; x < x1; x++) if (data[y * w + x]) return y * k; return -1; });
+  if (!hems.some((y) => y > knee + 60)) return ''; // a short skirt or shorts: boots show whole
+  const xm = mid * k, rect = (x, wd, y) => `<rect x="${num(x)}" y="${num(y)}" width="${num(wd)}" height="${num(H - y)}"/>`;
+  const cut = (y) => (y > knee + 60 ? y - 14 : 0); // (a little overlap so the hem meets the shoe)
+  return `<clipPath id="shoeclip-${n}" clipPathUnits="userSpaceOnUse">${rect(0, xm, cut(hems[0]))}${rect(xm, W - xm, cut(hems[1]))}</clipPath>`;
 }
 /** Convex hull (monotone chain) of [x, y] points. */
 function hull(pts) {
@@ -176,7 +205,7 @@ function hull(pts) {
 export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
-  const tucked = !!(top && bottom && isTuckable(top, pack) && tuckOf(top, pack)), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
+  const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && tuckOf(top, pack))), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
   const order = tucked ? pack.tuckedOrder : pack.clothesOrder;
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';
@@ -243,7 +272,8 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     return `${bag}<use href="#fig-${n}" clip-path="url(#armclip-${n})" pointer-events="none"/>${top}`;
   };
   const bagIt = items.bag, underArm = !!(bagIt && pack.bagArm && ['shoulder', 'cross'].includes(bagStyle(bagIt)) && !fits?.get(bagIt.id));
-  const clothes = order.filter((k) => !(underArm && k === 'bag')).map(garment).join(''), bagLayer = underArm ? garment('bag') : '';
+  const shoeDef = shoeClip(pack, items, fits, masks, n);
+  const clothes = (shoeDef ? `<defs>${shoeDef}</defs>` : '') + order.filter((k) => !(underArm && k === 'bag')).map((k) => (k === 'shoes' && shoeDef && items.shoes ? `<g clip-path="url(#shoeclip-${n})">${garment(k)}</g>` : garment(k))).join(''), bagLayer = underArm ? garment('bag') : '';
   const armDefs = underArm ? `<clipPath id="armclip-${n}"><polygon points="${pack.bagArm.map(([x, y]) => `${x},${y}`).join(' ')}"/></clipPath><clipPath id="strapclip-${n}"><rect x="0" y="-200" width="${pack.size[0]}" height="${200 + (pack.points.armpitR?.[1] ?? 540)}"/></clipPath>` : '';
   const bodyMask = bodyCover(pack, items, fits, masks, n);
   const body = pack.files[pack.layers.body] ? `${bodyMask ? `<defs>${bodyMask}</defs>` : ''}<image class="basepic" href="${base || pack.files[pack.layers.body]}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"${bodyMask ? ` mask="url(#bodycover-${n})"` : ''}/>` : '';

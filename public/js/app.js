@@ -9,6 +9,7 @@ import { outfitMeters } from './meters.js';
 import { closetInsights, streak as wearStreak } from './insights.js';
 import { syncState, connect as syncConnect, disconnect as syncDisconnect, syncNow } from './sync.js';
 import { renderPlan, planActs, todayWeather, loadForecast, wishFromGap } from './plan.js';
+import { renderToday, todayActs } from './today.js';
 import { BANDS, toF, weatherEmoji } from './weather.js';
 import { PRICE, aiSteps, aiSignature, personImage, garmentImage, renderOutfit, categoryFor, tagAI, pinAI, productAI } from './aitryon.js';
 import { fitItem, fitSignature, baseUnder } from './fitting.js';
@@ -17,7 +18,8 @@ import { groupOf } from './landmarks.js';
 import * as starter from './starter.js';
 import * as wearAI from './wear.js';
 import { BATCHES as STARTER_BATCHES, ITEMS as STARTER_ITEMS, seedFor } from '../starter/items.js';
-import { loadPack, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, tuckOf, imageRect, bagBody } from './doll.js';
+import * as myModel from './mymodel.js';
+import { loadPack, setMyBody, dollSVG, hairOf, fitOf, garmentTransform, isTuckable, tuckOf, imageRect, bagBody } from './doll.js';
 import { guessType, tidyTitle, firstLink, deepLink } from './intake.js';
 import { initial as gameInitial, rollOver, pickTheme, rateOutfit, applyRating, spendEnergy, endDay, themeLine, SOURCE_NOTE, PHASES, CATALOG, catalogItem, owns, buy, usePhoto } from './game.js';
 import { BACKGROUNDS, POSES, composePhoto, photoBlob } from './photo.js';
@@ -34,7 +36,7 @@ const S = {
   loc: (() => { try { return JSON.parse(store.get('loc', 'null')); } catch { return null; } })(), forecast: null, weatherError: '',
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
   urls: new Map(), fits: new Map(), fitBoxes: new Map(), bases: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitSig: new Map(), fitPending: new Set(),
-  view: 'tryon', mood: '', drawer: 'fit', lastTab: '',
+  view: 'today', planTab: 'week', mood: '', drawer: 'fit', lastTab: '',
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
   events: (() => { try { const e = JSON.parse(store.get('events', '[]')); return Array.isArray(e) ? e : []; } catch { return []; } })(), cas: false, casTab: 'hair', hairStyle: store.get('hairstyle', 'none'), hairColor: store.get('haircolor', 'natural'), dbgPts: /[?&]points\b/.test(location.search) /* (the body points over the model: a developer view, only with ?points in the address) */, meta: new Map(), // walk-in closet or mirror; which rail is open; pieces grabbed; customizer panel
@@ -91,9 +93,10 @@ function paintSheet(html, title) {
 
 async function load() {
   let profiles;
-  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); }); // don't hold up the first screen on the doll's art
-  [S.items, S.outfits, S.wears, S.inspos, profiles, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist'].map(all));
-  S.profile = profiles[0] || null;
+  profiles = await all('profile'); S.profile = profiles[0] || null;
+  if (S.profile?.modelBase) setMyBody(url('mymodel', S.profile.modelBase), S.profile.modelAt || 1); // your own model, made with "Make my model"
+  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); fillFigures(); }); // don't hold up the first screen on the doll's art
+  [S.items, S.outfits, S.wears, S.inspos, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'plans', 'wishlist'].map(all));
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
   S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
@@ -269,8 +272,8 @@ function queueFit(item) {
     if (!r) return;
     const old = S.fits.get(item.id); if (old) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one)
     const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
-    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item); }
-    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : render()), 60);
+    if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item, { sync: true }); } // (worked out, not an edit: it mustn't win over an edit from another device)
+    clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : (S.view === 'plan' && S.planTab === 'diary') || S.view === 'inspo' ? render() : fillFigures(true)), 60); // (elsewhere only the model pictures change, so nothing else on the page is redrawn)
   }).catch(() => S.fitPending.delete(key));
 }
 const usingPhoto = () => false; // (your own photo and the photoreal try-on are off the Dress Up screen: the model is always shown)
@@ -281,6 +284,8 @@ const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped
   const v = String(dollPack?.hair?.marksVersion || 1); if (dollPack && store.get('hairmarks_v', '1') !== v) { store.set('hairmarks', '{}'); store.set('hairmarks_v', v); }
   try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
+/** Model pictures drawn before the model's art had loaded (Today's looks) are filled in once it has, without redrawing the page. */
+function fillFigures(all = false) { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (all || !el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini'); }); }
 function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
@@ -296,10 +301,19 @@ function go(view) {
   const h = $('#main h2.view-title'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
 }
 function render() {
+  // a redraw from the background (pieces finishing an import, the weather arriving) mustn't wipe what she's typing: keep that box's text and cursor
+  const typing = document.activeElement?.matches?.('#main input[id]:not([type=file]):not([type=checkbox]):not([type=radio]), #main textarea[id]') ? document.activeElement : null;
+  const kept = typing && { id: typing.id, value: typing.value, a: typing.selectionStart, b: typing.selectionEnd };
+  renderView();
+  if (kept) { const el = document.getElementById(kept.id); if (el && el !== typing) { el.value = kept.value; el.focus({ preventScroll: true }); try { el.setSelectionRange(kept.a, kept.b); } catch { /* not a text box */ } } }
+}
+function renderView() {
   if (S.view !== 'tryon') S.lastView = S.view;
   document.body.classList.toggle('wic-on', S.view === 'tryon' && S.scene === 'closet');
   if (S.view !== 'tryon' || S.scene === 'closet') document.body.classList.remove('dsheet');
-  ({ closet: renderCloset, tryon: renderTryon, plan: () => renderPlan(ctx), planner: renderPlanner, inspo: renderInspo })[S.view]();
+  if (S.view === 'planner') { S.view = 'plan'; S.planTab = 'diary'; } // (the Diary lives in Plan now)
+  ({ today: () => renderToday(ctx), closet: renderCloset, tryon: renderTryon, plan: () => (S.planTab === 'diary' ? renderPlanner() : renderPlan(ctx)), inspo: renderInspo })[S.view]();
+  if (S.view === 'plan') $('#main').insertAdjacentHTML('afterbegin', `<div class="seg plan-seg" role="tablist" aria-label="Plan">${[['week', 'Week & trips'], ['diary', 'Diary']].map(([k, l]) => `<button role="tab" aria-selected="${S.planTab === k}" class="${S.planTab === k ? 'on' : ''}" data-act="plantab" data-v="${k}">${l}</button>`).join('')}</div>`);
 }
 
 /* ───────────────────────── closet ───────────────────────── */
@@ -330,7 +344,7 @@ function renderCloset() {
     <details class="panel more" ${S.moreOpen ? 'open' : ''}><summary>Backup, sync &amp; adding from other apps</summary>
       ${addPanel()}
       <section class="panel" aria-label="Backup and restore"><h3>Backup &amp; restore</h3>
-        <p class="muted">Your closet is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
+        <p class="muted">Your wardrobe is stored in this browser only. Save a backup file so clearing your browser or changing phones doesn’t lose it.</p>
         <div class="row"><button class="ghost" data-act="export">⬇ Save backup</button><button class="ghost" data-act="restore">⬆ Restore backup</button>
         ${S.items.some((i) => i.sample) ? '<button class="ghost danger" data-act="rmsamples">Remove old sample pieces</button>' : ''}</div>
         <input type="file" id="restore" accept=".json,application/json" hidden></section>
@@ -347,7 +361,7 @@ const pickBar = () => `<div class="pickbar" role="region" aria-label="Chosen pie
 
 function emptyCloset() {
   if (S.items.length) return `<div class="empty"><h2>Nothing here</h2><p class="muted">No pieces match those filters.</p></div>`;
-  return `<div class="empty"><h2 class="view-title">Your closet is empty ✨</h2>
+  return `<div class="empty"><h2 class="view-title">Your wardrobe is empty ✨</h2>
     <p class="muted">Snap a photo of each piece (flat on a bed or hanging on a plain wall works best) and add it.</p>
     <div class="row" style="justify-content:center;margin-top:14px">
       <button class="primary" data-act="add">+ Add your first piece</button></div></div>`;
@@ -357,7 +371,7 @@ function pieceCard(i) {
   const worn = wearCounts()[i.id] || 0;
   const picked = S.picking && S.pick.includes(i.id);
   return `<article class="piece ${starter.isStarter(i) ? 'is-starter' : ''} ${picked ? 'picked' : ''}">${hanger}
-    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your closet"><span aria-hidden="true">🗑</span></button>`}
+    ${S.picking ? `<span class="pickmark" aria-hidden="true">${picked ? '✓' : ''}</span>` : `<button class="edit" data-act="edit" data-id="${i.id}" aria-label="Edit ${esc(i.name)}"><span aria-hidden="true">✎</span></button><button class="del" data-act="delpiece" data-id="${i.id}" aria-label="Delete ${esc(i.name)} from your wardrobe"><span aria-hidden="true">×</span></button>`}
     <button class="img" data-act="${S.picking ? 'pick' : 'tryit'}" data-id="${i.id}" ${S.picking ? `aria-pressed="${picked}" aria-label="Choose ${esc(i.name)}"` : `aria-label="Try on ${esc(i.name)}"`}><img src="${url(i.id)}" alt="" loading="lazy" decoding="async"></button>
     <div class="name">${esc(i.name)}</div>
     <div class="meta"><span class="dot" style="background:${i.color?.hex}"></span>${esc(i.color?.name || '')} · worn ${worn}×</div>
@@ -423,7 +437,7 @@ function openItemModal(existing, preset = {}) {
       <div class="cswatches" role="group" aria-label="Colours found in the photo">${d.palette.map((c) => `<button type="button" class="cswatch ${d.color?.hex === c.hex ? 'on' : ''}" data-hex="${c.hex}" style="background:${c.hex}" aria-label="${esc(colorName(c.hex))}" aria-pressed="${d.color?.hex === c.hex}"></button>`).join('')}<input type="color" id="color" value="${d.color?.hex || '#888888'}" aria-label="Pick any colour" style="width:44px;height:34px;padding:0;border:0;background:none"></div>
       <div class="row" style="margin-top:18px;justify-content:space-between">
         <span class="row">${existing ? `<button class="ghost danger" id="rm">${starter.isStarter(existing) ? 'Remove' : 'Delete'}</button>` : ''}${starter.isStarter(existing) ? '<button class="ghost" id="ownit">✓ I own this</button>' : ''}</span>
-        <span class="row"><button class="ghost" id="cancel">Cancel</button>${existing ? '' : '<button class="ghost" id="saveadd">Save &amp; add another</button>'}<button class="primary" id="save">Save to closet</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
+        <span class="row"><button class="ghost" id="cancel">Cancel</button>${existing ? '' : '<button class="ghost" id="saveadd">Save &amp; add another</button>'}<button class="primary" id="save">Save to wardrobe</button></span></div>`, existing ? 'Edit piece' : 'Add a piece');
     wire();
   };
 
@@ -583,7 +597,7 @@ function openItemModal(existing, preset = {}) {
       closeModal(); render(); toast(`“${it.name}” is yours now ✓`);
     };
     if ($('#rm')) $('#rm').onclick = async () => {
-      if (!confirm(`Delete “${existing.name}” from your closet?`)) return;
+      if (!confirm(`Delete “${existing.name}” from your wardrobe?`)) return;
       await removeItems([existing.id], { byYou: true });
       closeModal(); render();
     };
@@ -607,7 +621,7 @@ function openItemModal(existing, preset = {}) {
       if (preset.onSaved) await preset.onSaved(item);
       closeModal(); render();
       if (d.queue?.length) { const [next, ...rest] = d.queue; toast(`Saved “${item.name}” ✓ — ${d.queue.length} to go`); return openItemModal(undefined, { intake: { mode: 'link', url: next, queue: rest } }); }
-      toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your closet ✓');
+      toast(existing ? 'Updated ✓' : again ? `Saved “${item.name}” ✓ — next one` : 'Added to your wardrobe ✓');
       if (again) openItemModal(undefined, { type: item.type });
     };
     $('#save').onclick = () => save(false);
@@ -641,11 +655,11 @@ function starterPanel() {
   const all = S.items.filter(starter.isStarter).length, hidden = store.get('hidestarter', '') === '1', each = starter.NEURONS_EACH, used = Math.round(starter.usedToday());
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
   // the wardrobe arrives preloaded (scripts/preload.mjs, nightly); making pieces on the phone is kept behind localStorage starter_make=1
-  if (store.get('starter_make', '') !== '1') return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
+  if (store.get('starter_make', '') !== '1') return `<section class="panel" aria-label="Starter pieces"><h3>Starter pieces</h3>
     <p class="muted">A wardrobe of ${STARTER_ITEMS.length} pieces made for your model from your Pinterest boards: work, casual and going-out clothes, blazers, cardigans and coats, shoes, bags and jewellery. It comes preloaded: new pieces are made every night and appear here on their own, nothing to press. For more ideas, open a pin in <b>Inspo</b>.</p>
-    <p class="starterready" role="status"><b>${all} of ${STARTER_ITEMS.length} in your closet</b>${all < STARTER_ITEMS.length ? ' · the rest are on their way' : ''}</p>
+    <p class="starterready" role="status"><b>${all} of ${STARTER_ITEMS.length} in your wardrobe</b>${all < STARTER_ITEMS.length ? ' · the rest are on their way' : ''}</p>
     <label class="check"><input type="checkbox" data-act="hidestarter" ${hidden ? 'checked' : ''}> Hide all starter pieces${all || hidden ? '' : ' (none yet)'}</label></section>`;
-  return `<section class="panel" aria-label="Starter closet"><h3>Starter closet</h3>
+  return `<section class="panel" aria-label="Starter pieces"><h3>Starter pieces</h3>
     <p class="muted">A wardrobe made for your model from your style profile (chic neutral casual + polished workwear). Clothes and shoes are drawn on her, wearing them, so they fit her exactly and swap in and out in Dress Up; bags and accessories are product photos. The whole wardrobe comes preloaded once it’s made (pieces are added automatically, no neurons used on your phone); the buttons below remake a category or fill gaps. Pieces made earlier as flat photos are remade on her when you open their category. For more ideas, open a pin in <b>Inspo</b> and make the pieces in it. Each is marked <span class="starterbadge inline">Starter</span>; tap one to keep it as yours (<b>I own this</b>) or remove it.</p>
     <p class="muted">Made with Cloudflare Workers AI on the free tier: about ${each} neurons a picture, ${fmt(each * 20)} a batch of 20, ${fmt(each * STARTER_ITEMS.length)} for all ${STARTER_ITEMS.length} (free: ${fmt(starter.DAILY_FREE)} a day). <b>Used today: ${fmt(used)}</b>. If the day’s allowance runs out, progress is kept and the batch carries on after 00:00 UTC. Needs your passcode.</p>
     <div class="starterbatches">${STARTER_BATCHES.map(([k, l, e]) => { const left = starter.missingIn(k, S.items).length, n = STARTER_ITEMS.filter((i) => i.batch === k).length;
@@ -752,11 +766,11 @@ function addPanel() {
     <details><summary>iPhone: add from the Share menu (Shortcut)</summary>
       <p class="muted">iPhones can’t share straight into a web app, so make a one-time Shortcut. It takes about two minutes:</p>
       <ol class="muted steps">
-        <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, and name it “Add to Closet”.</li>
+        <li>Open the <b>Shortcuts</b> app, tap <b>+</b>, and name it “Add to Vesti”.</li>
         <li>Tap the <b>ⓘ</b> button and turn on <b>Show in Share Sheet</b>. Under accepted types keep <b>Images</b>, <b>URLs</b> and <b>Text</b>.</li>
-        <li>For pictures: add <b>Copy to Clipboard</b> (input: Shortcut Input), then add <b>Open URLs</b> and enter <code>${esc(base)}/?add=paste</code>. When the closet opens, tap <b>Paste</b> and allow it.</li>
+        <li>For pictures: add <b>Copy to Clipboard</b> (input: Shortcut Input), then add <b>Open URLs</b> and enter <code>${esc(base)}/?add=paste</code>. When Vesti opens, tap <b>Paste</b> and allow it.</li>
         <li>For product pages: add <b>URL Encode</b> (input: Shortcut Input), then <b>Open URLs</b> with <code>${esc(base)}/?add=link&amp;u=</code> followed by the encoded text. The link is fetched automatically (needs your passcode saved once).</li>
-        <li>Then in Safari, Photos, Pinterest or a shop app: tap <b>Share → Add to Closet</b>.</li>
+        <li>Then in Safari, Photos, Pinterest or a shop app: tap <b>Share → Add to Vesti</b>.</li>
       </ol>
       <p class="muted">I can’t ship a ready-made Shortcut file (Apple requires them to be signed), and I haven’t been able to try this on a real iPhone, so tell me if a step differs on your iOS version.</p>
     </details>
@@ -768,9 +782,9 @@ function syncPanel() {
   const st = syncState();
   return `<section class="panel" aria-label="Cloud sync"><h3>Cloud sync</h3>
     ${st.on
-    ? `<p class="muted">Connected. Your closet, outfits and photos sync between your devices${st.last ? ` · last synced ${new Date(st.last).toLocaleString()}` : ''}.</p>
+    ? `<p class="muted">Connected. Your wardrobe, outfits and photos sync between your devices${st.last ? ` · last synced ${new Date(st.last).toLocaleString()}` : ''}.</p>
        <div class="row"><button class="ghost" data-act="syncnow">⟳ Sync now</button><button class="ghost danger" data-act="syncoff">Disconnect</button></div>`
-    : `<p class="muted">Keep your closet on every phone and computer. Enter your private sync key — it works like a password, so anyone with it can see your closet.</p>
+    : `<p class="muted">Keep your wardrobe on every phone and computer. Enter your private sync key — it works like a password, so anyone with it can see your wardrobe.</p>
        <label class="f" for="synckey">Sync key</label><input id="synckey" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="word-word-word-…"></label>
        <div class="row"><button class="ghost" data-act="syncconnect">Connect &amp; sync</button></div>`}
     <p class="muted" id="syncmsg" role="status">${esc(syncMsg)}</p></section>`;
@@ -788,7 +802,7 @@ async function runSync() {
 
 /* ───────────────────────── backup & restore ───────────────────────── */
 const STORES = ['items', 'outfits', 'wears', 'inspos', 'profile', 'plans', 'wishlist']; // renders are a cache, so they're not backed up
-const PREFS = ['budget', 'game', 'events', 'hairstyle', 'haircolor', 'hairmarks'];
+const PREFS = ['budget', 'game', 'events', 'hairstyle', 'haircolor', 'hairmarks', 'styleprefs'];
 const blobToData = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
 const packRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v instanceof Blob ? { __blob: await blobToData(v) } : v])));
 const unpackRecord = async (rec) => Object.fromEntries(await Promise.all(Object.entries(rec).map(async ([k, v]) => [k, v && typeof v.__blob === 'string' ? await (await fetch(v.__blob)).blob() : v])));
@@ -799,7 +813,7 @@ async function exportBackup() {
   const prefs = Object.fromEntries(PREFS.map((k) => [k, store.get(k, '')]).filter(([, v]) => v)); // only what was actually customized
   const file = new Blob([JSON.stringify({ app: 'nikkis-closet', version: 1, exportedAt: new Date().toISOString(), stores, prefs })], { type: 'application/json' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(file); a.download = `nikkis-closet-backup-${iso(new Date())}.json`;
+  a.href = URL.createObjectURL(file); a.download = `vesti-backup-${iso(new Date())}.json`;
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   toast(`Saved a backup of ${S.items.length} piece${S.items.length === 1 ? '' : 's'}`);
 }
@@ -807,7 +821,7 @@ async function exportBackup() {
 async function importBackup(file) {
   try {
     const data = JSON.parse(await file.text());
-    if (data?.app !== 'nikkis-closet' || typeof data.stores !== 'object') throw new Error('That doesn’t look like a Nikki’s Closet backup.');
+    if (data?.app !== 'nikkis-closet' || typeof data.stores !== 'object') throw new Error('That doesn’t look like a Vesti backup.');
     if (!confirm('Restore this backup? Anything with the same ID is replaced; everything else on this device is kept.')) return;
     let n = 0;
     for (const name of STORES) for (const rec of data.stores[name] || []) { await put(name, await unpackRecord(rec)); if (name === 'items') n++; }
@@ -815,6 +829,60 @@ async function importBackup(file) {
     try { sessionStorage.setItem('restored', String(n)); } catch { /* private mode */ }
     location.reload(); // rebuild all state from what's now stored
   } catch (e) { toast(e.message || 'Could not read that file'); }
+}
+
+/* ───────────────────────── make my model (look like you) ───────────────────────── */
+function openMyModel() {
+  const prof = S.profile, d = { face: '', body: '', made: null, busy: false, msg: '' };
+  const std = () => (dollPack ? `${dollPack.base}${dollPack.layers.body}${dollPack.version ? `?v=${dollPack.version}` : ''}` : '/assets/avatar/base.png'); // always the standard figure (its pose and outline)
+  openModal();
+  const paint = () => {
+    const now = prof?.modelBase ? url('mymodel') : std();
+    paintSheet(`
+      <p class="muted">Vesti gives your model your face and skin tone, keeping her pose and shape so every piece in your wardrobe still fits her. Your photo is only sent to Cloudflare to draw the picture; it isn’t saved anywhere.</p>
+      <label class="f" for="mmface">A clear photo of your face, looking at the camera</label>
+      <div class="mm-pick">${d.face ? `<img src="${d.face}" alt="" class="mm-thumb"><span>✓ Face photo added</span>` : ''}<input type="file" id="mmface" accept="image/*" aria-label="${d.face ? 'Choose a different photo' : 'A clear photo of your face'}"></div>
+      <label class="f" for="mmnotes">Anything about your face (optional)</label><input type="text" id="mmnotes" maxlength="120" placeholder="e.g. freckles, a nose piercing" value="${esc(store.get('mmnotes2', ''))}">
+      ${store.get('aipass', '') ? '' : '<label class="f" for="mmpass">Passcode</label><input type="password" id="mmpass" autocomplete="current-password">'}
+      <div class="mm-pair">${[['Now', now], ['New', d.made?.url]].map(([l, u]) => `<figure><figcaption class="muted">${l}</figcaption><div class="mm-pic">${u ? `<img src="${u}" alt="${l === 'Now' ? 'Your model now' : 'Your new model'}">` : '<span class="muted">Your new model shows here</span>'}</div></figure>`).join('')}</div>
+      ${d.made && d.made.match < myModel.GOOD_MATCH ? `<div class="gap" role="alert">This one changed her shape (${Math.round(d.made.match * 100)}% the same outline), so clothes may not line up. Try again for a closer one.</div>` : ''}
+      <div id="mmstatus" class="muted" role="status" aria-live="polite">${esc(d.msg)}</div>
+      <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+        <button class="primary" id="mmgo" ${d.busy || !d.face ? 'disabled' : ''}>${d.made ? '🔄 Try again' : '✨ Make my model'}</button>
+        ${d.made ? '<button class="primary" id="mmuse">Use this model</button>' : ''}
+        ${prof?.modelBase ? '<button class="ghost danger" id="mmreset">Back to the standard model</button>' : ''}
+        <button class="ghost" id="mmcancel">Close</button></div>
+      <p class="muted" style="margin-top:8px">Each try uses about 80 of today’s 10,000 free Cloudflare credits.</p>`, 'Make my model');
+    $('#mmcancel').onclick = closeModal;
+    const keep = () => { const n = $('#mmnotes'); if (n) store.set('mmnotes2', n.value.trim()); };
+    $('#mmface').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; try { d.face = await myModel.photoInput(f); d.msg = ''; } catch (err) { d.msg = err.message; } keep(); paint(); };
+    $('#mmgo').onclick = async () => {
+      keep(); const pass = store.get('aipass', '') || $('#mmpass')?.value.trim();
+      if (!pass) { d.msg = 'Enter your passcode first.'; return paint(); }
+      d.busy = true; d.msg = 'Drawing your model… (about 20 seconds)'; paint();
+      try {
+        const image = await myModel.headInput(std()); // (only her head and shoulders go: the rest of her is kept, so clothes still fit)
+        const r = await fetch('/api/starter', { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': pass }, body: JSON.stringify({ model: true, image, face: d.face, notes: store.get('mmnotes2', '') }) });
+        const j = await r.json().catch(() => ({}));
+        if (j.limit) throw new Error(`Today’s free Cloudflare credits are used up${j.resetAt ? ` — try again after ${new Date(j.resetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ' — try again tomorrow'}. Nothing was charged.`);
+        if (!r.ok) throw new Error(j.error || `The server said ${r.status}`);
+        store.set('aipass', pass);
+        if (d.made) URL.revokeObjectURL(d.made.url);
+        d.made = await myModel.finishHead(j.image, std()); d.msg = 'Here she is. Use this model, or try again.';
+      } catch (e) { d.msg = e.message || 'That didn’t work — try again.'; }
+      d.busy = false; paint();
+    };
+    if ($('#mmuse')) $('#mmuse').onclick = async () => {
+      const rec = { ...(S.profile || { id: 'me', display: 'model' }), id: 'me', modelBase: d.made.blob, modelAt: Date.now(), modelMatch: Math.round(d.made.match * 1000) / 1000 };
+      await put('profile', rec); S.profile = rec; toast('Your model is saved ✓'); setTimeout(() => location.reload(), 600); // (the model, its outline and fitted pieces are rebuilt for the new picture)
+    };
+    if ($('#mmreset')) $('#mmreset').onclick = async () => {
+      if (!confirm('Go back to the standard model?')) return;
+      const rec = { ...S.profile }; delete rec.modelBase; delete rec.modelAt; delete rec.modelMatch;
+      if (rec.photo) { await put('profile', rec); } else { await del('profile', 'me'); } setTimeout(() => location.reload(), 300);
+    };
+  };
+  paint();
 }
 
 /* ───────────────────────── my photo (for the photoreal try-on) ───────────────────────── */
@@ -842,14 +910,15 @@ function openModelModal() {
     };
     $('#msave').onclick = async () => {
       const photo = d.canvas ? await canvasToBlob(d.canvas, 'image/jpeg', 0.9) : prof?.photo || null;
-      const rec = { id: 'me', rev: d.canvas ? Date.now() : prof?.rev || Date.now(), W: d.canvas?.width || prof?.W || 0, H: d.canvas?.height || prof?.H || 0, photo, display: photo ? d.display : 'model' };
+      const rec = { ...(prof || {}), id: 'me', rev: d.canvas ? Date.now() : prof?.rev || Date.now(), W: d.canvas?.width || prof?.W || 0, H: d.canvas?.height || prof?.H || 0, photo, display: photo ? d.display : 'model' };
       await put('profile', rec); S.profile = rec;
       S.urls.delete('profile'); if (rec.photo) url('profile', rec.photo);
       closeModal(); toast('Saved ✓'); render();
     };
     if ($('#mreset')) $('#mreset').onclick = async () => {
       if (!confirm('Remove your saved photo?')) return;
-      await del('profile', 'me'); S.profile = null; S.urls.delete('profile'); closeModal(); render();
+      if (prof?.modelBase) { const rec = { ...prof, photo: null, display: 'model' }; await put('profile', rec); S.profile = rec; } else { await del('profile', 'me'); S.profile = null; } // (your own model stays)
+      S.urls.delete('profile'); closeModal(); render();
     };
   };
   paint();
@@ -933,6 +1002,14 @@ function stageHTML() {
 function mountStage() { if (S.scene === 'closet' && S.view === 'tryon') return wicRefresh(); const el = $('#stage'); if (el) el.innerHTML = stageHTML(); }
 const refreshStage = mountStage;
 
+/** Thin line icons for the Try On tools (editorial look: no emoji). */
+const ico = (d) => `<span class="lic" aria-hidden="true"><svg viewBox="0 0 24 24">${d}</svg></span>`;
+const LINE = {
+  style: ico('<path d="M12 3.5 13.9 9l5.6.2-4.4 3.5 1.6 5.5L12 15l-4.7 3.2 1.6-5.5-4.4-3.5L10.1 9z"/>'),
+  clear: ico('<path d="M5 7h14M10 7V4.5h4V7M6.5 7l1 12.5h9L17.5 7"/>'),
+  model: ico('<circle cx="12" cy="6" r="2.6"/><path d="M8 21v-6.5L6.5 9.5h11L16 14.5V21"/>'),
+  save: ico('<path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/>'),
+};
 const DRAWERS = [['fit', '📏 Fit'], ['looks', '💾 Looks'], ['ai', '✨ Photoreal'], ['me', '🧍 Me']];
 
 function metersHTML(worn) {
@@ -958,6 +1035,7 @@ function casHTML() {
   };
   return `<div class="cas" role="region" aria-label="Customize your model">
     <div class="cas-tabs" role="group" aria-label="What to change">${CAS_TABS.filter(([k]) => tabs.includes(k)).map(([k, l, e]) => `<button class="${S.casTab === k ? 'on' : ''}" aria-pressed="${S.casTab === k}" data-act="cas" data-v="${k}"><span aria-hidden="true">${e}</span><small>${l}</small></button>`).join('')}${close}</div>
+    <button class="primary cas-me" data-act="mymodel"><span aria-hidden="true">✨</span> ${S.profile?.modelBase ? 'Remake my model' : 'Make my model look like me'}</button>
     <div class="cas-opts">${panes[S.casTab] || panes[tabs[0]]}</div></div>`;
 }
 
@@ -1050,7 +1128,7 @@ function gameBarHTML(big) {
   const [em, label] = PHASES[d.phase] || PHASES.challenge, stk = streakNow();
   const msg = d.phase === 'done' ? 'Day done. See you tomorrow!' : d.phase === 'evening' ? `You scored ${d.stars}★. Tap End the day to finish.` : hasOutfit() ? 'Looking good? Rate it at the mirror.' : 'Get dressed!';
   return `<div class="gamebar ${big ? 'big' : ''} ${S.gbOpen ? 'open' : ''}" role="region" aria-label="Today’s challenge">
-    ${big ? '' : `<div class="gb-pillrow"><button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>${d.phase === 'done' ? '' : `<button class="gb-ratebtn" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate</button>`}<button class="gb-closet" data-act="scene" data-v="closet" aria-label="Walk-in closet"><span aria-hidden="true">✨</span></button></div>`}
+    ${big ? '' : `<div class="gb-pillrow"><button class="gb-pill" data-act="gbpill" aria-expanded="${!!S.gbOpen}"><span aria-hidden="true">${em}</span> ${esc(themeLine(d.theme))} <span class="gb-coins"><span aria-hidden="true">🪙</span> ${S.game.coins}<span class="sr-only"> coins</span></span><span class="gb-caret" aria-hidden="true">▾</span></button>${d.phase === 'done' ? '' : `<button class="gb-ratebtn" data-act="rate" ${hasOutfit() ? '' : 'disabled'}><span aria-hidden="true">⭐</span> Rate</button>`}<button class="gb-closet" data-act="scene" data-v="closet" aria-label="Walk-in closet"><span aria-hidden="true">✦</span></button></div>`}
     <div class="gb-top"><span class="gb-phase"><span aria-hidden="true">${em}</span> ${label}</span><span class="gb-stats"><span title="Coins"><span aria-hidden="true">🪙</span> <b>${S.game.coins}</b><span class="sr-only"> coins</span></span><button class="gb-shop" data-act="shop"><span aria-hidden="true">🛍️</span> Shop</button>${stk ? `<span title="Streak"><span aria-hidden="true">🔥</span> <b>${stk}</b><span class="sr-only">-day streak</span></span>` : ''}</span></div>
     <div class="gb-theme">Theme: <b>${esc(themeLine(d.theme))}</b> — ${msg}</div>
     <div class="gb-meta"><small>${SOURCE_NOTE[d.theme.source]}</small>
@@ -1303,10 +1381,10 @@ function renderMirror() {
       </div>
       ${dollOn() ? dollFitHTML(worn, fit) : ''}
       <div class="tools" role="group" aria-label="Outfit">
-        <button data-act="styleme"><span aria-hidden="true">🎲</span>Style me</button>
-        <button data-act="clear"><span aria-hidden="true">🧺</span>Clear</button>
-        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look"><span aria-hidden="true">💇</span>Hair</button>
-        <button class="go" data-act="gosave"><span aria-hidden="true">💾</span>Save look</button>
+        <button data-act="styleme">${LINE.style}Style me</button>
+        <button data-act="clear">${LINE.clear}Clear</button>
+        <button class="${S.cas ? 'on' : ''}" aria-pressed="${S.cas}" data-act="drawer" data-v="look">${LINE.model}Model</button>
+        <button class="go" data-act="gosave">${LINE.save}Save look</button>
       </div>
     </div>
     <div class="dress-right">${finderHTML()}${looksHTML()}</div></div>`;
@@ -1499,7 +1577,7 @@ async function makeLookCard() {
 const money = (n) => `$${n >= 100 ? Math.round(n) : n.toFixed(2)}`;
 function insightsHTML(ins) {
   const row = (i, right) => `<div class="logrow"><img src="${url(i.id)}" style="width:32px;height:32px;object-fit:contain;background:var(--tile);border-radius:6px" alt=""> <span class="grow">${esc(i.name)}</span><b>${right}</b></div>`;
-  return `<div class="panel"><h3>Closet insights</h3>
+  return `<div class="panel"><h3>Wardrobe insights</h3>
     ${ins.pricedCount ? `<p class="muted">${ins.pieces} pieces · <b>${money(ins.value)}</b> invested${ins.avgCostPerWear !== null ? ` · average <b>${money(ins.avgCostPerWear)}</b> per wear` : ''}</p>` : '<p class="muted">Add what you paid for a piece (✎ Edit) to see cost per wear and your best-value buys.</p>'}
     ${ins.bestValue.length ? `<div class="muted">Best value so far</div>${ins.bestValue.map((b) => row(b.item, `${money(b.cpw)}/wear`)).join('')}` : ''}
     ${ins.wearMore.length ? `<div class="muted" style="margin-top:8px">Worth wearing more — you paid for these</div>${ins.wearMore.map((i) => row(i, money(i.price))).join('')}` : ''}
@@ -1539,7 +1617,7 @@ function renderPlanner() {
         <div class="row" style="margin-top:8px"><button class="primary" data-act="logday">Log it</button><button class="ghost" data-act="tab-tryon">Edit outfit</button></div></div>
       ${lookbookHTML()}
       ${insightsHTML(ins)}
-      <div class="panel"><h3>Closet stats</h3>
+      <div class="panel"><h3>Wardrobe stats</h3>
         <div class="muted">Most worn</div>${top.map((i) => `<div class="logrow"><img src="${url(i.id)}" style="width:32px;height:32px;object-fit:contain" alt=""> <span class="grow">${esc(i.name)}</span><b>${counts[i.id]}×</b></div>`).join('') || '<div class="muted">Log some outfits to see this.</div>'}
         ${never.length ? `<div class="muted" style="margin-top:10px">Never worn — give them a turn:</div><div class="thumbs" style="margin-top:4px">${never.map((i) => `<img src="${url(i.id)}" title="${esc(i.name)}" alt="${esc(i.name)}">`).join('')}</div>` : ''}</div>
     </div></div>`;
@@ -1563,7 +1641,7 @@ function renderInspo() {
     <div class="chips" id="iwant" role="group" aria-labelledby="iwl">${['dress', 'top', 'bottom', 'outer', 'shoes', 'bag'].map((s) => `<button class="chip ${(d?.wanted || ['top', 'bottom', 'shoes']).includes(s) ? 'on' : ''}" aria-pressed="${(d?.wanted || ['top', 'bottom', 'shoes']).includes(s)}" data-s="${s}">${SLOT_LABEL[s]}</button>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="primary" data-act="saveinspo" ${d ? '' : 'disabled'}>📌 Save inspo</button></div>
     ${S.inspos.length ? `<h3 style="margin-top:16px">Saved inspo</h3><div class="inspo-saved">${S.inspos.map((n) => `<button class="thumbbtn" data-act="loadinspo" data-id="${n.id}" aria-label="Open saved inspo${n.occasion ? ' for ' + esc(n.occasion) : ''}"><img src="${url('inspo:' + n.id)}" alt=""></button>`).join('')}</div>` : ''}
-  </div><div id="iresult" aria-live="polite">${d ? '' : '<div class="empty"><h2>Shop your own closet</h2><p class="muted">Upload an outfit you love. I’ll pull its colour palette and rebuild the closest look from pieces you already own — and tell you what’s missing.</p></div>'}</div></div>`;
+  </div><div id="iresult" aria-live="polite">${d ? '' : '<div class="empty"><h2>Shop your own wardrobe</h2><p class="muted">Upload an outfit photo to recreate it from pieces you own and see what’s missing.</p></div>'}</div></div>`;
 
   const drop = $('#drop'), file = $('#ifile');
   drop.onclick = () => file.click();
@@ -1640,7 +1718,7 @@ function showMatch() {
     for (const { piece, best } of seen) { const s = slotOf(piece.type); if (best && best.score >= 60 && !(picks[s] && picks[s].score >= best.score)) picks[s] = best; }
     const missing = seen.filter(({ piece, best }) => !piece.made && !(best && best.score >= 75)).length;
     body = `<h3>In this look</h3><div class="ideas">${seen.map(({ piece: p, best }, k) => `<div class="idea"><div class="idea-what"><b>${esc(p.name)}</b><div class="muted">${esc(SLOT_LABEL[slotOf(p.type)] || p.type)} · ${esc(p.detail)}</div>${p.error ? `<div class="muted" role="alert">${esc(p.error)}</div>` : ''}</div>
-      ${best ? `<div class="idea-have"><img src="${url(best.item.id)}" alt=""><div><span class="muted">Closest you have</span><b>${esc(best.item.name)}</b></div>${pct(best.score)}</div>` : '<div class="idea-have muted">Nothing like it in your closet yet</div>'}
+      ${best ? `<div class="idea-have"><img src="${url(best.item.id)}" alt=""><div><span class="muted">Closest you have</span><b>${esc(best.item.name)}</b></div>${pct(best.score)}</div>` : '<div class="idea-have muted">Nothing like it in your wardrobe yet</div>'}
       ${p.made ? '<b class="ok">✓ Made for you</b>' : `<button class="${best && best.score >= 75 ? 'ghost' : 'primary'}" data-act="makeidea" data-v="${k}" ${p.busy ? 'disabled' : ''}>${p.busy ? 'Making…' : 'Make it for the model'}</button>`}</div>`).join('')}</div>
       ${missing > 1 ? `<button class="ghost" data-act="makeall" style="margin-top:8px">✨ Make the ${missing} missing pieces (about ${Math.round(missing * (wearAI.WEAR_NEURONS + 12))} neurons)</button>` : ''}`;
   } else {
@@ -1650,7 +1728,7 @@ function showMatch() {
     const ai = !d.ideas ? `<p class="muted">Let an AI look at the picture: it names each piece (a white cardigan, light blue trousers…), finds the closest one you have and can make the rest for your model (about 12 neurons to look).</p><button class="primary" data-act="inspoideas">✨ What’s in this look?</button>`
       : d.ideas.busy ? '<p class="muted" role="status">Looking at the picture…</p>'
       : d.ideas.error ? `<p class="muted" role="alert">${esc(d.ideas.error)}</p><button class="ghost" data-act="inspoideas">Try again</button>` : '<p class="muted">No pieces found in this picture.</p>';
-    body = `<div id="ideas">${ai}</div><h3>Closest by colour</h3>${rows || '<p class="muted">Nothing in your closet is close enough yet.</p>'}
+    body = `<div id="ideas">${ai}</div><h3>Closest by colour</h3>${rows || '<p class="muted">Nothing in your wardrobe is close enough yet.</p>'}
       ${m.gaps.map((g) => `<div class="gap">🛍️ You’re missing a <b>${SLOT_LABEL[g.slot].toLowerCase()}</b> like this — look for something in <b>${colorName(g.hex)}</b>. <button class="chip" data-act="wishgap" data-slot="${g.slot}" data-hex="${g.hex}">+ Wishlist</button></div>`).join('')}`;
   }
   d.picks = Object.fromEntries(Object.entries(picks).map(([s, p]) => [s, p.item.id]));
@@ -1687,7 +1765,7 @@ async function handleClick(e) {
     case 'carl': case 'carr': { const row = el.closest('.car')?.querySelector('.car-row'); row?.scrollBy({ left: (act === 'carl' ? -1 : 1) * row.clientWidth * 0.9, behavior: 'smooth' }); return; }
     case 'ftop': return window.scrollTo({ top: 0, behavior: 'smooth' });
     case 'delpiece': { // Wardrobe only: delete a piece from the closet, with Undo
-      const it = itemById(id); if (!it || !confirm(`Delete “${it.name}” from your closet?`)) return;
+      const it = itemById(id); if (!it || !confirm(`Delete “${it.name}” from your wardrobe?`)) return;
       const copy = { ...it }; await removeItems([id], { byYou: true }); render();
       return toastUndo(`Deleted “${it.name}”`, async () => { await restorePiece(copy); render(); toast(`“${copy.name}” is back ✓`); });
     }
@@ -1695,7 +1773,7 @@ async function handleClick(e) {
     case 'edit': return openItemModal(itemById(id));
     case 'ftype': S.filter.type = v; return renderCloset();
     case 'fsrc': S.filter.src = v; return renderCloset();
-    case 'rmstarterreview': { const bad = S.starterReview || []; if (!bad.length || !confirm(`Delete ${bad.length} starter piece${bad.length === 1 ? '' : 's'} that need review? You can make them again from Starter closet.`)) return; for (const b of bad) await del('items', b.id); S.starterReview = []; render(); return toast(`Deleted ${bad.length} ✓`); }
+    case 'rmstarterreview': { const bad = S.starterReview || []; if (!bad.length || !confirm(`Delete ${bad.length} starter piece${bad.length === 1 ? '' : 's'} that need review? You can make them again from Starter pieces.`)) return; for (const b of bad) await del('items', b.id); S.starterReview = []; render(); return toast(`Deleted ${bad.length} ✓`); }
     case 'starterbatch': return openStarterBatch(v);
     case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
     case 'pickmode': S.picking = !S.picking; S.pick = []; return renderCloset();
@@ -1740,7 +1818,7 @@ async function handleClick(e) {
     case 'restore': return $('#restore').click();
     case 'syncconnect': { const k = $('#synckey').value; if (!k.trim()) return toast('Enter your sync key first'); syncConnect(k); if (!(await runSync())) { syncDisconnect(); render(); } return; }
     case 'syncnow': return runSync();
-    case 'syncoff': if (confirm('Disconnect? Your closet stays on this device; the cloud copy is left as it is.')) { syncDisconnect(); syncMsg = ''; render(); } return;
+    case 'syncoff': if (confirm('Disconnect? Your wardrobe stays on this device; the cloud copy is left as it is.')) { syncDisconnect(); syncMsg = ''; render(); } return;
     case 'rmsamples': {
       const ids = S.items.filter((i) => i.sample).map((i) => i.id);
       if (!ids.length || !confirm(`Remove the ${ids.length} sample pieces? Your own pieces stay.`)) return;
@@ -1765,7 +1843,7 @@ async function handleClick(e) {
     case 'ftyp': FIND.type = v; FIND.more = 0; return refreshFinder();
     case 'fcol': FIND.color = v; FIND.more = 0; return refreshFinder();
     case 'focc': FIND.occ = v; FIND.more = 0; return refreshFinder();
-    case 'unwear': { // the ✕ on a piece you're wearing takes it off the model (it stays in your closet)
+    case 'unwear': { // the ✕ on a piece you're wearing takes it off the model (it stays in your wardrobe)
       for (const k of Object.keys(S.outfit)) if (S.outfit[k] === id) delete S.outfit[k];
       if (S.adjust === id) S.adjust = Object.values(S.outfit).at(-1) || null;
       return renderTryon();
@@ -1788,7 +1866,7 @@ async function handleClick(e) {
     case 'phshare': { const b = await photoBlob(photoCanvas()), r = await shareOrDownload(b, `look-${iso(new Date())}.jpg`, 'My look'); return r !== 'cancelled' && toast(r === 'shared' ? 'Shared ✓' : 'Photo saved'); }
     case 'lbopen': return lookbookOpen(id);
     case 'lbshare': { const w = S.wears.find((x) => x.id === id); if (!w?.photo) return; const r = await shareOrDownload(w.photo, `look-${w.date}.jpg`, 'My look'); return r !== 'cancelled' && toast(r === 'shared' ? 'Shared ✓' : 'Photo saved'); }
-    case 'lbdel': { const w = S.wears.find((x) => x.id === id); if (!w) return; delete w.photo; await put('wears', w); URL.revokeObjectURL(S.urls.get('photo:' + id) || ''); S.urls.delete('photo:' + id); closeModal(); return renderPlanner(); }
+    case 'lbdel': { const w = S.wears.find((x) => x.id === id); if (!w) return; delete w.photo; await put('wears', w); URL.revokeObjectURL(S.urls.get('photo:' + id) || ''); S.urls.delete('photo:' + id); closeModal(); return render(); }
     case 'shop': return showShop(S.shopTab || 'furn');
     case 'shoptab': return showShop(v);
     case 'shopbuy': return shopBuy(v);
@@ -1808,10 +1886,12 @@ async function handleClick(e) {
     case 'dellook': await del('outfits', id); S.outfits = S.outfits.filter((o) => o.id !== id); return renderTryon();
     case 'wearToday': S.date = iso(new Date()); S.month = new Date(); await logWear(S.date, S.mood); return renderTryon();
     case 'tab-tryon': return go('tryon');
-    case 'month': S.month = new Date(S.month.getFullYear(), S.month.getMonth() + +v, 1); return renderPlanner();
-    case 'pickday': S.date = v; return renderPlanner();
-    case 'logday': await logWear(S.date, $('#wocc').value, $('#wnote').value.trim()); return renderPlanner();
-    case 'delwear': await del('wears', id); S.wears = S.wears.filter((w) => w.id !== id); return renderPlanner();
+    case 'plantab': S.planTab = v; return render();
+    case 'mymodel': return openMyModel();
+    case 'month': S.month = new Date(S.month.getFullYear(), S.month.getMonth() + +v, 1); return render();
+    case 'pickday': S.date = v; return render();
+    case 'logday': await logWear(S.date, $('#wocc').value, $('#wnote').value.trim()); return render();
+    case 'delwear': await del('wears', id); S.wears = S.wears.filter((w) => w.id !== id); return render();
     case 'inspoideas': {
       const d = S.inspo; if (!d) return;
       const pass = store.get('aipass', '') || prompt('Your passcode (the APP_PASSCODE set in Vercel):')?.trim(); if (!pass) return; store.set('aipass', pass);
@@ -1822,7 +1902,7 @@ async function handleClick(e) {
       const todo = matchPieces(S.items, d.ideas, {}).filter(({ piece, best }) => !piece.made && !piece.busy && !(best && best.score >= 75)).map(({ piece }) => piece);
       for (const p of todo) {
         p.busy = true; p.error = ''; paintIdeas();
-        try { await makePieceForModel(p, pass, { occasion: d.occasion }); p.made = true; toast(`${p.name} added to your closet ✓`); }
+        try { await makePieceForModel(p, pass, { occasion: d.occasion }); p.made = true; toast(`${p.name} added to your wardrobe ✓`); }
         catch (e) { p.error = e.message; p.busy = false; paintIdeas(); if (/allowance|passcode/i.test(e.message)) break; continue; }
         p.busy = false; paintIdeas();
       }
@@ -1832,7 +1912,7 @@ async function handleClick(e) {
       const d = S.inspo, p = d?.ideas?.[+v]; if (!p || p.busy) return;
       const pass = store.get('aipass', ''); if (!pass) return;
       p.busy = true; p.error = ''; paintIdeas();
-      try { await makePieceForModel(p, pass, { occasion: d.occasion }); p.made = true; toast(`${p.name} added to your closet ✓`); }
+      try { await makePieceForModel(p, pass, { occasion: d.occasion }); p.made = true; toast(`${p.name} added to your wardrobe ✓`); }
       catch (e) { p.error = e.message; }
       p.busy = false; return paintIdeas();
     }
@@ -1855,7 +1935,8 @@ async function handleClick(e) {
       } catch (e) { msg.textContent = e.message; return; }
     }
     case 'tryinspo': S.outfit = { ...S.inspo.picks }; S.scene = 'doll'; return go('tryon');
-    default: if (planActs[act]) return planActs[act](ctx, el);
+    default: if (todayActs[act]) return todayActs[act](ctx, el);
+      if (planActs[act]) return planActs[act](ctx, el);
   }
 }
 
@@ -1890,11 +1971,25 @@ async function openFromLink() {
 }
 
 // helpers handed to the Plan tab
+/* Editorial look: no emoji. UI text, the clothing-type and occasion labels and older screens still carry some, so they're taken out of
+ *  whatever is put on screen (typographic marks the UI relies on, like ♥ ✓ ✕ ✎, stay). */
+const EMOJI = /(?![♥✓✔✕✎☑✦×◀▶▲▼])[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}][\u{FE0F}\u{200D}\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}]*\s?/gu;
+function deEmoji(root) {
+  if (root.nodeType === 3) { if (EMOJI.test(root.data)) root.data = root.data.replace(EMOJI, ''); EMOJI.lastIndex = 0; return; }
+  if (root.nodeType !== 1 || root.closest?.('svg')) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) { EMOJI.lastIndex = 0; if (EMOJI.test(n.data)) { EMOJI.lastIndex = 0; n.data = n.data.replace(EMOJI, ''); } }
+  EMOJI.lastIndex = 0;
+}
+new MutationObserver((list) => { for (const m of list) { if (m.type === 'characterData') deEmoji(m.target); else m.addedNodes.forEach(deEmoji); } })
+  .observe(document.body, { childList: true, subtree: true, characterData: true });
+deEmoji(document.body);
+
 const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure, wearCounts, go, wearIds, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
 
 (async () => {
   await load();
-  loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); }); // so "Style me" and the weather chip know today's weather
+  loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); else if (S.view === 'today') { S.today && (S.today.date = ''); render(); } }); // so "Style me" and the weather chip know today's weather
   render();
   window.__closet = S; // handy for debugging
   Object.defineProperty(window, '__wic', { get: () => wic });
