@@ -5114,6 +5114,78 @@
      "detail": "small metallic hoops"
     }
    ]
+  },
+  "1407443631499321": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/7d/7d/51/7d7d51becb79e21446968060b9bb2b01.jpg",
+   "text": "blazer do momentos um look para o dia a dia, com e estilo!",
+   "pieces": [
+    {
+     "name": "Black blazer",
+     "type": "outerwear",
+     "colors": [
+      "black"
+     ],
+     "detail": "long sleeve, notched lapel, tailored fit"
+    },
+    {
+     "name": "White tank top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "scoop neckline, sleeveless, fitted"
+    },
+    {
+     "name": "Black trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "high waisted, tailored"
+    },
+    {
+     "name": "Black handbag",
+     "type": "bags",
+     "colors": [
+      "black"
+     ],
+     "detail": "structured top handle bag with gold hardware"
+    },
+    {
+     "name": "Gold necklace",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "delicate chain with a small heart pendant"
+    },
+    {
+     "name": "Gold hoop earrings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "thick chunky hoops"
+    },
+    {
+     "name": "Black belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "thin with a gold rectangular buckle"
+    },
+    {
+     "name": "Smartwatch",
+     "type": "accessories",
+     "colors": [
+      "black",
+      "silver"
+     ],
+     "detail": "rectangular face with a black strap"
+    }
+   ]
   }
  }
 }
