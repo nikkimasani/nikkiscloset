@@ -751,12 +751,31 @@ test('Make my model: the new head blends in on an ellipse, and her skin follows 
   assert.equal(headMask(m.cx + m.rx + 1, m.cy), 0, 'outside the ellipse is all her');
   const edge = headMask(m.cx + m.rx - m.soft / 2, m.cy); assert.ok(edge > 0 && edge < 1, 'soft across the edge');
   assert.ok(headMask(448, 330) === 0, 'her shoulders and chest are never replaced');
-  assert.ok(CHEEKS.x >= HEAD.x && CHEEKS.y + CHEEKS.h <= HEAD.h && headMask(CHEEKS.x, CHEEKS.y) === 1, 'the cheeks are read inside the new head');
-  assert.deepEqual(toneRatio([200, 150, 120], [100, 75, 60]), [0.65, 0.65, 0.65], 'a much darker reading is held back');
+  assert.ok(CHEEKS.x >= HEAD.x && CHEEKS.y + CHEEKS.h <= HEAD.h && headMask(CHEEKS.x + CHEEKS.w / 2, CHEEKS.y + CHEEKS.h / 2) === 1, 'the face is read inside the new head');
+  assert.deepEqual(toneRatio([200, 150, 120], [100, 75, 60]), [0.75, 0.75, 0.75], 'a much darker reading is held back');
   assert.deepEqual(toneRatio([200, 150, 120], [180, 135, 108]).map((x) => Math.round(x * 100) / 100), [0.9, 0.9, 0.9]);
   assert.deepEqual(toneRatio(null, [1, 2, 3]), [1, 1, 1]);
   const img = { width: 2, height: 1, data: new Uint8ClampedArray([10, 20, 30, 255, 30, 40, 50, 0]) };
   assert.deepEqual(meanColor(img, { x: 5, y: 7, w: 2, h: 1 }, 5, 7), [10, 20, 30], 'only solid pixels, at an offset');
+});
+
+test('Make my model: skin tone is read from skin only, and the new head is lined up where hers was', async () => {
+  const { isSkin, skinTone, headFrame, alignHead, CROWN_Y, EYES_Y } = await import('../public/js/mymodel.js');
+  assert.ok(isSkin(198, 140, 110) && isSkin(150, 100, 75), 'light and deep skin');
+  assert.ok(!isSkin(40, 30, 28) && !isSkin(250, 250, 248) && !isSkin(120, 120, 125) && !isSkin(255, 0, 255), 'not hair, highlight, grey shadow or the backdrop');
+  const w = 20, h = 20, data = new Uint8ClampedArray(w * h * 4);
+  for (let p = 0; p < w * h; p++) data.set(p % 4 === 0 ? [40, 30, 28, 255] : [190, 135, 105, 255], p * 4); // a quarter of it dark hair
+  assert.deepEqual(skinTone({ width: w, height: h, data }, { x: 0, y: 0, w, h }), [190, 135, 105], 'hair falling in the box does not darken the reading');
+  assert.equal(skinTone({ width: 2, height: 2, data: new Uint8ClampedArray(16).fill(255) }, { x: 0, y: 0, w: 2, h: 2 }), null, 'too little skin: no reading');
+  // a head: an oval of solid pixels; the same head drawn 10% bigger and 12 px lower lines back up
+  const W = 200, H = 260, oval = (cx, top, rx, ry) => { const d = new Uint8ClampedArray(W * H * 4); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (((x - cx) / rx) ** 2 + ((y - top - ry) / ry) ** 2 <= 1) d[(y * W + x) * 4 + 3] = 255; return { width: W, height: H, data: d }; };
+  const b = headFrame(oval(100, 41, 60, 100)), n = headFrame(oval(100, 53, 66, 110));
+  assert.ok(Math.abs(b.crown - 41) <= 2, 'crown found (the first row a few pixels wide)'); assert.ok(Math.abs(b.cx - 100) <= 1);
+  const fit = alignHead(b, n);
+  assert.ok(fit && Math.abs(fit.s - b.w / n.w) < 1e-9 && fit.s < 1, 'scaled down to her head width');
+  assert.ok(Math.abs(n.crown * fit.s + fit.dy - b.crown) < 1e-9 && Math.abs(n.cx * fit.s + fit.dx - b.cx) < 1e-9, 'crown and middle land on hers');
+  assert.equal(alignHead(b, { ...n, w: n.w * 2 }), null, 'a reading too far off is not trusted');
+  assert.equal(EYES_Y - CROWN_Y, 112);
 });
 
 test('boots under long trousers show only below the hem; under a short skirt they show whole', async () => {
