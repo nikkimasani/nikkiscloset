@@ -1,5 +1,5 @@
 {
- "version": 1794978385030,
+ "version": 1794988568433,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -27739,6 +27739,24 @@
     "#3b4523"
    ],
    "t": 1794963293041
+  },
+  "starter-cream-blazer-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 248,
+    "w": 636,
+    "h": 804
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ece6d7",
+    "name": "Cream"
+   },
+   "colors": [
+    "#ece6d7"
+   ],
+   "t": 1794988568433
   }
  },
  "failed": {
