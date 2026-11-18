@@ -35,8 +35,12 @@ for (const id of redo) { delete index.pieces[id]; rmSync(`${DIR}/${id}.webp`, { 
 const outdated = (i) => index.pieces[i.id]?.kind === 'worn' && (index.pieces[i.id].v || 1) < WEAR_VERSION;
 const blocked = new Set(Object.keys(index.blocked || {})); // pieces taken out on review more than once: not made again unless asked for by name (--redo)
 const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!only || only.includes(i.id)) && (!blocked.has(i.id) || redo.includes(i.id));
+// pieces Nikki asked for come first (PRELOAD_FIRST: words in the name, comma-separated; default blazers), then the rest in catalogue order
+const FIRST = String(process.env.PRELOAD_FIRST ?? 'blazer').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);
+const wanted = (i) => FIRST.some((w) => i.name.toLowerCase().includes(w));
+const first = (list) => [...list.filter(wanted), ...list.filter((i) => !wanted(i))];
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
-  : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id)))];
+  : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...first(ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id))))];
 console.log(`${Object.keys(index.pieces).length} of ${ITEMS.length} made; ${todo.length} to make this run`);
 if (!todo.length) process.exit(0);
 
