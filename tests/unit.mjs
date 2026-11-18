@@ -270,9 +270,11 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
-test('a tucked top hides below the bottoms\' own waistband, only as wide as the bottoms (sleeves stay)', () => {
+test('a tucked top hides below the bottoms\' own waistband, out to her sides but short of her arms (sleeves stay)', () => {
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms', { wornBox: { x: 300, y: 690, w: 300, h: 500 } }) }, urls });
-  assert.match(svg, /<clipPath id="tuckclip-\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\d+V\d+H0Z M310 706H590V\d+H310Z"\/>/);
+  const [wl, wr] = [pack.points.waistbandL[0] - 30, pack.points.waistbandR[0] + 30];
+  assert.match(svg, new RegExp(`<clipPath id="tuckclip-\\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\\d+V\\d+H0Z M${wl} 706H${wr}V\\d+H${wl}Z"/>`));
+  assert.ok(wl > pack.points.elbowL[0] && wr < pack.points.elbowR[0], 'her arms are outside the cut');
 });
 
 test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
@@ -281,7 +283,7 @@ test('a tucked top follows the bottoms\' waistband when their outline is known (
   const at = (x) => ys.find(([px]) => px === x)?.[1];
   assert.ok(Math.abs(at(80) - (190 * 4 + 12)) <= 8, `the cut sits just inside their top edge in the middle (${at(80)})`);
   assert.ok(at(40) < at(80) - 20, 'and rises with the waistband at the sides');
-  assert.ok(ys.every(([x]) => x >= 5 * 4 && x <= 34 * 4), 'only as wide as the bottoms');
+  assert.ok(ys.every(([x]) => x >= 5 * 4 && x <= pack.points.waistbandR[0] + 30), 'from the bottoms\' own edge out to just past her waistband, never further');
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls, fits: new Map([['t', 'blob:tf'], ['b', 'blob:bf']]), masks: new Map([['b', { k: 4, top }]]) });
   assert.match(svg, /<clipPath id="tuckclip-\d+"[^>]*><path clip-rule="evenodd" d="M0 0H896V1776H0Z M\d+ \d+L/);
 });
@@ -322,10 +324,10 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
 });
 
-test('a bodysuit always goes under the bottoms (no trim at the waist), even with an old untucked setting', () => {
+test('a bodysuit always goes under the bottoms, trimmed at their waistband like a tucked top, even with an old untucked setting', () => {
   const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
   const svg = dollSVG({ pack, items, urls });
-  assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.doesNotMatch(svg, /clip-path="url\(#tuckclip-\d+\)"/);
+  assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.match(svg, /clip-path="url\(#tuckclip-\d+\)"/, 'trimmed so its sides never show beside narrower trousers');
   assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['top', 'bottom']);
   assert.ok(!isTuckable(items.top, pack), 'no Tuck in / Untuck button for a bodysuit');
 });
