@@ -113,6 +113,7 @@ export function garmentTransform(anchor, fit) {
 /** Tucked in: the top hides below the bottoms' own waistband, across her hips only, so sleeves and hands stay. With the bottoms' outline
  *  (edge: { k, top } — the first opaque row of each column of their worn picture, in steps of k pixels) the cut follows their waistband, so a
  *  low-rise pair or a curved waistband leaves no gap of skin; otherwise it is a straight line just below where they start. */
+const SIDE = 30; // how far past her waistband points a tucked top is trimmed (her arms hang further out)
 export function tuckCut(pack, bottom, edge) {
   const P = pack.points, [W, H] = pack.size, bx = bottom?.wornBox, dip = 12;
   if (edge?.top?.length) {
@@ -123,10 +124,19 @@ export function tuckCut(pack, bottom, edge) {
         const win = []; for (let d = -3; d <= 3; d++) { const y = edge.top[x + d]; if (y >= 0) win.push(y); }
         if (win.length) { win.sort((a, b) => a - b); pts.push([x * edge.k, win[win.length >> 1] * edge.k + dip]); }
       }
-      if (pts.length > 1) return `M${pts.map(([x, y]) => `${num(x)} ${num(y)}`).join('L')}L${num(pts[pts.length - 1][0])} ${H}L${num(pts[0][0])} ${H}Z`;
+      if (pts.length > 1) {
+        // below the waistband line the top is hidden right across her waist, short of her arms, not only under the bottoms: where their sides
+        // curve down over her hips, a top wider than them would otherwise show above the curve, beside them
+        const mid = pts.slice(Math.floor(pts.length / 4), Math.ceil(pts.length * 3 / 4)).map(([, y]) => y), line = Math.max(...mid); // (the lowest point of the waistband's front: never above their top edge there)
+        const L = P.waistbandL ? Math.min(pts[0][0], P.waistbandL[0] - SIDE) : pts[0][0], R = P.waistbandR ? Math.max(pts.at(-1)[0], P.waistbandR[0] + SIDE) : pts.at(-1)[0];
+        const at = new Map(pts.map(([x, y]) => [Math.round(x), y])), out = [];
+        for (let x = Math.floor(L / edge.k) * edge.k; x <= R; x += edge.k) out.push([x, Math.min(at.get(Math.round(x)) ?? Infinity, line)]);
+        if (out.at(-1)[0] < R) out.push([R, line]);
+        return `M${out.map(([x, y]) => `${num(x)} ${num(y)}`).join('L')}L${num(R)} ${H}L${num(L)} ${H}Z`;
+      }
     }
   }
-  const cut = Math.round((bx?.y ?? P.belt?.[1] ?? pack.waistY) + 16), x0 = bx ? bx.x + 10 : (P.waistbandL?.[0] ?? 0), x1 = bx ? bx.x + bx.w - 10 : (P.waistbandR?.[0] ?? W);
+  const cut = Math.round((bx?.y ?? P.belt?.[1] ?? pack.waistY) + 16), x0 = Math.min(bx ? bx.x + 10 : W, P.waistbandL ? P.waistbandL[0] - SIDE : 0), x1 = Math.max(bx ? bx.x + bx.w - 10 : 0, P.waistbandR ? P.waistbandR[0] + SIDE : W);
   return `M${x0} ${cut}H${x1}V${H}H${x0}Z`;
 }
 function tuckClip(pack, bottom, n, edge) {
@@ -205,7 +215,7 @@ function hull(pts) {
 export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom;
-  const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && tuckOf(top, pack))), clipTop = tucked && top.type !== 'bodysuits'; // (a bodysuit simply goes under: nothing to trim)
+  const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && tuckOf(top, pack))), clipTop = tucked; // (a bodysuit goes under too, but is trimmed the same way: where it's wider than the trousers at her hips it would show beside them)
   const order = tucked ? pack.tuckedOrder : pack.clothesOrder;
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';

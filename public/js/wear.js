@@ -218,7 +218,8 @@ export async function extractWorn(blob, piece, pack) {
   }
   for (let i = 0; i < w * h; i++) m[i] = keepId.has(lab[i]) ? 1 : 0;
   if (type === 'outerwear' && !/coat|trench|duster|longline|cape|coatigan|maxi|knee/i.test(`${piece.name} ${piece.detail || ''}`)) { // a jacket, blazer or cardigan ends at the hips: trousers or legs it drew below go
-    const cut = Math.round((pack.points.crotch[1] + 40) / k); m.fill(0, cut * w);
+    const long = /oversized|boyfriend|relaxed/i.test(`${piece.name} ${piece.detail || ''}`); // (an oversized blazer reaches the middle of her thighs: cut lower, or its hem is chopped off flat)
+    const cut = Math.round((pack.points.crotch[1] + (long ? 170 : 40)) / k); m.fill(0, cut * w);
   }
   if (type !== 'shoes') { // her hands are never the piece (FLUX often draws them in her own skin, or over a pocket)
     const P = pack.points, r = 54 / k;

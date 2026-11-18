@@ -1,5 +1,5 @@
 {
- "version": 1794964804899,
+ "version": 1794978385030,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -684,25 +684,6 @@
    ],
    "t": 1793457199738
   },
-  "starter-oversized-beige-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 140,
-    "y": 250,
-    "w": 620,
-    "h": 734
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c9b5a3",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c9b5a3",
-    "#9a8579"
-   ],
-   "t": 1794100593454
-  },
   "starter-black-tailored-blazer": {
    "kind": "worn",
    "box": {
@@ -971,26 +952,6 @@
     "#191917"
    ],
    "t": 1793498695798
-  },
-  "starter-oatmeal-shirt-jacket": {
-   "kind": "worn",
-   "box": {
-    "x": 94,
-    "y": 250,
-    "w": 706,
-    "h": 734
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c5ac95",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c5ac95",
-    "#897666",
-    "#5a4737"
-   ],
-   "t": 1793642341891
   },
   "starter-gold-strappy-heeled-sandals": {
    "kind": "worn",
