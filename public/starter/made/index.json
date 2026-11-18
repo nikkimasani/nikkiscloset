@@ -1,5 +1,5 @@
 {
- "version": 1794964576889,
+ "version": 1794964804899,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -27396,25 +27396,6 @@
    ],
    "t": 1794963105828
   },
-  "starter-ecru-sweatpants": {
-   "kind": "worn",
-   "box": {
-    "x": 232,
-    "y": 662,
-    "w": 448,
-    "h": 968
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e3dbc7",
-    "name": "Cream"
-   },
-   "colors": [
-    "#e3dbc7",
-    "#a59a87"
-   ],
-   "t": 1794963112957
-  },
   "starter-black-a-line-midi-skirt": {
    "kind": "worn",
    "box": {
@@ -27661,26 +27642,6 @@
    ],
    "t": 1794963221225
   },
-  "starter-ivory-satin-mini-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 628,
-    "w": 454,
-    "h": 404
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f7f6e9",
-    "name": "White"
-   },
-   "colors": [
-    "#f7f6e9",
-    "#cac3aa",
-    "#a4967c"
-   ],
-   "t": 1794963224839
-  },
   "starter-chocolate-brown-satin-mini-skirt": {
    "kind": "worn",
    "box": {
@@ -27798,25 +27759,6 @@
     "#75753c"
    ],
    "t": 1794963276530
-  },
-  "starter-sage-green-linen-midi-skirt": {
-   "kind": "worn",
-   "box": {
-    "x": 186,
-    "y": 652,
-    "w": 520,
-    "h": 784
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a6b89a",
-    "name": "Sage"
-   },
-   "colors": [
-    "#a6b89a",
-    "#6a7b65"
-   ],
-   "t": 1794963288873
   },
   "starter-olive-linen-midi-skirt": {
    "kind": "worn",
@@ -28072,6 +28014,15 @@
   ],
   "starter-stone-pencil-skirt": [
    "stone texture, not fabric (left out by review)"
+  ],
+  "starter-ecru-sweatpants": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-ivory-satin-mini-skirt": [
+   "torn edge against skin (left out by review)"
+  ],
+  "starter-sage-green-linen-midi-skirt": [
+   "torn edge against skin (left out by review)"
   ]
  },
  "blocked": {
