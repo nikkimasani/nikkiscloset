@@ -71,8 +71,11 @@ export const GOOD_MATCH = 0.9;
 export const HEAD = { x: 278, y: 0, w: 340, h: 340, out: 768 }; // (stops above the sports bra: nothing for the safety filter to object to)
 /** Where the new head replaces the old one: an ellipse around the head and neck (base picture pixels), with a soft edge. */
 export const HEAD_MASK = { cx: 448, cy: 172, rx: 98, ry: 152, soft: 22 };
-/** Cheeks, below the eyes and above the jaw: where the skin tone is read. */
-export const CHEEKS = { x: 405, y: 182, w: 86, h: 30 };
+/** Her face (brows to chin): where the skin tone is read, from skin-coloured pixels only. */
+export const FACE = { x: 392, y: 118, w: 112, h: 112 };
+export const CHEEKS = FACE; // (the old name)
+/** Where her crown and eyes are in the base picture: the new head is lined up on these so earrings and sunglasses still sit right. */
+export const CROWN_Y = 41, EYES_Y = 153;
 
 /** 0..1: how much of the new head shows at this point (1 well inside the ellipse, fading to 0 across its soft edge). */
 export function headMask(x, y, m = HEAD_MASK) {
@@ -91,8 +94,48 @@ export function meanColor(img, box, ox = 0, oy = 0) {
   return n ? [r / n, g / n, b / n] : null;
 }
 
-/** Per-channel factors that turn one skin tone into another (kept within reason, so a shadow on a cheek can't paint her green). */
-export function toneRatio(from, to) { return from && to ? from.map((c, k) => Math.min(1.45, Math.max(0.65, to[k] / Math.max(1, c)))) : [1, 1, 1]; }
+/** Per-channel factors that turn one skin tone into another (kept within reason, so a shadow can't paint her grey or green). */
+export function toneRatio(from, to) { return from && to ? from.map((c, k) => Math.min(1.3, Math.max(0.75, to[k] / Math.max(1, c)))) : [1, 1, 1]; }
+
+/** Is this pixel skin-coloured? (warm: red over green over blue, neither shadow-dark nor highlight-white; hair, brows, eyes and lips fail) */
+export const isSkin = (r, g, b) => r > g && g > b && r - b >= 25 && r - b <= 140 && r >= 70 && r <= 250 && g >= 40;
+/** The median colour of the skin-coloured solid pixels in a box (robust to hair, shadow or a highlight falling in it), or null if too few. */
+export function skinTone(img, box, ox = 0, oy = 0) {
+  const R = [], G = [], B = [];
+  for (let y = box.y; y < box.y + box.h; y++) for (let x = box.x; x < box.x + box.w; x++) {
+    const hx = x - ox, hy = y - oy; if (hx < 0 || hy < 0 || hx >= img.width || hy >= img.height) continue;
+    const i = (hy * img.width + hx) * 4, r = img.data[i], g = img.data[i + 1], b = img.data[i + 2];
+    if (img.data[i + 3] < 200 || !isSkin(r, g, b)) continue; R.push(r); G.push(g); B.push(b);
+  }
+  if (R.length < 40) return null;
+  const med = (a) => { a.sort((p, q) => p - q); return a[a.length >> 1]; };
+  return [med(R), med(G), med(B)];
+}
+
+/** Where a head sits in a picture (ImageData, solid where the figure is): its crown row, and the middle and width of the head at its widest
+ *  (going down from the crown until the neck narrows it, so the reading holds whatever size the head is drawn). */
+export function headFrame(img, cx0 = img.width / 2) {
+  const solid = (x, y) => img.data[(y * img.width + x) * 4 + 3] >= 128;
+  let crown = -1;
+  for (let y = 0; y < img.height && crown < 0; y++) { let n = 0; for (let x = 0; x < img.width; x++) if (solid(x, y)) n++; if (n >= 6) crown = y; }
+  if (crown < 0) return null;
+  let best = null; const c = Math.round(cx0);
+  for (let y = crown; y < img.height; y++) {
+    if (!solid(c, y)) { if (best) break; continue; }
+    let l = c, r = c; while (l > 0 && solid(l - 1, y)) l--; while (r < img.width - 1 && solid(r + 1, y)) r++;
+    const w = r - l + 1;
+    if (!best || w > best.w) best = { w, cx: (l + r) / 2 };
+    else if (y - crown > 40 && w < best.w * 0.7) break; // the neck: the head ends here
+  }
+  return best && { crown, cx: best.cx, w: best.w };
+}
+
+/** How to move and scale the new head so it sits where hers was: { s, dx, dy } for x' = (x - n.cx) * s + b.cx, y' = (y - n.crown) * s + b.crown; null when it can't be read or is too far off to trust. */
+export function alignHead(b, n) {
+  if (!b || !n || n.w < 20) return null;
+  const s = b.w / n.w; if (s < 0.8 || s > 1.25 || Math.abs(b.cx - n.cx) > 50 || Math.abs(b.crown - n.crown) > 50) return null;
+  return { s, dx: b.cx - n.cx * s, dy: b.crown - n.crown * s };
+}
 
 /** The standard figure's head and shoulders on the magenta backdrop, at the size Cloudflare draws. */
 export async function headInput(baseHref) {
@@ -109,8 +152,15 @@ export async function finishHead(drawn, baseHref) {
   const c = canvas(W, H), g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(base, 0, 0);
   const out = g.getImageData(0, 0, W, H), orig = new Uint8ClampedArray(out.data);
   const hc = canvas(HEAD.w, HEAD.h), hg = hc.getContext('2d', { willReadFrequently: true }); hg.drawImage(im, 0, 0, HEAD.w, HEAD.h);
-  const head = keyOut(hg.getImageData(0, 0, HEAD.w, HEAD.h));
-  const ratio = toneRatio(meanColor(out, CHEEKS), meanColor(head, CHEEKS, HEAD.x, HEAD.y));
+  let head = keyOut(hg.getImageData(0, 0, HEAD.w, HEAD.h));
+  // line the new head up with hers (crown and width at eye level), so the anchors for earrings, sunglasses and hair still match
+  const bc = canvas(HEAD.w, HEAD.h), bg = bc.getContext('2d', { willReadFrequently: true }); bg.drawImage(base, HEAD.x, HEAD.y, HEAD.w, HEAD.h, 0, 0, HEAD.w, HEAD.h);
+  const fit = alignHead(headFrame(bg.getImageData(0, 0, HEAD.w, HEAD.h)), headFrame(head));
+  if (fit && (Math.abs(fit.s - 1) > 0.01 || Math.abs(fit.dx) > 1 || Math.abs(fit.dy) > 1)) {
+    hg.putImageData(head, 0, 0); const ac = canvas(HEAD.w, HEAD.h), ag = ac.getContext('2d', { willReadFrequently: true });
+    ag.setTransform(fit.s, 0, 0, fit.s, fit.dx, fit.dy); ag.drawImage(hc, 0, 0); head = ag.getImageData(0, 0, HEAD.w, HEAD.h);
+  }
+  const ratio = toneRatio(skinTone(out, FACE), skinTone(head, FACE, HEAD.x, HEAD.y));
   for (let p = 0; p < W * H; p++) {
     const i = p * 4; if (!out.data[i + 3]) continue;
     for (let k = 0; k < 3; k++) out.data[i + k] = out.data[i + k] * ratio[k]; // her skin (and the nude set) in your tone

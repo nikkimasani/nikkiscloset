@@ -270,9 +270,11 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
-test('a tucked top hides below the bottoms\' own waistband, only as wide as the bottoms (sleeves stay)', () => {
+test('a tucked top hides below the bottoms\' own waistband, out to her sides but short of her arms (sleeves stay)', () => {
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms', { wornBox: { x: 300, y: 690, w: 300, h: 500 } }) }, urls });
-  assert.match(svg, /<clipPath id="tuckclip-\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\d+V\d+H0Z M310 706H590V\d+H310Z"\/>/);
+  const [wl, wr] = [pack.points.waistbandL[0] - 30, pack.points.waistbandR[0] + 30];
+  assert.match(svg, new RegExp(`<clipPath id="tuckclip-\\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\\d+V\\d+H0Z M${wl} 706H${wr}V\\d+H${wl}Z"/>`));
+  assert.ok(wl > pack.points.elbowL[0] && wr < pack.points.elbowR[0], 'her arms are outside the cut');
 });
 
 test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
@@ -281,7 +283,7 @@ test('a tucked top follows the bottoms\' waistband when their outline is known (
   const at = (x) => ys.find(([px]) => px === x)?.[1];
   assert.ok(Math.abs(at(80) - (190 * 4 + 12)) <= 8, `the cut sits just inside their top edge in the middle (${at(80)})`);
   assert.ok(at(40) < at(80) - 20, 'and rises with the waistband at the sides');
-  assert.ok(ys.every(([x]) => x >= 5 * 4 && x <= 34 * 4), 'only as wide as the bottoms');
+  assert.ok(ys.every(([x]) => x >= 5 * 4 && x <= pack.points.waistbandR[0] + 30), 'from the bottoms\' own edge out to just past her waistband, never further');
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls, fits: new Map([['t', 'blob:tf'], ['b', 'blob:bf']]), masks: new Map([['b', { k: 4, top }]]) });
   assert.match(svg, /<clipPath id="tuckclip-\d+"[^>]*><path clip-rule="evenodd" d="M0 0H896V1776H0Z M\d+ \d+L/);
 });
@@ -322,10 +324,10 @@ test('a bag: its own body is found without the strap, it is carried the way its 
   assert.ok(w(bag('Red mini crossbody', 'shoulderbag')) < w(bag('Brown leather shoulder bag', 'shoulderbag')), 'a mini bag is smaller');
 });
 
-test('a bodysuit always goes under the bottoms (no trim at the waist), even with an old untucked setting', () => {
+test('a bodysuit always goes under the bottoms, trimmed at their waistband like a tucked top, even with an old untucked setting', () => {
   const items = { top: mkItem('s', 'bodysuits'), bottom: mkItem('b', 'bottoms') };
   const svg = dollSVG({ pack, items, urls });
-  assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.doesNotMatch(svg, /clip-path="url\(#tuckclip-\d+\)"/);
+  assert.deepEqual(slotsIn(svg), ['top', 'bottom']); assert.match(svg, /clip-path="url\(#tuckclip-\d+\)"/, 'trimmed so its sides never show beside narrower trousers');
   assert.deepEqual(slotsIn(dollSVG({ pack, items: { ...items, top: { ...items.top, fit: { base: { tuck: false } } } }, urls })), ['top', 'bottom']);
   assert.ok(!isTuckable(items.top, pack), 'no Tuck in / Untuck button for a bodysuit');
 });
@@ -751,12 +753,31 @@ test('Make my model: the new head blends in on an ellipse, and her skin follows 
   assert.equal(headMask(m.cx + m.rx + 1, m.cy), 0, 'outside the ellipse is all her');
   const edge = headMask(m.cx + m.rx - m.soft / 2, m.cy); assert.ok(edge > 0 && edge < 1, 'soft across the edge');
   assert.ok(headMask(448, 330) === 0, 'her shoulders and chest are never replaced');
-  assert.ok(CHEEKS.x >= HEAD.x && CHEEKS.y + CHEEKS.h <= HEAD.h && headMask(CHEEKS.x, CHEEKS.y) === 1, 'the cheeks are read inside the new head');
-  assert.deepEqual(toneRatio([200, 150, 120], [100, 75, 60]), [0.65, 0.65, 0.65], 'a much darker reading is held back');
+  assert.ok(CHEEKS.x >= HEAD.x && CHEEKS.y + CHEEKS.h <= HEAD.h && headMask(CHEEKS.x + CHEEKS.w / 2, CHEEKS.y + CHEEKS.h / 2) === 1, 'the face is read inside the new head');
+  assert.deepEqual(toneRatio([200, 150, 120], [100, 75, 60]), [0.75, 0.75, 0.75], 'a much darker reading is held back');
   assert.deepEqual(toneRatio([200, 150, 120], [180, 135, 108]).map((x) => Math.round(x * 100) / 100), [0.9, 0.9, 0.9]);
   assert.deepEqual(toneRatio(null, [1, 2, 3]), [1, 1, 1]);
   const img = { width: 2, height: 1, data: new Uint8ClampedArray([10, 20, 30, 255, 30, 40, 50, 0]) };
   assert.deepEqual(meanColor(img, { x: 5, y: 7, w: 2, h: 1 }, 5, 7), [10, 20, 30], 'only solid pixels, at an offset');
+});
+
+test('Make my model: skin tone is read from skin only, and the new head is lined up where hers was', async () => {
+  const { isSkin, skinTone, headFrame, alignHead, CROWN_Y, EYES_Y } = await import('../public/js/mymodel.js');
+  assert.ok(isSkin(198, 140, 110) && isSkin(150, 100, 75), 'light and deep skin');
+  assert.ok(!isSkin(40, 30, 28) && !isSkin(250, 250, 248) && !isSkin(120, 120, 125) && !isSkin(255, 0, 255), 'not hair, highlight, grey shadow or the backdrop');
+  const w = 20, h = 20, data = new Uint8ClampedArray(w * h * 4);
+  for (let p = 0; p < w * h; p++) data.set(p % 4 === 0 ? [40, 30, 28, 255] : [190, 135, 105, 255], p * 4); // a quarter of it dark hair
+  assert.deepEqual(skinTone({ width: w, height: h, data }, { x: 0, y: 0, w, h }), [190, 135, 105], 'hair falling in the box does not darken the reading');
+  assert.equal(skinTone({ width: 2, height: 2, data: new Uint8ClampedArray(16).fill(255) }, { x: 0, y: 0, w: 2, h: 2 }), null, 'too little skin: no reading');
+  // a head: an oval of solid pixels; the same head drawn 10% bigger and 12 px lower lines back up
+  const W = 200, H = 260, oval = (cx, top, rx, ry) => { const d = new Uint8ClampedArray(W * H * 4); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (((x - cx) / rx) ** 2 + ((y - top - ry) / ry) ** 2 <= 1) d[(y * W + x) * 4 + 3] = 255; return { width: W, height: H, data: d }; };
+  const b = headFrame(oval(100, 41, 60, 100)), n = headFrame(oval(100, 53, 66, 110));
+  assert.ok(Math.abs(b.crown - 41) <= 2, 'crown found (the first row a few pixels wide)'); assert.ok(Math.abs(b.cx - 100) <= 1);
+  const fit = alignHead(b, n);
+  assert.ok(fit && Math.abs(fit.s - b.w / n.w) < 1e-9 && fit.s < 1, 'scaled down to her head width');
+  assert.ok(Math.abs(n.crown * fit.s + fit.dy - b.crown) < 1e-9 && Math.abs(n.cx * fit.s + fit.dx - b.cx) < 1e-9, 'crown and middle land on hers');
+  assert.equal(alignHead(b, { ...n, w: n.w * 2 }), null, 'a reading too far off is not trusted');
+  assert.equal(EYES_Y - CROWN_Y, 112);
 });
 
 test('boots under long trousers show only below the hem; under a short skirt they show whole', async () => {
