@@ -1,5 +1,5 @@
 {
- "version": 1795049797968,
+ "version": 1795074936585,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -29083,6 +29083,46 @@
     "#464848"
    ],
    "t": 1795049797968
+  },
+  "starter-beige-blazer-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 246,
+    "w": 626,
+    "h": 1362
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d4bba6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d4bba6",
+    "#a88976",
+    "#985948",
+    "#592d27"
+   ],
+   "t": 1795074930961
+  },
+  "starter-camel-blazer-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 236,
+    "w": 656,
+    "h": 1432
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c49667",
+    "name": "Camel"
+   },
+   "colors": [
+    "#c49667",
+    "#98674a"
+   ],
+   "t": 1795074936585
   }
  },
  "failed": {
@@ -29328,12 +29368,6 @@
   ],
   "starter-cream-tailored-blazer": [
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (04767ac5-b9f0-410b-bcf4-0103306339fa)"
-  ],
-  "starter-beige-blazer-dress": [
-   "legs and feet kept (left out by review)"
-  ],
-  "starter-camel-blazer-dress": [
-   "legs and feet kept (left out by review)"
   ],
   "starter-grey-blazer-dress": [
    "legs and feet kept (left out by review)"
