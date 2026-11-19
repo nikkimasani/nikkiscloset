@@ -27794,49 +27794,6 @@
    ],
    "t": 1795049302555
   },
-  "starter-beige-blazer-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 248,
-    "w": 630,
-    "h": 1458
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d4baa7",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d4baa7",
-    "#784739",
-    "#a8664b",
-    "#a58a79"
-   ],
-   "t": 1795049306312
-  },
-  "starter-camel-blazer-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 236,
-    "w": 646,
-    "h": 1470
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c58859",
-    "name": "Tan"
-   },
-   "colors": [
-    "#c58859",
-    "#855938",
-    "#b88877",
-    "#e5b997",
-    "#694c45"
-   ],
-   "t": 1795049309813
-  },
   "starter-navy-blazer-dress": {
    "kind": "worn",
    "box": {
@@ -27855,45 +27812,6 @@
     "#130e27"
    ],
    "t": 1795049315086
-  },
-  "starter-grey-blazer-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 258,
-    "w": 626,
-    "h": 1032
-   },
-   "v": 5,
-   "color": {
-    "hex": "#65666a",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#65666a",
-    "#37373a"
-   ],
-   "t": 1795049319324
-  },
-  "starter-oatmeal-blazer-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 250,
-    "w": 642,
-    "h": 1402
-   },
-   "v": 5,
-   "color": {
-    "hex": "#987a65",
-    "name": "Tan"
-   },
-   "colors": [
-    "#987a65",
-    "#664b37",
-    "#975b46"
-   ],
-   "t": 1795049324497
   },
   "starter-stone-blazer-dress": {
    "kind": "worn",
@@ -27914,25 +27832,6 @@
     "#070808"
    ],
    "t": 1795049328199
-  },
-  "starter-espresso-blazer-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 252,
-    "w": 634,
-    "h": 808
-   },
-   "v": 5,
-   "color": {
-    "hex": "#493a27",
-    "name": "Brown"
-   },
-   "colors": [
-    "#493a27",
-    "#060502"
-   ],
-   "t": 1795049331390
   },
   "starter-mocha-blazer-dress": {
    "kind": "worn",
@@ -27971,28 +27870,6 @@
    ],
    "t": 1795049339429
   },
-  "starter-oversized-beige-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 114,
-    "y": 240,
-    "w": 664,
-    "h": 874
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d4baa5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d4baa5",
-    "#a58b77",
-    "#382519",
-    "#b77955",
-    "#775949"
-   ],
-   "t": 1795049344543
-  },
   "starter-white-linen-blazer": {
    "kind": "worn",
    "box": {
@@ -28010,26 +27887,6 @@
     "#f6f7f7"
    ],
    "t": 1795049347580
-  },
-  "starter-brown-leather-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 250,
-    "w": 642,
-    "h": 734
-   },
-   "v": 5,
-   "color": {
-    "hex": "#673926",
-    "name": "Brown"
-   },
-   "colors": [
-    "#673926",
-    "#291b15",
-    "#866559"
-   ],
-   "t": 1795049351016
   },
   "starter-white-single-breasted-blazer": {
    "kind": "worn",
@@ -28049,44 +27906,6 @@
     "#b8b7b7"
    ],
    "t": 1795049354530
-  },
-  "starter-tan-oversized-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 110,
-    "y": 258,
-    "w": 668,
-    "h": 856
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b69575",
-    "name": "Camel"
-   },
-   "colors": [
-    "#b69575",
-    "#876b54",
-    "#5a4635"
-   ],
-   "t": 1795049358864
-  },
-  "starter-taupe-oversized-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 250,
-    "w": 640,
-    "h": 864
-   },
-   "v": 5,
-   "color": {
-    "hex": "#867778",
-    "name": "Grey"
-   },
-   "colors": [
-    "#867778"
-   ],
-   "t": 1795049363750
   },
   "starter-beige-double-breasted-blazer": {
    "kind": "worn",
@@ -28126,26 +27945,6 @@
    ],
    "t": 1795049371927
   },
-  "starter-pink-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 252,
-    "w": 644,
-    "h": 732
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5c2bd",
-    "name": "Blush"
-   },
-   "colors": [
-    "#f5c2bd",
-    "#864b48",
-    "#ba8985"
-   ],
-   "t": 1795049378512
-  },
   "starter-light-blue-plaid-blazer": {
    "kind": "worn",
    "box": {
@@ -28165,44 +27964,6 @@
     "#c5e6fb"
    ],
    "t": 1795049384483
-  },
-  "starter-navy-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 258,
-    "w": 644,
-    "h": 726
-   },
-   "v": 5,
-   "color": {
-    "hex": "#171c47",
-    "name": "Navy"
-   },
-   "colors": [
-    "#171c47",
-    "#090618"
-   ],
-   "t": 1795049388317
-  },
-  "starter-chocolate-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 258,
-    "w": 634,
-    "h": 726
-   },
-   "v": 5,
-   "color": {
-    "hex": "#4b2b22",
-    "name": "Brown"
-   },
-   "colors": [
-    "#4b2b22",
-    "#080402"
-   ],
-   "t": 1795049392239
   },
   "starter-cream-cropped-blazer": {
    "kind": "worn",
@@ -28419,26 +28180,6 @@
    ],
    "t": 1795049452541
   },
-  "starter-sage-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 264,
-    "w": 646,
-    "h": 778
-   },
-   "v": 5,
-   "color": {
-    "hex": "#95a58c",
-    "name": "Sage"
-   },
-   "colors": [
-    "#95a58c",
-    "#647c67",
-    "#2c3427"
-   ],
-   "t": 1795049462029
-  },
   "starter-butter-yellow-blazer": {
    "kind": "worn",
    "box": {
@@ -28457,46 +28198,6 @@
     "#d7ba85"
    ],
    "t": 1795049476884
-  },
-  "starter-black-velvet-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 118,
-    "y": 252,
-    "w": 652,
-    "h": 732
-   },
-   "v": 5,
-   "color": {
-    "hex": "#010102",
-    "name": "Black"
-   },
-   "colors": [
-    "#010102"
-   ],
-   "t": 1795049481008
-  },
-  "starter-leopard-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 264,
-    "w": 644,
-    "h": 720
-   },
-   "v": 5,
-   "color": {
-    "hex": "#040403",
-    "name": "Black"
-   },
-   "colors": [
-    "#040403",
-    "#58352a",
-    "#d8b797",
-    "#896755",
-    "#f9e8c5"
-   ],
-   "t": 1795049486526
   },
   "starter-white-tailored-blazer": {
    "kind": "worn",
@@ -28534,25 +28235,6 @@
     "#b5ac99"
    ],
    "t": 1795049496970
-  },
-  "starter-grey-tailored-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 122,
-    "y": 258,
-    "w": 652,
-    "h": 726
-   },
-   "v": 5,
-   "color": {
-    "hex": "#74767a",
-    "name": "Grey"
-   },
-   "colors": [
-    "#74767a",
-    "#46474a"
-   ],
-   "t": 1795049500599
   },
   "starter-charcoal-grey-tailored-blazer": {
    "kind": "worn",
@@ -28610,27 +28292,6 @@
    ],
    "t": 1795049513706
   },
-  "starter-red-tailored-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 254,
-    "w": 636,
-    "h": 730
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d6011d",
-    "name": "Red"
-   },
-   "colors": [
-    "#d6011d",
-    "#a70015",
-    "#680002",
-    "#370000"
-   ],
-   "t": 1795049518185
-  },
   "starter-black-oversized-blazer": {
    "kind": "worn",
    "box": {
@@ -28686,25 +28347,6 @@
     "#3b3c45"
    ],
    "t": 1795049539995
-  },
-  "starter-chocolate-brown-oversized-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 122,
-    "y": 240,
-    "w": 654,
-    "h": 874
-   },
-   "v": 5,
-   "color": {
-    "hex": "#462b27",
-    "name": "Black"
-   },
-   "colors": [
-    "#462b27",
-    "#160a08"
-   ],
-   "t": 1795049543840
   },
   "starter-navy-oversized-blazer": {
    "kind": "worn",
@@ -28899,26 +28541,6 @@
    ],
    "t": 1795049590124
   },
-  "starter-taupe-double-breasted-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 256,
-    "w": 652,
-    "h": 728
-   },
-   "v": 5,
-   "color": {
-    "hex": "#796764",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#796764",
-    "#473a38",
-    "#1c1715"
-   ],
-   "t": 1795049595220
-  },
   "starter-grey-double-breasted-blazer": {
    "kind": "worn",
    "box": {
@@ -28977,26 +28599,6 @@
    ],
    "t": 1795049611897
   },
-  "starter-olive-double-breasted-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 250,
-    "w": 654,
-    "h": 734
-   },
-   "v": 5,
-   "color": {
-    "hex": "#656946",
-    "name": "Olive"
-   },
-   "colors": [
-    "#656946",
-    "#050501",
-    "#35361c"
-   ],
-   "t": 1795049616636
-  },
   "starter-white-cropped-blazer": {
    "kind": "worn",
    "box": {
@@ -29036,46 +28638,6 @@
     "#0d0d09"
    ],
    "t": 1795049623776
-  },
-  "starter-camel-cropped-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 122,
-    "y": 236,
-    "w": 646,
-    "h": 748
-   },
-   "v": 5,
-   "color": {
-    "hex": "#ca8659",
-    "name": "Tan"
-   },
-   "colors": [
-    "#ca8659",
-    "#985a37",
-    "#e3ac87",
-    "#381804"
-   ],
-   "t": 1795049628940
-  },
-  "starter-chocolate-brown-cropped-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 246,
-    "w": 648,
-    "h": 738
-   },
-   "v": 5,
-   "color": {
-    "hex": "#573a34",
-    "name": "Brown"
-   },
-   "colors": [
-    "#573a34",
-    "#150b0a"
-   ],
-   "t": 1795049632431
   },
   "starter-grey-cropped-blazer": {
    "kind": "worn",
@@ -29117,26 +28679,6 @@
    ],
    "t": 1795049640430
   },
-  "starter-olive-cropped-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 256,
-    "w": 632,
-    "h": 728
-   },
-   "v": 5,
-   "color": {
-    "hex": "#5b6445",
-    "name": "Olive"
-   },
-   "colors": [
-    "#5b6445",
-    "#333c26",
-    "#060803"
-   ],
-   "t": 1795049645693
-  },
   "starter-burgundy-cropped-blazer": {
    "kind": "worn",
    "box": {
@@ -29156,27 +28698,6 @@
     "#060201"
    ],
    "t": 1795049651512
-  },
-  "starter-oatmeal-cropped-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 254,
-    "w": 650,
-    "h": 696
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b7956a",
-    "name": "Camel"
-   },
-   "colors": [
-    "#b7956a",
-    "#866848",
-    "#1c1c15",
-    "#5b4834"
-   ],
-   "t": 1795049657137
   },
   "starter-stone-cropped-blazer": {
    "kind": "worn",
@@ -29274,163 +28795,6 @@
    ],
    "t": 1795049679247
   },
-  "starter-beige-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 114,
-    "y": 254,
-    "w": 668,
-    "h": 860
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d8c7b9",
-    "name": "Blush"
-   },
-   "colors": [
-    "#d8c7b9",
-    "#a8968a"
-   ],
-   "t": 1795049682356
-  },
-  "starter-sage-green-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 262,
-    "w": 652,
-    "h": 852
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a9b598",
-    "name": "Sage"
-   },
-   "colors": [
-    "#a9b598",
-    "#79846b",
-    "#363a26"
-   ],
-   "t": 1795049685791
-  },
-  "starter-olive-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 118,
-    "y": 252,
-    "w": 654,
-    "h": 862
-   },
-   "v": 5,
-   "color": {
-    "hex": "#798558",
-    "name": "Olive"
-   },
-   "colors": [
-    "#798558",
-    "#545c35",
-    "#050601"
-   ],
-   "t": 1795049689396
-  },
-  "starter-black-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 254,
-    "w": 654,
-    "h": 860
-   },
-   "v": 5,
-   "color": {
-    "hex": "#181818",
-    "name": "Black"
-   },
-   "colors": [
-    "#181818"
-   ],
-   "t": 1795049693707
-  },
-  "starter-chocolate-brown-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 118,
-    "y": 268,
-    "w": 660,
-    "h": 846
-   },
-   "v": 5,
-   "color": {
-    "hex": "#4c3228",
-    "name": "Brown"
-   },
-   "colors": [
-    "#4c3228",
-    "#0b0804"
-   ],
-   "t": 1795049697663
-  },
-  "starter-light-blue-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 122,
-    "y": 262,
-    "w": 658,
-    "h": 852
-   },
-   "v": 5,
-   "color": {
-    "hex": "#99b7e7",
-    "name": "Light Blue"
-   },
-   "colors": [
-    "#99b7e7",
-    "#798cb5",
-    "#c2dbf9",
-    "#475579"
-   ],
-   "t": 1795049701370
-  },
-  "starter-oatmeal-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 124,
-    "y": 258,
-    "w": 646,
-    "h": 856
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c7ab95",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c7ab95",
-    "#997b65",
-    "#654836"
-   ],
-   "t": 1795049704743
-  },
-  "starter-stone-linen-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 122,
-    "y": 260,
-    "w": 656,
-    "h": 854
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c8c7c9",
-    "name": "Silver"
-   },
-   "colors": [
-    "#c8c7c9",
-    "#989798",
-    "#494847"
-   ],
-   "t": 1795049711728
-  },
   "starter-espresso-linen-blazer": {
    "kind": "worn",
    "box": {
@@ -29527,26 +28891,6 @@
    ],
    "t": 1795049732181
   },
-  "starter-cream-belted-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 258,
-    "w": 648,
-    "h": 726
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f6f2e7",
-    "name": "White"
-   },
-   "colors": [
-    "#f6f2e7",
-    "#ccc4b9",
-    "#887b69"
-   ],
-   "t": 1795049738098
-  },
   "starter-beige-belted-blazer": {
    "kind": "worn",
    "box": {
@@ -29566,26 +28910,6 @@
     "#473427"
    ],
    "t": 1795049741790
-  },
-  "starter-camel-belted-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 254,
-    "w": 648,
-    "h": 730
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b57b55",
-    "name": "Tan"
-   },
-   "colors": [
-    "#b57b55",
-    "#77462a",
-    "#4b2613"
-   ],
-   "t": 1795049746877
   },
   "starter-chocolate-brown-belted-blazer": {
    "kind": "worn",
@@ -29643,26 +28967,6 @@
     "#17132a"
    ],
    "t": 1795049757972
-  },
-  "starter-olive-belted-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 236,
-    "w": 642,
-    "h": 748
-   },
-   "v": 5,
-   "color": {
-    "hex": "#464b35",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#464b35",
-    "#6c7255",
-    "#161808"
-   ],
-   "t": 1795049764400
   },
   "starter-burgundy-belted-blazer": {
    "kind": "worn",
@@ -29741,24 +29045,6 @@
     "#292927"
    ],
    "t": 1795049781699
-  },
-  "starter-espresso-belted-blazer": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 258,
-    "w": 638,
-    "h": 726
-   },
-   "v": 5,
-   "color": {
-    "hex": "#46392a",
-    "name": "Brown"
-   },
-   "colors": [
-    "#46392a"
-   ],
-   "t": 1795049784944
   },
   "starter-ecru-belted-blazer": {
    "kind": "worn",
@@ -30042,6 +29328,114 @@
   ],
   "starter-cream-tailored-blazer": [
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (04767ac5-b9f0-410b-bcf4-0103306339fa)"
+  ],
+  "starter-beige-blazer-dress": [
+   "legs and feet kept (left out by review)"
+  ],
+  "starter-camel-blazer-dress": [
+   "legs and feet kept (left out by review)"
+  ],
+  "starter-grey-blazer-dress": [
+   "legs and feet kept (left out by review)"
+  ],
+  "starter-oatmeal-blazer-dress": [
+   "legs and feet kept (left out by review)"
+  ],
+  "starter-beige-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-black-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-chocolate-brown-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-light-blue-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-cream-belted-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-grey-tailored-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-navy-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-oatmeal-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-olive-cropped-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-olive-double-breasted-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-olive-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-pink-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-red-tailored-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-sage-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-sage-green-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-stone-linen-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-tan-oversized-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-taupe-double-breasted-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-taupe-oversized-blazer": [
+   "matching shorts or trousers kept under the jacket (left out by review)"
+  ],
+  "starter-camel-cropped-blazer": [
+   "bare skin kept inside the jacket (left out by review)"
+  ],
+  "starter-chocolate-brown-cropped-blazer": [
+   "bare skin kept inside the jacket (left out by review)"
+  ],
+  "starter-chocolate-brown-oversized-blazer": [
+   "bare skin kept inside the jacket (left out by review)"
+  ],
+  "starter-oversized-beige-blazer": [
+   "bare skin kept inside the jacket (left out by review)"
+  ],
+  "starter-camel-belted-blazer": [
+   "a top kept inside the jacket (left out by review)"
+  ],
+  "starter-black-velvet-blazer": [
+   "torn or ragged edges (left out by review)"
+  ],
+  "starter-espresso-belted-blazer": [
+   "torn or ragged edges (left out by review)"
+  ],
+  "starter-espresso-blazer-dress": [
+   "torn or ragged edges (left out by review)"
+  ],
+  "starter-chocolate-blazer": [
+   "stray light patch on the chest (left out by review)"
+  ],
+  "starter-brown-leather-blazer": [
+   "stray dark patch at the hem (left out by review)"
+  ],
+  "starter-leopard-blazer": [
+   "stray dark patch at the hem (left out by review)"
+  ],
+  "starter-oatmeal-cropped-blazer": [
+   "stray dark patch at the hem (left out by review)"
+  ],
+  "starter-olive-belted-blazer": [
+   "stray dark patch at the hem (left out by review)"
   ]
  },
  "blocked": {
