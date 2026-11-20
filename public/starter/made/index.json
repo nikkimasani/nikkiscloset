@@ -1,5 +1,5 @@
 {
- "version": 1795136168705,
+ "version": 1795160661293,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -29988,6 +29988,46 @@
     "#7a8767"
    ],
    "t": 1795136163894
+  },
+  "starter-oatmeal-cropped-blazer": {
+   "kind": "worn",
+   "box": {
+    "x": 126,
+    "y": 256,
+    "w": 638,
+    "h": 728
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c3ac94",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c3ac94",
+    "#8a7767",
+    "#664839",
+    "#382a27"
+   ],
+   "t": 1795160656998
+  },
+  "starter-light-blue-linen-blazer": {
+   "kind": "worn",
+   "box": {
+    "x": 108,
+    "y": 254,
+    "w": 662,
+    "h": 860
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b8d5ed",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#b8d5ed",
+    "#768aa6"
+   ],
+   "t": 1795160661293
   }
  },
  "failed": {
@@ -30107,12 +30147,6 @@
   ],
   "starter-camel-cropped-jacket": [
    "a dark patch at the waist (left out by review)"
-  ],
-  "starter-light-blue-linen-blazer": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (6732480f-4b13-4f81-b21a-9c19f909e4ca)"
-  ],
-  "starter-oatmeal-cropped-blazer": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (9c74b3d8-fbf1-4b31-bfc1-f01fd5420cb7)"
   ],
   "starter-beige-belted-midi-dress": [
    "legs or feet kept (left out by review)"
