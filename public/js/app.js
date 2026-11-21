@@ -79,8 +79,8 @@ function openModal() {
   document.querySelectorAll('header, main').forEach((e) => (e.inert = true));
 }
 function closeModal() {
-  modalSeq++; S.photoOpen = false;
-  $('#modal').hidden = true;
+  modalSeq++; S.photoOpen = false; S.grid = null;
+  $('#modal').hidden = true; $('#modal').classList.remove('pgrid-on');
   document.querySelectorAll('header, main').forEach((e) => (e.inert = false));
   lastFocus?.isConnected && lastFocus.focus();
 }
@@ -1339,7 +1339,7 @@ function finderHTML() {
   const nf = (FIND.color !== 'all') + (FIND.occ !== 'all'), any = FIND.q || FIND.type !== 'all' || nf;
   const tile = (i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="wear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>${on.has(i.id) ? `<button class="tile-x" data-act="unwear" data-id="${i.id}" aria-label="Take ${esc(i.name)} off"><span aria-hidden="true">✕</span></button>` : ''}</div>`;
   // one carousel per kind of piece (swipe sideways through tops, then the next row is bottoms...)
-  const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small><span class="car-nav"><button class="car-btn" data-act="carl" aria-label="Back through ${t.label}">‹</button><button class="car-btn" data-act="carr" aria-label="More ${t.label}">›</button></span></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
+  const rows = Object.entries(TYPES).map(([k, t]) => { const l = list.filter((i) => i.type === k); return l.length ? `<section class="car" aria-label="${t.label}"><h3 class="car-h"><span aria-hidden="true">${t.emoji}</span> ${t.label} <small>${l.length}</small><span class="car-nav"><button class="car-btn car-grid" data-act="cargrid" data-v="${k}" aria-label="See all ${t.label} on one page">${GRID_ICON}</button><button class="car-btn" data-act="carl" aria-label="Back through ${t.label}">‹</button><button class="car-btn" data-act="carr" aria-label="More ${t.label}">›</button></span></h3><div class="car-row" data-type="${k}">${l.map(tile).join('')}</div></section>` : ''; }).join('');
   return `<section class="finder" aria-label="Your wardrobe">
     <div class="findbar"><input type="search" id="fq" aria-label="Search your wardrobe" placeholder="Search: satin, black, work, linen…" value="${esc(FIND.q)}" autocomplete="off">
       <button class="ghost ${S.fOpen ? 'on' : ''}" data-act="ftoggle" aria-expanded="${!!S.fOpen}" aria-controls="ffilters">Filters${nf ? ` · ${nf}` : ''}</button>${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
@@ -1351,6 +1351,17 @@ function finderHTML() {
     <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
     ${S.items.length ? `${rows}${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
   </section>`;
+}
+const GRID_ICON = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M1 1h6v6H1zM9 1h6v6H9zM1 9h6v6H1zM9 9h6v6H9z"/></svg>';
+/** One kind of piece (tops, dresses…) as a grid filling the page: everything that matches the finder, tap one to put it on. */
+function gridHTML(type) {
+  const t = TYPES[type], list = findPieces().filter((i) => i.type === type), on = new Set(Object.values(S.outfit));
+  return `<div class="pgrid-head"><p class="muted">${list.length} piece${list.length === 1 ? '' : 's'}${FIND.q || FIND.color !== 'all' || FIND.occ !== 'all' ? ' matching your search' : ''} · tap one to put it on</p><button class="ghost" data-act="gridclose">Done</button></div>
+    <div class="pgrid">${list.map((i) => `<div class="tile"><button class="pick ${on.has(i.id) ? 'on' : ''}" aria-pressed="${on.has(i.id)}" data-act="gridwear" data-id="${i.id}"><img src="${url(i.id)}" alt="" loading="lazy" draggable="false"><span>${esc(i.name)}</span></button>${on.has(i.id) ? `<button class="tile-x" data-act="gridoff" data-id="${i.id}" aria-label="Take ${esc(i.name)} off"><span aria-hidden="true">✕</span></button>` : ''}</div>`).join('') || '<p class="muted">Nothing here yet.</p>'}</div>`;
+}
+function openGrid(type) {
+  S.grid = type; openModal(); $('#modal').classList.add('pgrid-on');
+  paintSheet(gridHTML(type), `<span aria-hidden="true">${TYPES[type].emoji}</span> ${TYPES[type].label}`);
 }
 /** Where each carousel was scrolled to, so putting a piece on doesn't send the row back to its start. */
 const carScroll = () => Object.fromEntries([...document.querySelectorAll('.car-row')].map((r) => [r.dataset.type, r.scrollLeft]));
@@ -1764,6 +1775,15 @@ async function handleClick(e) {
     case 'redo': { const b = outfitSig(); stepOutfit(HIST.fwd, HIST.back); HIST.skip = b; return renderTryon(); }
     case 'carl': case 'carr': { const row = el.closest('.car')?.querySelector('.car-row'); row?.scrollBy({ left: (act === 'carl' ? -1 : 1) * row.clientWidth * 0.9, behavior: 'smooth' }); return; }
     case 'ftop': return window.scrollTo({ top: 0, behavior: 'smooth' });
+    case 'cargrid': return openGrid(v);
+    case 'gridclose': return closeModal();
+    case 'gridoff': { S.outfit = wear(S.outfit, itemById(id)); S.adjust = Object.values(S.outfit).at(-1) || null; paintSheet(gridHTML(S.grid), $('#mtitle').innerHTML); return renderTryon(); } // (taking it off keeps the grid open)
+    case 'gridwear': { // put it on and go back to the model, with that row scrolled to the piece
+      if (!Object.values(S.outfit).includes(id)) { S.outfit = wear(S.outfit, itemById(id)); S.adjust = id; S.pop = true; }
+      closeModal(); renderTryon();
+      document.querySelector(`.car-row [data-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest', inline: 'start' });
+      return document.querySelector('.room')?.scrollIntoView?.({ block: 'nearest' });
+    }
     case 'delpiece': { // Wardrobe only: delete a piece from the closet, with Undo
       const it = itemById(id); if (!it || !confirm(`Delete “${it.name}” from your wardrobe?`)) return;
       const copy = { ...it }; await removeItems([id], { byYou: true }); render();

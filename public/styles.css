@@ -865,6 +865,18 @@ label.check { display: flex; gap: 8px; align-items: center; min-height: 44px; }
 .tile { position: relative; flex: 0 0 auto; scroll-snap-align: start; display: flex; }
 .car-row .tile .pick { flex: 0 0 clamp(118px, 32vw, 150px); }
 .tile-x { position: absolute; top: 4px; right: 4px; z-index: 2; width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid #0002; background: #ffffffd9; color: #5a1f33; font-size: 14px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 2px 6px #0003; }
+.car-grid { display: grid; place-items: center; }
+/* one kind of piece as a full-page grid */
+.modal.pgrid-on { padding: 0; place-items: stretch; }
+.modal.pgrid-on .sheet { width: 100%; max-width: none; max-height: none; height: 100dvh; border-radius: 0; border: 0; padding: calc(14px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom)); }
+.pgrid-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: -4px 0 10px; }
+.pgrid-head p { margin: 0; font-size: 13px; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(27vw, 150px), 1fr)); gap: 8px; }
+.pgrid .tile { display: flex; }
+.pgrid .pick { flex: 1; min-width: 0; padding: 8px 6px 6px; border-radius: 18px; }
+.pgrid .pick img { height: clamp(96px, 26vw, 160px); width: 100%; object-fit: contain; }
+.pgrid .pick span { font-size: 12.5px; }
+.pgrid .pick.on { border-color: var(--hot); box-shadow: 0 0 0 2px var(--hot) inset, 0 4px 14px #0003; }
 .tile-x:hover, .tile-x:focus-visible { background: #ffe1ea; }
 .piece .tile-x { top: 6px; right: 48px; width: 36px; height: 36px; }
 @media (min-width: 600px) { .car-row .tile .pick { flex-basis: 150px; } }
