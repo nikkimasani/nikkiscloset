@@ -326,6 +326,15 @@ try {
     ok(await p3.locator('.finder .pick').count() === 2, 'the type chips narrow the wardrobe (2 bottoms)');
     await p3.click('[data-act=fclear]');
     ok(JSON.stringify(await p3.locator('.car-row').evaluateAll((r) => r.map((x) => x.dataset.type))) === JSON.stringify(['tops', 'tanks', 'bottoms', 'skirts', 'dresses', 'outerwear', 'shoes', 'bags']), 'the wardrobe is one carousel per kind of piece');
+    // a whole kind of piece as a grid filling the page: tap one to put it on and go back to the model
+    await p3.click('[data-act=cargrid][data-v=tops]'); await p3.waitForSelector('.pgrid');
+    ok(await p3.locator('.pgrid .pick').count() === 2 && await p3.evaluate(() => { const r = document.querySelector('.modal.pgrid-on .sheet').getBoundingClientRect(); return r.width >= innerWidth - 1 && r.height >= innerHeight - 1; }), 'the grid button shows every top on one full page');
+    const gid = await p3.locator('.pgrid [data-act=gridwear]').first().getAttribute('data-id'); await p3.locator('.pgrid [data-act=gridwear]').first().click();
+    await p3.waitForFunction((g) => document.querySelector('#modal').hidden && Object.values(window.__closet.outfit).includes(g), gid);
+    ok(true, 'tapping a piece in the grid puts it on and closes the grid');
+    await p3.click('[data-act=cargrid][data-v=tops]'); await p3.waitForSelector('.pgrid .tile-x'); await p3.click('.pgrid .tile-x');
+    await p3.waitForFunction((g) => !Object.values(window.__closet.outfit).includes(g) && !document.querySelector('#modal').hidden, gid);
+    await p3.click('[data-act=gridclose]'); ok(await p3.locator('#modal').isHidden(), 'the ✕ in the grid takes a piece off, and Done closes it');
     if (!(await p3.locator('#ffilters[hidden]').count())) await p3.click('[data-act=ftoggle]');
     ok(await p3.locator('[data-act=fcol]').first().isHidden() && await p3.locator('[data-act=ftoggle]').isVisible(), 'colour and style fold behind Filters (less to scroll past)');
     await p3.click('[data-act=ftoggle]');
