@@ -340,7 +340,7 @@ function renderCloset() {
         <button class="ghost sm ${S.cfOpen ? 'on' : ''}" data-act="cftoggle" aria-expanded="${!!S.cfOpen}" aria-controls="cfilters">Filters${nf ? ` · ${nf}` : ''}</button>${S.items.length ? `<button class="${S.picking ? 'primary' : 'ghost'} sm" data-act="pickmode" aria-pressed="${S.picking}">${S.picking ? 'Done' : 'Try several'}</button>` : ''}</div>
       <div class="chips findrow" role="group" aria-label="Type">${chip('ftype', 'all', type, 'All')}${Object.entries(TYPES).filter(([k]) => S.items.some((i) => i.type === k)).map(([k, v]) => chip('ftype', k, type, `<span aria-hidden="true">${v.emoji}</span> ${v.label}`)).join('')}</div>
       <div id="cfilters" ${S.cfOpen ? '' : 'hidden'}>
-      <div class="chips findrow" role="group" aria-label="Colour">${chip('fcolor', 'all', color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcolor', n, color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+      <div class="swatches findrow" role="group" aria-label="Colour">${swatchRow('fcolor', color)}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('foccas', 'all', occ, 'Any style')}${OCCASIONS.map((o) => chip('foccas', o, occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
       </div>
       <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>
@@ -1333,6 +1333,11 @@ function closetColors() {
   for (const i of S.items) { const n = i.color?.name; if (!n) continue; const c = by.get(n) || [n, i.color.hex, 0]; c[2]++; by.set(n, c); }
   return [...by.values()].sort((x, y) => y[2] - x[2]);
 }
+/** The colour filter as small square swatches with a tiny name under each (Any first). */
+function swatchRow(act, cur) {
+  const sw = (v, label, bg) => `<button class="swatch ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}" aria-label="${esc(label)}"><i style="background:${bg}" aria-hidden="true"></i><span aria-hidden="true">${esc(label)}</span></button>`;
+  return sw('all', 'Any', 'conic-gradient(#e8d9c4, #1c1915, #c9a27a, #f4f1ea, #6b7b52, #8a2a3a, #e8d9c4)') + closetColors().slice(0, 18).map(([n, hex]) => sw(n, n, hex)).join('');
+}
 /** Pieces matching the finder: every search word must appear in the name, colour, type, style or season. */
 function findPieces() {
   const words = FIND.q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -1351,7 +1356,7 @@ function finderHTML() {
       <button class="ghost ${S.fOpen ? 'on' : ''}" data-act="ftoggle" aria-expanded="${!!S.fOpen}" aria-controls="ffilters">Filters${nf ? ` · ${nf}` : ''}</button>${any ? '<button class="ghost" data-act="fclear">Clear</button>' : ''}</div>
     <div class="chips findrow" role="group" aria-label="Show only">${chip('ftyp', 'all', FIND.type, 'Everything')}${Object.entries(TYPES).filter(([k]) => S.items.some((i) => i.type === k)).map(([k, t]) => chip('ftyp', k, FIND.type, `<span aria-hidden="true">${t.emoji}</span> ${t.label}`)).join('')}</div>
     <div id="ffilters" ${S.fOpen ? '' : 'hidden'}>
-      <div class="chips findrow" role="group" aria-label="Colour">${chip('fcol', 'all', FIND.color, 'Any colour')}${closetColors().slice(0, 18).map(([n, hex]) => chip('fcol', n, FIND.color, `<i class="sw" style="background:${hex}" aria-hidden="true"></i>${esc(n)}`)).join('')}</div>
+      <div class="swatches findrow" role="group" aria-label="Colour">${swatchRow('fcol', FIND.color)}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
     </div>
     <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>

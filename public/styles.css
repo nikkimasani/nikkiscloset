@@ -1050,11 +1050,11 @@ label.f { color: var(--muted); font-weight: 500; letter-spacing: .02em; }
 .mm-pick span { font-size: 14px; }
 
 /* ── Wardrobe: one compact row of search and buttons, smaller chips, and a grid page per kind ── */
-.finder .chip { min-height: 32px; padding: 4px 11px; font-size: 12.5px; }
+.finder .chip { min-height: 32px; height: 32px; padding: 0 12px; font-size: 12px; line-height: 1; }
 .finder .chip .sw { width: 12px; height: 12px; }
 .findbar { display: flex; gap: 8px; align-items: center; }
-.findbar input { flex: 1; min-width: 0; min-height: 38px; padding: 7px 12px; font-size: 14px; }
-.ghost.sm, .primary.sm { min-height: 38px; padding: 0 13px; font-size: 12.5px; white-space: nowrap; flex: 0 0 auto; }
+.findbar input { flex: 1; min-width: 0; min-height: 32px; height: 32px; padding: 0 12px; font-size: 13px; border-radius: 99px; }
+.findbar .ghost, .ghost.sm, .primary.sm { min-height: 32px; height: 32px; padding: 0 12px; font-size: 12px; line-height: 1; white-space: nowrap; flex: 0 0 auto; }
 .findbar .ghost.on { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
 #cfilters { display: grid; gap: 8px; }
 #cfilters[hidden] { display: none; }
@@ -1076,3 +1076,11 @@ label.f { color: var(--muted); font-weight: 500; letter-spacing: .02em; }
 .cgrid-page .rail-h .ghost { font-family: var(--sans); }
 .cgrid .piece .meta { font-size: 11px; gap: 4px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
 .cgrid .piece .meta .dot { flex: 0 0 auto; }
+
+/* colour filter: small square swatches with a tiny name under each */
+.swatches { display: flex; gap: 6px; padding: 4px 2px 2px; }
+.swatch { flex: 0 0 auto; width: 46px; min-height: 0; padding: 0; border: 0; background: none; display: grid; justify-items: center; gap: 3px; color: var(--muted); }
+.swatch i { width: 28px; height: 28px; border-radius: 7px; border: 1px solid var(--line); box-shadow: inset 0 0 0 1px #ffffff40; }
+.swatch span { font-size: 9.5px; line-height: 1.1; max-width: 46px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.swatch.on i { outline: 2px solid var(--ink); outline-offset: 2px; }
+.swatch.on span { color: var(--ink); font-weight: 600; }
