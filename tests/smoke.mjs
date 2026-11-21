@@ -386,7 +386,8 @@ try {
   ok(await p4.locator('.piece').count() === 9, 'the Wardrobe’s delete has an Undo that brings the piece back');
   // Wardrobe: a kind of piece as a grid filling the page, and back to every row
   await p4.click('[data-act=cgrid][data-v=tops]'); await p4.waitForSelector('.cgrid');
-  ok(await p4.locator('.cgrid .piece').count() === 2 && await p4.locator('.rail-row').count() === 0, 'the Wardrobe grid button shows every top on one page');
+  const nTopsW = await p4.evaluate(() => window.__closet.items.filter((i) => i.type === 'tops').length);
+  ok(nTopsW > 0 && await p4.locator('.cgrid .piece').count() === nTopsW && await p4.locator('.rail-row').count() === 0, `the Wardrobe grid button shows every top on one page (${nTopsW})`);
   await p4.click('[data-act=cgridclose]'); ok(await p4.locator('.rail-row').count() > 1, '‹ All pieces goes back to every row');
   ok(await p4.locator('[data-act=fcolor]').first().isHidden() && await p4.locator('[data-act=cftoggle]').isVisible(), 'the Wardrobe’s colour and style chips fold behind Filters');
   // installable app
