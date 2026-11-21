@@ -384,6 +384,11 @@ try {
   await p4.click('[data-view=closet]'); await p4.locator('.piece .del').first().click(); await p4.waitForFunction(() => window.__closet.items.length === 8);
   await p4.click('#toast .toast-undo'); await p4.waitForFunction(() => window.__closet.items.length === 9);
   ok(await p4.locator('.piece').count() === 9, 'the Wardrobe’s delete has an Undo that brings the piece back');
+  // Wardrobe: a kind of piece as a grid filling the page, and back to every row
+  await p4.click('[data-act=cgrid][data-v=tops]'); await p4.waitForSelector('.cgrid');
+  ok(await p4.locator('.cgrid .piece').count() === 2 && await p4.locator('.rail-row').count() === 0, 'the Wardrobe grid button shows every top on one page');
+  await p4.click('[data-act=cgridclose]'); ok(await p4.locator('.rail-row').count() > 1, '‹ All pieces goes back to every row');
+  ok(await p4.locator('[data-act=fcolor]').first().isHidden() && await p4.locator('[data-act=cftoggle]').isVisible(), 'the Wardrobe’s colour and style chips fold behind Filters');
   // installable app
   const pwa = await p4.evaluate(async () => ({ sw: (await navigator.serviceWorker.ready).active?.state, manifest: (await fetch('/manifest.webmanifest')).status, icon: (await fetch('/icon-192.png')).status, link: !!document.querySelector('link[rel=manifest]') }));
   ok(pwa.sw === 'activated' && pwa.manifest === 200 && pwa.icon === 200 && pwa.link, 'installable: manifest, icons and service worker are live');

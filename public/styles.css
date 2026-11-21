@@ -1048,3 +1048,31 @@ label.f { color: var(--muted); font-weight: 500; letter-spacing: .02em; }
 .mm-pick { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .mm-thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
 .mm-pick span { font-size: 14px; }
+
+/* ── Wardrobe: one compact row of search and buttons, smaller chips, and a grid page per kind ── */
+.finder .chip { min-height: 32px; padding: 4px 11px; font-size: 12.5px; }
+.finder .chip .sw { width: 12px; height: 12px; }
+.findbar { display: flex; gap: 8px; align-items: center; }
+.findbar input { flex: 1; min-width: 0; min-height: 38px; padding: 7px 12px; font-size: 14px; }
+.ghost.sm, .primary.sm { min-height: 38px; padding: 0 13px; font-size: 12.5px; white-space: nowrap; flex: 0 0 auto; }
+.findbar .ghost.on { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
+#cfilters { display: grid; gap: 8px; }
+#cfilters[hidden] { display: none; }
+.cfinder { margin-top: 4px; }
+.rail-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 2px 6px; }
+.rail-h h3 { margin: 0; font: inherit; font-family: var(--serif); font-size: 19px; display: flex; gap: 8px; align-items: baseline; }
+.rail-h h3 small { font-family: var(--sans); font-size: 13px; color: var(--muted); }
+.piece .edit, .piece .del { width: 28px; height: 28px; min-height: 28px; top: 8px; font-size: 12px; padding: 0; display: grid; place-items: center; box-shadow: 0 1px 4px #0002; }
+.piece .edit { right: 8px; }
+.piece .del { right: 42px; }
+.cgrid-page .rail-h { justify-content: flex-start; }
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(28vw, 150px), 1fr)); gap: 10px; padding-top: 4px; }
+.cgrid .piece { flex: none; min-width: 0; }
+.cgrid .piece .hang { display: none; }
+.cgrid .piece .img { height: clamp(100px, 27vw, 150px); display: block; overflow: hidden; margin-top: 18px; }
+.cgrid .piece img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; }
+.cgrid .piece .meta { flex-wrap: wrap; }
+@media (max-width: 420px) { .cgrid .piece .edit, .cgrid .piece .del { width: 26px; height: 26px; min-height: 26px; font-size: 11px; top: 6px; } .cgrid .piece .edit { right: 6px; } .cgrid .piece .del { right: 36px; } .cgrid .piece .name { font-size: 12px; } }
+.cgrid-page .rail-h .ghost { font-family: var(--sans); }
+.cgrid .piece .meta { font-size: 11px; gap: 4px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
+.cgrid .piece .meta .dot { flex: 0 0 auto; }
