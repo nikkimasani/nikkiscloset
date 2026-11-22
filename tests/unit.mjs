@@ -818,6 +818,26 @@ test('Today: looks from Pinterest pins, made from the wardrobe', () => {
   assert.ok(PINS.length > 40 && PINS.every((p) => p.pieces.length && p.board), 'the pins from her boards are bundled');
 });
 
+import { tuckFor, goesWith } from '../public/js/stylist.js';
+test('Today: tucked in like the pin, different pins each day, pieces that go together', () => {
+  const it = (id, name, type, hex, occasions = ['Casual Outing']) => ({ id, name, type, season: 'all', occasions, source: 'starter', color: { hex, name } });
+  const shirt = it('s', 'White crisp button-down', 'tops', '#ffffff'), sweater = it('w', 'Cream cable-knit sweater', 'tops', '#efe6d2'), jeans = it('j', 'Light blue jeans', 'bottoms', '#a9c1dc');
+  assert.equal(tuckFor({ top: shirt, bottom: jeans }), true, 'a shirt goes in with jeans');
+  assert.equal(tuckFor({ top: sweater, bottom: jeans }), false, 'a chunky sweater is worn out');
+  assert.equal(tuckFor({ top: shirt, bottom: jeans }, { name: 'White oversized shirt', detail: 'untucked' }), false, 'the pin says untucked');
+  assert.equal(tuckFor({ top: shirt }), false, 'nothing to tuck into');
+
+  const gym = it('g', 'Black workout leggings', 'bottoms', '#111111', ['Workout']), satin = it('st', 'Champagne satin blouse', 'tops', '#efe6d2', ['Formal / Event', 'Date Night']);
+  const red = it('r', 'Red corset top', 'tops', '#c4262e', ['Date Night']), green = it('gr', 'Emerald satin skirt', 'skirts', '#3f8a4f', ['Date Night']);
+  assert.ok(goesWith(shirt, jeans) > goesWith(satin, gym), 'a satin blouse and gym leggings don’t go together');
+  assert.ok(goesWith(red, it('b', 'Black satin skirt', 'skirts', '#1a1a1a', ['Date Night'])) > goesWith(red, green), 'red goes with black, not with emerald');
+
+  const items = [shirt, sweater, jeans, it('k', 'Black tailored trousers', 'bottoms', '#111111')];
+  const pins = ['a', 'b', 'c', 'd'].map((id) => ({ id, board: 'outfits', pieces: [{ name: id === 'c' ? 'Cream cable sweater' : 'White button-down shirt', type: 'tops', colors: [id === 'c' ? 'cream' : 'white'] }, { name: id === 'd' ? 'Black trousers' : 'Light blue jeans', type: 'bottoms', colors: [id === 'd' ? 'black' : 'light blue'] }] }));
+  let seenA = 0; for (let k = 0; k < 200; k++) if (pinLooks(items, pins, { n: 1, shown: { a: 0 } })[0].pin.id === 'a') seenA++;
+  assert.ok(seenA < 20, `a pin she saw today seldom comes back (${seenA}/200)`);
+});
+
 import { mergeIndex } from '../scripts/merge-index.mjs';
 test('the wardrobe list: a clash with main joins both sides instead of throwing pieces away', () => {
   const p = (t) => ({ kind: 'worn', t, v: 5 });
