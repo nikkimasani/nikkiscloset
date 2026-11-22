@@ -173,10 +173,11 @@ async function importPreloaded() {
   const todo = Object.entries(idx.pieces).filter(needed);
   // a long import (a new phone or browser has the whole wardrobe to add) shows its progress and the pieces as they arrive, a page at a time
   S.importing = todo.length > 20 ? { done: 0, total: todo.length } : null; let failed = 0, drawnAt = performance.now();
+  if (S.importing && $('#modal').hidden && ['today', 'closet', 'tryon'].includes(S.view)) render(); // (the progress line shows from the start, whichever page is open)
   const progress = () => {
     if (!S.importing) return; S.importing.done++;
     const st = document.getElementById('impstat'); if (st) st.textContent = importText();
-    if (performance.now() - drawnAt > 20000 && performance.now() - lastTouch > 6000 && $('#modal').hidden && ['closet', 'tryon'].includes(S.view)) { drawnAt = performance.now(); render(); } // (not while she's scrolling or tapping)
+    if (performance.now() - drawnAt > 20000 && performance.now() - lastTouch > 6000 && $('#modal').hidden && ['today', 'closet', 'tryon'].includes(S.view)) { drawnAt = performance.now(); render(); } // (not while she's scrolling or tapping)
   };
   for (const [sid, p] of todo) {
     const it = catalogue.get(sid), mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
