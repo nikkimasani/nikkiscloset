@@ -38,9 +38,13 @@ const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!only || only.i
 // pieces Nikki asked for come first (PRELOAD_FIRST: words in the name, comma-separated; none by default)
 const FIRST = String(process.env.PRELOAD_FIRST ?? '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);
 const wanted = (i) => FIRST.some((w) => i.name.toLowerCase().includes(w));
-// after those, the categories take turns (a dress, a coat, shoes, a bag, an accessory, ...) so every night brings some of each
+// after those, the categories take turns (a dress, a coat, shoes, a bag, an accessory, ...) so every night brings some of each; the ones
+// Nikki wants most of (shoes, bags, accessories, dresses: the wardrobe has far fewer of those) take more turns each round
+const TURNS = { shoes: 3, bags: 2, accessories: 2, dresses: 2 };
 const takeTurns = (list) => { const by = new Map(); for (const i of list) { if (!by.has(i.batch)) by.set(i.batch, []); by.get(i.batch).push(i); }
-  const queues = [...by.values()], out = []; while (queues.some((q) => q.length)) for (const q of queues) if (q.length) out.push(q.shift()); return out; };
+  const queues = [...by.entries()], out = [];
+  while (queues.some(([, q]) => q.length)) for (const [b, q] of queues) for (let n = TURNS[b] || 1; n > 0 && q.length; n--) out.push(q.shift());
+  return out; };
 const first = (list) => [...list.filter(wanted), ...takeTurns(list.filter((i) => !wanted(i)))];
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
   : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...first(ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id))))];
