@@ -89,7 +89,7 @@ export function renderToday(c) {
   $('#main').innerHTML = `<div class="today">
     <section class="t-hero"><p class="muted">${new Date().toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
       <h2 class="view-title">Today</h2>
-      <div class="chips">${wx}${b.event ? `<span class="chip">${esc(b.event.title || b.event.occasion)}</span>` : ''}</div></section>
+      <div class="chips">${wx}${b.event ? `<span class="chip">${esc(b.event.title || b.event.occasion)}</span>` : ''}</div>${S.importing ? `<p class="muted findcount" id="impstat">Adding your wardrobe: ${S.importing.done.toLocaleString()} of ${S.importing.total.toLocaleString()} pieces…</p>` : ''}</section>
     <section class="panel t-ask" aria-label="Ask your stylist"><label class="f" for="askq">What are you dressing for?</label>
       <div class="row"><input type="text" id="askq" class="grow" maxlength="80" placeholder="e.g. brunch with the girls, it’s hot" value="${esc(t.ask)}" enterkeyhint="go"><button class="primary" data-act="todayask">Style me</button></div>
       <div class="chips t-occ" role="group" aria-label="Or pick an occasion">${OCCASIONS.map((o) => `<button class="chip ${b.occasion === o ? 'on' : ''}" aria-pressed="${b.occasion === o}" data-act="todayocc" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></section>
