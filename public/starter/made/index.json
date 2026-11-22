@@ -33278,25 +33278,6 @@
    ],
    "t": 1795332419733
   },
-  "starter-champagne-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 308,
-    "w": 542,
-    "h": 1398
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b89986",
-    "name": "Beige"
-   },
-   "colors": [
-    "#b89986",
-    "#d6c6b7"
-   ],
-   "t": 1795332424575
-  },
   "starter-white-sports-bra": {
    "kind": "worn",
    "box": {
@@ -33316,48 +33297,6 @@
     "#aaa8a6"
    ],
    "t": 1795332465927
-  },
-  "starter-chocolate-brown-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 316,
-    "w": 630,
-    "h": 1390
-   },
-   "v": 5,
-   "color": {
-    "hex": "#170c06",
-    "name": "Black"
-   },
-   "colors": [
-    "#170c06",
-    "#482b23",
-    "#784c44",
-    "#d6a57a"
-   ],
-   "t": 1795332478176
-  },
-  "starter-camel-cropped-jacket": {
-   "kind": "worn",
-   "box": {
-    "x": 110,
-    "y": 238,
-    "w": 672,
-    "h": 648
-   },
-   "v": 5,
-   "color": {
-    "hex": "#bb743a",
-    "name": "Tan"
-   },
-   "colors": [
-    "#bb743a",
-    "#683619",
-    "#2a1305",
-    "#e6b898"
-   ],
-   "t": 1795332482420
   },
   "starter-grey-sports-bra": {
    "kind": "worn",
@@ -34091,6 +34030,9 @@
   "starter-black-pointed-pumps": "patchy toe caps, no heel, twice",
   "starter-white-pointed-kitten-heels": "only the toe caps came out, twice",
   "starter-camel-wool-coat": "a dark scrap left inside the coat, twice",
-  "starter-gold-dome-earrings": "ragged blobs instead of earrings, twice"
+  "starter-gold-dome-earrings": "ragged blobs instead of earrings, twice",
+  "starter-champagne-slip-maxi-dress": "a bare arm kept with the dress, twice",
+  "starter-chocolate-brown-slip-maxi-dress": "bare arms kept with the dress, twice",
+  "starter-camel-cropped-jacket": "a bare torso inside the open jacket, twice"
  }
 }
