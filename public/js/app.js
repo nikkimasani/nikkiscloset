@@ -164,18 +164,20 @@ async function importPreloaded() {
     }
     return { cutout, worn };
   };
+  let repair; try { repair = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); } catch { repair = new Set(); } // (pieces whose stored picture went unreadable: imported afresh)
   const byId = new Map(S.items.map((i) => [i.id, i])), bySid = new Map(); for (const i of S.items) if (i.starterId) (bySid.get(i.starterId) || bySid.set(i.starterId, []).get(i.starterId)).push(i);
   for (const [sid, p] of Object.entries(idx.pieces)) {
     const it = catalogue.get(sid); if (!it || removed.has(sid)) continue;
     const mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
-    if (mine ? !starter.isStarter(mine) || (mine.preloadT || 0) === (p.t || 0) : same.some((i) => i.worn || p.kind !== 'worn' || !starter.isStarter(i))) continue; // (already here as it is, or one you own: nothing to do, and no pause needed)
+    if (mine ? !starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id)) : same.some((i) => i.worn || p.kind !== 'worn' || !starter.isStarter(i))) continue; // (already here as it is, or one you own: nothing to do, and no pause needed)
     if (performance.now() > busyUntil) { await breather(); busyUntil = performance.now() + 30; } // (taps and scrolling get a turn between pieces)
     try {
       if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
-        if (!starter.isStarter(mine) || (mine.preloadT || 0) === (p.t || 0)) continue;
+        if (!starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id))) continue;
         const { cutout, worn } = await pictures(sid, p);
         Object.assign(mine, { cutout, worn, color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
-        URL.revokeObjectURL(S.urls.get(mine.id) || ''); S.urls.delete(mine.id); url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++;
+        const was = S.urls.get(mine.id); if (was) setTimeout(() => URL.revokeObjectURL(was), 120000); S.urls.delete(mine.id); // (the old picture stays readable a while: pictures already on screen keep showing until the page redraws)
+        url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++;
         continue;
       }
       const { cutout, worn } = await pictures(sid, p);
@@ -184,7 +186,7 @@ async function importPreloaded() {
       await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++;
     } catch { /* this one is tried again next time */ return; }
   }
-  store.set('preloaded', String(idx.version));
+  store.set('preloaded', String(idx.version)); try { localStorage.removeItem('repair'); } catch { /* private mode */ }
   if (added || updated) { render(); toast([added && `${added} starter piece${added === 1 ? '' : 's'} added`, updated && `${updated} updated`].filter(Boolean).join(', ') + ' ✓'); }
 }
 
@@ -229,18 +231,22 @@ async function analyseItem(item) {
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (d[(y * N + x) * 4 + 3] > 40) { mask[y * N + x] = 1; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
     const m = x1 < 0 ? { iw, ih, bx: 0, by: 0, bw: 1, bh: 1, mask, N } : { iw, ih, bx: x0 / N, by: y0 / N, bw: (x1 - x0 + 1) / N, bh: (y1 - y0 + 1) / N, mask, N, ...(item.type === 'bags' && { body: bagBodyOf(img, iw, ih) }) };
     S.meta.set(item.id, m);
-    item._m = metaToSaved(m, item.cutout); put('items', item, { sync: true }); // (kept on the piece, so the next launch needn't decode every picture again; not a change to sync)
+    saveMeta(item, m);
   } catch { /* an unreadable picture just keeps the full box */ } finally { done(); }
 }
-/** A piece's measurements as saved on it (the 64x64 mask packed into bits), tied to its picture by size and type. */
-function metaToSaved(m, blob) {
-  const bits = new Uint8Array(Math.ceil(m.mask.length / 8)); m.mask.forEach((v, i) => { if (v) bits[i >> 3] |= 1 << (i & 7); });
-  let bin = ''; bits.forEach((b) => (bin += String.fromCharCode(b)));
-  const { mask, ...rest } = m; return { ...rest, mask: btoa(bin), sig: `${blob.size}:${blob.type}` };
+/* Each piece's measurements, kept between launches in a small list of their own (never by saving the piece again: rewriting
+   every piece with its pictures was heavy enough to crash the page on an iPhone). Without the tap mask, which isn't needed
+   to draw: until a piece is measured again, a tap anywhere in its box picks it. */
+let metaStore = null, metaTimer = 0;
+const metaList = () => { if (!metaStore) { try { metaStore = JSON.parse(localStorage.getItem('piecemeta') || '{}'); } catch { metaStore = {}; } } return metaStore; };
+function saveMeta(item, m) {
+  const { iw, ih, bx, by, bw, bh, body } = m;
+  metaList()[item.id] = { iw, ih, bx, by, bw, bh, ...(body && { body }), sig: `${item.cutout.size}:${item.cutout.type}` };
+  clearTimeout(metaTimer); metaTimer = setTimeout(() => { try { const ids = new Set(S.items.map((i) => i.id)); for (const k of Object.keys(metaStore)) if (!ids.has(k)) delete metaStore[k]; localStorage.setItem('piecemeta', JSON.stringify(metaStore)); } catch { /* full or private mode: measured again next time */ } }, 1500);
 }
 function metaFromSaved(item) {
-  const m = item._m; if (!m?.mask || !item.cutout || m.sig !== `${item.cutout.size}:${item.cutout.type}`) return null;
-  try { const bin = atob(m.mask), mask = new Uint8Array(m.N * m.N); for (let i = 0; i < mask.length; i++) mask[i] = (bin.charCodeAt(i >> 3) >> (i & 7)) & 1; const { sig, ...rest } = m; return { ...rest, mask }; } catch { return null; }
+  const m = metaList()[item.id] || item._m; if (!m || !item.cutout || m.sig !== `${item.cutout.size}:${item.cutout.type}`) return null;
+  const { sig, mask, ...rest } = m; return rest;
 }
 /** Every piece looked at once, one at a time with a pause between (what's on the model first), so opening the app never freezes it. */
 async function analyseAll() {
@@ -2051,6 +2057,26 @@ deEmoji(document.body);
 /** Tuck a top in or leave it out (as a look on Today has it), remembered on the piece like the Tuck in button. */
 async function setTuck(it, on) { if (!it || !dollPack || !isTuckable(it, dollPack) || tuckOf(it, dollPack) === on) return; setFit(it, { tuck: on }); await put('items', it); }
 const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure, wearCounts, go, wearIds, setTuck, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
+
+/* A picture that won't show (an iPhone can lose its link to a stored picture): read the piece again from storage; if that copy is
+   unreadable too, show a preloaded piece straight from the site and have it imported afresh on the next launch. */
+const rereads = new Map();
+document.addEventListener('error', async (e) => {
+  const el = e.target, src = el?.getAttribute?.('src') || el?.getAttribute?.('href') || '';
+  if (!src.startsWith('blob:') || !(el.tagName === 'IMG' || el.tagName === 'image')) return;
+  const key = [...S.urls.entries()].find(([, u]) => u === src)?.[0]; if (!key) return;
+  const [id, side] = key.split(':'), it = S.items.find((i) => i.id === id), tries = rereads.get(key) || 0; if (!it || side && side !== 'back' || tries > 1) return;
+  rereads.set(key, tries + 1);
+  let blob = null;
+  if (tries === 0) { const fresh = await get('items', id).catch(() => null); blob = side ? fresh?.backCutout : fresh?.cutout; if (fresh && !side) Object.assign(it, { cutout: fresh.cutout, worn: fresh.worn, original: fresh.original }); }
+  else if (it.starterId && it.preloaded && !side) {
+    blob = await fetch(`/starter/made/${it.starterId}.webp`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+    try { const fix = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); fix.add(id); localStorage.setItem('repair', JSON.stringify([...fix])); store.set('preloaded', ''); } catch { /* private mode */ }
+  }
+  if (!blob) return;
+  S.urls.delete(key); const u = url(key, blob);
+  for (const n of document.querySelectorAll('img, image')) { if (n.getAttribute('src') === src) n.setAttribute('src', u); if (n.getAttribute('href') === src) n.setAttribute('href', u); }
+}, true);
 
 (async () => {
   await load();
