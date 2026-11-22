@@ -105,7 +105,14 @@ await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing f
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-const openMore = async (pg) => { await pg.click('[data-view=closet]').catch(() => {}); if (!(await pg.locator('details.more[open]').count())) await pg.click('details.more summary'); };
+// (a device that just synced reloads itself, sometimes a moment later: wait until the app is up and the Wardrobe's More panel is there, then open it)
+const openMore = async (pg) => {
+  for (let t = 0; t < 4; t++) {
+    try { await pg.waitForFunction(() => window.__closet, null, { timeout: 10000 }); await pg.click('[data-view=closet]', { timeout: 5000 }); await pg.waitForSelector('details.more summary', { timeout: 5000 }); break; } catch { await pg.waitForLoadState('load').catch(() => {}); }
+  }
+  if (!(await pg.locator('details.more[open]').count())) await pg.click('details.more summary');
+  await pg.waitForSelector('details.more[open] summary');
+};
 const openF = async (pg) => { if (await pg.locator('#ffilters[hidden]').count()) await pg.click('[data-act=ftoggle]'); };
 let failed = 0;
 // A closet to test with: your own photo cutouts (tests/fixtures are real garment cutouts), put straight into the browser's database.
