@@ -1,5 +1,5 @@
 {
- "version": 1795311173589,
+ "version": 1795332575900,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -33240,14 +33240,425 @@
     "#38391b"
    ],
    "t": 1795310619469
+  },
+  "starter-black-sports-bra": {
+   "kind": "worn",
+   "box": {
+    "x": 284,
+    "y": 308,
+    "w": 326,
+    "h": 304
+   },
+   "v": 5,
+   "color": {
+    "hex": "#151417",
+    "name": "Black"
+   },
+   "colors": [
+    "#151417"
+   ],
+   "t": 1795332416496
+  },
+  "starter-black-workout-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 652,
+    "w": 454,
+    "h": 940
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161718",
+    "name": "Black"
+   },
+   "colors": [
+    "#161718"
+   ],
+   "t": 1795332419733
+  },
+  "starter-champagne-slip-maxi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 308,
+    "w": 542,
+    "h": 1398
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b89986",
+    "name": "Beige"
+   },
+   "colors": [
+    "#b89986",
+    "#d6c6b7"
+   ],
+   "t": 1795332424575
+  },
+  "starter-camel-wool-coat": {
+   "kind": "worn",
+   "box": {
+    "x": 110,
+    "y": 236,
+    "w": 674,
+    "h": 1098
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c88b63",
+    "name": "Tan"
+   },
+   "colors": [
+    "#c88b63",
+    "#88543b",
+    "#060b0a",
+    "#482819"
+   ],
+   "t": 1795332427961
+  },
+  "starter-black-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 230,
+    "y": 1548,
+    "w": 440,
+    "h": 198
+   },
+   "v": 5,
+   "color": {
+    "hex": "#040406",
+    "name": "Black"
+   },
+   "colors": [
+    "#040406",
+    "#574939",
+    "#857663"
+   ],
+   "t": 1795332432610
+  },
+  "starter-gold-dome-earrings": {
+   "kind": "photo",
+   "color": {
+    "hex": "#dcb566",
+    "name": "Camel"
+   },
+   "colors": [
+    "#dcb566"
+   ],
+   "t": 1795332462462
+  },
+  "starter-white-sports-bra": {
+   "kind": "worn",
+   "box": {
+    "x": 282,
+    "y": 310,
+    "w": 330,
+    "h": 476
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9f9f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f9f9f7",
+    "#ab8b7b",
+    "#aaa8a6"
+   ],
+   "t": 1795332465927
+  },
+  "starter-grey-workout-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 658,
+    "w": 456,
+    "h": 950
+   },
+   "v": 5,
+   "color": {
+    "hex": "#686a79",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#686a79"
+   ],
+   "t": 1795332469738
+  },
+  "starter-chocolate-brown-slip-maxi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 316,
+    "w": 630,
+    "h": 1390
+   },
+   "v": 5,
+   "color": {
+    "hex": "#170c06",
+    "name": "Black"
+   },
+   "colors": [
+    "#170c06",
+    "#482b23",
+    "#784c44",
+    "#d6a57a"
+   ],
+   "t": 1795332478176
+  },
+  "starter-camel-cropped-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 110,
+    "y": 238,
+    "w": 672,
+    "h": 648
+   },
+   "v": 5,
+   "color": {
+    "hex": "#bb743a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#bb743a",
+    "#683619",
+    "#2a1305",
+    "#e6b898"
+   ],
+   "t": 1795332482420
+  },
+  "starter-black-kitten-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 236,
+    "y": 1640,
+    "w": 436,
+    "h": 106
+   },
+   "v": 5,
+   "color": {
+    "hex": "#050606",
+    "name": "Black"
+   },
+   "colors": [
+    "#050606"
+   ],
+   "t": 1795332486876
+  },
+  "starter-grey-sports-bra": {
+   "kind": "worn",
+   "box": {
+    "x": 292,
+    "y": 306,
+    "w": 316,
+    "h": 300
+   },
+   "v": 5,
+   "color": {
+    "hex": "#74767b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#74767b",
+    "#464848"
+   ],
+   "t": 1795332514250
+  },
+  "starter-chocolate-brown-workout-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 568,
+    "w": 464,
+    "h": 1040
+   },
+   "v": 5,
+   "color": {
+    "hex": "#382626",
+    "name": "Black"
+   },
+   "colors": [
+    "#382626",
+    "#d7b997"
+   ],
+   "t": 1795332517289
+  },
+  "starter-navy-slip-maxi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 170,
+    "y": 388,
+    "w": 556,
+    "h": 1318
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080718",
+    "name": "Black"
+   },
+   "colors": [
+    "#080718",
+    "#141a47",
+    "#233887"
+   ],
+   "t": 1795332519723
+  },
+  "starter-oatmeal-shirt-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 100,
+    "y": 262,
+    "w": 694,
+    "h": 760
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dcc3aa",
+    "name": "Beige"
+   },
+   "colors": [
+    "#dcc3aa",
+    "#a58c76",
+    "#765b46"
+   ],
+   "t": 1795332523519
+  },
+  "starter-white-pointed-kitten-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 240,
+    "y": 1562,
+    "w": 428,
+    "h": 184
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e8e8",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e8e8",
+    "#965d42",
+    "#b8b8b7"
+   ],
+   "t": 1795332528989
+  },
+  "starter-tan-bucket-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#a64a18",
+    "name": "Rust"
+   },
+   "colors": [
+    "#a64a18",
+    "#d87936",
+    "#f6a868",
+    "#894729",
+    "#fcfaf8"
+   ],
+   "t": 1795332541148
+  },
+  "starter-chocolate-brown-sports-bra": {
+   "kind": "worn",
+   "box": {
+    "x": 248,
+    "y": 310,
+    "w": 392,
+    "h": 616
+   },
+   "v": 5,
+   "color": {
+    "hex": "#482824",
+    "name": "Brown"
+   },
+   "colors": [
+    "#482824"
+   ],
+   "t": 1795332561304
+  },
+  "starter-sage-green-workout-leggings": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 668,
+    "w": 458,
+    "h": 956
+   },
+   "v": 5,
+   "color": {
+    "hex": "#88a698",
+    "name": "Sage"
+   },
+   "colors": [
+    "#88a698",
+    "#647a6c"
+   ],
+   "t": 1795332565122
+  },
+  "starter-oatmeal-slip-maxi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 310,
+    "w": 492,
+    "h": 1396
+   },
+   "v": 5,
+   "color": {
+    "hex": "#664c38",
+    "name": "Brown"
+   },
+   "colors": [
+    "#664c38",
+    "#e9d5b9",
+    "#baa48a"
+   ],
+   "t": 1795332568409
+  },
+  "starter-white-longline-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 120,
+    "y": 294,
+    "w": 644,
+    "h": 990
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4f6f7",
+    "name": "White"
+   },
+   "colors": [
+    "#f4f6f7",
+    "#c6c8c9",
+    "#99999a"
+   ],
+   "t": 1795332571642
+  },
+  "starter-black-knee-high-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 1168,
+    "w": 466,
+    "h": 578
+   },
+   "v": 5,
+   "color": {
+    "hex": "#040403",
+    "name": "Black"
+   },
+   "colors": [
+    "#040403"
+   ],
+   "t": 1795332575900
   }
  },
  "failed": {
   "starter-beige-quilted-crossbody": [
-   "cut-out not clean enough (left out by review)"
-  ],
-  "starter-tan-bucket-bag": [
-   "skin-coloured areas (a person or a body form?)"
+   "skin-coloured areas (a person or a body form?)",
+   "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-cognac-saddle-bag": [
    "more than the item in the picture (text, a hanger or a prop?)",
@@ -33268,8 +33679,8 @@
    "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-pendant-necklace": [
-   "item is missing or tiny",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white or grey body shape (a dress form?)"
   ],
   "starter-tortoiseshell-sunglasses": [
    "more than the item in the picture (text, a hanger or a prop?)",
@@ -33310,7 +33721,9 @@
    "cut-out not clean enough (left out by review)"
   ],
   "starter-brown-crescent-bag": [
-   "cut-out not clean enough (left out by review)"
+   "more than the item in the picture (text, a hanger or a prop?)",
+   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-chain-bracelet": [
    "cut-out not clean enough (left out by review)"
@@ -33327,38 +33740,17 @@
   "starter-sage-satin-blouse": [
    "taken out on review: trousers added, twice"
   ],
-  "starter-black-kitten-heels": [
-   "holes where her foot shows through (left out by review)"
-  ],
-  "starter-black-knee-high-boots": [
-   "holes down the side of the boots (left out by review)"
-  ],
   "starter-black-ankle-boots": [
    "hollow shaft, her leg shows through (left out by review)"
   ],
   "starter-black-loafers": [
    "torn shape (left out by review)"
   ],
-  "starter-black-pointed-pumps": [
-   "only the toes came out (left out by review)"
-  ],
-  "starter-white-pointed-kitten-heels": [
-   "only the toes came out (left out by review)"
-  ],
   "starter-tan-halter-top": [
    "taken out on review: pale arms kept with the piece, twice"
   ],
   "starter-tan-scoop-bodysuit": [
    "taken out on review: pale arms kept with the piece, twice"
-  ],
-  "starter-camel-wool-coat": [
-   "dark patches inside the coat (left out by review)"
-  ],
-  "starter-gold-dome-earrings": [
-   "cut through: half of each earring missing (left out by review)"
-  ],
-  "starter-camel-cropped-jacket": [
-   "a dark patch at the waist (left out by review)"
   ],
   "starter-beige-ribbed-midi-dress": [
    "arms or skin kept (left out by review)"
@@ -33367,9 +33759,6 @@
    "arms or skin kept (left out by review)"
   ],
   "starter-beige-square-neck-midi-dress": [
-   "arms or skin kept (left out by review)"
-  ],
-  "starter-champagne-slip-maxi-dress": [
    "arms or skin kept (left out by review)"
   ],
   "starter-oatmeal-off-shoulder-dress": [
@@ -33384,16 +33773,10 @@
   "starter-camel-long-sleeve-maxi-dress": [
    "more than the dress in the picture (left out by review)"
   ],
-  "starter-chocolate-brown-slip-maxi-dress": [
-   "more than the dress in the picture (left out by review)"
-  ],
   "starter-espresso-long-sleeve-maxi-dress": [
    "torn edges or holes (left out by review)"
   ],
   "starter-espresso-slip-maxi-dress": [
-   "torn edges or holes (left out by review)"
-  ],
-  "starter-oatmeal-slip-maxi-dress": [
    "torn edges or holes (left out by review)"
   ],
   "starter-olive-off-shoulder-dress": [
@@ -33403,9 +33786,6 @@
    "torn edges or holes (left out by review)"
   ],
   "starter-red-off-shoulder-dress": [
-   "torn edges or holes (left out by review)"
-  ],
-  "starter-navy-slip-maxi-dress": [
    "torn edges or holes (left out by review)"
   ]
  },
