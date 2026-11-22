@@ -33297,58 +33297,6 @@
    ],
    "t": 1795332424575
   },
-  "starter-camel-wool-coat": {
-   "kind": "worn",
-   "box": {
-    "x": 110,
-    "y": 236,
-    "w": 674,
-    "h": 1098
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c88b63",
-    "name": "Tan"
-   },
-   "colors": [
-    "#c88b63",
-    "#88543b",
-    "#060b0a",
-    "#482819"
-   ],
-   "t": 1795332427961
-  },
-  "starter-black-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 230,
-    "y": 1548,
-    "w": 440,
-    "h": 198
-   },
-   "v": 5,
-   "color": {
-    "hex": "#040406",
-    "name": "Black"
-   },
-   "colors": [
-    "#040406",
-    "#574939",
-    "#857663"
-   ],
-   "t": 1795332432610
-  },
-  "starter-gold-dome-earrings": {
-   "kind": "photo",
-   "color": {
-    "hex": "#dcb566",
-    "name": "Camel"
-   },
-   "colors": [
-    "#dcb566"
-   ],
-   "t": 1795332462462
-  },
   "starter-white-sports-bra": {
    "kind": "worn",
    "box": {
@@ -33368,24 +33316,6 @@
     "#aaa8a6"
    ],
    "t": 1795332465927
-  },
-  "starter-grey-workout-leggings": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 658,
-    "w": 456,
-    "h": 950
-   },
-   "v": 5,
-   "color": {
-    "hex": "#686a79",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#686a79"
-   ],
-   "t": 1795332469738
   },
   "starter-chocolate-brown-slip-maxi-dress": {
    "kind": "worn",
@@ -33428,24 +33358,6 @@
     "#e6b898"
    ],
    "t": 1795332482420
-  },
-  "starter-black-kitten-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 236,
-    "y": 1640,
-    "w": 436,
-    "h": 106
-   },
-   "v": 5,
-   "color": {
-    "hex": "#050606",
-    "name": "Black"
-   },
-   "colors": [
-    "#050606"
-   ],
-   "t": 1795332486876
   },
   "starter-grey-sports-bra": {
    "kind": "worn",
@@ -33524,26 +33436,6 @@
     "#765b46"
    ],
    "t": 1795332523519
-  },
-  "starter-white-pointed-kitten-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 240,
-    "y": 1562,
-    "w": 428,
-    "h": 184
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e8e8e8",
-    "name": "White"
-   },
-   "colors": [
-    "#e8e8e8",
-    "#965d42",
-    "#b8b8b7"
-   ],
-   "t": 1795332528989
   },
   "starter-tan-bucket-bag": {
    "kind": "photo",
@@ -33788,6 +33680,9 @@
   ],
   "starter-red-off-shoulder-dress": [
    "torn edges or holes (left out by review)"
+  ],
+  "starter-grey-workout-leggings": [
+   "big holes in the fabric, her legs show through (left out by review)"
   ]
  },
  "blocked": {
@@ -34191,6 +34086,11 @@
   "starter-champagne-strapless-mini-dress": [
    "legs or feet kept (left out by review)",
    "skin left at the top edge (left out by review)"
-  ]
+  ],
+  "starter-black-kitten-heels": "only the toe caps came out, twice",
+  "starter-black-pointed-pumps": "patchy toe caps, no heel, twice",
+  "starter-white-pointed-kitten-heels": "only the toe caps came out, twice",
+  "starter-camel-wool-coat": "a dark scrap left inside the coat, twice",
+  "starter-gold-dome-earrings": "ragged blobs instead of earrings, twice"
  }
 }
