@@ -861,5 +861,7 @@ const ACTIVE_LOUNGE = {
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const rowsOf = (list) => list.flatMap(([what, type, season, occ, detail, colours]) =>
   colours.split(', ').map((c) => { const [label, colour = label] = c.split('='); return [`${cap(label)} ${what}`, type, colour, season, occ, detail]; }));
+/** Workout / Lounge tags by name, so a piece that was already in the catalogue under the same name (e.g. Black bike shorts) gets them too. */
+export const EXTRA_OCC = Object.fromEntries(Object.values(ACTIVE_LOUNGE).flatMap(rowsOf).map(([name, , , , occ]) => [name.toLowerCase(), occ]));
 export const STAPLE_ROWS = Object.fromEntries(Object.keys(STAPLES).map((batch) => { const seen = new Set(); // (a name that comes up twice is kept once)
   return [batch, [...rowsOf(STAPLES[batch]), ...rowsOf(STAPLES_MORE[batch] || []), ...rowsOf(ACTIVE_LOUNGE[batch] || [])].filter(([name]) => { const k = name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })]; }));
