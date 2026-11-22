@@ -2060,22 +2060,26 @@ const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure
 
 /* A picture that won't show (an iPhone can lose its link to a stored picture): read the piece again from storage; if that copy is
    unreadable too, show a preloaded piece straight from the site and have it imported afresh on the next launch. */
-const rereads = new Map();
-document.addEventListener('error', async (e) => {
+const repairs = new Map(); // key -> { tries, urls: every address this picture has had, busy: the repair under way }
+document.addEventListener('error', (e) => {
   const el = e.target, src = el?.getAttribute?.('src') || el?.getAttribute?.('href') || '';
   if (!src.startsWith('blob:') || !(el.tagName === 'IMG' || el.tagName === 'image')) return;
-  const key = [...S.urls.entries()].find(([, u]) => u === src)?.[0]; if (!key) return;
-  const [id, side] = key.split(':'), it = S.items.find((i) => i.id === id), tries = rereads.get(key) || 0; if (!it || side && side !== 'back' || tries > 1) return;
-  rereads.set(key, tries + 1);
-  let blob = null;
-  if (tries === 0) { const fresh = await get('items', id).catch(() => null); blob = side ? fresh?.backCutout : fresh?.cutout; if (fresh && !side) Object.assign(it, { cutout: fresh.cutout, worn: fresh.worn, original: fresh.original }); }
-  else if (it.starterId && it.preloaded && !side) {
-    blob = await fetch(`/starter/made/${it.starterId}.webp`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
-    try { const fix = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); fix.add(id); localStorage.setItem('repair', JSON.stringify([...fix])); store.set('preloaded', ''); } catch { /* private mode */ }
-  }
-  if (!blob) return;
-  S.urls.delete(key); const u = url(key, blob);
-  for (const n of document.querySelectorAll('img, image')) { if (n.getAttribute('src') === src) n.setAttribute('src', u); if (n.getAttribute('href') === src) n.setAttribute('href', u); }
+  const key = [...S.urls.entries()].find(([, u]) => u === src)?.[0] || [...repairs].find(([, r]) => r.urls.has(src))?.[0]; if (!key) return;
+  const [id, side] = key.split(':'), it = S.items.find((i) => i.id === id); if (!it || (side && side !== 'back')) return;
+  const r = repairs.get(key) || { tries: 0, urls: new Set() }; repairs.set(key, r); r.urls.add(src);
+  if (r.busy || r.tries > 1) return; // (one repair at a time per picture: it fixes every place the picture shows, and only a failed replacement starts the next try)
+  r.busy = (async () => {
+    const tries = r.tries++; let blob = null;
+    if (tries === 0) { const fresh = await get('items', id).catch(() => null); blob = side ? fresh?.backCutout : fresh?.cutout; if (fresh && !side) Object.assign(it, { cutout: fresh.cutout, worn: fresh.worn, original: fresh.original }); }
+    else if (it.starterId && it.preloaded && !side) {
+      blob = await fetch(`/starter/made/${it.starterId}.webp`).then((x) => (x.ok ? x.blob() : null)).catch(() => null);
+      try { const fix = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); fix.add(id); localStorage.setItem('repair', JSON.stringify([...fix])); store.set('preloaded', ''); } catch { /* private mode */ }
+    }
+    if (!blob) return;
+    S.urls.delete(key); const u = url(key, blob);
+    for (const n of document.querySelectorAll('img, image')) for (const at of ['src', 'href']) if (r.urls.has(n.getAttribute(at))) n.setAttribute(at, u);
+    r.urls.add(u);
+  })().finally(() => { r.busy = null; });
 }, true);
 
 (async () => {
