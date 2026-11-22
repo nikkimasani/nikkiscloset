@@ -31634,28 +31634,6 @@
    ],
    "t": 1795285396557
   },
-  "starter-gold-sequin-mini-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 312,
-    "w": 446,
-    "h": 712
-   },
-   "v": 5,
-   "color": {
-    "hex": "#7a6547",
-    "name": "Brown"
-   },
-   "colors": [
-    "#7a6547",
-    "#fdfcf6",
-    "#b59b75",
-    "#d6c5a8",
-    "#4b3a25"
-   ],
-   "t": 1795308503483
-  },
   "starter-silver-sequin-midi-dress": {
    "kind": "worn",
    "box": {
@@ -31676,43 +31654,6 @@
     "#66697a"
    ],
    "t": 1795308507523
-  },
-  "starter-black-lace-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 304,
-    "w": 618,
-    "h": 1142
-   },
-   "v": 5,
-   "color": {
-    "hex": "#171619",
-    "name": "Black"
-   },
-   "colors": [
-    "#171619"
-   ],
-   "t": 1795308511281
-  },
-  "starter-butter-yellow-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 182,
-    "y": 386,
-    "w": 516,
-    "h": 1076
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f6e6a5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#f6e6a5",
-    "#c9b977"
-   ],
-   "t": 1795308515334
   },
   "starter-leopard-mini-dress": {
    "kind": "worn",
@@ -31774,26 +31715,6 @@
    ],
    "t": 1795308528458
   },
-  "starter-blush-pink-bodycon-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 300,
-    "w": 546,
-    "h": 1280
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e7aab4",
-    "name": "Pink"
-   },
-   "colors": [
-    "#e7aab4",
-    "#b48769",
-    "#a87878"
-   ],
-   "t": 1795308531758
-  },
   "starter-grey-knit-maxi-dress": {
    "kind": "worn",
    "box": {
@@ -31812,24 +31733,6 @@
     "#3d4247"
    ],
    "t": 1795308535217
-  },
-  "starter-camel-knit-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 236,
-    "w": 630,
-    "h": 1470
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a87557",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a87557"
-   ],
-   "t": 1795308539272
   },
   "starter-olive-knit-maxi-dress": {
    "kind": "worn",
@@ -31909,66 +31812,6 @@
    ],
    "t": 1795308553876
   },
-  "starter-blush-pink-strapless-mini-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 408,
-    "w": 458,
-    "h": 814
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fab9c6",
-    "name": "Pink"
-   },
-   "colors": [
-    "#fab9c6",
-    "#a48b6a"
-   ],
-   "t": 1795308559289
-  },
-  "starter-champagne-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 236,
-    "w": 576,
-    "h": 1470
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fbf5ea",
-    "name": "White"
-   },
-   "colors": [
-    "#fbf5ea",
-    "#c8b7a7",
-    "#957a66",
-    "#67554b"
-   ],
-   "t": 1795308565010
-  },
-  "starter-chocolate-brown-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 194,
-    "y": 316,
-    "w": 550,
-    "h": 1390
-   },
-   "v": 5,
-   "color": {
-    "hex": "#261717",
-    "name": "Black"
-   },
-   "colors": [
-    "#261717",
-    "#583934",
-    "#96675a"
-   ],
-   "t": 1795308572450
-  },
   "starter-emerald-green-slip-maxi-dress": {
    "kind": "worn",
    "box": {
@@ -32009,26 +31852,6 @@
    ],
    "t": 1795308580941
   },
-  "starter-navy-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 404,
-    "w": 474,
-    "h": 1302
-   },
-   "v": 5,
-   "color": {
-    "hex": "#0d0818",
-    "name": "Black"
-   },
-   "colors": [
-    "#0d0818",
-    "#151637",
-    "#2b3a76"
-   ],
-   "t": 1795308585165
-  },
   "starter-red-slip-maxi-dress": {
    "kind": "worn",
    "box": {
@@ -32050,26 +31873,6 @@
    ],
    "t": 1795308588812
   },
-  "starter-oatmeal-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 202,
-    "y": 386,
-    "w": 522,
-    "h": 1320
-   },
-   "v": 5,
-   "color": {
-    "hex": "#79655b",
-    "name": "Brown"
-   },
-   "colors": [
-    "#79655b",
-    "#a58b75",
-    "#dcc9b4"
-   ],
-   "t": 1795308594373
-  },
   "starter-stone-slip-maxi-dress": {
    "kind": "worn",
    "box": {
@@ -32090,24 +31893,6 @@
     "#968989"
    ],
    "t": 1795308597868
-  },
-  "starter-espresso-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 184,
-    "y": 386,
-    "w": 462,
-    "h": 1320
-   },
-   "v": 5,
-   "color": {
-    "hex": "#1d1d15",
-    "name": "Black"
-   },
-   "colors": [
-    "#1d1d15"
-   ],
-   "t": 1795308603968
   },
   "starter-mocha-slip-maxi-dress": {
    "kind": "worn",
@@ -32205,25 +31990,6 @@
    ],
    "t": 1795308623290
   },
-  "starter-beige-ribbed-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 126,
-    "y": 284,
-    "w": 638,
-    "h": 1420
-   },
-   "v": 5,
-   "color": {
-    "hex": "#cab4a8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#cab4a8",
-    "#8b7975"
-   ],
-   "t": 1795308629257
-  },
   "starter-camel-ribbed-midi-dress": {
    "kind": "worn",
    "box": {
@@ -32317,27 +32083,6 @@
     "#3a2426"
    ],
    "t": 1795308655743
-  },
-  "starter-oatmeal-ribbed-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 294,
-    "w": 632,
-    "h": 1314
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a99686",
-    "name": "Grey"
-   },
-   "colors": [
-    "#a99686",
-    "#b67859",
-    "#796858",
-    "#e8b698"
-   ],
-   "t": 1795308659004
   },
   "starter-stone-ribbed-midi-dress": {
    "kind": "worn",
@@ -32467,26 +32212,6 @@
    ],
    "t": 1795308688425
   },
-  "starter-camel-long-sleeve-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 302,
-    "w": 628,
-    "h": 1404
-   },
-   "v": 5,
-   "color": {
-    "hex": "#985735",
-    "name": "Rust"
-   },
-   "colors": [
-    "#985735",
-    "#693b24",
-    "#c68756"
-   ],
-   "t": 1795308692856
-  },
   "starter-chocolate-brown-long-sleeve-maxi-dress": {
    "kind": "worn",
    "box": {
@@ -32543,24 +32268,6 @@
     "#0a0528"
    ],
    "t": 1795308708736
-  },
-  "starter-olive-long-sleeve-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 288,
-    "w": 622,
-    "h": 1368
-   },
-   "v": 5,
-   "color": {
-    "hex": "#454927",
-    "name": "Olive"
-   },
-   "colors": [
-    "#454927"
-   ],
-   "t": 1795308713809
   },
   "starter-burgundy-long-sleeve-maxi-dress": {
    "kind": "worn",
@@ -32638,24 +32345,6 @@
    ],
    "t": 1795308730051
   },
-  "starter-espresso-long-sleeve-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 144,
-    "y": 312,
-    "w": 612,
-    "h": 1390
-   },
-   "v": 5,
-   "color": {
-    "hex": "#352919",
-    "name": "Black"
-   },
-   "colors": [
-    "#352919"
-   ],
-   "t": 1795308734136
-  },
   "starter-ecru-long-sleeve-maxi-dress": {
    "kind": "worn",
    "box": {
@@ -32730,25 +32419,6 @@
     "#f2eddc"
    ],
    "t": 1795308752226
-  },
-  "starter-beige-square-neck-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 308,
-    "w": 620,
-    "h": 1398
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c4ab98",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c4ab98",
-    "#c58b68"
-   ],
-   "t": 1795308756674
   },
   "starter-camel-square-neck-midi-dress": {
    "kind": "worn",
@@ -32880,26 +32550,6 @@
     "#65082e"
    ],
    "t": 1795308783656
-  },
-  "starter-oatmeal-square-neck-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 300,
-    "w": 562,
-    "h": 1348
-   },
-   "v": 5,
-   "color": {
-    "hex": "#957a66",
-    "name": "Tan"
-   },
-   "colors": [
-    "#957a66",
-    "#573a26",
-    "#855a38"
-   ],
-   "t": 1795308786701
   },
   "starter-stone-square-neck-midi-dress": {
    "kind": "worn",
@@ -33425,44 +33075,6 @@
    ],
    "t": 1795308895494
   },
-  "starter-olive-off-shoulder-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 382,
-    "w": 464,
-    "h": 950
-   },
-   "v": 5,
-   "color": {
-    "hex": "#575935",
-    "name": "Olive"
-   },
-   "colors": [
-    "#575935"
-   ],
-   "t": 1795308899454
-  },
-  "starter-red-off-shoulder-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 168,
-    "y": 400,
-    "w": 574,
-    "h": 990
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a8001a",
-    "name": "Red"
-   },
-   "colors": [
-    "#a8001a",
-    "#770006",
-    "#d60123"
-   ],
-   "t": 1795308902643
-  },
   "starter-emerald-green-off-shoulder-dress": {
    "kind": "worn",
    "box": {
@@ -33481,26 +33093,6 @@
     "#00482a"
    ],
    "t": 1795308907115
-  },
-  "starter-oatmeal-off-shoulder-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 138,
-    "y": 376,
-    "w": 618,
-    "h": 1330
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c7aa96",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c7aa96",
-    "#a36a59",
-    "#492825"
-   ],
-   "t": 1795308911460
   },
   "starter-stone-off-shoulder-dress": {
    "kind": "worn",
@@ -33611,26 +33203,6 @@
     "#f4ecd7"
    ],
    "t": 1795308944511
-  },
-  "starter-beige-sheath-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 304,
-    "w": 458,
-    "h": 1400
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d7baa8",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d7baa8",
-    "#955739",
-    "#a78979"
-   ],
-   "t": 1795308948499
   },
   "starter-chocolate-brown-sheath-dress": {
    "kind": "worn",
@@ -33808,6 +33380,54 @@
   ],
   "starter-camel-cropped-jacket": [
    "a dark patch at the waist (left out by review)"
+  ],
+  "starter-beige-ribbed-midi-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-beige-sheath-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-beige-square-neck-midi-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-champagne-slip-maxi-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-oatmeal-off-shoulder-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-oatmeal-ribbed-midi-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-oatmeal-square-neck-midi-dress": [
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-camel-long-sleeve-maxi-dress": [
+   "more than the dress in the picture (left out by review)"
+  ],
+  "starter-chocolate-brown-slip-maxi-dress": [
+   "more than the dress in the picture (left out by review)"
+  ],
+  "starter-espresso-long-sleeve-maxi-dress": [
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-espresso-slip-maxi-dress": [
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-oatmeal-slip-maxi-dress": [
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-olive-off-shoulder-dress": [
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-olive-long-sleeve-maxi-dress": [
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-red-off-shoulder-dress": [
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-navy-slip-maxi-dress": [
+   "torn edges or holes (left out by review)"
   ]
  },
  "blocked": {
@@ -34181,6 +33801,30 @@
    "torn edges or holes (left out by review)"
   ],
   "starter-stone-linen-midi-skirt": [
+   "torn edges or holes (left out by review)",
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-blush-pink-bodycon-midi-dress": [
+   "legs or feet kept (left out by review)",
+   "arms or skin kept (left out by review)"
+  ],
+  "starter-blush-pink-strapless-mini-dress": [
+   "legs or feet kept (left out by review)",
+   "more than the dress in the picture (left out by review)"
+  ],
+  "starter-camel-knit-maxi-dress": [
+   "arms or skin kept at the sides (left out by review)",
+   "more than the dress in the picture (left out by review)"
+  ],
+  "starter-butter-yellow-midi-dress": [
+   "torn edges or holes (left out by review)",
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-black-lace-midi-dress": [
+   "torn edges or holes (left out by review)",
+   "torn edges or holes (left out by review)"
+  ],
+  "starter-gold-sequin-mini-dress": [
    "torn edges or holes (left out by review)",
    "torn edges or holes (left out by review)"
   ]
