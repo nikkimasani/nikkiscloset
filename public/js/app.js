@@ -135,7 +135,8 @@ async function importPreloaded() {
   if (withdrawn.length) await removeItems(withdrawn);
   for (const i of S.items.filter((i) => i.preloaded && starter.isStarter(i))) { // (once: where each piece sits on her, for tucking, and its catalogue colour name)
     const p = idx.pieces[i.starterId], it = STARTER_ITEMS.find((x) => x.id === i.starterId), color = it && starter.namedColor(it, i.color);
-    if ((p?.box && !i.wornBox) || (color && color.name !== i.color?.name)) { Object.assign(i, p?.box && !i.wornBox ? { wornBox: p.box } : {}, color ? { color } : {}); await put('items', i); }
+    const occ = it && String(i.occasions || []) !== String(it.occasions) ? { occasions: [...it.occasions] } : {}; // (styles added to the catalogue later, e.g. Workout, reach pieces already here)
+    if ((p?.box && !i.wornBox) || (color && color.name !== i.color?.name) || occ.occasions) { Object.assign(i, p?.box && !i.wornBox ? { wornBox: p.box } : {}, color ? { color } : {}, occ); await put('items', i); }
   }
   if (String(idx.version) === store.get('preloaded', '')) return;
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }

@@ -831,8 +831,37 @@ const STAPLES_MORE = {
     ['skinny belt', 'accessories', 'all', 'W', 'skinny leather belt', 'black, chocolate brown, tan, cream, white'],
   ],
 };
+/** Activewear, and lounge / PJs (Nikki: "add active wear and baggy sweats and joggers to the pjs"). Occasions: A Workout, L Lounge. */
+const ACTIVE_LOUNGE = {
+  tops: [
+    ['sports bra', 'tanks', 'light', 'A', 'supportive scoop-neck sports bra with wide straps', 'black, white, grey, chocolate brown, sage green, blush pink, navy, olive, mocha'],
+    ['racerback workout tank', 'tanks', 'light', 'A', 'fitted seamless racerback workout tank top', 'black, white, grey, sage green, blush pink, navy, chocolate brown'],
+    ['long-sleeve workout top', 'tops', 'all', 'A', 'fitted seamless long-sleeve workout top with thumbholes', 'black, grey, chocolate brown, sage green, navy, oatmeal'],
+    ['oversized hoodie', 'tops', 'warm', 'CL', 'oversized cotton pullover hoodie with a kangaroo pocket', 'grey, black, cream, oatmeal, chocolate brown, sage green, navy, mocha'],
+    ['oversized sweatshirt', 'tops', 'warm', 'CL', 'oversized fleece crewneck sweatshirt', 'grey, cream, oatmeal, black, chocolate brown, sage green, navy'],
+    ['satin pajama shirt', 'tops', 'all', 'L', 'satin button-up pajama shirt with contrast piping and long sleeves', 'ivory, champagne, black, blush pink, sage green, navy, chocolate brown'],
+  ],
+  bottoms: [
+    ['workout leggings', 'bottoms', 'all', 'A', 'high-waisted seamless workout leggings, ankle length', 'black, grey, chocolate brown, sage green, navy, olive, blush pink, mocha'],
+    ['bike shorts', 'bottoms', 'light', 'AC', 'high-waisted mid-thigh bike shorts', 'black, grey, chocolate brown, sage green, navy, olive, beige'],
+    ['baggy sweatpants', 'bottoms', 'all', 'CL', 'oversized baggy wide-leg sweatpants with an elastic waist and a drawstring', 'grey, black, cream, oatmeal, chocolate brown, sage green, navy, mocha'],
+    ['wide-leg joggers', 'bottoms', 'all', 'CL', 'relaxed baggy wide-leg joggers with cuffed ankles and a drawstring', 'grey, black, cream, oatmeal, chocolate brown, navy, sage green'],
+    ['satin pajama pants', 'bottoms', 'all', 'L', 'satin wide-leg pajama pants with contrast piping and an elastic waist', 'ivory, champagne, black, blush pink, sage green, navy, chocolate brown'],
+    ['tennis skirt', 'skirts', 'light', 'AC', 'pleated athletic tennis skirt with built-in shorts', 'white, black, sage green, navy, blush pink'],
+  ],
+  outerwear: [
+    ['zip-up workout jacket', 'outerwear', 'all', 'A', 'fitted zip-up athletic jacket with thumbholes', 'black, grey, sage green, navy, chocolate brown, oatmeal'],
+    ['zip-up hoodie', 'outerwear', 'warm', 'CL', 'oversized zip-up cotton hoodie', 'grey, black, cream, oatmeal, chocolate brown, navy'],
+  ],
+  shoes: [
+    ['training sneakers', 'shoes', 'all', 'A', 'lightweight athletic training sneakers', 'white, black, grey, blush pink, sage green'],
+    ['fuzzy slide slippers', 'shoes', 'warm', 'L', 'plush fuzzy slide slippers', 'cream, grey, blush pink, chocolate brown'],
+  ],
+};
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const rowsOf = (list) => list.flatMap(([what, type, season, occ, detail, colours]) =>
   colours.split(', ').map((c) => { const [label, colour = label] = c.split('='); return [`${cap(label)} ${what}`, type, colour, season, occ, detail]; }));
+/** Workout / Lounge tags by name, so a piece that was already in the catalogue under the same name (e.g. Black bike shorts) gets them too. */
+export const EXTRA_OCC = Object.fromEntries(Object.values(ACTIVE_LOUNGE).flatMap(rowsOf).map(([name, , , , occ]) => [name.toLowerCase(), occ]));
 export const STAPLE_ROWS = Object.fromEntries(Object.keys(STAPLES).map((batch) => { const seen = new Set(); // (a name that comes up twice is kept once)
-  return [batch, [...rowsOf(STAPLES[batch]), ...rowsOf(STAPLES_MORE[batch] || [])].filter(([name]) => { const k = name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })]; }));
+  return [batch, [...rowsOf(STAPLES[batch]), ...rowsOf(STAPLES_MORE[batch] || []), ...rowsOf(ACTIVE_LOUNGE[batch] || [])].filter(([name]) => { const k = name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })]; }));

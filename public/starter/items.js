@@ -1,10 +1,10 @@
 // The starter closet: pieces generated with fal (scripts/starter.mjs or Closet > Starter closet) so the app is useful before your own
 // clothes are added. Style profile from Nikki's Pinterest boards: chic neutral casual + polished workwear. Add a row to add a piece;
 // its id is made from its name, so keep names unique. Each row: [name, type, colours, warmth, occasions, extra detail for the prompt].
-// warmth: light / all / warm. occasions: C casual, W work, D date night, B brunch, E event. The wider wardrobe is in wardrobe.js.
-import { WARDROBE_ROWS, STAPLE_ROWS } from './wardrobe.js';
+// warmth: light / all / warm. occasions: C casual, W work, D date night, B brunch, E event, A workout, L lounge. The wider wardrobe is in wardrobe.js.
+import { WARDROBE_ROWS, STAPLE_ROWS, EXTRA_OCC } from './wardrobe.js';
 export const STYLE = 'chic neutral casual and polished workwear; cream, ivory, beige, camel, chocolate brown, black, white, olive, champagne and denim';
-export const OCC = { C: 'Casual Outing', W: 'Work / Office', D: 'Date Night', B: 'Brunch', E: 'Formal / Event' };
+export const OCC = { C: 'Casual Outing', W: 'Work / Office', D: 'Date Night', B: 'Brunch', E: 'Formal / Event', A: 'Workout', L: 'Lounge' };
 /** A stable seed for each category. */
 const SEEDS = { tops: 110000, bottoms: 220000, dresses: 330000, outerwear: 440000, shoes: 550000, bags: 660000, accessories: 770000 };
 export const BATCHES = [['tops', 'Tops', '👚'], ['bottoms', 'Bottoms', '👖'], ['dresses', 'Dresses', '👗'], ['outerwear', 'Outerwear', '🧥'], ['shoes', 'Shoes', '👠'], ['bags', 'Bags', '👜'], ['accessories', 'Accessories', '💍']];
@@ -179,7 +179,7 @@ export function accKindOf(name, type) {
 const taken = new Set(Object.keys(ROWS).flatMap((b) => [...ROWS[b], ...(WARDROBE_ROWS[b] || [])].map(([name]) => slug(name))));
 const staples = (batch) => (STAPLE_ROWS[batch] || []).filter(([name]) => !taken.has(slug(name))); // (a colour a named row already has is skipped)
 export const ITEMS = Object.entries(ROWS).map(([batch, rows]) => [batch, [...rows, ...(WARDROBE_ROWS[batch] || []), ...staples(batch)]]).flatMap(([batch, rows], b) => rows.map(([name, type, colors, season, occ, detail], k) => ({
-  id: 'starter-' + slug(name), batch, name, type, acc: accKindOf(name, type), colors: colors.split(','), season, occasions: [...occ].map((c) => OCC[c]), detail,
+  id: 'starter-' + slug(name), batch, name, type, acc: accKindOf(name, type), colors: colors.split(','), season, occasions: [...new Set([...occ, ...(EXTRA_OCC[name.toLowerCase()] || '')])].map((c) => OCC[c]), detail,
   seed: SEEDS[batch] + k, // a stable seed per category (plus the piece's place in it), so a batch looks like one set and remakes are repeatable
 })));
 export const starterItem = (id) => ITEMS.find((i) => i.id === id) || null;
