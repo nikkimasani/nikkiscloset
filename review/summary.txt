@@ -1,11 +1,10 @@
-108 made this run · 1778 of 3044 in the wardrobe · 35 failed · stopped: today's share of the free Cloudflare allowance is used (6383 of 6500 neurons; the rest is kept for the app) (the next run carries on)
-starter-beige-quilted-crossbody: cut-out not clean enough (left out by review)
-starter-tan-bucket-bag: skin-coloured areas (a person or a body form?)
+22 made this run · 1777 of 3142 in the wardrobe · 39 failed · stopped: today's share of the free Cloudflare allowance is used (8821 of 9000 neurons; the rest is kept for the app) (the next run carries on)
+starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-cognac-saddle-bag: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
 starter-straw-beach-tote: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
 starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-layered-gold-necklaces: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
-starter-gold-pendant-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-gold-pendant-necklace: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-tortoiseshell-sunglasses: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-brown-oversized-sunglasses: a white or grey body shape (a dress form?); colour doesn’t look brown
 starter-brown-leather-belt: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
@@ -17,20 +16,25 @@ starter-olive-hobo-bag: cut-out not clean enough (left out by review)
 starter-white-woven-clutch: cut-out not clean enough (left out by review)
 starter-brown-belt-bag: cut-out not clean enough (left out by review)
 starter-gold-anklet: cut-out not clean enough (left out by review)
-starter-brown-crescent-bag: cut-out not clean enough (left out by review)
+starter-brown-crescent-bag: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-gold-chain-bracelet: cut-out not clean enough (left out by review)
 starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
 starter-floral-corset-top: taken out on review: torn and off colours, twice
 starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
 starter-sage-satin-blouse: taken out on review: trousers added, twice
-starter-black-kitten-heels: holes where her foot shows through (left out by review)
-starter-black-knee-high-boots: holes down the side of the boots (left out by review)
 starter-black-ankle-boots: hollow shaft, her leg shows through (left out by review)
 starter-black-loafers: torn shape (left out by review)
-starter-black-pointed-pumps: only the toes came out (left out by review)
-starter-white-pointed-kitten-heels: only the toes came out (left out by review)
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
-starter-camel-wool-coat: dark patches inside the coat (left out by review)
-starter-gold-dome-earrings: cut through: half of each earring missing (left out by review)
-starter-camel-cropped-jacket: a dark patch at the waist (left out by review)
+starter-beige-ribbed-midi-dress: arms or skin kept (left out by review)
+starter-beige-sheath-dress: arms or skin kept (left out by review)
+starter-beige-square-neck-midi-dress: arms or skin kept (left out by review)
+starter-oatmeal-off-shoulder-dress: arms or skin kept (left out by review)
+starter-oatmeal-ribbed-midi-dress: arms or skin kept (left out by review)
+starter-oatmeal-square-neck-midi-dress: arms or skin kept (left out by review)
+starter-camel-long-sleeve-maxi-dress: more than the dress in the picture (left out by review)
+starter-espresso-long-sleeve-maxi-dress: torn edges or holes (left out by review)
+starter-espresso-slip-maxi-dress: torn edges or holes (left out by review)
+starter-olive-off-shoulder-dress: torn edges or holes (left out by review)
+starter-olive-long-sleeve-maxi-dress: torn edges or holes (left out by review)
+starter-red-off-shoulder-dress: torn edges or holes (left out by review)
