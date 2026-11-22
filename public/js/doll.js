@@ -212,10 +212,10 @@ function hull(pts) {
   return lo.slice(0, -1).concat(up.slice(0, -1));
 }
 
-export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false }) {
+export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false, tuck = null }) {
   const n = ++uidN;
-  const top = items.top, bottom = items.bottom;
-  const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && tuckOf(top, pack))), clipTop = tucked; // (a bodysuit goes under too, but is trimmed the same way: where it's wider than the trousers at her hips it would show beside them)
+  const top = items.top, bottom = items.bottom; // (tuck: true/false to tuck the top in or not for this picture only, as a look on Today says; null = as she left it)
+  const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && (tuck ?? tuckOf(top, pack)))), clipTop = tucked; // (a bodysuit goes under too, but is trimmed the same way: where it's wider than the trousers at her hips it would show beside them)
   const order = tucked ? pack.tuckedOrder : pack.clothesOrder;
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';

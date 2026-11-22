@@ -1084,3 +1084,11 @@ label.f { color: var(--muted); font-weight: 500; letter-spacing: .02em; }
 .swatch span { font-size: 9.5px; line-height: 1.1; max-width: 46px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .swatch.on i { outline: 2px solid var(--ink); outline-offset: 2px; }
 .swatch.on span { color: var(--ink); font-weight: 600; }
+
+/* the last card on a long rail: opens the whole kind as a grid */
+.rail-row .see-all { flex: 0 0 120px; align-self: stretch; display: grid; place-items: center; border: 1px dashed var(--muted); background: var(--panel); box-shadow: none; font: inherit; color: inherit; cursor: pointer; }
+.rail-row .see-all span { font-weight: 600; }
+.t-look .t-recipe { grid-column: 1 / -1; margin: -6px 0 0; line-height: 1.35; }
+.t-src a { text-transform: none; letter-spacing: 0; }
+.t-src a { color: inherit; text-decoration: underline; }
+.t-wait { padding: 40px 0; text-align: center; }
