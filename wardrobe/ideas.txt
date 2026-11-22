@@ -1,13 +1,13 @@
-98 pins looked at (0 this run)
+99 pins looked at (1 this run)
 
 ## accessories (60)
 24× Gold necklace — thin chain with pendant
 22× Gold bracelet — thin, delicate band
 15× Gold hoop earrings — small, circular
 14× Gold watch — metal link band
-8× Black belt — thin, with silver buckle
+9× Black belt — thin, with silver buckle
 7× Brown leather belt — gold logo buckle
-5× Gold layered necklaces — multiple chains with small pendants
+6× Gold layered necklaces — multiple chains with small pendants
 4× Black leather belt — gold buckle, slim width
 4× Gold earrings — large, dangling style
 4× Brown sunglasses — cat-eye shape, tinted lenses
@@ -15,15 +15,15 @@
 3× Black sunglasses — cat-eye shape
 3× Gold pendant necklace — delicate chain with small pendant
 3× Silver bracelet — thin band on wrist
+3× Gold rings — minimalist band style
+3× Gold bracelets — stacked delicate bracelets on wrist
 2× Gold necklaces — layered delicate chains
 2× Black belt with gold buckle — thin, leather, gold H-shaped buckle
 2× Dark sunglasses — large, square frame
 2× Sunglasses — dark lenses, classic frame
-2× Gold rings — minimalist band style
 2× Silver hoop earrings — small hoop style
 2× Gold drop earrings — small drop style, metallic
 2× Ring — simple band on finger
-2× Gold bracelets — stacked delicate bracelets on wrist
 2× Tan belt — wide with large gold buckle
 2× Gold chain bracelet — thick link chain bracelet
 1× Oversized sunglasses — large square frames
@@ -127,12 +127,12 @@
 5× Light blue wide-leg jeans — high-waisted, wide-leg, denim fabric
 5× Light blue ripped jeans — high-waisted, straight leg, distressed knee cutouts
 4× White high-waisted trousers — high-waisted, straight leg, full length
+3× Black wide-leg trousers — high-waisted, wide-leg, floor length
 3× Black high-waisted trousers — slim fit, ankle length
 3× Black trousers — slim fit, full length
 2× Blue high-waisted jeans — high-waisted, straight leg, denim
 2× Light blue jeans — high waisted, wide leg, denim
 2× Blue ripped jeans — skinny fit, distressed, high waisted
-2× Black wide-leg trousers — high-waisted, wide-leg, floor length
 2× Cream wide-leg trousers — high-waisted, pleated, full length
 2× Beige high-waisted trousers — straight leg, high-waisted, tailored fabric
 2× Light blue denim jeans — high-waisted, slim fit, full length
@@ -216,6 +216,7 @@
 2× Tan pointed-toe pumps — pointed toe, high heel
 2× Clear pointed heels — pointed toe, transparent material, stiletto heel
 2× Black pointed heels — stiletto, patent leather, pointed toe
+2× Nude pointed-toe pumps — pointed toe, high heel
 1× Dark brown pointed boots — pointed toe
 1× Black pointed-toe pumps — stiletto heel, patent leather
 1× Brown strappy sandals — flat, thin straps
@@ -252,7 +253,6 @@
 1× Brown lace-up boots — platform, lace-up, ankle height
 1× Gold sandals — open-toe strappy sandals
 1× Black heeled sandals — stiletto heel, ankle strap, open toe
-1× Nude pointed-toe pumps — pointed toe, high heel
 1× Beige pointed toe heels — pointed toe, pump style
 
 ## skirts (14)
@@ -280,7 +280,7 @@
 1× Tan ribbed tank top — scoop neckline, ribbed fabric, sleeveless
 1× Tan tank top — scoop neckline, sleeveless, fitted
 
-## tops (54)
+## tops (55)
 5× White tank top — v-neck, sleeveless
 3× Beige sleeveless knit top — sleeveless, crew neck, knit, cropped length
 3× Black sleeveless top — sleeveless, crew neck, fitted
@@ -335,3 +335,4 @@
 1× White graphic t-shirt — short sleeves, crew neck, casual cotton
 1× Brown short sleeve t-shirt — crew neckline, short sleeves, fitted
 1× Green ribbed tank top — ribbed fabric, square neckline, sleeveless
+1× White sleeveless turtleneck top — sleeveless, high neckline, slim fit

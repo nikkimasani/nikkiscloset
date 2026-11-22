@@ -5186,6 +5186,69 @@
      "detail": "rectangular face with a black strap"
     }
    ]
+  },
+  "1407443631513111": {
+   "board": "nikkimasani/statement",
+   "image": "https://i.pinimg.com/564x/63/66/99/636699f8258fa5a540e5a5698ac8ae19.jpg",
+   "text": "C&#243;digo da pe&#231;a Shopee: BFB-XWG-ZBZ  Cal&#231;a social pantalona preta de alfaiataria com cinto de fivela dourada. B&#225;sica coringa para o trabalho. Link do produto no Pin. #lookdetrabalho #alfaiataria #calcapantalona #modafeminina",
+   "pieces": [
+    {
+     "name": "White sleeveless turtleneck top",
+     "type": "tops",
+     "colors": [
+      "white"
+     ],
+     "detail": "sleeveless, high neckline, slim fit"
+    },
+    {
+     "name": "Black wide-leg trousers",
+     "type": "bottoms",
+     "colors": [
+      "black"
+     ],
+     "detail": "high-waisted, wide-leg, tailored with creases"
+    },
+    {
+     "name": "Black belt",
+     "type": "accessories",
+     "colors": [
+      "black"
+     ],
+     "detail": "thin with silver buckle"
+    },
+    {
+     "name": "Gold layered necklaces",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "multiple thin chains"
+    },
+    {
+     "name": "Gold bracelets",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "chunky link and bangle styles"
+    },
+    {
+     "name": "Gold rings",
+     "type": "accessories",
+     "colors": [
+      "gold"
+     ],
+     "detail": "multiple rings on fingers"
+    },
+    {
+     "name": "Nude pointed-toe pumps",
+     "type": "shoes",
+     "colors": [
+      "nude"
+     ],
+     "detail": "pointed toe, high heel"
+    }
+   ]
   }
  }
 }
