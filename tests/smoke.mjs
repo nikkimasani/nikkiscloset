@@ -105,7 +105,14 @@ await page.addInitScript(() => localStorage.setItem('flat', '1')); // existing f
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-const openMore = async (pg) => { await pg.click('[data-view=closet]').catch(() => {}); if (!(await pg.locator('details.more[open]').count())) await pg.click('details.more summary'); };
+// (a device that just synced reloads itself, sometimes a moment later: wait until the app is up and the Wardrobe's More panel is there, then open it)
+const openMore = async (pg) => {
+  for (let t = 0; t < 4; t++) {
+    try { await pg.waitForFunction(() => window.__closet, null, { timeout: 10000 }); await pg.click('[data-view=closet]', { timeout: 5000 }); await pg.waitForSelector('details.more summary', { timeout: 5000 }); break; } catch { await pg.waitForLoadState('load').catch(() => {}); }
+  }
+  if (!(await pg.locator('details.more[open]').count())) await pg.click('details.more summary');
+  await pg.waitForSelector('details.more[open] summary');
+};
 const openF = async (pg) => { if (await pg.locator('#ffilters[hidden]').count()) await pg.click('[data-act=ftoggle]'); };
 let failed = 0;
 // A closet to test with: your own photo cutouts (tests/fixtures are real garment cutouts), put straight into the browser's database.
@@ -326,6 +333,15 @@ try {
     ok(await p3.locator('.finder .pick').count() === 2, 'the type chips narrow the wardrobe (2 bottoms)');
     await p3.click('[data-act=fclear]');
     ok(JSON.stringify(await p3.locator('.car-row').evaluateAll((r) => r.map((x) => x.dataset.type))) === JSON.stringify(['tops', 'tanks', 'bottoms', 'skirts', 'dresses', 'outerwear', 'shoes', 'bags']), 'the wardrobe is one carousel per kind of piece');
+    // a whole kind of piece as a grid filling the page: tap one to put it on and go back to the model
+    await p3.click('[data-act=cargrid][data-v=tops]'); await p3.waitForSelector('.pgrid');
+    ok(await p3.locator('.pgrid .pick').count() === 2 && await p3.evaluate(() => { const r = document.querySelector('.modal.pgrid-on .sheet').getBoundingClientRect(); return r.width >= innerWidth - 1 && r.height >= innerHeight - 1; }), 'the grid button shows every top on one full page');
+    const gid = await p3.locator('.pgrid [data-act=gridwear]').first().getAttribute('data-id'); await p3.locator('.pgrid [data-act=gridwear]').first().click();
+    await p3.waitForFunction((g) => document.querySelector('#modal').hidden && Object.values(window.__closet.outfit).includes(g), gid);
+    ok(true, 'tapping a piece in the grid puts it on and closes the grid');
+    await p3.click('[data-act=cargrid][data-v=tops]'); await p3.waitForSelector('.pgrid .tile-x'); await p3.click('.pgrid .tile-x');
+    await p3.waitForFunction((g) => !Object.values(window.__closet.outfit).includes(g) && !document.querySelector('#modal').hidden, gid);
+    await p3.click('[data-act=gridclose]'); ok(await p3.locator('#modal').isHidden(), 'the ✕ in the grid takes a piece off, and Done closes it');
     if (!(await p3.locator('#ffilters[hidden]').count())) await p3.click('[data-act=ftoggle]');
     ok(await p3.locator('[data-act=fcol]').first().isHidden() && await p3.locator('[data-act=ftoggle]').isVisible(), 'colour and style fold behind Filters (less to scroll past)');
     await p3.click('[data-act=ftoggle]');
@@ -375,6 +391,12 @@ try {
   await p4.click('[data-view=closet]'); await p4.locator('.piece .del').first().click(); await p4.waitForFunction(() => window.__closet.items.length === 8);
   await p4.click('#toast .toast-undo'); await p4.waitForFunction(() => window.__closet.items.length === 9);
   ok(await p4.locator('.piece').count() === 9, 'the Wardrobe’s delete has an Undo that brings the piece back');
+  // Wardrobe: a kind of piece as a grid filling the page, and back to every row
+  await p4.click('[data-act=cgrid][data-v=tops]'); await p4.waitForSelector('.cgrid');
+  const nTopsW = await p4.evaluate(() => window.__closet.items.filter((i) => i.type === 'tops').length);
+  ok(nTopsW > 0 && await p4.locator('.cgrid .piece').count() === nTopsW && await p4.locator('.rail-row').count() === 0, `the Wardrobe grid button shows every top on one page (${nTopsW})`);
+  await p4.click('[data-act=cgridclose]'); ok(await p4.locator('.rail-row').count() > 1, '‹ All pieces goes back to every row');
+  ok(await p4.locator('[data-act=fcolor]').first().isHidden() && await p4.locator('[data-act=cftoggle]').isVisible(), 'the Wardrobe’s colour and style chips fold behind Filters');
   // installable app
   const pwa = await p4.evaluate(async () => ({ sw: (await navigator.serviceWorker.ready).active?.state, manifest: (await fetch('/manifest.webmanifest')).status, icon: (await fetch('/icon-192.png')).status, link: !!document.querySelector('link[rel=manifest]') }));
   ok(pwa.sw === 'activated' && pwa.manifest === 200 && pwa.icon === 200 && pwa.link, 'installable: manifest, icons and service worker are live');

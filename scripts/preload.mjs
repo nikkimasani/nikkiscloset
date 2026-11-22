@@ -2,7 +2,7 @@
 // Make the preloaded wardrobe: every starter piece, made once, saved into the app (public/starter/made/), so every device opens with the
 // whole closet and nothing is generated on a phone. Run by .github/workflows/preload.yml with the Cloudflare secrets kept in GitHub.
 //
-//   CF_ACCOUNT_ID=... CF_API_TOKEN=... node scripts/preload.mjs                 make what isn't made yet (stops at PRELOAD_NEURONS, default 6500 of the 10000 free a day)
+//   CF_ACCOUNT_ID=... CF_API_TOKEN=... node scripts/preload.mjs                 make what isn't made yet (stops at PRELOAD_NEURONS, default 9000 of the 10000 free a day)
 //   ... --redo starter-black-fitted-tee,starter-camel-ribbed-turtleneck          make these again
 //   ... --redo worn                                                             make every piece drawn on the model again
 //   ... --batch tops                                                            just one category
@@ -35,10 +35,13 @@ for (const id of redo) { delete index.pieces[id]; rmSync(`${DIR}/${id}.webp`, { 
 const outdated = (i) => index.pieces[i.id]?.kind === 'worn' && (index.pieces[i.id].v || 1) < WEAR_VERSION;
 const blocked = new Set(Object.keys(index.blocked || {})); // pieces taken out on review more than once: not made again unless asked for by name (--redo)
 const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!only || only.includes(i.id)) && (!blocked.has(i.id) || redo.includes(i.id));
-// pieces Nikki asked for come first (PRELOAD_FIRST: words in the name, comma-separated; default blazers), then the rest in catalogue order
-const FIRST = String(process.env.PRELOAD_FIRST ?? 'blazer').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);
+// pieces Nikki asked for come first (PRELOAD_FIRST: words in the name, comma-separated; none by default)
+const FIRST = String(process.env.PRELOAD_FIRST ?? '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);
 const wanted = (i) => FIRST.some((w) => i.name.toLowerCase().includes(w));
-const first = (list) => [...list.filter(wanted), ...list.filter((i) => !wanted(i))];
+// after those, the categories take turns (a dress, a coat, shoes, a bag, an accessory, ...) so every night brings some of each
+const takeTurns = (list) => { const by = new Map(); for (const i of list) { if (!by.has(i.batch)) by.set(i.batch, []); by.get(i.batch).push(i); }
+  const queues = [...by.values()], out = []; while (queues.some((q) => q.length)) for (const q of queues) if (q.length) out.push(q.shift()); return out; };
+const first = (list) => [...list.filter(wanted), ...takeTurns(list.filter((i) => !wanted(i)))];
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
   : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...first(ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id))))];
 console.log(`${Object.keys(index.pieces).length} of ${ITEMS.length} made; ${todo.length} to make this run`);
@@ -51,10 +54,10 @@ page.on('pageerror', (e) => console.error('page error:', e.message));
 await page.goto(`http://localhost:${PORT}/`); await page.evaluate(() => localStorage.setItem('aipass', ''));
 const save = () => { index.version = Date.now(); writeFileSync(INDEX, JSON.stringify(index, null, 1) + '\n'); };
 
-// The nightly run leaves part of the day's free allowance for using the app (Inspo, making a piece): it stops at PRELOAD_NEURONS (default 6500 of 10000).
+// The nightly run leaves part of the day's free allowance for using the app (Inspo, making a piece): it stops at PRELOAD_NEURONS (default 9000 of 10000: Nikki chose a faster wardrobe over headroom).
 // The cap is for the whole day (the shared usage counter), not each run: GitHub's own scheduled run often starts hours late, and two runs
 // each taking 6,500 used to leave nothing for the app.
-const BUDGET = Number(process.env.PRELOAD_NEURONS) || 6500, PER = { worn: 57.5, photo: 57.6 + 10.7 }; let spent = 0;
+const BUDGET = Number(process.env.PRELOAD_NEURONS) || 9000, PER = { worn: 57.5, photo: 57.6 + 10.7 }; let spent = 0;
 const usedAtStart = reextract ? 0 : await fetch(`http://localhost:${PORT}/api/starter`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': PASS }, body: JSON.stringify({ usage: true }) })
   .then((r) => r.json()).then((j) => Number(j.used) || 0).catch(() => 0);
 const ROOM = Math.max(0, BUDGET - usedAtStart);
