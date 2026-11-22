@@ -2,7 +2,7 @@
 // Make the preloaded wardrobe: every starter piece, made once, saved into the app (public/starter/made/), so every device opens with the
 // whole closet and nothing is generated on a phone. Run by .github/workflows/preload.yml with the Cloudflare secrets kept in GitHub.
 //
-//   CF_ACCOUNT_ID=... CF_API_TOKEN=... node scripts/preload.mjs                 make what isn't made yet (stops at PRELOAD_NEURONS, default 6500 of the 10000 free a day)
+//   CF_ACCOUNT_ID=... CF_API_TOKEN=... node scripts/preload.mjs                 make what isn't made yet (stops at PRELOAD_NEURONS, default 9000 of the 10000 free a day)
 //   ... --redo starter-black-fitted-tee,starter-camel-ribbed-turtleneck          make these again
 //   ... --redo worn                                                             make every piece drawn on the model again
 //   ... --batch tops                                                            just one category
@@ -54,10 +54,10 @@ page.on('pageerror', (e) => console.error('page error:', e.message));
 await page.goto(`http://localhost:${PORT}/`); await page.evaluate(() => localStorage.setItem('aipass', ''));
 const save = () => { index.version = Date.now(); writeFileSync(INDEX, JSON.stringify(index, null, 1) + '\n'); };
 
-// The nightly run leaves part of the day's free allowance for using the app (Inspo, making a piece): it stops at PRELOAD_NEURONS (default 6500 of 10000).
+// The nightly run leaves part of the day's free allowance for using the app (Inspo, making a piece): it stops at PRELOAD_NEURONS (default 9000 of 10000: Nikki chose a faster wardrobe over headroom).
 // The cap is for the whole day (the shared usage counter), not each run: GitHub's own scheduled run often starts hours late, and two runs
 // each taking 6,500 used to leave nothing for the app.
-const BUDGET = Number(process.env.PRELOAD_NEURONS) || 6500, PER = { worn: 57.5, photo: 57.6 + 10.7 }; let spent = 0;
+const BUDGET = Number(process.env.PRELOAD_NEURONS) || 9000, PER = { worn: 57.5, photo: 57.6 + 10.7 }; let spent = 0;
 const usedAtStart = reextract ? 0 : await fetch(`http://localhost:${PORT}/api/starter`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-app-passcode': PASS }, body: JSON.stringify({ usage: true }) })
   .then((r) => r.json()).then((j) => Number(j.used) || 0).catch(() => 0);
 const ROOM = Math.max(0, BUDGET - usedAtStart);
