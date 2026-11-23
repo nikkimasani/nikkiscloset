@@ -687,8 +687,9 @@ async function removeItems(ids, { byYou = false } = {}) {
     let removed; try { removed = JSON.parse(store.get('starter_removed', '[]')); } catch { removed = []; }
     const sids = S.items.filter((i) => gone.has(i.id) && i.starterId).map((i) => i.starterId); if (sids.length) store.set('starter_removed', JSON.stringify([...new Set([...removed, ...sids])]));
   }
-  // what's on screen changes all at once (the piece leaves the wardrobe, the outfit and the saved looks together), then it's saved:
-  // before, the wardrobe lost the piece while its saved looks were still being saved, so for a moment a look could show a deleted piece
+  // the piece is deleted from storage first (so a reload straight after never brings it back), then what's on screen changes all at once
+  // (the wardrobe, the outfit and the saved looks together; before, a saved look could show a deleted piece for a moment), then the looks are saved
+  for (const id of ids) await del('items', id);
   S.items = S.items.filter((i) => !gone.has(i.id));
   for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
   const emptied = [], changed = [];
@@ -699,7 +700,6 @@ async function removeItems(ids, { byYou = false } = {}) {
   }
   S.outfits = S.outfits.filter((o) => !emptied.includes(o.id));
   for (const id of ids) { for (const key of [id, id + ':back']) { const u = S.urls.has(key) && S.urls.get(key); if (u) setTimeout(() => URL.revokeObjectURL(u), 2000); S.urls.delete(key); } }
-  for (const id of ids) await del('items', id);
   for (const id of emptied) await del('outfits', id);
   for (const o of changed) await put('outfits', o);
 }
