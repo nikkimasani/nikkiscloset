@@ -687,14 +687,21 @@ async function removeItems(ids, { byYou = false } = {}) {
     let removed; try { removed = JSON.parse(store.get('starter_removed', '[]')); } catch { removed = []; }
     const sids = S.items.filter((i) => gone.has(i.id) && i.starterId).map((i) => i.starterId); if (sids.length) store.set('starter_removed', JSON.stringify([...new Set([...removed, ...sids])]));
   }
-  for (const id of ids) { await del('items', id); for (const key of [id, id + ':back']) { const u = S.urls.get(key); if (u) { URL.revokeObjectURL(u); S.urls.delete(key); } } }
+  // what's on screen changes all at once (the piece leaves the wardrobe, the outfit and the saved looks together), then it's saved:
+  // before, the wardrobe lost the piece while its saved looks were still being saved, so for a moment a look could show a deleted piece
   S.items = S.items.filter((i) => !gone.has(i.id));
-    for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
-  for (const o of [...S.outfits]) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)
+  for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
+  const emptied = [], changed = [];
+  for (const o of S.outfits) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)
     const kept = Object.fromEntries(Object.entries(o.outfit).filter(([, v]) => !gone.has(v)));
-    if (!Object.keys(kept).length) { await del('outfits', o.id); S.outfits = S.outfits.filter((x) => x.id !== o.id); }
-    else if (Object.keys(kept).length !== Object.keys(o.outfit).length) { o.outfit = kept; await put('outfits', o); }
+    if (!Object.keys(kept).length) emptied.push(o.id);
+    else if (Object.keys(kept).length !== Object.keys(o.outfit).length) { o.outfit = kept; changed.push(o); }
   }
+  S.outfits = S.outfits.filter((o) => !emptied.includes(o.id));
+  for (const id of ids) { for (const key of [id, id + ':back']) { const u = S.urls.has(key) && S.urls.get(key); if (u) setTimeout(() => URL.revokeObjectURL(u), 2000); S.urls.delete(key); } }
+  for (const id of ids) await del('items', id);
+  for (const id of emptied) await del('outfits', id);
+  for (const o of changed) await put('outfits', o);
 }
 
 /* ───────────────────────── cloud sync ───────────────────────── */
