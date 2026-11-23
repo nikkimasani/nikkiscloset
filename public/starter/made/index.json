@@ -1,5 +1,5 @@
 {
- "version": 1795405772106,
+ "version": 1795421678176,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -34385,6 +34385,265 @@
     "#060608"
    ],
    "t": 1795395187892
+  },
+  "starter-multicolor-floral-corset-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 384,
+    "w": 426,
+    "h": 590
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fbe8fb",
+    "name": "White"
+   },
+   "colors": [
+    "#fbe8fb",
+    "#fbc8f7",
+    "#fa96c8",
+    "#fab8c7",
+    "#f969b7"
+   ],
+   "t": 1795421613796
+  },
+  "starter-pink-chunky-knit-sweater": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 280,
+    "w": 638,
+    "h": 606
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fa96d8",
+    "name": "Pink"
+   },
+   "colors": [
+    "#fa96d8",
+    "#e768a8"
+   ],
+   "t": 1795421618609
+  },
+  "starter-tan-leather-mini-skirt": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 654,
+    "w": 462,
+    "h": 412
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b48b5a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b48b5a",
+    "#d5bba7"
+   ],
+   "t": 1795421622775
+  },
+  "starter-pink-blazer": {
+   "kind": "worn",
+   "box": {
+    "x": 166,
+    "y": 260,
+    "w": 592,
+    "h": 690
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f799b3",
+    "name": "Pink"
+   },
+   "colors": [
+    "#f799b3"
+   ],
+   "t": 1795421627467
+  },
+  "starter-sage-blazer": {
+   "kind": "worn",
+   "box": {
+    "x": 104,
+    "y": 264,
+    "w": 664,
+    "h": 726
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8ca387",
+    "name": "Sage"
+   },
+   "colors": [
+    "#8ca387",
+    "#67785a"
+   ],
+   "t": 1795421632559
+  },
+  "starter-burgundy-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 238,
+    "y": 1536,
+    "w": 434,
+    "h": 210
+   },
+   "v": 5,
+   "color": {
+    "hex": "#38001a",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#38001a",
+    "#a58969",
+    "#776659",
+    "#19010b"
+   ],
+   "t": 1795421646031
+  },
+  "starter-black-ankle-strap-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 1546,
+    "w": 476,
+    "h": 200
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060505",
+    "name": "Black"
+   },
+   "colors": [
+    "#060505",
+    "#a86648",
+    "#784b37"
+   ],
+   "t": 1795421652490
+  },
+  "starter-white-flat-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 1606,
+    "w": 468,
+    "h": 140
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e6e8e9",
+    "name": "White"
+   },
+   "colors": [
+    "#e6e8e9",
+    "#a87666",
+    "#b7bbba",
+    "#7a7657"
+   ],
+   "t": 1795421656674
+  },
+  "starter-tan-block-heel-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 1570,
+    "w": 484,
+    "h": 176
+   },
+   "v": 5,
+   "color": {
+    "hex": "#774a39",
+    "name": "Brown"
+   },
+   "colors": [
+    "#774a39",
+    "#b87a66",
+    "#16120b",
+    "#48291a"
+   ],
+   "t": 1795421661142
+  },
+  "starter-cream-strappy-heeled-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 1552,
+    "w": 460,
+    "h": 194
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c7876a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#c7876a",
+    "#ece7d3",
+    "#977564",
+    "#aba798"
+   ],
+   "t": 1795421665303
+  },
+  "starter-black-strappy-heeled-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 1566,
+    "w": 476,
+    "h": 180
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171715",
+    "name": "Black"
+   },
+   "colors": [
+    "#171715",
+    "#c69879"
+   ],
+   "t": 1795421669840
+  },
+  "starter-tan-strappy-heeled-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 1534,
+    "w": 464,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a87759",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a87759",
+    "#774b38",
+    "#483438"
+   ],
+   "t": 1795421674975
+  },
+  "starter-pink-pointed-toe-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 234,
+    "y": 1544,
+    "w": 442,
+    "h": 202
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e579b3",
+    "name": "Pink"
+   },
+   "colors": [
+    "#e579b3",
+    "#ab5386"
+   ],
+   "t": 1795421678176
   }
  },
  "failed": {
@@ -34447,7 +34706,7 @@
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (eae8beb5-7a34-46d3-9cff-c861359c2af3)"
   ],
   "starter-clear-pointed-heels": [
-   "the piece barely shows (it may not have dressed her)"
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (40125841-b6dd-4aee-a259-7b4ffdb9d563)"
   ],
   "starter-black-cropped-cardigan": [
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (47183511-678c-47fe-845d-c63c9891e6ff)"
@@ -34466,9 +34725,6 @@
   ],
   "starter-black-square-toe-mules": [
    "tangled shapes, not mules (left out by review)"
-  ],
-  "starter-burgundy-pointed-pumps": [
-   "only toe caps, floating above the foot (left out by review)"
   ],
   "starter-pink-pointed-pumps": [
    "fuzzy toe caps, not pumps (left out by review)"

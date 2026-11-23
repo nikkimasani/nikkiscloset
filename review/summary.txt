@@ -1,4 +1,4 @@
-71 made this run · 1839 of 3142 in the wardrobe · 21 failed · stopped: today's share of the free Cloudflare allowance is used (8882 of 9000 neurons; the rest is kept for the app) (the next run carries on)
+13 made this run · 1831 of 3146 in the wardrobe · 31 failed · stopped: today's share of the free Cloudflare allowance is used (8832 of 9000 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
 starter-straw-beach-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
@@ -16,7 +16,17 @@ starter-sage-satin-blouse: taken out on review: trousers added, twice
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
 starter-espresso-long-sleeve-maxi-dress: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (eae8beb5-7a34-46d3-9cff-c861359c2af3)
-starter-clear-pointed-heels: the piece barely shows (it may not have dressed her)
+starter-clear-pointed-heels: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (40125841-b6dd-4aee-a259-7b4ffdb9d563)
 starter-black-cropped-cardigan: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (47183511-678c-47fe-845d-c63c9891e6ff)
 starter-white-structured-top-handle-bag: more than the item in the picture (text, a hanger or a prop?)
 starter-white-quilted-chain-bag: more than the item in the picture (text, a hanger or a prop?)
+starter-beige-button-cardigan: a bare torso and shorts kept inside the open cardigan (left out by review)
+starter-black-patent-pumps: only fragments of the shoes (left out by review)
+starter-black-square-toe-mules: tangled shapes, not mules (left out by review)
+starter-pink-pointed-pumps: fuzzy toe caps, not pumps (left out by review)
+starter-nude-ankle-strap-heels: mostly her skin, the shoe blends in (left out by review)
+starter-nude-strappy-stilettos: mostly her skin, the shoe blends in (left out by review)
+starter-brown-structured-top-handle-bag: ragged, the handles missing (left out by review)
+starter-silver-small-hoops: grey claw shapes, not hoops (left out by review)
+starter-camel-cardigan: matching shorts and a bare chest kept with the cardigan (left out by review)
+starter-cream-ribbed-balloon-cardigan: matching leggings kept with the cardigan (left out by review)
