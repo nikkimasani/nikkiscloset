@@ -12,7 +12,9 @@ export function toLab([r, g, b]) {
   return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
 }
 export const labDist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-export const hexDist = (a, b) => labDist(toLab(unhex(a)), toLab(unhex(b)));
+const LABS = new Map(); // (the same few hundred colours are compared again and again when looks are put together)
+const labOf = (h) => { let v = LABS.get(h); if (!v) { if (LABS.size > 5000) LABS.clear(); LABS.set(h, (v = toLab(unhex(h)))); } return v; };
+export const hexDist = (a, b) => labDist(labOf(a), labOf(b));
 
 const NAMED = {
   Black: '#1a1a1a', Charcoal: '#4a4a4f', Grey: '#9a9a9a', White: '#f7f7f4', Cream: '#efe6d2', Beige: '#d6c2a3',

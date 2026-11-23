@@ -168,7 +168,7 @@ const BOARDS = {
     ['Taupe oversized blazer', 'outerwear', 'taupe', 'all', 'WC', 'oversized single-breasted blazer, structured shoulders'],
     ['Beige double-breasted blazer', 'outerwear', 'beige', 'all', 'W', 'tailored double-breasted blazer with gold buttons'],
     ['Black double-breasted blazer', 'outerwear', 'black', 'all', 'WE', 'tailored double-breasted blazer with gold buttons'],
-    ['Pink blazer', 'outerwear', 'blush pink', 'all', 'WB', 'single-breasted blazer with notched lapels'],
+    ['Pink blazer', 'outerwear', 'pink', 'all', 'WB', 'single-breasted tailored blazer with notched lapels and long sleeves'],
     ['Light blue plaid blazer', 'outerwear', 'light blue', 'all', 'W', 'single-breasted blazer in a light blue plaid'],
     ['Navy blazer', 'outerwear', 'navy', 'all', 'W', 'tailored single-breasted blazer'],
     ['Chocolate blazer', 'outerwear', 'chocolate brown', 'all', 'W', 'tailored single-breasted blazer'],

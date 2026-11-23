@@ -21,12 +21,12 @@ export async function loadForecast(c, force = false) {
   const { S } = c;
   if (!S.loc) return;
   try {
-    const cached = JSON.parse(sessionStorage.getItem('forecast') || 'null');
-    if (!force && cached && cached.key === `${S.loc.lat},${S.loc.lon}` && Date.now() - cached.at < 3_600_000) { S.forecast = cached.days; return; }
+    const cached = JSON.parse(localStorage.getItem('forecast') || sessionStorage.getItem('forecast') || 'null'); // (kept between visits, so Today knows the weather straight away)
+    if (!force && cached && cached.key === `${S.loc.lat},${S.loc.lon}` && Date.now() - cached.at < 3 * 3_600_000) { S.forecast = cached.days; return; }
   } catch { /* no cache */ }
   try {
     S.forecast = await fetchForecast(S.loc); S.weatherError = '';
-    try { sessionStorage.setItem('forecast', JSON.stringify({ key: `${S.loc.lat},${S.loc.lon}`, at: Date.now(), days: S.forecast })); } catch { /* private mode */ }
+    try { localStorage.setItem('forecast', JSON.stringify({ key: `${S.loc.lat},${S.loc.lon}`, at: Date.now(), days: S.forecast })); } catch { /* private mode */ }
   } catch (e) { S.weatherError = e.message; }
 }
 

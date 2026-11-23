@@ -34,13 +34,21 @@ for (const id of redo) { delete index.pieces[id]; rmSync(`${DIR}/${id}.webp`, { 
 // what to make: pieces already in the closet but drawn by an older version of wear.js first (they're what you see today), then missing ones
 const outdated = (i) => index.pieces[i.id]?.kind === 'worn' && (index.pieces[i.id].v || 1) < WEAR_VERSION;
 const blocked = new Set(Object.keys(index.blocked || {})); // pieces taken out on review more than once: not made again unless asked for by name (--redo)
-const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!only || only.includes(i.id)) && (!blocked.has(i.id) || redo.includes(i.id));
+// pieces a Pinterest pin needs and the wardrobe doesn't have (scripts/pin-gaps.mjs): made first, and tried again even if left out before
+const { PIN_ROWS, PIN_FIRST } = await import('../public/starter/pin-pieces.js');
+const pinNames = new Set(Object.values(PIN_ROWS || {}).flat().map(([name]) => name.toLowerCase()));
+const pinIds = new Set([...(PIN_FIRST || []), ...ITEMS.filter((i) => pinNames.has(i.name.toLowerCase())).map((i) => i.id)]);
+const inScope = (i) => (!onlyBatch || i.batch === onlyBatch) && (!only || only.includes(i.id)) && (!blocked.has(i.id) || redo.includes(i.id) || (PIN_FIRST || []).includes(i.id));
 // pieces Nikki asked for come first (PRELOAD_FIRST: words in the name, comma-separated; none by default)
 const FIRST = String(process.env.PRELOAD_FIRST ?? '').split(',').map((w) => w.trim().toLowerCase()).filter(Boolean);
-const wanted = (i) => FIRST.some((w) => i.name.toLowerCase().includes(w));
-// after those, the categories take turns (a dress, a coat, shoes, a bag, an accessory, ...) so every night brings some of each
+const wanted = (i) => pinIds.has(i.id) || FIRST.some((w) => i.name.toLowerCase().includes(w));
+// after those, the categories take turns (a dress, a coat, shoes, a bag, an accessory, ...) so every night brings some of each; the ones
+// Nikki wants most of (shoes, bags, accessories, dresses: the wardrobe has far fewer of those) take more turns each round
+const TURNS = { shoes: 3, bags: 2, accessories: 2, dresses: 2 };
 const takeTurns = (list) => { const by = new Map(); for (const i of list) { if (!by.has(i.batch)) by.set(i.batch, []); by.get(i.batch).push(i); }
-  const queues = [...by.values()], out = []; while (queues.some((q) => q.length)) for (const q of queues) if (q.length) out.push(q.shift()); return out; };
+  const queues = [...by.entries()], out = [];
+  while (queues.some(([, q]) => q.length)) for (const [b, q] of queues) for (let n = TURNS[b] || 1; n > 0 && q.length; n--) out.push(q.shift());
+  return out; };
 const first = (list) => [...list.filter(wanted), ...takeTurns(list.filter((i) => !wanted(i)))];
 const todo = reextract ? ITEMS.filter((i) => inScope(i) && isWornType(i.type) && existsSync(`${RAW}/${i.id}.jpg`))
   : [...ITEMS.filter((i) => inScope(i) && index.pieces[i.id] && !redo.includes(i.id) && outdated(i)), ...first(ITEMS.filter((i) => inScope(i) && (!index.pieces[i.id] || redo.includes(i.id))))];

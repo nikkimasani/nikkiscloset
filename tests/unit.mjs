@@ -277,6 +277,14 @@ test('a tucked top hides below the bottoms\' own waistband, out to her sides but
   assert.ok(wl > pack.points.elbowL[0] && wr < pack.points.elbowR[0], 'her arms are outside the cut');
 });
 
+test('a tucked top keeps its sleeves: drawn again inside her forearms, elbow to hand, with no id of its own', () => {
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls });
+  const clip = svg.match(/<clipPath id="sleeveclip-\d+"><path d="([^"]+)"\/>/); assert.ok(clip, 'a sleeve clip, with its own id (armclip is the bag strap\'s)');
+  assert.equal((clip[1].match(/M/g) || []).length, 2, 'one band for each forearm');
+  assert.equal((svg.match(/data-slot="top"/g) || []).length, 1, 'the top is still one piece to tap');
+  assert.ok(!/sleeveclip/.test(dollSVG({ pack, items: { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms') }, urls })), 'an untucked top is drawn once');
+});
+
 test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
   const top = new Int16Array(40).fill(-1); for (let x = 5; x < 35; x++) top[x] = 190 - Math.abs(x - 20); // (higher at the sides, lower in the middle)
   const d = tuckCut(pack, null, { k: 4, top }), ys = [...d.matchAll(/(\d+(?:\.\d+)?) (\d+(?:\.\d+)?)/g)].map((m) => [+m[1], +m[2]]);
@@ -816,6 +824,34 @@ test('Today: looks from Pinterest pins, made from the wardrobe', () => {
   assert.equal(wet.look.shoes.id, 's2', 'boots, not strappy heels, in the rain');
 
   assert.ok(PINS.length > 40 && PINS.every((p) => p.pieces.length && p.board), 'the pins from her boards are bundled');
+});
+
+import { tuckFor, goesWith } from '../public/js/stylist.js';
+test('Today: tucked in like the pin, different pins each day, pieces that go together', () => {
+  const it = (id, name, type, hex, occasions = ['Casual Outing']) => ({ id, name, type, season: 'all', occasions, source: 'starter', color: { hex, name } });
+  const shirt = it('s', 'White crisp button-down', 'tops', '#ffffff'), sweater = it('w', 'Cream cable-knit sweater', 'tops', '#efe6d2'), jeans = it('j', 'Light blue jeans', 'bottoms', '#a9c1dc');
+  assert.equal(tuckFor({ top: shirt, bottom: jeans }), true, 'a shirt goes in with jeans');
+  assert.equal(tuckFor({ top: sweater, bottom: jeans }), false, 'a chunky sweater is worn out');
+  assert.equal(tuckFor({ top: shirt, bottom: jeans }, { name: 'White oversized shirt', detail: 'untucked' }), false, 'the pin says untucked');
+  assert.equal(tuckFor({ top: shirt }), false, 'nothing to tuck into');
+
+  const gym = it('g', 'Black workout leggings', 'bottoms', '#111111', ['Workout']), satin = it('st', 'Champagne satin blouse', 'tops', '#efe6d2', ['Formal / Event', 'Date Night']);
+  const red = it('r', 'Red corset top', 'tops', '#c4262e', ['Date Night']), green = it('gr', 'Emerald satin skirt', 'skirts', '#3f8a4f', ['Date Night']);
+  assert.ok(goesWith(shirt, jeans) > goesWith(satin, gym), 'a satin blouse and gym leggings don’t go together');
+  assert.ok(goesWith(red, it('b', 'Black satin skirt', 'skirts', '#1a1a1a', ['Date Night'])) > goesWith(red, green), 'red goes with black, not with emerald');
+
+  const items = [shirt, sweater, jeans, it('k', 'Black tailored trousers', 'bottoms', '#111111')];
+  const pins = ['a', 'b', 'c', 'd'].map((id) => ({ id, board: 'outfits', pieces: [{ name: id === 'c' ? 'Cream cable sweater' : 'White button-down shirt', type: 'tops', colors: [id === 'c' ? 'cream' : 'white'] }, { name: id === 'd' ? 'Black trousers' : 'Light blue jeans', type: 'bottoms', colors: [id === 'd' ? 'black' : 'light blue'] }] }));
+  let seenA = 0; for (let k = 0; k < 200; k++) if (pinLooks(items, pins, { n: 1, shown: { a: 0 } })[0].pin.id === 'a') seenA++;
+  assert.ok(seenA < 20, `a pin she saw today seldom comes back (${seenA}/200)`);
+});
+
+test('Today: blue jeans in a pin are matched by denim wash, never by black or white jeans; heels are no stand-in for flats', () => {
+  const it = (name, c, hex, type = 'bottoms') => ({ id: name, name, type, color: { hex, name: c }, colors: [c] });
+  const pin = { name: 'Blue straight-leg jeans', type: 'bottoms', colors: ['blue'], detail: 'high-waisted, denim' };
+  assert.ok(recipeScore(it('Medium-wash straight jeans', 'medium denim', '#46628f'), pin) >= 70, 'denim of the same wash');
+  assert.ok(recipeScore(it('Black straight-leg jeans', 'black', '#1a1a1a'), pin) < 40, 'black jeans keep their own colour');
+  assert.ok(recipeScore(it('Skinny white pants', 'white', '#f7f7f4'), { name: 'White wide-leg trousers', type: 'bottoms', colors: ['white'] }) < recipeScore(it('White wide-leg trousers', 'white', '#f7f7f4'), { name: 'White wide-leg trousers', type: 'bottoms', colors: ['white'] }), 'skinny is no stand-in for wide-leg');
 });
 
 import { mergeIndex } from '../scripts/merge-index.mjs';

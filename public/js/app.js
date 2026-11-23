@@ -31,11 +31,21 @@ const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return
 
 let dollFailed = false;
 let dollPack = null; // the base picture and its anchor points (null while loading or if it can't be loaded)
+/** Picture addresses for blobs, made the first time one is asked for: making one for every piece at launch took the phone a while. */
+function lazyUrls() {
+  const blobs = new Map();
+  return new (class extends Map {
+    defer(k, blob) { blobs.set(k, blob); }
+    get(k) { let v = super.get(k); if (v === undefined && blobs.has(k)) { v = URL.createObjectURL(blobs.get(k)); blobs.delete(k); super.set(k, v); } return v; }
+    has(k) { return super.has(k) || blobs.has(k); }
+    delete(k) { blobs.delete(k); return super.delete(k); }
+  })();
+}
 const S = {
   items: [], outfits: [], wears: [], inspos: [], profile: null, plans: [], wishlist: [],
   loc: (() => { try { return JSON.parse(store.get('loc', 'null')); } catch { return null; } })(), forecast: null, weatherError: '',
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
-  urls: new Map(), fits: new Map(), fitBoxes: new Map(), bases: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitSig: new Map(), fitPending: new Set(),
+  urls: lazyUrls(), fits: new Map(), fitBoxes: new Map(), bases: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitSig: new Map(), fitPending: new Set(),
   view: 'today', planTab: 'week', mood: '', drawer: 'fit', lastTab: '',
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
@@ -51,7 +61,7 @@ const S = {
 
 
 const itemById = (id) => S.items.find((i) => i.id === id);
-const url = (key, blob) => { if (!S.urls.has(key) && blob) S.urls.set(key, URL.createObjectURL(blob)); return S.urls.get(key); };
+const url = (key, blob) => { if (!S.urls.has(key) && blob) S.urls.defer(key, blob); return S.urls.get(key); };
 const wearCounts = () => S.wears.reduce((m, w) => (w.itemIds.forEach((id) => (m[id] = (m[id] || 0) + 1)), m), {});
 
 function toast(msg) {
@@ -100,10 +110,10 @@ async function load() {
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
   S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
-  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1' && (i.worn || !wearAI.isWornType(i.type)))); // (hidden ones stay in the database, backups and sync; an old flat photo of a piece drawn on her waits for the preloaded one)
+  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1' && (i.worn || i.wornLazy || !wearAI.isWornType(i.type)))); // (hidden ones stay in the database, backups and sync; an old flat photo of a piece drawn on her waits for the preloaded one)
   for (const i of S.items) if (starter.isStarter(i) && !i.placedFromAnchors) { delete i.fit; i.adj = { scale: 1, dx: 0, dy: 0 }; i.placedFromAnchors = 1; put('items', i); } // one-time: drop saved drag offsets so starter pieces sit by the body points
   S.items.sort((a, b) => a.createdAt - b.createdAt);
-  S.items.forEach((i) => { url(i.id, i.cutout); if (i.backCutout) url(i.id + ':back', i.backCutout); });
+  S.items.forEach((i) => { if (i.cutout) S.urls.defer(i.id, i.cutout); if (i.backCutout) S.urls.defer(i.id + ':back', i.backCutout); }); // (addresses made when a picture is first shown)
   S.inspos.forEach((n) => url('inspo:' + n.id, n.photo));
   analyseAll();
   recheckStarters(); // the dashed selection box and tap-to-select need each cutout's real bounds
@@ -113,6 +123,8 @@ async function load() {
 /** The preloaded wardrobe (public/starter/made/, made once by the preload workflow): pieces this closet doesn't have yet are added as
  *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
 /** A pause that lets the page handle taps and draw (between pieces of a long job). */
+let lastTouch = 0; for (const ev of ['pointerdown', 'scroll', 'touchmove', 'keydown']) addEventListener(ev, () => { lastTouch = performance.now(); }, { passive: true, capture: true });
+const importText = () => (S.importing ? `Adding your wardrobe: ${S.importing.done.toLocaleString()} of ${S.importing.total.toLocaleString()} pieces…` : '');
 const breather = () => new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 120 }) : setTimeout(r, 16)));
 /** A background worker that fetches a preloaded piece and places it on a model-size picture; null where the browser can't (no OffscreenCanvas). */
 function composeWorker() {
@@ -133,8 +145,9 @@ async function importPreloaded() {
   // a preloaded piece taken out of the wardrobe on review (now failed or blocked there) leaves the closet too; one you made yours stays
   const withdrawn = S.items.filter((i) => i.preloaded && starter.isStarter(i) && !idx.pieces[i.starterId] && (idx.failed?.[i.starterId] || idx.blocked?.[i.starterId])).map((i) => i.id);
   if (withdrawn.length) await removeItems(withdrawn);
+  const catalogue = new Map(STARTER_ITEMS.map((x) => [x.id, x])); // (looked up for every piece: a list search each time took a while with thousands)
   for (const i of S.items.filter((i) => i.preloaded && starter.isStarter(i))) { // (once: where each piece sits on her, for tucking, and its catalogue colour name)
-    const p = idx.pieces[i.starterId], it = STARTER_ITEMS.find((x) => x.id === i.starterId), color = it && starter.namedColor(it, i.color);
+    const p = idx.pieces[i.starterId], it = catalogue.get(i.starterId), color = it && starter.namedColor(it, i.color);
     const occ = it && String(i.occasions || []) !== String(it.occasions) ? { occasions: [...it.occasions] } : {}; // (styles added to the catalogue later, e.g. Workout, reach pieces already here)
     if ((p?.box && !i.wornBox) || (color && color.name !== i.color?.name) || occ.occasions) { Object.assign(i, p?.box && !i.wornBox ? { wornBox: p.box } : {}, color ? { color } : {}, occ); await put('items', i); }
   }
@@ -142,37 +155,48 @@ async function importPreloaded() {
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
   const pack = dollPack || await loadPack(); if (!pack) return;
   let added = 0, updated = 0;
-  const worker = composeWorker(); let busyUntil = 0;
+  let busyUntil = 0;
   const pictures = async (sid, p) => { // the closet picture, and for a piece drawn on her, the piece placed on a picture the size of the model
     const src = `/starter/made/${sid}.webp?v=${p.t || idx.version}`;
-    if (worker) { const r = await worker(sid, src, p.kind === 'worn' ? p.box : null, pack.size).catch(() => null); if (r) return r; } // (in the background, so the app keeps responding)
-    const cutout = await (await fetch(src)).blob(); let worn;
-    if (p.kind === 'worn') {
-      const { img, url: u } = await loadImage(cutout), c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
-      c.getContext('2d').drawImage(img, p.box.x, p.box.y, p.box.w, p.box.h); URL.revokeObjectURL(u); worn = await canvasToBlob(c, 'image/png'); c.width = 0;
-    }
-    return { cutout, worn };
+    // only the piece's own picture is kept (about 35 KB); the model-size picture of it on her (about 270 KB, eight times as much) is made
+    // from it and its place when she wears it, so a whole wardrobe fits in the storage a browser gives a page (a launcher's tab gets little)
+    const r = await fetch(src); if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return { cutout: await r.blob(), worn: undefined };
   };
-  for (const [sid, p] of Object.entries(idx.pieces)) {
-    const it = STARTER_ITEMS.find((x) => x.id === sid); if (!it || removed.has(sid)) continue;
+  let repair; try { repair = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); } catch { repair = new Set(); } // (pieces whose stored picture went unreadable: imported afresh)
+  const byId = new Map(S.items.map((i) => [i.id, i])), bySid = new Map(); for (const i of S.items) if (i.starterId) (bySid.get(i.starterId) || bySid.set(i.starterId, []).get(i.starterId)).push(i);
+  const needed = ([sid, p]) => { const it = catalogue.get(sid); if (!it || removed.has(sid)) return false; const mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
+    return !(mine ? !starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id)) : same.some((i) => i.worn || i.wornLazy || p.kind !== 'worn' || !starter.isStarter(i))); }; // (not already here as it is, nor one you own)
+  const todo = Object.entries(idx.pieces).filter(needed);
+  // a long import (a new phone or browser has the whole wardrobe to add) shows its progress and the pieces as they arrive, a page at a time
+  S.importing = todo.length > 20 ? { done: 0, total: todo.length } : null; let failed = 0, drawnAt = performance.now();
+  if (S.importing && $('#modal').hidden && ['today', 'closet', 'tryon'].includes(S.view)) render(); // (the progress line shows from the start, whichever page is open)
+  const progress = () => {
+    if (!S.importing) return; S.importing.done++;
+    const st = document.getElementById('impstat'); if (st) st.textContent = importText();
+    if (performance.now() - drawnAt > 20000 && performance.now() - lastTouch > 6000 && $('#modal').hidden && ['today', 'closet', 'tryon'].includes(S.view)) { drawnAt = performance.now(); render(); } // (not while she's scrolling or tapping)
+  };
+  for (const [sid, p] of todo) {
+    const it = catalogue.get(sid), mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
     if (performance.now() > busyUntil) { await breather(); busyUntil = performance.now() + 30; } // (taps and scrolling get a turn between pieces)
     try {
-      const mine = S.items.find((i) => i.id === `pre-${sid}`);
       if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
-        if (!starter.isStarter(mine) || (mine.preloadT || 0) === (p.t || 0)) continue;
+        if (!starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id))) continue;
         const { cutout, worn } = await pictures(sid, p);
-        Object.assign(mine, { cutout, worn, color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
-        URL.revokeObjectURL(S.urls.get(mine.id) || ''); S.urls.delete(mine.id); url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++;
+        Object.assign(mine, { cutout, worn, ...(p.kind === 'worn' && { wornLazy: true, made: 'model' }), color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
+        const was = S.urls.get(mine.id); if (was) setTimeout(() => URL.revokeObjectURL(was), 120000); S.urls.delete(mine.id); // (the old picture stays readable a while: pictures already on screen keep showing until the page redraws)
+        url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++; progress();
         continue;
       }
-      if (S.items.some((i) => i.starterId === sid && (i.worn || p.kind !== 'worn' || !starter.isStarter(i)))) continue; // (already here, or one you own)
       const { cutout, worn } = await pictures(sid, p);
-      const older = S.items.filter((i) => i.starterId === sid && starter.isStarter(i)); if (older.length) await removeItems(older.map((i) => i.id));
-      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn, box: p.box }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
-      await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++;
-    } catch { /* this one is tried again next time */ return; }
+      const older = same.filter((i) => starter.isStarter(i) && S.items.includes(i)); if (older.length) await removeItems(older.map((i) => i.id));
+      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn, box: p.box }, undefined), ...(p.kind === 'worn' && { wornLazy: true, made: 'model', wornBox: p.box }), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
+      await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++; progress();
+    } catch { failed++; progress(); /* skipped: tried again next time (one piece that won't download no longer stops the rest) */ }
   }
-  store.set('preloaded', String(idx.version));
+  S.importing = null;
+  if (!failed) { store.set('preloaded', String(idx.version)); try { localStorage.removeItem('repair'); } catch { /* private mode */ } }
+  if (added > 30 && S.today) { S.today.looks = []; S.today.date = ''; store.set('todaylooks', ''); } // (looks made from a handful of pieces are made again from the whole wardrobe)
   if (added || updated) { render(); toast([added && `${added} starter piece${added === 1 ? '' : 's'} added`, updated && `${updated} updated`].filter(Boolean).join(', ') + ' ✓'); }
 }
 
@@ -215,12 +239,29 @@ async function analyseItem(item) {
     const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, N, N);
     const d = g.getImageData(0, 0, N, N).data, mask = new Uint8Array(N * N); let x0 = N, y0 = N, x1 = -1, y1 = -1;
     for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (d[(y * N + x) * 4 + 3] > 40) { mask[y * N + x] = 1; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-    S.meta.set(item.id, x1 < 0 ? { iw, ih, bx: 0, by: 0, bw: 1, bh: 1, mask, N } : { iw, ih, bx: x0 / N, by: y0 / N, bw: (x1 - x0 + 1) / N, bh: (y1 - y0 + 1) / N, mask, N, ...(item.type === 'bags' && { body: bagBodyOf(img, iw, ih) }) });
+    const m = x1 < 0 ? { iw, ih, bx: 0, by: 0, bw: 1, bh: 1, mask, N } : { iw, ih, bx: x0 / N, by: y0 / N, bw: (x1 - x0 + 1) / N, bh: (y1 - y0 + 1) / N, mask, N, ...(item.type === 'bags' && { body: bagBodyOf(img, iw, ih) }) };
+    S.meta.set(item.id, m);
+    saveMeta(item, m);
   } catch { /* an unreadable picture just keeps the full box */ } finally { done(); }
+}
+/* Each piece's measurements, kept between launches in a small list of their own (never by saving the piece again: rewriting
+   every piece with its pictures was heavy enough to crash the page on an iPhone). Without the tap mask, which isn't needed
+   to draw: until a piece is measured again, a tap anywhere in its box picks it. */
+let metaStore = null, metaTimer = 0;
+const metaList = () => { if (!metaStore) { try { metaStore = JSON.parse(localStorage.getItem('piecemeta') || '{}'); } catch { metaStore = {}; } } return metaStore; };
+function saveMeta(item, m) {
+  const { iw, ih, bx, by, bw, bh, body } = m;
+  metaList()[item.id] = { iw, ih, bx, by, bw, bh, ...(body && { body }), sig: `${item.cutout.size}:${item.cutout.type}` };
+  clearTimeout(metaTimer); metaTimer = setTimeout(() => { try { const ids = new Set(S.items.map((i) => i.id)); for (const k of Object.keys(metaStore)) if (!ids.has(k)) delete metaStore[k]; localStorage.setItem('piecemeta', JSON.stringify(metaStore)); } catch { /* full or private mode: measured again next time */ } }, 1500);
+}
+function metaFromSaved(item) {
+  const m = metaList()[item.id] || item._m; if (!m || !item.cutout || m.sig !== `${item.cutout.size}:${item.cutout.type}`) return null;
+  const { sig, mask, ...rest } = m; return rest;
 }
 /** Every piece looked at once, one at a time with a pause between (what's on the model first), so opening the app never freezes it. */
 async function analyseAll() {
   const on = new Set(Object.values(S.outfit || {}));
+  for (const it of S.items) if (!S.meta.has(it.id)) { const m = metaFromSaved(it); if (m) S.meta.set(it.id, m); } // (measured on an earlier launch)
   const order = [...S.items].sort((a, b) => on.has(b.id) - on.has(a.id));
   let shown = false;
   for (const it of order) {
@@ -264,7 +305,7 @@ async function maskFromBlob(blob) {
 
 /** Fit a worn piece to the body in the background (landmarks are suggested the first time and kept on the piece); the figure redraws when it's ready. */
 function queueFit(item) {
-  if (!dollPack || !(groupOf(item.type) || item.worn) || !item.cutout) return;
+  if (!dollPack || !(groupOf(item.type) || item.worn || item.wornLazy) || !item.cutout) return;
   const sig = fitSignature(item, dollPack), key = item.id + sig;
   if (S.fitSig.get(item.id) === sig || S.fitPending.has(key)) return;
   S.fitPending.add(key);
@@ -286,8 +327,8 @@ const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped
   try { return JSON.parse(store.get('hairmarks', '{}')); } catch { return {}; } };
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
 /** Model pictures drawn before the model's art had loaded (Today's looks) are filled in once it has, without redrawing the page. */
-function fillFigures(all = false) { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (all || !el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini'); }); }
-function figure(src, cls = '') { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls }) : ''; }
+function fillFigures(all = false) { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (all || !el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini', el.dataset.tuck ? { tuck: el.dataset.tuck === '1' } : {}); }); }
+function figure(src, cls = '', { tuck = null } = {}) { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls, tuck }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
 /* ───────────────────────── router ───────────────────────── */
@@ -318,6 +359,7 @@ function renderView() {
 }
 
 /* ───────────────────────── closet ───────────────────────── */
+const RAIL_MAX = 24, GRID_PAGE = 60; // (a rail shows its first pieces and a See all; the grid shows a page at a time: drawing all 1,700 pieces at once was slow on a phone)
 function renderCloset() {
   const { type, occ, q, color = 'all' } = S.filter;
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -325,12 +367,13 @@ function renderCloset() {
     && words.every((w) => `${i.name} ${i.brand || ''} ${i.color?.name || ''} ${(i.tags?.colors || []).join(' ')} ${TYPES[i.type]?.label || ''} ${(i.occasions || []).join(' ')}`.toLowerCase().includes(w)));
   const g = S.closetGrid && TYPES[S.closetGrid] ? S.closetGrid : null; // one kind of piece as a grid filling the page
   const rails = g ? (() => { const list = shown.filter((i) => i.type === g); return `<section class="rail cgrid-page" aria-label="${TYPES[g].label}"><div class="rail-h"><button class="ghost sm" data-act="cgridclose" aria-label="Back to all pieces">‹ All pieces</button><h3><span aria-hidden="true">${TYPES[g].emoji}</span> ${TYPES[g].label} <small>${list.length}</small></h3></div>
-      <div class="cgrid">${list.map(pieceCard).join('') || '<p class="muted">No pieces match those filters.</p>'}</div></section>`; })()
+      <div class="cgrid">${list.slice(0, S.gridN || GRID_PAGE).map(pieceCard).join('') || '<p class="muted">No pieces match those filters.</p>'}</div>
+      ${list.length > (S.gridN || GRID_PAGE) ? `<div class="row t-more"><button class="ghost" data-act="cgridmore">Show more (${list.length - (S.gridN || GRID_PAGE)} left)</button></div>` : ''}</section>`; })()
     : Object.keys(TYPES).map((t) => {
     const list = shown.filter((i) => i.type === t);
     if (!list.length) return '';
     return `<section class="rail" aria-label="${TYPES[t].label}"><div class="rail-h"><h3><span aria-hidden="true">${TYPES[t].emoji}</span> ${TYPES[t].label} <small>${list.length}</small></h3><button class="car-btn car-grid" data-act="cgrid" data-v="${t}" aria-label="See all ${TYPES[t].label} on one page">${GRID_ICON}</button></div>
-      <div class="rail-row">${list.map(pieceCard).join('')}</div></section>`;
+      <div class="rail-row">${list.slice(0, RAIL_MAX).map(pieceCard).join('')}${list.length > RAIL_MAX ? `<button class="piece see-all" data-act="cgrid" data-v="${t}"><span>See all ${list.length}</span></button>` : ''}</div></section>`;
   }).join('');
   const chip = (act, v, cur, label) => `<button class="chip ${cur === v ? 'on' : ''}" aria-pressed="${cur === v}" data-act="${act}" data-v="${esc(v)}">${label}</button>`;
   const nf = (color !== 'all') + (occ !== 'all');
@@ -344,7 +387,7 @@ function renderCloset() {
       <div class="swatches findrow" role="group" aria-label="Colour">${swatchRow('fcolor', color)}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('foccas', 'all', occ, 'Any style')}${OCCASIONS.map((o) => chip('foccas', o, occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
       </div>
-      <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>
+      <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>${S.importing ? `<p class="muted findcount" id="impstat">${importText()}</p>` : ''}
     </section>
     ${rails || emptyCloset()}
     ${S.picking ? pickBar() : ''}
@@ -644,14 +687,21 @@ async function removeItems(ids, { byYou = false } = {}) {
     let removed; try { removed = JSON.parse(store.get('starter_removed', '[]')); } catch { removed = []; }
     const sids = S.items.filter((i) => gone.has(i.id) && i.starterId).map((i) => i.starterId); if (sids.length) store.set('starter_removed', JSON.stringify([...new Set([...removed, ...sids])]));
   }
-  for (const id of ids) { await del('items', id); for (const key of [id, id + ':back']) { const u = S.urls.get(key); if (u) { URL.revokeObjectURL(u); S.urls.delete(key); } } }
+  // the piece is deleted from storage first (so a reload straight after never brings it back), then what's on screen changes all at once
+  // (the wardrobe, the outfit and the saved looks together; before, a saved look could show a deleted piece for a moment), then the looks are saved
+  for (const id of ids) await del('items', id);
   S.items = S.items.filter((i) => !gone.has(i.id));
-    for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
-  for (const o of [...S.outfits]) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)
+  for (const k of Object.keys(S.outfit)) if (gone.has(S.outfit[k])) delete S.outfit[k];
+  const emptied = [], changed = [];
+  for (const o of S.outfits) { // saved looks lose the piece; a look left empty is removed (diary history keeps its record)
     const kept = Object.fromEntries(Object.entries(o.outfit).filter(([, v]) => !gone.has(v)));
-    if (!Object.keys(kept).length) { await del('outfits', o.id); S.outfits = S.outfits.filter((x) => x.id !== o.id); }
-    else if (Object.keys(kept).length !== Object.keys(o.outfit).length) { o.outfit = kept; await put('outfits', o); }
+    if (!Object.keys(kept).length) emptied.push(o.id);
+    else if (Object.keys(kept).length !== Object.keys(o.outfit).length) { o.outfit = kept; changed.push(o); }
   }
+  S.outfits = S.outfits.filter((o) => !emptied.includes(o.id));
+  for (const id of ids) { for (const key of [id, id + ':back']) { const u = S.urls.has(key) && S.urls.get(key); if (u) setTimeout(() => URL.revokeObjectURL(u), 2000); S.urls.delete(key); } }
+  for (const id of emptied) await del('outfits', id);
+  for (const o of changed) await put('outfits', o);
 }
 
 /* ───────────────────────── cloud sync ───────────────────────── */
@@ -1360,7 +1410,7 @@ function finderHTML() {
       <div class="swatches findrow" role="group" aria-label="Colour">${swatchRow('fcol', FIND.color)}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
     </div>
-    <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
+    <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>${S.importing ? `<p class="muted findcount" id="impstat">${importText()}</p>` : ''}
     ${S.items.length ? `${rows}${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
   </section>`;
 }
@@ -1810,7 +1860,8 @@ async function handleClick(e) {
     case 'hidestarter': store.set('hidestarter', store.get('hidestarter', '') === '1' ? '' : '1'); return location.reload();
     case 'pickmode': S.picking = !S.picking; S.pick = []; return renderCloset();
     case 'cftoggle': S.cfOpen = !S.cfOpen; return renderCloset();
-    case 'cgrid': S.closetGrid = v; renderCloset(); return window.scrollTo({ top: 0 });
+    case 'cgrid': S.closetGrid = v; S.gridN = GRID_PAGE; renderCloset(); return window.scrollTo({ top: 0 });
+    case 'cgridmore': S.gridN = (S.gridN || GRID_PAGE) + GRID_PAGE * 2; return renderCloset();
     case 'cgridclose': S.closetGrid = null; return renderCloset();
     case 'pickcancel': S.picking = false; S.pick = []; return S.view === 'tryon' && S.scene === 'closet' ? wicRefresh() : renderCloset();
     case 'pick': { // (updated in place, so the rails keep their scroll)
@@ -2020,11 +2071,37 @@ new MutationObserver((list) => { for (const m of list) { if (m.type === 'charact
   .observe(document.body, { childList: true, subtree: true, characterData: true });
 deEmoji(document.body);
 
-const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure, wearCounts, go, wearIds, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
+/** Tuck a top in or leave it out (as a look on Today has it), remembered on the piece like the Tuck in button. */
+async function setTuck(it, on) { if (!it || !dollPack || !isTuckable(it, dollPack) || tuckOf(it, dollPack) === on) return; setFit(it, { tuck: on }); await put('items', it); }
+const ctx = { S, $, esc, url, toast, put, del, uid, iso, store, itemById, figure, wearCounts, go, wearIds, setTuck, afterEvent: () => retheme(), openItemModal: (x, p) => openItemModal(x, p) };
+
+/* A picture that won't show (an iPhone can lose its link to a stored picture): read the piece again from storage; if that copy is
+   unreadable too, show a preloaded piece straight from the site and have it imported afresh on the next launch. */
+const repairs = new Map(); // key -> { tries, urls: every address this picture has had, busy: the repair under way }
+document.addEventListener('error', (e) => {
+  const el = e.target, src = el?.getAttribute?.('src') || el?.getAttribute?.('href') || '';
+  if (!src.startsWith('blob:') || !(el.tagName === 'IMG' || el.tagName === 'image')) return;
+  const key = [...S.urls.entries()].find(([, u]) => u === src)?.[0] || [...repairs].find(([, r]) => r.urls.has(src))?.[0]; if (!key) return;
+  const [id, side] = key.split(':'), it = S.items.find((i) => i.id === id); if (!it || (side && side !== 'back')) return;
+  const r = repairs.get(key) || { tries: 0, urls: new Set() }; repairs.set(key, r); r.urls.add(src);
+  if (r.busy || r.tries > 1) return; // (one repair at a time per picture: it fixes every place the picture shows, and only a failed replacement starts the next try)
+  r.busy = (async () => {
+    const tries = r.tries++; let blob = null;
+    if (tries === 0) { const fresh = await get('items', id).catch(() => null); blob = side ? fresh?.backCutout : fresh?.cutout; if (fresh && !side) Object.assign(it, { cutout: fresh.cutout, worn: fresh.worn, original: fresh.original }); }
+    else if (it.starterId && it.preloaded && !side) {
+      blob = await fetch(`/starter/made/${it.starterId}.webp`).then((x) => (x.ok ? x.blob() : null)).catch(() => null);
+      try { const fix = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); fix.add(id); localStorage.setItem('repair', JSON.stringify([...fix])); store.set('preloaded', ''); } catch { /* private mode */ }
+    }
+    if (!blob) return;
+    S.urls.delete(key); const u = url(key, blob);
+    for (const n of document.querySelectorAll('img, image')) for (const at of ['src', 'href']) if (r.urls.has(n.getAttribute(at))) n.setAttribute(at, u);
+    r.urls.add(u);
+  })().finally(() => { r.busy = null; });
+}, true);
 
 (async () => {
   await load();
-  loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); else if (S.view === 'today') { S.today && (S.today.date = ''); render(); } }); // so "Style me" and the weather chip know today's weather
+  loadForecast(ctx).then(() => { if (S.view === 'tryon') renderTryon(); else if (S.view === 'today') render(); }); // so "Style me" and the weather chip know today's weather (Today waits for it rather than swapping its looks once it comes)
   render();
   window.__closet = S; // handy for debugging
   Object.defineProperty(window, '__wic', { get: () => wic });
