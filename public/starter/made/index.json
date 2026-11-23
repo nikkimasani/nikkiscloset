@@ -33523,44 +33523,6 @@
    ],
    "t": 1795394820694
   },
-  "starter-espresso-slip-maxi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 196,
-    "y": 314,
-    "w": 478,
-    "h": 1392
-   },
-   "v": 5,
-   "color": {
-    "hex": "#29190a",
-    "name": "Black"
-   },
-   "colors": [
-    "#29190a",
-    "#664a36"
-   ],
-   "t": 1795394824770
-  },
-  "starter-beige-ribbed-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 298,
-    "w": 624,
-    "h": 1408
-   },
-   "v": 5,
-   "color": {
-    "hex": "#baa599",
-    "name": "Grey"
-   },
-   "colors": [
-    "#baa599",
-    "#aa7459"
-   ],
-   "t": 1795394830469
-  },
   "starter-cream-longline-cardigan": {
    "kind": "worn",
    "box": {
@@ -33598,44 +33560,6 @@
     "#090908"
    ],
    "t": 1795394839021
-  },
-  "starter-black-ankle-boots": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 1534,
-    "w": 454,
-    "h": 212
-   },
-   "v": 5,
-   "color": {
-    "hex": "#030304",
-    "name": "Black"
-   },
-   "colors": [
-    "#030304"
-   ],
-   "t": 1795394841850
-  },
-  "starter-nude-strappy-stilettos": {
-   "kind": "worn",
-   "box": {
-    "x": 240,
-    "y": 1534,
-    "w": 426,
-    "h": 208
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b88678",
-    "name": "Tan"
-   },
-   "colors": [
-    "#b88678",
-    "#87594a",
-    "#6a5456"
-   ],
-   "t": 1795394844975
   },
   "starter-layered-gold-necklaces": {
    "kind": "photo",
@@ -33725,28 +33649,6 @@
    ],
    "t": 1795394880130
   },
-  "starter-beige-button-cardigan": {
-   "kind": "worn",
-   "box": {
-    "x": 130,
-    "y": 262,
-    "w": 638,
-    "h": 722
-   },
-   "v": 5,
-   "color": {
-    "hex": "#cbb5a5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#cbb5a5",
-    "#9b8576",
-    "#483728",
-    "#765a4a",
-    "#dba585"
-   ],
-   "t": 1795394883282
-  },
   "starter-black-strappy-stilettos": {
    "kind": "worn",
    "box": {
@@ -33807,17 +33709,6 @@
     "#977b67"
    ],
    "t": 1795394894760
-  },
-  "starter-cognac-saddle-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#a94b1b",
-    "name": "Rust"
-   },
-   "colors": [
-    "#a94b1b"
-   ],
-   "t": 1795394902514
   },
   "starter-gold-chain-bracelet": {
    "kind": "photo",
@@ -33891,25 +33782,6 @@
    ],
    "t": 1795394929631
   },
-  "starter-cream-ribbed-balloon-cardigan": {
-   "kind": "worn",
-   "box": {
-    "x": 104,
-    "y": 288,
-    "w": 686,
-    "h": 1296
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f5f4ea",
-    "name": "White"
-   },
-   "colors": [
-    "#f5f4ea",
-    "#c8c5b8"
-   ],
-   "t": 1795394939881
-  },
   "starter-gold-strappy-stilettos": {
    "kind": "worn",
    "box": {
@@ -33953,18 +33825,6 @@
     "#aaa5a9"
    ],
    "t": 1795394960154
-  },
-  "starter-olive-hobo-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#49331a",
-    "name": "Brown"
-   },
-   "colors": [
-    "#49331a",
-    "#180d05"
-   ],
-   "t": 1795394964886
   },
   "starter-white-woven-clutch": {
    "kind": "photo",
@@ -34019,45 +33879,6 @@
    ],
    "t": 1795394986749
   },
-  "starter-beige-square-neck-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 308,
-    "w": 558,
-    "h": 1398
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c8ab98",
-    "name": "Beige"
-   },
-   "colors": [
-    "#c8ab98",
-    "#967a68"
-   ],
-   "t": 1795394990496
-  },
-  "starter-oatmeal-square-neck-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 296,
-    "w": 636,
-    "h": 1410
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a4785c",
-    "name": "Tan"
-   },
-   "colors": [
-    "#a4785c",
-    "#6a4938",
-    "#dc9b84"
-   ],
-   "t": 1795394994719
-  },
   "starter-beige-pointed-pumps": {
    "kind": "worn",
    "box": {
@@ -34096,36 +33917,6 @@
     "#452e18"
    ],
    "t": 1795395006442
-  },
-  "starter-black-patent-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 236,
-    "y": 1612,
-    "w": 430,
-    "h": 134
-   },
-   "v": 5,
-   "color": {
-    "hex": "#030406",
-    "name": "Black"
-   },
-   "colors": [
-    "#030406",
-    "#896445"
-   ],
-   "t": 1795395009484
-  },
-  "starter-brown-belt-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#963519",
-    "name": "Rust"
-   },
-   "colors": [
-    "#963519"
-   ],
-   "t": 1795395013719
   },
   "starter-black-leather-belt": {
    "kind": "photo",
@@ -34217,25 +34008,6 @@
    ],
    "t": 1795395040122
   },
-  "starter-camel-cardigan": {
-   "kind": "worn",
-   "box": {
-    "x": 120,
-    "y": 294,
-    "w": 660,
-    "h": 690
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b57b59",
-    "name": "Tan"
-   },
-   "colors": [
-    "#b57b59",
-    "#784935"
-   ],
-   "t": 1795395044665
-  },
   "starter-white-pointed-pumps": {
    "kind": "worn",
    "box": {
@@ -34273,25 +34045,6 @@
     "#a9a695"
    ],
    "t": 1795395052886
-  },
-  "starter-burgundy-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 1556,
-    "w": 448,
-    "h": 190
-   },
-   "v": 5,
-   "color": {
-    "hex": "#370719",
-    "name": "Burgundy"
-   },
-   "colors": [
-    "#370719",
-    "#18030c"
-   ],
-   "t": 1795395057522
   },
   "starter-black-structured-top-handle-bag": {
    "kind": "photo",
@@ -34382,45 +34135,6 @@
    ],
    "t": 1795395086942
   },
-  "starter-oatmeal-off-shoulder-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 128,
-    "y": 240,
-    "w": 636,
-    "h": 1466
-   },
-   "v": 5,
-   "color": {
-    "hex": "#a78a79",
-    "name": "Grey"
-   },
-   "colors": [
-    "#a78a79",
-    "#d6baa4",
-    "#785949"
-   ],
-   "t": 1795395092914
-  },
-  "starter-beige-sheath-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 132,
-    "y": 280,
-    "w": 630,
-    "h": 1426
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d4b7a5",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d4b7a5",
-    "#b98974"
-   ],
-   "t": 1795395095825
-  },
   "starter-grey-cardigan": {
    "kind": "worn",
    "box": {
@@ -34440,25 +34154,6 @@
     "#262829"
    ],
    "t": 1795395099243
-  },
-  "starter-pink-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 1566,
-    "w": 448,
-    "h": 180
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d89aa4",
-    "name": "Pink"
-   },
-   "colors": [
-    "#d89aa4",
-    "#9a6b74"
-   ],
-   "t": 1795395102637
   },
   "starter-white-slingback-heels": {
    "kind": "worn",
@@ -34498,18 +34193,6 @@
     "#87573c"
    ],
    "t": 1795395111024
-  },
-  "starter-brown-structured-top-handle-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#b75428",
-    "name": "Rust"
-   },
-   "colors": [
-    "#b75428",
-    "#dd8159"
-   ],
-   "t": 1795395119767
   },
   "starter-small-gold-hoops": {
    "kind": "photo",
@@ -34621,44 +34304,6 @@
    ],
    "t": 1795395150945
   },
-  "starter-nude-ankle-strap-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 232,
-    "y": 1534,
-    "w": 432,
-    "h": 210
-   },
-   "v": 5,
-   "color": {
-    "hex": "#d3b39a",
-    "name": "Beige"
-   },
-   "colors": [
-    "#d3b39a",
-    "#b8866c",
-    "#896558"
-   ],
-   "t": 1795395154325
-  },
-  "starter-black-square-toe-mules": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 1606,
-    "w": 462,
-    "h": 140
-   },
-   "v": 5,
-   "color": {
-    "hex": "#080808",
-    "name": "Black"
-   },
-   "colors": [
-    "#080808"
-   ],
-   "t": 1795395158361
-  },
   "starter-white-heeled-mules": {
    "kind": "worn",
    "box": {
@@ -34689,19 +34334,6 @@
     "#464647"
    ],
    "t": 1795395167088
-  },
-  "starter-silver-small-hoops": {
-   "kind": "photo",
-   "color": {
-    "hex": "#86868a",
-    "name": "Grey"
-   },
-   "colors": [
-    "#86868a",
-    "#5a5956",
-    "#261d12"
-   ],
-   "t": 1795395175350
   },
   "starter-gold-teardrop-earrings": {
    "kind": "photo",
@@ -34824,6 +34456,39 @@
   ],
   "starter-white-quilted-chain-bag": [
    "more than the item in the picture (text, a hanger or a prop?)"
+  ],
+  "starter-beige-button-cardigan": [
+   "a bare torso and shorts kept inside the open cardigan (left out by review)"
+  ],
+  "starter-black-patent-pumps": [
+   "only fragments of the shoes (left out by review)"
+  ],
+  "starter-black-square-toe-mules": [
+   "tangled shapes, not mules (left out by review)"
+  ],
+  "starter-burgundy-pointed-pumps": [
+   "only toe caps, floating above the foot (left out by review)"
+  ],
+  "starter-pink-pointed-pumps": [
+   "fuzzy toe caps, not pumps (left out by review)"
+  ],
+  "starter-nude-ankle-strap-heels": [
+   "mostly her skin, the shoe blends in (left out by review)"
+  ],
+  "starter-nude-strappy-stilettos": [
+   "mostly her skin, the shoe blends in (left out by review)"
+  ],
+  "starter-brown-structured-top-handle-bag": [
+   "ragged, the handles missing (left out by review)"
+  ],
+  "starter-silver-small-hoops": [
+   "grey claw shapes, not hoops (left out by review)"
+  ],
+  "starter-camel-cardigan": [
+   "matching shorts and a bare chest kept with the cardigan (left out by review)"
+  ],
+  "starter-cream-ribbed-balloon-cardigan": [
+   "matching leggings kept with the cardigan (left out by review)"
   ]
  },
  "blocked": {
@@ -35235,6 +34900,16 @@
   "starter-gold-dome-earrings": "ragged blobs instead of earrings, twice",
   "starter-champagne-slip-maxi-dress": "a bare arm kept with the dress, twice",
   "starter-chocolate-brown-slip-maxi-dress": "bare arms kept with the dress, twice",
-  "starter-camel-cropped-jacket": "a bare torso inside the open jacket, twice"
+  "starter-camel-cropped-jacket": "a bare torso inside the open jacket, twice",
+  "starter-beige-ribbed-midi-dress": "bare arms kept with the dress, twice",
+  "starter-beige-sheath-dress": "bare arms kept with the dress, twice",
+  "starter-beige-square-neck-midi-dress": "bare arms kept with the dress, twice",
+  "starter-oatmeal-off-shoulder-dress": "bare arms and shoulders kept with the dress, twice",
+  "starter-oatmeal-square-neck-midi-dress": "bare arms kept with the dress, twice",
+  "starter-espresso-slip-maxi-dress": "holes in the satin, twice",
+  "starter-black-ankle-boots": "broken boot shapes, twice",
+  "starter-brown-belt-bag": "a ragged blob, not a belt bag, twice",
+  "starter-cognac-saddle-bag": "a ragged blob, not a saddle bag, twice",
+  "starter-olive-hobo-bag": "most of the bag missing, twice"
  }
 }
