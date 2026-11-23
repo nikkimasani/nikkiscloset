@@ -123,6 +123,8 @@ async function load() {
 /** The preloaded wardrobe (public/starter/made/, made once by the preload workflow): pieces this closet doesn't have yet are added as
  *  Ready starter pieces, replacing flat-lay versions made earlier. One you removed stays removed; hidden starter pieces aren't added. */
 /** A pause that lets the page handle taps and draw (between pieces of a long job). */
+let lastTouch = 0; for (const ev of ['pointerdown', 'scroll', 'touchmove', 'keydown']) addEventListener(ev, () => { lastTouch = performance.now(); }, { passive: true, capture: true });
+const importText = () => (S.importing ? `Adding your wardrobe: ${S.importing.done.toLocaleString()} of ${S.importing.total.toLocaleString()} pieces…` : '');
 const breather = () => new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 120 }) : setTimeout(r, 16)));
 /** A background worker that fetches a preloaded piece and places it on a model-size picture; null where the browser can't (no OffscreenCanvas). */
 function composeWorker() {
@@ -166,10 +168,19 @@ async function importPreloaded() {
   };
   let repair; try { repair = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); } catch { repair = new Set(); } // (pieces whose stored picture went unreadable: imported afresh)
   const byId = new Map(S.items.map((i) => [i.id, i])), bySid = new Map(); for (const i of S.items) if (i.starterId) (bySid.get(i.starterId) || bySid.set(i.starterId, []).get(i.starterId)).push(i);
-  for (const [sid, p] of Object.entries(idx.pieces)) {
-    const it = catalogue.get(sid); if (!it || removed.has(sid)) continue;
-    const mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
-    if (mine ? !starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id)) : same.some((i) => i.worn || p.kind !== 'worn' || !starter.isStarter(i))) continue; // (already here as it is, or one you own: nothing to do, and no pause needed)
+  const needed = ([sid, p]) => { const it = catalogue.get(sid); if (!it || removed.has(sid)) return false; const mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
+    return !(mine ? !starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id)) : same.some((i) => i.worn || p.kind !== 'worn' || !starter.isStarter(i))); }; // (not already here as it is, nor one you own)
+  const todo = Object.entries(idx.pieces).filter(needed);
+  // a long import (a new phone or browser has the whole wardrobe to add) shows its progress and the pieces as they arrive, a page at a time
+  S.importing = todo.length > 20 ? { done: 0, total: todo.length } : null; let failed = 0, drawnAt = performance.now();
+  if (S.importing && $('#modal').hidden && ['today', 'closet', 'tryon'].includes(S.view)) render(); // (the progress line shows from the start, whichever page is open)
+  const progress = () => {
+    if (!S.importing) return; S.importing.done++;
+    const st = document.getElementById('impstat'); if (st) st.textContent = importText();
+    if (performance.now() - drawnAt > 20000 && performance.now() - lastTouch > 6000 && $('#modal').hidden && ['today', 'closet', 'tryon'].includes(S.view)) { drawnAt = performance.now(); render(); } // (not while she's scrolling or tapping)
+  };
+  for (const [sid, p] of todo) {
+    const it = catalogue.get(sid), mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
     if (performance.now() > busyUntil) { await breather(); busyUntil = performance.now() + 30; } // (taps and scrolling get a turn between pieces)
     try {
       if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
@@ -177,16 +188,18 @@ async function importPreloaded() {
         const { cutout, worn } = await pictures(sid, p);
         Object.assign(mine, { cutout, worn, color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
         const was = S.urls.get(mine.id); if (was) setTimeout(() => URL.revokeObjectURL(was), 120000); S.urls.delete(mine.id); // (the old picture stays readable a while: pictures already on screen keep showing until the page redraws)
-        url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++;
+        url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++; progress();
         continue;
       }
       const { cutout, worn } = await pictures(sid, p);
       const older = same.filter((i) => starter.isStarter(i) && S.items.includes(i)); if (older.length) await removeItems(older.map((i) => i.id));
       const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn, box: p.box }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
-      await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++;
-    } catch { /* this one is tried again next time */ return; }
+      await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++; progress();
+    } catch { failed++; progress(); /* skipped: tried again next time (one piece that won't download no longer stops the rest) */ }
   }
-  store.set('preloaded', String(idx.version)); try { localStorage.removeItem('repair'); } catch { /* private mode */ }
+  S.importing = null;
+  if (!failed) { store.set('preloaded', String(idx.version)); try { localStorage.removeItem('repair'); } catch { /* private mode */ } }
+  if (added > 30 && S.today) { S.today.looks = []; S.today.date = ''; store.set('todaylooks', ''); } // (looks made from a handful of pieces are made again from the whole wardrobe)
   if (added || updated) { render(); toast([added && `${added} starter piece${added === 1 ? '' : 's'} added`, updated && `${updated} updated`].filter(Boolean).join(', ') + ' ✓'); }
 }
 
@@ -377,7 +390,7 @@ function renderCloset() {
       <div class="swatches findrow" role="group" aria-label="Colour">${swatchRow('fcolor', color)}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('foccas', 'all', occ, 'Any style')}${OCCASIONS.map((o) => chip('foccas', o, occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
       </div>
-      <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>
+      <p class="muted findcount" role="status">${shown.length} of ${S.items.length} pieces${S.picking ? ' · tap pieces, then Try on' : ''}</p>${S.importing ? `<p class="muted findcount" id="impstat">${importText()}</p>` : ''}
     </section>
     ${rails || emptyCloset()}
     ${S.picking ? pickBar() : ''}
@@ -1393,7 +1406,7 @@ function finderHTML() {
       <div class="swatches findrow" role="group" aria-label="Colour">${swatchRow('fcol', FIND.color)}</div>
       <div class="chips findrow" role="group" aria-label="Style">${chip('focc', 'all', FIND.occ, 'Any style')}${OCCASIONS.map((o) => chip('focc', o, FIND.occ, `<span aria-hidden="true">${OCCASION_EMOJI[o]}</span> ${o}`)).join('')}</div>
     </div>
-    <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>
+    <p class="muted findcount" role="status">${list.length} piece${list.length === 1 ? '' : 's'}${on.size ? ` · ${on.size} on the model` : ''}</p>${S.importing ? `<p class="muted findcount" id="impstat">${importText()}</p>` : ''}
     ${S.items.length ? `${rows}${list.length ? '' : '<p class="muted">Nothing matches. Try fewer filters.</p>'}` : emptyCloset()}
   </section>`;
 }
