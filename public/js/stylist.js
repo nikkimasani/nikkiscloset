@@ -224,7 +224,8 @@ export function recipeScore(item, piece) {
   let color = want.length && item.color ? Math.max(...want.map((h) => Math.max(0, 100 - hexDist(item.color.hex, h) * 2.2))) : 40;
   // "blue jeans" in a pin means denim, not bright blue: denim of the same wash (light, mid, dark) is the same colour, another wash close to it
   const ptext0 = `${piece.name} ${(piece.colors || []).join(' ')} ${piece.detail || ''}`.toLowerCase(), itext0 = `${item.name} ${item.color?.name || ''} ${(item.colors || item.tags?.colors || []).join(' ')}`.toLowerCase();
-  if (DENIM.test(ptext0) && /blue|denim|wash/.test(ptext0) && DENIM.test(itext0)) color = Math.max(color, washOf(ptext0) === washOf(itext0) ? 95 : 75);
+  const blueDenim = (t) => DENIM.test(t) && /blue|denim|wash|indigo/.test(t) && !/\b(white|black|grey|gray|cream|ecru|beige|tan|olive|pink|red|brown|ivory|khaki)\b/.test(t); // (white or black jeans keep their own colour)
+  if (blueDenim(ptext0) && blueDenim(itext0)) color = Math.max(color, washOf(ptext0) === washOf(itext0) ? 95 : 75);
   const pk = garmentKinds(`${piece.name} ${piece.detail || ''}`), ik = garmentKinds(item.name);
   const kind = pk.length && ik.length ? (ik.some((k) => pk.includes(k)) ? 1 : 0.5) : item.type === piece.type ? 0.85 : 0.7;
   const pd = detailsIn(`${piece.name} ${piece.detail || ''}`), id = new Set(detailsIn(`${item.name} ${item.detail || ''}`));

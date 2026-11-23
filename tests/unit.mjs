@@ -279,10 +279,10 @@ test('a tucked top hides below the bottoms\' own waistband, out to her sides but
 
 test('a tucked top keeps its sleeves: drawn again inside her forearms, elbow to hand, with no id of its own', () => {
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls });
-  const clip = svg.match(/<clipPath id="armclip-\d+"><path d="([^"]+)"\/>/); assert.ok(clip, 'an arm clip');
+  const clip = svg.match(/<clipPath id="sleeveclip-\d+"><path d="([^"]+)"\/>/); assert.ok(clip, 'a sleeve clip, with its own id (armclip is the bag strap\'s)');
   assert.equal((clip[1].match(/M/g) || []).length, 2, 'one band for each forearm');
   assert.equal((svg.match(/data-slot="top"/g) || []).length, 1, 'the top is still one piece to tap');
-  assert.ok(!/armclip/.test(dollSVG({ pack, items: { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms') }, urls })), 'an untucked top is drawn once');
+  assert.ok(!/sleeveclip/.test(dollSVG({ pack, items: { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms') }, urls })), 'an untucked top is drawn once');
 });
 
 test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
@@ -844,6 +844,14 @@ test('Today: tucked in like the pin, different pins each day, pieces that go tog
   const pins = ['a', 'b', 'c', 'd'].map((id) => ({ id, board: 'outfits', pieces: [{ name: id === 'c' ? 'Cream cable sweater' : 'White button-down shirt', type: 'tops', colors: [id === 'c' ? 'cream' : 'white'] }, { name: id === 'd' ? 'Black trousers' : 'Light blue jeans', type: 'bottoms', colors: [id === 'd' ? 'black' : 'light blue'] }] }));
   let seenA = 0; for (let k = 0; k < 200; k++) if (pinLooks(items, pins, { n: 1, shown: { a: 0 } })[0].pin.id === 'a') seenA++;
   assert.ok(seenA < 20, `a pin she saw today seldom comes back (${seenA}/200)`);
+});
+
+test('Today: blue jeans in a pin are matched by denim wash, never by black or white jeans; heels are no stand-in for flats', () => {
+  const it = (name, c, hex, type = 'bottoms') => ({ id: name, name, type, color: { hex, name: c }, colors: [c] });
+  const pin = { name: 'Blue straight-leg jeans', type: 'bottoms', colors: ['blue'], detail: 'high-waisted, denim' };
+  assert.ok(recipeScore(it('Medium-wash straight jeans', 'medium denim', '#46628f'), pin) >= 70, 'denim of the same wash');
+  assert.ok(recipeScore(it('Black straight-leg jeans', 'black', '#1a1a1a'), pin) < 40, 'black jeans keep their own colour');
+  assert.ok(recipeScore(it('Skinny white pants', 'white', '#f7f7f4'), { name: 'White wide-leg trousers', type: 'bottoms', colors: ['white'] }) < recipeScore(it('White wide-leg trousers', 'white', '#f7f7f4'), { name: 'White wide-leg trousers', type: 'bottoms', colors: ['white'] }), 'skinny is no stand-in for wide-leg');
 });
 
 import { mergeIndex } from '../scripts/merge-index.mjs';

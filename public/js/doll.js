@@ -244,11 +244,11 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
       const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
       const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}"><image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
-      return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#armclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
+      return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
     }
     const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${garmentTransform(a, f)}">
       <image href="${href}" width="${a.w}" height="${a.h}" preserveAspectRatio="${a.align} meet" filter="url(#gfx-${n})"/>${selected === it.id ? `<rect class="selbox" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="6" fill="none"/>` : ''}</g>`;
-    return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#armclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
+    return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
   };
   const accPiece = (it, r, f, sel, slot) => {
     const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, off = r.off || [0, 0], pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean).map(([x, y]) => [x + off[0], y + off[1]]), pair = pts.length === 2;
@@ -339,7 +339,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hairDefs}${armDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}${arms ? `<clipPath id="armclip-${n}"><path d="${arms}"/></clipPath>` : ''}</defs>
+    <defs>${fx}${hairDefs}${armDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}${arms ? `<clipPath id="sleeveclip-${n}"><path d="${arms}"/></clipPath>` : ''}</defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 
