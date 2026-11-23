@@ -20,7 +20,7 @@ export const cutoutCanvas = async (blob) => {
 };
 
 /** What decides whether a worn picture is still current. */
-export const fitSignature = (item, pack) => JSON.stringify([item.type, item.marks || null, item.sleeves ?? null, pack.id, item.cutout?.size, item.worn?.size || 0]);
+export const fitSignature = (item, pack) => JSON.stringify([item.type, item.marks || null, item.sleeves ?? null, pack.id, item.cutout?.size, item.worn?.size || (item.wornLazy ? 'lazy' : 0)]);
 
 /**
  * The item fitted to the body. Resolves to { url, marks } (marks are suggested the first time and should be saved on the item),
@@ -28,6 +28,12 @@ export const fitSignature = (item, pack) => JSON.stringify([item.type, item.mark
  */
 export async function fitItem(item, pack) {
   if (item.worn?.size) return { url: URL.createObjectURL(item.worn), blob: item.worn, marks: null }; // made on the model: it already lines up with her
+  if (item.wornLazy && item.wornBox && item.cutout) { // made on the model, kept as the piece and its place on her: put it back on a picture her size
+    const { img, url } = await loadImage(item.cutout), b = item.wornBox, c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
+    c.getContext('2d').drawImage(img, b.x, b.y, b.w, b.h); URL.revokeObjectURL(url);
+    const blob = await new Promise((r) => c.toBlob(r, 'image/png')); c.width = 0;
+    return { url: URL.createObjectURL(blob), blob, marks: null };
+  }
   if (!groupOf(item.type) || !item.cutout) return null;
   const [body, cut] = await Promise.all([bodyOf(pack), cutoutCanvas(item.cutout)]);
   const marks = item.marks || suggestFor(item.type, cut, { sleeves: item.sleeves ?? sleevesFromName(item.type, item.name) });

@@ -110,7 +110,7 @@ async function load() {
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
   S.starterReview = S.items.filter((i) => starter.isStarter(i) && !i.ready);
-  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1' && (i.worn || !wearAI.isWornType(i.type)))); // (hidden ones stay in the database, backups and sync; an old flat photo of a piece drawn on her waits for the preloaded one)
+  S.items = S.items.filter((i) => !starter.isStarter(i) || (i.ready && store.get('hidestarter', '') !== '1' && (i.worn || i.wornLazy || !wearAI.isWornType(i.type)))); // (hidden ones stay in the database, backups and sync; an old flat photo of a piece drawn on her waits for the preloaded one)
   for (const i of S.items) if (starter.isStarter(i) && !i.placedFromAnchors) { delete i.fit; i.adj = { scale: 1, dx: 0, dy: 0 }; i.placedFromAnchors = 1; put('items', i); } // one-time: drop saved drag offsets so starter pieces sit by the body points
   S.items.sort((a, b) => a.createdAt - b.createdAt);
   S.items.forEach((i) => { if (i.cutout) S.urls.defer(i.id, i.cutout); if (i.backCutout) S.urls.defer(i.id + ':back', i.backCutout); }); // (addresses made when a picture is first shown)
@@ -155,21 +155,18 @@ async function importPreloaded() {
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
   const pack = dollPack || await loadPack(); if (!pack) return;
   let added = 0, updated = 0;
-  const worker = composeWorker(); let busyUntil = 0;
+  let busyUntil = 0;
   const pictures = async (sid, p) => { // the closet picture, and for a piece drawn on her, the piece placed on a picture the size of the model
     const src = `/starter/made/${sid}.webp?v=${p.t || idx.version}`;
-    if (worker) { const r = await worker(sid, src, p.kind === 'worn' ? p.box : null, pack.size).catch(() => null); if (r) return r; } // (in the background, so the app keeps responding)
-    const cutout = await (await fetch(src)).blob(); let worn;
-    if (p.kind === 'worn') {
-      const { img, url: u } = await loadImage(cutout), c = document.createElement('canvas'); c.width = pack.size[0]; c.height = pack.size[1];
-      c.getContext('2d').drawImage(img, p.box.x, p.box.y, p.box.w, p.box.h); URL.revokeObjectURL(u); worn = await canvasToBlob(c, 'image/png'); c.width = 0;
-    }
-    return { cutout, worn };
+    // only the piece's own picture is kept (about 35 KB); the model-size picture of it on her (about 270 KB, eight times as much) is made
+    // from it and its place when she wears it, so a whole wardrobe fits in the storage a browser gives a page (a launcher's tab gets little)
+    const r = await fetch(src); if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return { cutout: await r.blob(), worn: undefined };
   };
   let repair; try { repair = new Set(JSON.parse(localStorage.getItem('repair') || '[]')); } catch { repair = new Set(); } // (pieces whose stored picture went unreadable: imported afresh)
   const byId = new Map(S.items.map((i) => [i.id, i])), bySid = new Map(); for (const i of S.items) if (i.starterId) (bySid.get(i.starterId) || bySid.set(i.starterId, []).get(i.starterId)).push(i);
   const needed = ([sid, p]) => { const it = catalogue.get(sid); if (!it || removed.has(sid)) return false; const mine = byId.get(`pre-${sid}`), same = bySid.get(sid) || [];
-    return !(mine ? !starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id)) : same.some((i) => i.worn || p.kind !== 'worn' || !starter.isStarter(i))); }; // (not already here as it is, nor one you own)
+    return !(mine ? !starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id)) : same.some((i) => i.worn || i.wornLazy || p.kind !== 'worn' || !starter.isStarter(i))); }; // (not already here as it is, nor one you own)
   const todo = Object.entries(idx.pieces).filter(needed);
   // a long import (a new phone or browser has the whole wardrobe to add) shows its progress and the pieces as they arrive, a page at a time
   S.importing = todo.length > 20 ? { done: 0, total: todo.length } : null; let failed = 0, drawnAt = performance.now();
@@ -186,14 +183,14 @@ async function importPreloaded() {
       if (mine) { // a newer version of a preloaded piece replaces the older one in place (same piece in looks and plans); one you made yours stays
         if (!starter.isStarter(mine) || ((mine.preloadT || 0) === (p.t || 0) && !repair.has(mine.id))) continue;
         const { cutout, worn } = await pictures(sid, p);
-        Object.assign(mine, { cutout, worn, color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
+        Object.assign(mine, { cutout, worn, ...(p.kind === 'worn' && { wornLazy: true, made: 'model' }), color: starter.namedColor(it, p.color), colors: p.colors, ...(p.box && { wornBox: p.box }), preloadT: p.t || 0, marks: undefined, updatedAt: Date.now() }); await put('items', mine);
         const was = S.urls.get(mine.id); if (was) setTimeout(() => URL.revokeObjectURL(was), 120000); S.urls.delete(mine.id); // (the old picture stays readable a while: pictures already on screen keep showing until the page redraws)
         url(mine.id, mine.cutout); S.meta.delete(mine.id); S.fitSig.delete(mine.id); analyseItem(mine); queueFit(mine); updated++; progress();
         continue;
       }
       const { cutout, worn } = await pictures(sid, p);
       const older = same.filter((i) => starter.isStarter(i) && S.items.includes(i)); if (older.length) await removeItems(older.map((i) => i.id));
-      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn, box: p.box }, undefined), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
+      const item = { ...starter.toItem(it, { ready: true, color: p.color, colors: p.colors, cutout, worn, box: p.box }, undefined), ...(p.kind === 'worn' && { wornLazy: true, made: 'model', wornBox: p.box }), id: `pre-${sid}`, placedFromAnchors: 1, preloaded: true, preloadT: p.t || 0 };
       await put('items', item); S.items.push(item); url(item.id, item.cutout); analyseItem(item); added++; progress();
     } catch { failed++; progress(); /* skipped: tried again next time (one piece that won't download no longer stops the rest) */ }
   }
@@ -308,7 +305,7 @@ async function maskFromBlob(blob) {
 
 /** Fit a worn piece to the body in the background (landmarks are suggested the first time and kept on the piece); the figure redraws when it's ready. */
 function queueFit(item) {
-  if (!dollPack || !(groupOf(item.type) || item.worn) || !item.cutout) return;
+  if (!dollPack || !(groupOf(item.type) || item.worn || item.wornLazy) || !item.cutout) return;
   const sig = fitSignature(item, dollPack), key = item.id + sig;
   if (S.fitSig.get(item.id) === sig || S.fitPending.has(key)) return;
   S.fitPending.add(key);
