@@ -217,17 +217,31 @@ const detailsIn = memo((text) => { const s = text.toLowerCase().replace(/long sl
 const garmentKinds = memo((text) => { const k = kindsIn(text); return k.length > 1 && k.includes('jeans') && !/\bjeans?\b/i.test(text) ? k.filter((x) => x !== 'jeans') : k; });
 
 /** 0-100: how well a closet piece stands in for one in a pin. The same colour and the same kind of garment are both needed; shared details count a little. */
+const DENIM = /\b(jeans?|denim)\b/i, WASH = { light: /light|pale|bleach|baby/, dark: /dark|indigo|raw|deep/ };
+const washOf = (t) => (WASH.light.test(t) ? 'light' : WASH.dark.test(t) ? 'dark' : 'mid');
 export function recipeScore(item, piece) {
   const want = (piece.colors || []).map(hexOf).filter(Boolean);
-  const color = want.length && item.color ? Math.max(...want.map((h) => Math.max(0, 100 - hexDist(item.color.hex, h) * 2.2))) : 40;
+  let color = want.length && item.color ? Math.max(...want.map((h) => Math.max(0, 100 - hexDist(item.color.hex, h) * 2.2))) : 40;
+  // "blue jeans" in a pin means denim, not bright blue: denim of the same wash (light, mid, dark) is the same colour, another wash close to it
+  const ptext0 = `${piece.name} ${(piece.colors || []).join(' ')} ${piece.detail || ''}`.toLowerCase(), itext0 = `${item.name} ${item.color?.name || ''} ${(item.colors || item.tags?.colors || []).join(' ')}`.toLowerCase();
+  const blueDenim = (t) => DENIM.test(t) && /blue|denim|wash|indigo/.test(t) && !/\b(white|black|grey|gray|cream|ecru|beige|tan|olive|pink|red|brown|ivory|khaki)\b/.test(t); // (white or black jeans keep their own colour)
+  if (blueDenim(ptext0) && blueDenim(itext0)) color = Math.max(color, washOf(ptext0) === washOf(itext0) ? 95 : 75);
   const pk = garmentKinds(`${piece.name} ${piece.detail || ''}`), ik = garmentKinds(item.name);
   const kind = pk.length && ik.length ? (ik.some((k) => pk.includes(k)) ? 1 : 0.5) : item.type === piece.type ? 0.85 : 0.7;
   const pd = detailsIn(`${piece.name} ${piece.detail || ''}`), id = new Set(detailsIn(`${item.name} ${item.detail || ''}`));
   const detail = pd.length ? 0.85 + 0.15 * pd.filter((d) => id.has(d)).length / pd.length : 1;
   const len = (set) => ['mini', 'midi', 'maxi'].find((l) => set.includes(l)), pl = len(pd), il = len([...id]);
   const length = pl && il && pl !== il && (pl === 'mini' || il === 'mini') ? 0.75 : 1; // a mini skirt is no stand-in for a long one
-  return Math.round(color * kind * detail * length);
+  const ptext = `${piece.name} ${piece.detail || ''}`.toLowerCase(), itext = `${item.name} ${item.detail || ''}`.toLowerCase();
+  const cut = (t) => (NARROW.test(t) ? 'narrow' : WIDE.test(t) ? 'wide' : ''), pc = cut(ptext), ic = cut(itext);
+  const shape = pc && ic && pc !== ic ? 0.75 : 1; // skinny trousers are no stand-in for wide-leg ones (nor a pencil skirt for a full one)
+  const fabric = STRONG.filter((f) => itext.includes(f) && !ptext.includes(f)).length ? 0.88 : 1; // a satin cami stands in for a plain tank only if nothing plainer fits
+  return Math.round(color * kind * detail * length * shape * fabric);
 }
+const NARROW = /\b(skinny|slim|cigarette|pencil|bodycon|leggings)\b/, WIDE = /\b(wide[- ]leg|flared?|palazzo|barrel|baggy|bootcut|a-line|full)\b/;
+const STRONG = ['satin', 'silk', 'sequin', 'leather', 'lace', 'velvet', 'sheer', 'metallic', 'crochet', 'mesh'];
+/** Does a closet piece name the same kind of thing as the pin's piece (heels for heels, a blazer for a blazer)? True when the pin names no kind. */
+const sameKind = (item, piece) => { const pk = garmentKinds(`${piece.name} ${piece.detail || ''}`); return !pk.length || garmentKinds(item.name).some((k) => pk.includes(k)); };
 
 const CORE = ['top', 'dress', 'bottom'];
 const NEUTRAL_SHOES = /black|white|nude|tan|beige|cream|brown|camel|taupe/i;
@@ -240,7 +254,7 @@ export function tuckFor(look, piece = null) {
   const top = look.top;
   if (!top || !look.bottom || !['tops', 'tanks'].includes(top.type)) return false;
   const said = `${piece?.name || ''} ${piece?.detail || ''}`;
-  if (/\buntucked\b|\bloose\b|\boversized\b|\bboxy\b|\brelaxed\b/i.test(said)) return false;
+  if (/\buntucked\b|\bloose\b|\boversized\b|\bboxy\b/i.test(said)) return false; // ("relaxed fit" shirts are usually tucked in, front or all round)
   if (/\btucked\b/i.test(said)) return true;
   return !LOOSE.test(top.name);
 }
@@ -261,7 +275,8 @@ export function pinLooks(items, pins, { occasion = '', wearCounts = {}, band, ra
   };
   // the closest stand-in, or one of the few that are just as close (so the same pin isn't always the same pieces, nor every beige heel the same pair)
   const best = (piece, slot, taken) => {
-    const all = (bySlot[slot] || []).filter((i) => !taken.has(i.id)).map((item) => { const s = recipeScore(item, piece); return { item, s, r: s * fits(item, slot) }; }).sort((a, b) => b.r - a.r);
+    // (shoes, a bag or a coat must be the same kind as the pin's: flats are no stand-in for heeled sandals)
+    const all = (bySlot[slot] || []).filter((i) => !taken.has(i.id) && (CORE.includes(slot) || sameKind(i, piece))).map((item) => { const s = recipeScore(item, piece); return { item, s, r: s * fits(item, slot) }; }).sort((a, b) => b.r - a.r);
     if (!all.length) return null;
     const near = all.filter((x, k) => k < 5 && x.r >= all[0].r - (slot === 'shoes' || slot === 'bag' ? 9 : 5)); // (any of a few pairs of black heels will do)
     return near[Math.min(near.length - 1, Math.floor(random() * near.length))];
@@ -270,13 +285,13 @@ export function pinLooks(items, pins, { occasion = '', wearCounts = {}, band, ra
 
   const options = [];
   for (const pin of pins) {
-    const look = {}, scores = {}, taken = new Set(), from = {};
+    const look = {}, scores = {}, taken = new Set(), from = {}, missing = [];
     for (const piece of pin.pieces) {
       const slot = slotOf(piece.type);
       if (slot === 'outer' && !outerOk(piece)) continue;
       if (look[slot] || (slot === 'dress' && (look.top || look.bottom)) || ((slot === 'top' || slot === 'bottom') && look.dress)) continue;
-      const b = best(piece, slot, taken); if (!b) continue;
-      if (!CORE.includes(slot) && b.s < 48) continue; // no close stand-in for the shoes, bag or coat: shoes come from the fallback below
+      const b = best(piece, slot, taken);
+      if (!b || (!CORE.includes(slot) && b.s < 55)) { if (!CORE.includes(slot)) { missing.push(piece.name); from[slot] = piece; } continue; } // no close stand-in for the shoes, bag or coat: said on the look (shoes come from the fallback below)
       look[slot] = b.item; scores[slot] = b.r; taken.add(b.item.id); from[slot] = piece;
     }
     const core = CORE.filter((s) => look[s]);
@@ -285,7 +300,7 @@ export function pinLooks(items, pins, { occasion = '', wearCounts = {}, band, ra
     if (coreMin < 62) continue; // a main piece isn't close enough to read as this pin
     const age = shown[pin.id], fresh = age === undefined ? 1 : age < 1 ? 0.04 : age < 3 ? 0.15 : age < 7 ? 0.45 : 0.8; // pins she saw lately wait their turn
     const score = coreMin * 0.7 + (Object.values(scores).reduce((a, b) => a + b, 0) / Object.keys(scores).length) * 0.3;
-    options.push({ look, pin, scores, score, w: Math.pow(score / 100, 6) * fresh, tuck: tuckFor(look, from.top) });
+    options.push({ look, pin, scores, score, w: Math.pow(score / 100, 6) * fresh * (missing.length ? 0.85 : 1), tuck: tuckFor(look, from.top), missing, from });
   }
 
   // pick by chance among every pin that works (closer ones and ones she hasn't seen lately more likely); never the same main piece twice in one day
@@ -311,7 +326,10 @@ export function pinLooks(items, pins, { occasion = '', wearCounts = {}, band, ra
       const near = all.filter((x, k) => k < 4 && x.r >= (all[0]?.r || 0) - 6);
       return near[Math.min(near.length - 1, Math.floor(random() * near.length))]?.i;
     };
-    if (!look.shoes) { const s = nearest('shoes', (i) => NEUTRAL_SHOES.test(i.name)) || nearest('shoes'); if (s) { look.shoes = s; added.add(s.id); } }
+    if (!look.shoes) { // the pin's kind of shoe in another colour, else a neutral pair
+      const want = o.from?.shoes, s = (want && nearest('shoes', (i) => sameKind(i, want) && garmentKinds(`${want.name} ${want.detail || ''}`).length > 0)) || nearest('shoes', (i) => NEUTRAL_SHOES.test(i.name)) || nearest('shoes');
+      if (s) { look.shoes = s; added.add(s.id); if (want && sameKind(s, want)) o.missing = o.missing.filter((m) => m !== want.name); }
+    }
     if (!look.outer && (band === 'cold' || (band === 'cool' && rain >= 50))) { // a coat only when it's really needed; she can add or drop one
       const coat = nearest('outer', (i) => (rain >= 50 ? /trench|rain|coat|jacket/i : /coat|jacket|blazer|cardigan|trench/i).test(i.name) && (band === 'cold' || !/puffer|parka/i.test(i.name)) && suitsWeather(i, band));
       if (coat) { look.outer = coat; added.add(coat.id); }
