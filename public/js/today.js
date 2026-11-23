@@ -96,7 +96,7 @@ export function renderToday(c) {
     ${looks ? `<div class="t-looks">${looks}</div>` : S.items.length ? `<p class="muted">Not enough pieces for a full look yet. Add a top and a bottom, or a dress.</p>` : `<button class="primary" data-act="add">Add your first piece</button>`}
     ${looks ? '<div class="row t-more"><button class="ghost" data-act="todaymore">More looks</button></div>' : ''}
     <section class="panel t-next" aria-label="Planning ahead"><h3>Planning ahead</h3>
-      <div class="row"><button class="ghost" data-act="todayplan" data-v="week">My week</button><button class="ghost" data-act="todayplan" data-v="pack">Pack for a trip</button><button class="ghost" data-act="todayplan" data-v="event">Add an event</button></div></section>
+      <div class="row"><button class="ghost" data-act="todayplan" data-v="week">My week</button><button class="ghost" data-act="todayplan" data-v="pack">Pack a trip</button><button class="ghost" data-act="todayplan" data-v="event">Add event</button></div></section>
   </div>`;
   $('#askq')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); todayActs.todayask(c); } });
 }
@@ -104,16 +104,17 @@ export function renderToday(c) {
 function lookCard(c, o, i) {
   const { esc, url, figure } = c, pieces = ORDER.filter((s) => o[s]).map((s) => [s, o[s]]);
   const ids = pieces.map(([, p]) => p.id), names = pieces.map(([, p]) => p.name).join(', '), pin = c.S.today.pins?.[i], board = pin?.board, tuck = c.S.today.tucks?.[i];
-  const tk = o.top && o.bottom && typeof tuck === 'boolean' ? (tuck ? '1' : '0') : '';
+  const tk = o.top && o.bottom && ['tops', 'tanks'].includes(o.top.type) ? (tuck === true ? '1' : '0') : '';
   return `<article class="panel t-look" aria-label="Look ${i + 1}: ${esc(names)}">
     ${board ? `<p class="t-src muted">From your Pinterest · ${esc(BOARD_NAMES[board] || board.replace(/-/g, ' '))} · <a href="https://www.pinterest.com/pin/${encodeURIComponent(pin.id)}/" target="_blank" rel="noopener">See the pin</a></p>
       <p class="t-recipe muted"><small>The pin: ${esc(pin.pieces.map((x) => x.name.toLowerCase()).join(', ').replace(/^./, (m) => m.toUpperCase()))}</small>${c.S.today.missing?.[i]?.length ? `<br><small class="t-gap">Not in your wardrobe yet: ${esc(c.S.today.missing[i].map((m) => m.toLowerCase()).join(', '))}</small>` : ''}</p>` : ''}
     <div class="t-fig" aria-hidden="true" data-fig="${esc(ids.join(','))}"${tk ? ` data-tuck="${tk}"` : ''}>${figure(ids, 'mini', tk ? { tuck: tk === '1' } : {}) || ''}</div>
     <div class="t-pieces">${pieces.map(([s, p]) => `<div class="t-piece"><img src="${url(p.id)}" alt="" loading="lazy"><span class="grow"><small class="muted">${esc(SLOT_LABEL[s] || s)}</small><br>${esc(p.name)}</span>
       <span class="t-btns"><button class="ghost t-swap" data-act="todayswap" data-i="${i}" data-v="${s}" aria-label="Swap the ${esc(p.name)}"><span aria-hidden="true">⟳</span></button>${DROPPABLE.includes(s) ? `<button class="ghost t-swap" data-act="todaydrop" data-i="${i}" data-v="${s}" aria-label="Remove the ${esc(p.name)}"><span aria-hidden="true">✕</span></button>` : ''}</span></div>`).join('')}</div>
-    ${((adds) => adds ? `<div class="row t-adds">${adds}</div>` : '')(ADDABLE.filter((s) => !o[s] && c.S.items.some((it) => slotOf(it.type) === s)).map((s) => `<button class="ghost t-add" data-act="todayadd" data-i="${i}" data-v="${s}">Add ${ADD_LABEL[s]}</button>`).join(''))}
-    <div class="row t-acts"><button class="primary" data-act="todaywear" data-i="${i}">Wear this today</button><button class="ghost" data-act="todaytry" data-i="${i}">Try it on</button>
-      <button class="ghost" data-act="todaylove" data-i="${i}" aria-label="Love this look"><span aria-hidden="true">♥</span></button><button class="ghost" data-act="todaynope" data-i="${i}" aria-label="Not for me — show another"><span aria-hidden="true">✕</span></button></div>
+    <div class="row t-adds">${ADDABLE.filter((s) => !o[s] && c.S.items.some((it) => slotOf(it.type) === s)).map((s) => `<button class="ghost t-add" data-act="todayadd" data-i="${i}" data-v="${s}">Add ${ADD_LABEL[s]}</button>`).join('')}${tk ? `<button class="ghost t-add" data-act="todaytuck" data-i="${i}" aria-pressed="${tk === '1'}">${tk === '1' ? 'Untuck' : 'Tuck in'}</button>` : ''}</div>
+    <div class="row t-acts"><button class="ghost t-try" data-act="todaytry" data-i="${i}">Try it on</button>
+      <button class="ghost t-icon" data-act="todaylove" data-i="${i}" aria-label="Love this look"><span aria-hidden="true">♥</span></button><button class="ghost t-icon" data-act="todaynope" data-i="${i}" aria-label="Not for me — show another"><span aria-hidden="true">✕</span></button></div>
+    <button class="primary t-wear" data-act="todaywear" data-i="${i}">Wear this today</button>
   </article>`;
 }
 
@@ -134,6 +135,7 @@ export const todayActs = {
     if (['top', 'bottom'].includes(el.dataset.v)) (t.tucks ||= [])[i] = tuckFor(t.looks[i]); // (a new top or bottom: tucked in or not as suits it)
     save(c); renderToday(c);
   },
+  todaytuck(c, el) { const t = c.S.today, i = Number(el.dataset.i); (t.tucks ||= [])[i] = !t.tucks[i]; save(c); renderToday(c); },
   todaydrop(c, el) { const o = { ...look(c, el) }; delete o[el.dataset.v]; c.S.today.looks[Number(el.dataset.i)] = o; save(c); renderToday(c); },
   todayadd(c, el) { const b = brief(c), i = Number(el.dataset.i); c.S.today.looks[i] = swapPiece(c.S.items, c.S.today.looks[i], el.dataset.v, { occasion: b.occasion, wearCounts: c.wearCounts(), band: b.band, prefs: prefsOf(c) }); save(c); renderToday(c); },
   todaylove(c, el) { savePrefs(c, learn(prefsOf(c), idsOf(look(c, el)), true)); c.toast('Saved to your likes'); },

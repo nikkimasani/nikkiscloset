@@ -1092,3 +1092,20 @@ label.f { color: var(--muted); font-weight: 500; letter-spacing: .02em; }
 .t-src a { text-transform: none; letter-spacing: 0; }
 .t-src a { color: inherit; text-decoration: underline; }
 .t-wait { padding: 40px 0; text-align: center; }
+
+/* a look's buttons: small add / tuck chips, then Try it on with love and pass, then Wear this today across */
+.t-look .t-adds { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
+.t-look .t-adds:empty { display: none; }
+.t-look .t-add { min-height: 34px; padding: 4px 14px; font-size: 14px; flex: 0 0 auto; }
+.t-look .t-add[aria-pressed="true"] { background: var(--ink); color: var(--accent-ink); border-color: var(--ink); }
+.t-look .t-acts { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; }
+.t-look .t-acts .t-try { flex: 1 1 auto; min-height: 46px; }
+.t-look .t-acts .t-icon { flex: 0 0 46px; width: 46px; height: 46px; min-height: 46px; padding: 0; display: grid; place-items: center; }
+.t-look .t-wear { grid-column: 1 / -1; width: 100%; min-height: 48px; }
+/* Planning ahead: the three buttons side by side, the same size */
+.t-next .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.t-next .row > button { min-width: 0; padding-left: 6px; padding-right: 6px; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* a date and a select side by side: each keeps to its half (iPhone's date box would otherwise run under the select) */
+.row > .grow { min-width: 0; }
+.row > .grow input, .row > .grow select { width: 100%; min-width: 0; box-sizing: border-box; }
+input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 44px; }
