@@ -124,8 +124,10 @@ export function styleMe(items, occasion, wearCounts = {}, weather = {}) {
   const dresses = pool('dress'), tops = pool('top'), bottoms = pool('bottom');
   const active = occasion === 'Workout' || occasion === 'Lounge'; // (the gym or a day at home: separates, comfy shoes, no bag)
   const useDress = dresses.length && (!(tops.length && bottoms.length) || (!active && Math.random() < 0.35));
+  const any = (slot) => items.filter((i) => slotOf(i.type) === slot);
   if (useDress) out.dress = pick(dresses);
-  else { out.top = pick(tops); out.bottom = pick(bottoms); }
+  else { out.top = pick(tops.length ? tops : any('top')); out.bottom = pick(bottoms.length ? bottoms : any('bottom')); } // (nothing tagged for it in one half: any of that half, never a top on its own)
+  if (out.top && !out.bottom) { const d = dresses.length ? dresses : any('dress'); delete out.top; if (d.length) out.dress = pick(d); } // (no bottoms at all yet: a dress, or nothing)
   const wantOuter = band ? band === 'cold' || band === 'cool' || rain >= 50 : Math.random() < 0.5; // layers when it's chilly or wet
   for (const s of ['outer', 'shoes', 'bag']) {
     if (s === 'outer' && !wantOuter && band) continue;
