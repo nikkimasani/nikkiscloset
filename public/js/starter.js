@@ -14,7 +14,7 @@ export const isStarter = (i) => i?.source === 'starter';
 /** Pieces of a batch not yet in your closet (approved ones are skipped, so a batch can be topped up later). */
 /** The pieces of a batch not in the closet yet. A flat-lay piece made before pieces were drawn on the model counts as missing, so it's
  *  made again on her (approving the new one replaces it). */
-export const missingIn = (batch, items) => { const have = new Set(items.filter((i) => i.worn || !isWornType(i.type)).map((i) => i.starterId).filter(Boolean)); return ITEMS.filter((i) => i.batch === batch && !have.has(i.id)); };
+export const missingIn = (batch, items) => { const have = new Set(items.filter((i) => i.worn || i.wornLazy || !isWornType(i.type)).map((i) => i.starterId).filter(Boolean)); return ITEMS.filter((i) => i.batch === batch && !have.has(i.id)); };
 
 const today = () => new Date().toISOString().slice(0, 10); // (a UTC day, like Cloudflare's allowance)
 export const nextReset = (now = Date.now()) => { const d = new Date(now); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1); };
