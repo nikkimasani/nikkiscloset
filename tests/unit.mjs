@@ -578,6 +578,13 @@ test('Style me can use starter pieces but prefers your own', async () => {
   assert.ok(own > 280 && own < 400, `own picked ${own}/400`);
   assert.equal(styleMe([st, b], 'Brunch').top.id, 's', 'a starter piece fills the gap when you have nothing');
 });
+test('Style me never makes a look of a top on its own', async () => {
+  const { styleMe } = await import('../public/js/stylist.js');
+  const t = { id: 't', type: 'tops', occasions: ['Brunch'] }, b = { id: 'b', type: 'bottoms', occasions: ['Work / Office'] }, d = { id: 'd', type: 'dresses', occasions: [] };
+  for (let k = 0; k < 50; k++) { const o = styleMe([t, b], 'Brunch'); assert.equal(o.bottom?.id, 'b', 'a bottom not tagged for it still goes with the top'); }
+  for (let k = 0; k < 20; k++) { const o = styleMe([t, d], 'Brunch'); assert.ok(!o.top && o.dress?.id === 'd', 'no bottoms at all: a dress instead'); }
+  assert.ok(!styleMe([t], 'Brunch').top, 'nothing to go with the top: no look');
+});
 test('accessories and bags snap to their body points: earrings split onto both ears, a watch on the wrist', () => {
   const earrings = mkItem('e', 'accessories', { acc: 'earrings' }), meta = new Map([['e', { iw: 200, ih: 100 }], ['w', { iw: 100, ih: 100 }]]);
   const svg = dollSVG({ pack, items: { acc: earrings }, urls: new Map([['e', 'blob:e']]), meta });
