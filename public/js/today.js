@@ -39,7 +39,7 @@ function build(c) {
   const more = fromPins.length < 3 ? dailyLooks(S.items, { ...opts, n: 3 - fromPins.length, recent: new Set([...recent, ...fromPins.flatMap((o) => idsOf(o.look))]) }) : [];
   Object.assign(S.today, {
     looks: [...fromPins.map((o) => o.look), ...more], pins: [...fromPins.map((o) => o.pin), ...more.map(() => null)],
-    tucks: [...fromPins.map((o) => o.tuck), ...more.map((o) => tuckFor(o))], seenPins: [...new Set([...(S.today.seenPins || []), ...fromPins.map((o) => o.pin.id)])],
+    tucks: [...fromPins.map((o) => o.tuck), ...more.map((o) => tuckFor(o))], missing: [...fromPins.map((o) => o.missing || []), ...more.map(() => [])], seenPins: [...new Set([...(S.today.seenPins || []), ...fromPins.map((o) => o.pin.id)])],
     date: today, band: b.band, key: lookKey(c),
   });
   for (const o of fromPins) shownAt[o.pin.id] = today;
@@ -54,7 +54,7 @@ function build(c) {
 const lookKey = (c) => `${c.iso(new Date())}|${c.S.today.ask}|${c.S.today.occ}`;
 function save(c) {
   const t = c.S.today;
-  c.store.set('todaylooks', JSON.stringify({ key: t.key, band: t.band ?? null, looks: t.looks.map((o) => Object.fromEntries(Object.entries(o).map(([s, p]) => [s, p.id]))), pins: t.pins.map((p) => p?.id || ''), tucks: t.tucks, seenPins: t.seenPins }));
+  c.store.set('todaylooks', JSON.stringify({ key: t.key, band: t.band ?? null, looks: t.looks.map((o) => Object.fromEntries(Object.entries(o).map(([s, p]) => [s, p.id]))), pins: t.pins.map((p) => p?.id || ''), tucks: t.tucks, missing: t.missing || [], seenPins: t.seenPins }));
 }
 /** Today's looks as she last saw them (reopening the app shows the same ones at once, with nothing to work out). */
 function restore(c) {
@@ -63,7 +63,7 @@ function restore(c) {
   const byId = new Map(c.S.items.map((i) => [i.id, i])), pinById = new Map(PINS.map((p) => [p.id, p]));
   const looks = saved.looks.map((o) => Object.fromEntries(Object.entries(o).map(([s, id]) => [s, byId.get(id)])));
   if (!looks.length || looks.some((o) => Object.values(o).some((p) => !p))) return false; // (a piece was deleted since)
-  Object.assign(t, { looks, pins: saved.pins.map((id) => pinById.get(id) || null), tucks: saved.tucks || [], seenPins: saved.seenPins || [], date: c.iso(new Date()), band: saved.band ?? undefined, key: saved.key });
+  Object.assign(t, { looks, pins: saved.pins.map((id) => pinById.get(id) || null), tucks: saved.tucks || [], missing: saved.missing || [], seenPins: saved.seenPins || [], date: c.iso(new Date()), band: saved.band ?? undefined, key: saved.key });
   return true;
 }
 
@@ -107,7 +107,7 @@ function lookCard(c, o, i) {
   const tk = o.top && o.bottom && typeof tuck === 'boolean' ? (tuck ? '1' : '0') : '';
   return `<article class="panel t-look" aria-label="Look ${i + 1}: ${esc(names)}">
     ${board ? `<p class="t-src muted">From your Pinterest · ${esc(BOARD_NAMES[board] || board.replace(/-/g, ' '))} · <a href="https://www.pinterest.com/pin/${encodeURIComponent(pin.id)}/" target="_blank" rel="noopener">See the pin</a></p>
-      <p class="t-recipe muted"><small>The pin: ${esc(pin.pieces.map((x) => x.name.toLowerCase()).join(', ').replace(/^./, (m) => m.toUpperCase()))}</small></p>` : ''}
+      <p class="t-recipe muted"><small>The pin: ${esc(pin.pieces.map((x) => x.name.toLowerCase()).join(', ').replace(/^./, (m) => m.toUpperCase()))}</small>${c.S.today.missing?.[i]?.length ? `<br><small class="t-gap">Not in your wardrobe yet: ${esc(c.S.today.missing[i].map((m) => m.toLowerCase()).join(', '))}</small>` : ''}</p>` : ''}
     <div class="t-fig" aria-hidden="true" data-fig="${esc(ids.join(','))}"${tk ? ` data-tuck="${tk}"` : ''}>${figure(ids, 'mini', tk ? { tuck: tk === '1' } : {}) || ''}</div>
     <div class="t-pieces">${pieces.map(([s, p]) => `<div class="t-piece"><img src="${url(p.id)}" alt="" loading="lazy"><span class="grow"><small class="muted">${esc(SLOT_LABEL[s] || s)}</small><br>${esc(p.name)}</span>
       <span class="t-btns"><button class="ghost t-swap" data-act="todayswap" data-i="${i}" data-v="${s}" aria-label="Swap the ${esc(p.name)}"><span aria-hidden="true">⟳</span></button>${DROPPABLE.includes(s) ? `<button class="ghost t-swap" data-act="todaydrop" data-i="${i}" data-v="${s}" aria-label="Remove the ${esc(p.name)}"><span aria-hidden="true">✕</span></button>` : ''}</span></div>`).join('')}</div>
@@ -145,9 +145,9 @@ export const todayActs = {
     const opts = { occasion: b.occasion, wearCounts: c.wearCounts(), band: b.band, rain: b.rain, prefs: prefsOf(c), recent: others, shown, n: 1 };
     const [p] = pinLooks(c.S.items, PINS.filter((x) => !seen.includes(x.id)), opts); // the next pin she hasn't seen today
     const fresh = p ? p.look : dailyLooks(c.S.items, opts)[0];
-    t.pins ||= []; t.tucks ||= [];
+    t.pins ||= []; t.tucks ||= []; t.missing ||= [];
     if (p) seen.push(p.pin.id);
-    if (fresh) { t.looks[i] = fresh; t.pins[i] = p ? p.pin : null; t.tucks[i] = p ? p.tuck : tuckFor(fresh); } else { t.looks.splice(i, 1); t.pins.splice(i, 1); t.tucks.splice(i, 1); }
+    if (fresh) { t.looks[i] = fresh; t.pins[i] = p ? p.pin : null; t.tucks[i] = p ? p.tuck : tuckFor(fresh); t.missing[i] = p ? p.missing || [] : []; } else { t.looks.splice(i, 1); t.pins.splice(i, 1); t.tucks.splice(i, 1); t.missing.splice(i, 1); }
     save(c); renderToday(c);
   },
   async todaytry(c, el) { const o = look(c, el); await tuckAsLook(c, el); c.S.outfit = Object.fromEntries(Object.values(o).map((p) => [wornSlot(p), p.id])); c.S.pop = true; c.go('tryon'); },

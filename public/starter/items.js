@@ -3,6 +3,7 @@
 // its id is made from its name, so keep names unique. Each row: [name, type, colours, warmth, occasions, extra detail for the prompt].
 // warmth: light / all / warm. occasions: C casual, W work, D date night, B brunch, E event, A workout, L lounge. The wider wardrobe is in wardrobe.js.
 import { WARDROBE_ROWS, STAPLE_ROWS, EXTRA_OCC } from './wardrobe.js';
+import { PIN_ROWS } from './pin-pieces.js'; // (pieces from her pins that nothing in the wardrobe was close to)
 export const STYLE = 'chic neutral casual and polished workwear; cream, ivory, beige, camel, chocolate brown, black, white, olive, champagne and denim';
 export const OCC = { C: 'Casual Outing', W: 'Work / Office', D: 'Date Night', B: 'Brunch', E: 'Formal / Event', A: 'Workout', L: 'Lounge' };
 /** A stable seed for each category. */
@@ -178,7 +179,7 @@ export function accKindOf(name, type) {
 /** Every starter piece: { id, batch, name, type, acc?, colors, season, occasions, detail, seed }. */
 const taken = new Set(Object.keys(ROWS).flatMap((b) => [...ROWS[b], ...(WARDROBE_ROWS[b] || [])].map(([name]) => slug(name))));
 const staples = (batch) => (STAPLE_ROWS[batch] || []).filter(([name]) => !taken.has(slug(name))); // (a colour a named row already has is skipped)
-export const ITEMS = Object.entries(ROWS).map(([batch, rows]) => [batch, [...rows, ...(WARDROBE_ROWS[batch] || []), ...staples(batch)]]).flatMap(([batch, rows], b) => rows.map(([name, type, colors, season, occ, detail], k) => ({
+export const ITEMS = Object.entries(ROWS).map(([batch, rows]) => [batch, [...rows, ...(WARDROBE_ROWS[batch] || []), ...staples(batch), ...pinRows(batch, [...rows, ...(WARDROBE_ROWS[batch] || []), ...staples(batch)])]]).flatMap(([batch, rows], b) => rows.map(([name, type, colors, season, occ, detail], k) => ({
   id: 'starter-' + slug(name), batch, name, type, acc: accKindOf(name, type), colors: colors.split(','), season, occasions: [...new Set([...occ, ...(EXTRA_OCC[name.toLowerCase()] || '')])].map((c) => OCC[c]), detail,
   seed: SEEDS[batch] + k, // a stable seed per category (plus the piece's place in it), so a batch looks like one set and remakes are repeatable
 })));
@@ -186,6 +187,8 @@ export const starterItem = (id) => ITEMS.find((i) => i.id === id) || null;
 /** The seed for a piece's n-th try: the stable one first, then a fixed step for each automatic or manual remake. */
 export const seedFor = (it, attempt = 0) => (it.seed + attempt * 7919) % 2147483647;
 
+/** Rows from her pins, minus any whose name the catalogue already has (ids are made from names). */
+function pinRows(batch, have) { const ids = new Set(have.map(([n]) => slug(n))); return (PIN_ROWS[batch] || []).filter(([n]) => !ids.has(slug(n))); }
 const SMALL = new Set(['shoes', 'bags', 'accessories']);
 /** The picture size (used by fal; Cloudflare's FLUX.1 schnell always makes 1024x1024): portrait for clothing, square for the rest. */
 export const sizeFor = (it) => (SMALL.has(it.type) ? { width: 1024, height: 1024 } : { width: 1024, height: 1365 });

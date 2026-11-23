@@ -277,6 +277,14 @@ test('a tucked top hides below the bottoms\' own waistband, out to her sides but
   assert.ok(wl > pack.points.elbowL[0] && wr < pack.points.elbowR[0], 'her arms are outside the cut');
 });
 
+test('a tucked top keeps its sleeves: drawn again inside her forearms, elbow to hand, with no id of its own', () => {
+  const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls });
+  const clip = svg.match(/<clipPath id="armclip-\d+"><path d="([^"]+)"\/>/); assert.ok(clip, 'an arm clip');
+  assert.equal((clip[1].match(/M/g) || []).length, 2, 'one band for each forearm');
+  assert.equal((svg.match(/data-slot="top"/g) || []).length, 1, 'the top is still one piece to tap');
+  assert.ok(!/armclip/.test(dollSVG({ pack, items: { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms') }, urls })), 'an untucked top is drawn once');
+});
+
 test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
   const top = new Int16Array(40).fill(-1); for (let x = 5; x < 35; x++) top[x] = 190 - Math.abs(x - 20); // (higher at the sides, lower in the middle)
   const d = tuckCut(pack, null, { k: 4, top }), ys = [...d.matchAll(/(\d+(?:\.\d+)?) (\d+(?:\.\d+)?)/g)].map((m) => [+m[1], +m[2]]);
