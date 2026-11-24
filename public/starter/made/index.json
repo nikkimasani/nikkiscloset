@@ -1,5 +1,5 @@
 {
- "version": 1795421678176,
+ "version": 1795481559064,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -34644,15 +34644,969 @@
     "#ab5386"
    ],
    "t": 1795421678176
+  },
+  "starter-white-quilted-chain-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#8b8b8b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#8b8b8b",
+    "#ebe9e6"
+   ],
+   "t": 1795481228383
+  },
+  "starter-sage-top-handle-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#bbc8b4",
+    "name": "Sage"
+   },
+   "colors": [
+    "#bbc8b4",
+    "#e9e9e9",
+    "#87977a"
+   ],
+   "t": 1795481247276
+  },
+  "starter-white-mini-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#ebebe9",
+    "name": "White"
+   },
+   "colors": [
+    "#ebebe9"
+   ],
+   "t": 1795481257662
+  },
+  "starter-gold-mini-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#daa65a",
+    "name": "Camel"
+   },
+   "colors": [
+    "#daa65a",
+    "#c37c2a",
+    "#f4d484"
+   ],
+   "t": 1795481263695
+  },
+  "starter-sage-green-racerback-workout-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 266,
+    "y": 296,
+    "w": 362,
+    "h": 524
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a5bca7",
+    "name": "Sage"
+   },
+   "colors": [
+    "#a5bca7",
+    "#768a78"
+   ],
+   "t": 1795481271676
+  },
+  "starter-cream-baggy-sweatpants": {
+   "kind": "worn",
+   "box": {
+    "x": 144,
+    "y": 660,
+    "w": 612,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e9e6d6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e9e6d6"
+   ],
+   "t": 1795481275904
+  },
+  "starter-espresso-long-sleeve-maxi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 304,
+    "w": 626,
+    "h": 1396
+   },
+   "v": 5,
+   "color": {
+    "hex": "#563928",
+    "name": "Brown"
+   },
+   "colors": [
+    "#563928"
+   ],
+   "t": 1795481279747
+  },
+  "starter-oatmeal-sheath-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 304,
+    "w": 454,
+    "h": 1402
+   },
+   "v": 5,
+   "color": {
+    "hex": "#cbb9a3",
+    "name": "Beige"
+   },
+   "colors": [
+    "#cbb9a3",
+    "#a9745a",
+    "#784939"
+   ],
+   "t": 1795481284189
+  },
+  "starter-beige-button-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 122,
+    "y": 276,
+    "w": 650,
+    "h": 708
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5bba6",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d5bba6",
+    "#a78a77",
+    "#775948"
+   ],
+   "t": 1795481287759
+  },
+  "starter-nude-strappy-stilettos": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 1534,
+    "w": 446,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c49a88",
+    "name": "Camel"
+   },
+   "colors": [
+    "#c49a88",
+    "#956a58",
+    "#684b45",
+    "#e8e6e6"
+   ],
+   "t": 1795481291264
+  },
+  "starter-black-patent-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 1588,
+    "w": 438,
+    "h": 158
+   },
+   "v": 5,
+   "color": {
+    "hex": "#050403",
+    "name": "Black"
+   },
+   "colors": [
+    "#050403",
+    "#aa7456"
+   ],
+   "t": 1795481297965
+  },
+  "starter-pink-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 252,
+    "y": 1534,
+    "w": 426,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f6b5b7",
+    "name": "Blush"
+   },
+   "colors": [
+    "#f6b5b7",
+    "#d4a38c",
+    "#aa7765",
+    "#c47b83"
+   ],
+   "t": 1795481301716
+  },
+  "starter-brown-crescent-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#da9655",
+    "name": "Tan"
+   },
+   "colors": [
+    "#da9655",
+    "#b86b26"
+   ],
+   "t": 1795481307765
+  },
+  "starter-blush-pink-racerback-workout-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 268,
+    "y": 292,
+    "w": 360,
+    "h": 450
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8bbc4",
+    "name": "Pink"
+   },
+   "colors": [
+    "#f8bbc4",
+    "#d98a96"
+   ],
+   "t": 1795481332128
+  },
+  "starter-oatmeal-baggy-sweatpants": {
+   "kind": "worn",
+   "box": {
+    "x": 162,
+    "y": 660,
+    "w": 550,
+    "h": 1046
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b9957b",
+    "name": "Camel"
+   },
+   "colors": [
+    "#b9957b",
+    "#89644a"
+   ],
+   "t": 1795481335130
+  },
+  "starter-stone-sheath-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 238,
+    "y": 288,
+    "w": 424,
+    "h": 820
+   },
+   "v": 5,
+   "color": {
+    "hex": "#97867a",
+    "name": "Grey"
+   },
+   "colors": [
+    "#97867a",
+    "#66544b"
+   ],
+   "t": 1795481338223
+  },
+  "starter-espresso-sheath-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 236,
+    "y": 296,
+    "w": 444,
+    "h": 1008
+   },
+   "v": 5,
+   "color": {
+    "hex": "#371d17",
+    "name": "Black"
+   },
+   "colors": [
+    "#371d17"
+   ],
+   "t": 1795481341537
+  },
+  "starter-cream-ribbed-balloon-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 106,
+    "y": 292,
+    "w": 678,
+    "h": 1112
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f7f5eb",
+    "name": "White"
+   },
+   "colors": [
+    "#f7f5eb",
+    "#bbb7a9"
+   ],
+   "t": 1795481344600
+  },
+  "starter-nude-ankle-strap-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 234,
+    "y": 1534,
+    "w": 428,
+    "h": 214
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b98876",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b98876",
+    "#d5b6a5",
+    "#7a5449"
+   ],
+   "t": 1795481348127
+  },
+  "starter-black-square-toe-mules": {
+   "kind": "worn",
+   "box": {
+    "x": 212,
+    "y": 1616,
+    "w": 466,
+    "h": 130
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161514",
+    "name": "Black"
+   },
+   "colors": [
+    "#161514",
+    "#a86a55"
+   ],
+   "t": 1795481353684
+  },
+  "starter-tan-flat-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 1618,
+    "w": 460,
+    "h": 128
+   },
+   "v": 5,
+   "color": {
+    "hex": "#965733",
+    "name": "Rust"
+   },
+   "colors": [
+    "#965733",
+    "#a78667",
+    "#593826",
+    "#271c17"
+   ],
+   "t": 1795481358483
+  },
+  "starter-brown-leather-belt": {
+   "kind": "photo",
+   "color": {
+    "hex": "#963a15",
+    "name": "Rust"
+   },
+   "colors": [
+    "#963a15",
+    "#280501",
+    "#040201",
+    "#460a02"
+   ],
+   "t": 1795481380136
+  },
+  "starter-chocolate-brown-baggy-sweatpants": {
+   "kind": "worn",
+   "box": {
+    "x": 160,
+    "y": 674,
+    "w": 562,
+    "h": 1032
+   },
+   "v": 5,
+   "color": {
+    "hex": "#46221d",
+    "name": "Brown"
+   },
+   "colors": [
+    "#46221d",
+    "#1a0805"
+   ],
+   "t": 1795481393402
+  },
+  "starter-mocha-sheath-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 296,
+    "w": 452,
+    "h": 910
+   },
+   "v": 5,
+   "color": {
+    "hex": "#392326",
+    "name": "Black"
+   },
+   "colors": [
+    "#392326"
+   ],
+   "t": 1795481397004
+  },
+  "starter-ecru-sheath-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 304,
+    "w": 452,
+    "h": 966
+   },
+   "v": 5,
+   "color": {
+    "hex": "#dbd7ca",
+    "name": "Cream"
+   },
+   "colors": [
+    "#dbd7ca",
+    "#b5a999"
+   ],
+   "t": 1795481401613
+  },
+  "starter-black-cropped-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 298,
+    "w": 622,
+    "h": 588
+   },
+   "v": 5,
+   "color": {
+    "hex": "#090908",
+    "name": "Black"
+   },
+   "colors": [
+    "#090908"
+   ],
+   "t": 1795481405400
+  },
+  "starter-white-chunky-sneakers": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 1568,
+    "w": 502,
+    "h": 178
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e8e7e7",
+    "name": "White"
+   },
+   "colors": [
+    "#e8e7e7",
+    "#b9b8b7"
+   ],
+   "t": 1795481411380
+  },
+  "starter-beige-sneakers": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 1566,
+    "w": 500,
+    "h": 180
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d4b897",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d4b897",
+    "#a98967",
+    "#e6e6eb"
+   ],
+   "t": 1795481414041
+  },
+  "starter-white-structured-top-handle-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#ebe8e5",
+    "name": "White"
+   },
+   "colors": [
+    "#ebe8e5",
+    "#bbb7b4",
+    "#65656a"
+   ],
+   "t": 1795481421491
+  },
+  "starter-brown-structured-top-handle-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#c46537",
+    "name": "Rust"
+   },
+   "colors": [
+    "#c46537"
+   ],
+   "t": 1795481426604
+  },
+  "starter-beige-bucket-hat": {
+   "kind": "photo",
+   "color": {
+    "hex": "#aaaaaa",
+    "name": "Grey"
+   },
+   "colors": [
+    "#aaaaaa",
+    "#f8f5e9",
+    "#494847",
+    "#787878"
+   ],
+   "t": 1795481438031
+  },
+  "starter-chocolate-brown-racerback-workout-tank": {
+   "kind": "worn",
+   "box": {
+    "x": 268,
+    "y": 294,
+    "w": 356,
+    "h": 462
+   },
+   "v": 5,
+   "color": {
+    "hex": "#58322d",
+    "name": "Brown"
+   },
+   "colors": [
+    "#58322d",
+    "#27140d"
+   ],
+   "t": 1795481444861
+  },
+  "starter-sage-green-baggy-sweatpants": {
+   "kind": "worn",
+   "box": {
+    "x": 188,
+    "y": 666,
+    "w": 532,
+    "h": 1036
+   },
+   "v": 5,
+   "color": {
+    "hex": "#75a59c",
+    "name": "Sage"
+   },
+   "colors": [
+    "#75a59c",
+    "#486a64"
+   ],
+   "t": 1795481448128
+  },
+  "starter-white-sweater-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 238,
+    "w": 618,
+    "h": 1074
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f7f7f6",
+    "name": "White"
+   },
+   "colors": [
+    "#f7f7f6",
+    "#b8b9b8"
+   ],
+   "t": 1795481454152
+  },
+  "starter-camel-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 124,
+    "y": 302,
+    "w": 646,
+    "h": 682
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c57a4b",
+    "name": "Tan"
+   },
+   "colors": [
+    "#c57a4b",
+    "#683619"
+   ],
+   "t": 1795481457368
+  },
+  "starter-black-pointed-ankle-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 232,
+    "y": 1534,
+    "w": 444,
+    "h": 210
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080808",
+    "name": "Black"
+   },
+   "colors": [
+    "#080808",
+    "#383835"
+   ],
+   "t": 1795481460287
+  },
+  "starter-brown-pointed-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 228,
+    "y": 1534,
+    "w": 456,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472518",
+    "name": "Brown"
+   },
+   "colors": [
+    "#472518",
+    "#453537"
+   ],
+   "t": 1795481463104
+  },
+  "starter-brown-suede-knee-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 1168,
+    "w": 450,
+    "h": 578
+   },
+   "v": 5,
+   "color": {
+    "hex": "#391404",
+    "name": "Brown"
+   },
+   "colors": [
+    "#391404",
+    "#662c14",
+    "#190701"
+   ],
+   "t": 1795481466768
+  },
+  "starter-black-small-shoulder-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#fdfdfd",
+    "name": "White"
+   },
+   "colors": [
+    "#fdfdfd",
+    "#262626"
+   ],
+   "t": 1795481480228
+  },
+  "starter-silver-small-hoops": {
+   "kind": "photo",
+   "color": {
+    "hex": "#d7d7d7",
+    "name": "Silver"
+   },
+   "colors": [
+    "#d7d7d7",
+    "#aaaaaa"
+   ],
+   "t": 1795481484468
+  },
+  "starter-gold-statement-earrings": {
+   "kind": "photo",
+   "color": {
+    "hex": "#faf5e9",
+    "name": "White"
+   },
+   "colors": [
+    "#faf5e9",
+    "#f8d687",
+    "#f7e8b8"
+   ],
+   "t": 1795481488583
+  },
+  "starter-navy-baggy-sweatpants": {
+   "kind": "worn",
+   "box": {
+    "x": 154,
+    "y": 646,
+    "w": 576,
+    "h": 1060
+   },
+   "v": 5,
+   "color": {
+    "hex": "#19224b",
+    "name": "Navy"
+   },
+   "colors": [
+    "#19224b",
+    "#080819"
+   ],
+   "t": 1795481500814
+  },
+  "starter-cream-sweater-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 236,
+    "w": 624,
+    "h": 1094
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f5f2eb",
+    "name": "White"
+   },
+   "colors": [
+    "#f5f2eb"
+   ],
+   "t": 1795481504580
+  },
+  "starter-beige-sweater-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 132,
+    "y": 236,
+    "w": 634,
+    "h": 1470
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c9b7a7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c9b7a7",
+    "#9a8578"
+   ],
+   "t": 1795481507568
+  },
+  "starter-chocolate-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 282,
+    "w": 638,
+    "h": 702
+   },
+   "v": 5,
+   "color": {
+    "hex": "#361b1a",
+    "name": "Black"
+   },
+   "colors": [
+    "#361b1a"
+   ],
+   "t": 1795481510467
+  },
+  "starter-black-knee-high-stiletto-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 228,
+    "y": 1228,
+    "w": 430,
+    "h": 520
+   },
+   "v": 5,
+   "color": {
+    "hex": "#090a0b",
+    "name": "Black"
+   },
+   "colors": [
+    "#090a0b",
+    "#383835"
+   ],
+   "t": 1795481513178
+  },
+  "starter-brown-lace-up-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 1534,
+    "w": 488,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#794935",
+    "name": "Brown"
+   },
+   "colors": [
+    "#794935",
+    "#483729",
+    "#040206"
+   ],
+   "t": 1795481516028
+  },
+  "starter-black-ballet-flats": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 1608,
+    "w": 468,
+    "h": 138
+   },
+   "v": 5,
+   "color": {
+    "hex": "#080805",
+    "name": "Black"
+   },
+   "colors": [
+    "#080805"
+   ],
+   "t": 1795481518559
+  },
+  "starter-gold-metallic-clutch-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#d8a935",
+    "name": "Gold"
+   },
+   "colors": [
+    "#d8a935",
+    "#f6d558"
+   ],
+   "t": 1795481526679
+  },
+  "starter-gold-huggie-earrings": {
+   "kind": "photo",
+   "color": {
+    "hex": "#f8c669",
+    "name": "Yellow"
+   },
+   "colors": [
+    "#f8c669",
+    "#fdf797",
+    "#c89a48",
+    "#fdfac8"
+   ],
+   "t": 1795481531883
+  },
+  "starter-dainty-gold-necklace": {
+   "kind": "photo",
+   "color": {
+    "hex": "#fa7ab4",
+    "name": "Hot Pink"
+   },
+   "colors": [
+    "#fa7ab4",
+    "#f94a85",
+    "#f50347",
+    "#f8d8e4",
+    "#fab7d5"
+   ],
+   "t": 1795481536966
+  },
+  "starter-mocha-baggy-sweatpants": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 668,
+    "w": 514,
+    "h": 1038
+   },
+   "v": 5,
+   "color": {
+    "hex": "#291617",
+    "name": "Black"
+   },
+   "colors": [
+    "#291617",
+    "#583437"
+   ],
+   "t": 1795481549592
+  },
+  "starter-chocolate-brown-sweater-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 238,
+    "w": 626,
+    "h": 1332
+   },
+   "v": 5,
+   "color": {
+    "hex": "#271915",
+    "name": "Black"
+   },
+   "colors": [
+    "#271915"
+   ],
+   "t": 1795481553034
+  },
+  "starter-navy-sweater-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 104,
+    "y": 236,
+    "w": 668,
+    "h": 1114
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171348",
+    "name": "Navy"
+   },
+   "colors": [
+    "#171348",
+    "#090529"
+   ],
+   "t": 1795481556272
+  },
+  "starter-white-cable-cardigan": {
+   "kind": "worn",
+   "box": {
+    "x": 122,
+    "y": 298,
+    "w": 646,
+    "h": 588
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eaeae9",
+    "name": "White"
+   },
+   "colors": [
+    "#eaeae9",
+    "#bab9b7"
+   ],
+   "t": 1795481559064
   }
  },
  "failed": {
   "starter-beige-quilted-crossbody": [
    "skin-coloured areas (a person or a body form?)",
-   "a light piece on a white background (it can’t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-straw-beach-tote": [
+   "more than the item in the picture (text, a hanger or a prop?)",
    "skin-coloured areas (a person or a body form?)",
    "a light piece on a form: the form could not be removed automatically"
   ],
@@ -34661,28 +35615,19 @@
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-gold-pendant-necklace": [
-   "item is missing or tiny",
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+   "item is missing or tiny"
   ],
   "starter-tortoiseshell-sunglasses": [
-   "a white or grey body shape (a dress form?)"
-  ],
-  "starter-brown-oversized-sunglasses": [
-   "a white or grey body shape (a dress form?)"
-  ],
-  "starter-brown-leather-belt": [
-   "a white or grey body shape (a dress form?)"
-  ],
-  "starter-tortoiseshell-claw-clip": [
-   "more than the item in the picture (text, a hanger or a prop?)",
    "a white patch at the top or bottom edge (a form’s neck or stand?)",
    "a white or grey body shape (a dress form?)"
   ],
-  "starter-beige-bucket-hat": [
-   "a light piece on a white background (it can’t be cut out cleanly)"
+  "starter-brown-oversized-sunglasses": [
+   "more than the item in the picture (text, a hanger or a prop?)",
+   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "colour doesn’t look brown"
   ],
-  "starter-brown-crescent-bag": [
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+  "starter-tortoiseshell-claw-clip": [
+   "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-sequin-cami": [
    "taken out on review: cut out in shreds, twice"
@@ -34702,50 +35647,53 @@
   "starter-tan-scoop-bodysuit": [
    "taken out on review: pale arms kept with the piece, twice"
   ],
-  "starter-espresso-long-sleeve-maxi-dress": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (eae8beb5-7a34-46d3-9cff-c861359c2af3)"
-  ],
   "starter-clear-pointed-heels": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (40125841-b6dd-4aee-a259-7b4ffdb9d563)"
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (f87f6165-6852-40b3-b9ec-d1c258fd76d7)"
   ],
-  "starter-black-cropped-cardigan": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (47183511-678c-47fe-845d-c63c9891e6ff)"
+  "starter-clear-pointed-toe-heels": [
+   "the piece barely shows (it may not have dressed her)"
   ],
-  "starter-white-structured-top-handle-bag": [
-   "more than the item in the picture (text, a hanger or a prop?)"
+  "starter-taupe-quilted-chain-bag": [
+   "a light piece on a white background (it can’t be cut out cleanly)",
+   "a light piece on a form: the form could not be removed automatically"
   ],
-  "starter-white-quilted-chain-bag": [
-   "more than the item in the picture (text, a hanger or a prop?)"
+  "starter-brown-suede-shoulder-bag": [
+   "a white or grey body shape (a dress form?)"
   ],
-  "starter-beige-button-cardigan": [
-   "a bare torso and shorts kept inside the open cardigan (left out by review)"
+  "starter-beige-envelope-clutch": [
+   "skin-coloured areas (a person or a body form?)",
+   "a light piece on a form: the form could not be removed automatically"
   ],
-  "starter-black-patent-pumps": [
-   "only fragments of the shoes (left out by review)"
+  "starter-beige-mini-top-handle-bag": [
+   "skin-coloured areas (a person or a body form?)",
+   "a light piece on a white background (it can’t be cut out cleanly)",
+   "a light piece on a form: the form could not be removed automatically"
   ],
-  "starter-black-square-toe-mules": [
-   "tangled shapes, not mules (left out by review)"
+  "starter-tan-woven-tote": [
+   "skin-coloured areas (a person or a body form?)"
   ],
-  "starter-pink-pointed-pumps": [
-   "fuzzy toe caps, not pumps (left out by review)"
+  "starter-navy-racerback-workout-tank": [
+   "it added shorts or trousers to the top"
   ],
-  "starter-nude-ankle-strap-heels": [
-   "mostly her skin, the shoe blends in (left out by review)"
+  "starter-black-flat-slides": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (5503e90d-4b0b-46f7-a389-7ea2eb7e3c51)"
   ],
-  "starter-nude-strappy-stilettos": [
-   "mostly her skin, the shoe blends in (left out by review)"
+  "starter-black-sweater-dress": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (d6be871c-e135-4159-a0b4-77a71b3d4a30)"
   ],
-  "starter-brown-structured-top-handle-bag": [
-   "ragged, the handles missing (left out by review)"
+  "starter-beige-chain-shoulder-bag": [
+   "skin-coloured areas (a person or a body form?)",
+   "a light piece on a form: the form could not be removed automatically"
   ],
-  "starter-silver-small-hoops": [
-   "grey claw shapes, not hoops (left out by review)"
+  "starter-black-long-sleeve-workout-top": [
+   "it added shorts or trousers to the top"
   ],
-  "starter-camel-cardigan": [
-   "matching shorts and a bare chest kept with the cardigan (left out by review)"
+  "starter-brown-small-shoulder-bag": [
+   "more than the item in the picture (text, a hanger or a prop?)",
+   "a white patch at the top or bottom edge (a form’s neck or stand?)"
   ],
-  "starter-cream-ribbed-balloon-cardigan": [
-   "matching leggings kept with the cardigan (left out by review)"
+  "starter-grey-long-sleeve-workout-top": [
+   "it added shorts or trousers to the top"
   ]
  },
  "blocked": {
