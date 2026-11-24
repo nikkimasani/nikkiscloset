@@ -1,5 +1,5 @@
 {
- "version": 1795481559064,
+ "version": 1795515986998,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -35474,6 +35474,63 @@
     "#bab9b7"
    ],
    "t": 1795481559064
+  },
+  "starter-multicolor-floral-corset-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 392,
+    "w": 498,
+    "h": 582
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e85887",
+    "name": "Hot Pink"
+   },
+   "colors": [
+    "#e85887",
+    "#f7d8e9",
+    "#f787b7",
+    "#aa7557",
+    "#c86888"
+   ],
+   "t": 1795515951700
+  },
+  "starter-clear-pointed-toe-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 1668,
+    "w": 462,
+    "h": 76
+   },
+   "v": 5,
+   "color": {
+    "hex": "#976855",
+    "name": "Brown"
+   },
+   "colors": [
+    "#976855",
+    "#897678",
+    "#594755",
+    "#8689ab",
+    "#6b6248"
+   ],
+   "t": 1795515959895
+  },
+  "starter-brown-suede-shoulder-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#471b09",
+    "name": "Brown"
+   },
+   "colors": [
+    "#471b09",
+    "#a5491c",
+    "#270c03"
+   ],
+   "t": 1795515972507
   }
  },
  "failed": {
@@ -35524,17 +35581,11 @@
    "taken out on review: pale arms kept with the piece, twice"
   ],
   "starter-clear-pointed-heels": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (f87f6165-6852-40b3-b9ec-d1c258fd76d7)"
-  ],
-  "starter-clear-pointed-toe-heels": [
-   "the piece barely shows (it may not have dressed her)"
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (12b38155-993d-4aad-856f-21c2628d1fd0)"
   ],
   "starter-taupe-quilted-chain-bag": [
-   "a light piece on a white background (it can’t be cut out cleanly)",
+   "more than the item in the picture (text, a hanger or a prop?)",
    "a light piece on a form: the form could not be removed automatically"
-  ],
-  "starter-brown-suede-shoulder-bag": [
-   "a white or grey body shape (a dress form?)"
   ],
   "starter-beige-envelope-clutch": [
    "skin-coloured areas (a person or a body form?)",
@@ -35542,7 +35593,6 @@
   ],
   "starter-beige-mini-top-handle-bag": [
    "skin-coloured areas (a person or a body form?)",
-   "a light piece on a white background (it can’t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-tan-woven-tote": [
@@ -35570,9 +35620,6 @@
   ],
   "starter-grey-long-sleeve-workout-top": [
    "it added shorts or trousers to the top"
-  ],
-  "starter-multicolor-floral-corset-bodysuit": [
-   "only scattered flowers came out, no bodysuit"
   ],
   "starter-gold-mini-bag": [
    "mostly cut away: only bits of the outline are left"
