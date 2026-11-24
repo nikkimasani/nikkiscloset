@@ -101,11 +101,25 @@ function paintSheet(html, title) {
   (prev && m.querySelector('#' + CSS.escape(prev)) || $('#mtitle', m)).focus();
 }
 
+/** Fetch the model's art; tried again a few times, and again when the phone comes back online, so one dropped download doesn't leave her blank. */
+let dollTries = 0;
+function getDoll() {
+  return loadPack().then((p) => {
+    dollPack = p; dollFailed = !p;
+    if (!p && ++dollTries < 4) { setTimeout(getDoll, 1500 * dollTries); dollFailed = false; } // (a moment later, then a bit longer)
+    if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); fillFigures();
+    return p;
+  });
+}
+addEventListener('online', () => { if (!dollPack) { dollTries = 0; getDoll(); } importPreloaded(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !dollPack && dollFailed) { dollTries = 0; getDoll(); } });
+
 async function load() {
   let profiles;
   profiles = await all('profile'); S.profile = profiles[0] || null;
   if (S.profile?.modelBase) setMyBody(url('mymodel', S.profile.modelBase), S.profile.modelAt || 1); // your own model, made with "Make my model"
-  loadPack().then((p) => { dollPack = p; dollFailed = !p; if (S.view === 'tryon' && S.scene === 'doll') renderTryon(); fillFigures(); }); // don't hold up the first screen on the doll's art
+  getDoll(); // don't hold up the first screen on the doll's art
+  try { navigator.storage?.persist?.().catch(() => {}); } catch { /* not offered */ } // (asks the browser not to clear the wardrobe when space runs low)
   [S.items, S.outfits, S.wears, S.inspos, S.plans, S.wishlist] = await Promise.all(['items', 'outfits', 'wears', 'inspos', 'plans', 'wishlist'].map(all));
   if (S.profile?.photo) url('profile', S.profile.photo);
   // starter pieces that aren't Ready never reach the closet or the model: they stay in the database until remade (their batch makes them again)
@@ -137,10 +151,16 @@ function composeWorker() {
   return (id, url, box, size) => dead ? Promise.reject(new Error('worker failed')) : new Promise((ok, no) => { waiting.set(id, [ok, no]); w.postMessage({ id, url: new URL(url, location.href).href, box, size }); setTimeout(() => waiting.has(id) && fail(), 30000); });
 }
 
-async function importPreloaded() {
+let importRunning = null, indexTries = 0;
+/** Add the preloaded wardrobe (one run at a time; the list tried again shortly when it couldn't be fetched). */
+function importPreloaded() {
+  if (!importRunning) importRunning = addPreloaded().then((got) => { importRunning = null; if (got === 'noindex' && ++indexTries < 4) setTimeout(importPreloaded, 4000 * indexTries); }, () => { importRunning = null; });
+  return importRunning;
+}
+async function addPreloaded() {
   if (store.get('hidestarter', '') === '1') return;
   if (!store.get('restore_x_v1', '')) { store.set('starter_removed', '[]'); store.set('preloaded', ''); store.set('restore_x_v1', '1'); } // (the ✕ briefly deleted pieces instead of taking them off: bring them back once)
-  let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return; idx = await r.json(); } catch { return; }
+  let idx; try { const r = await fetch('/starter/made/index.json', { cache: 'no-cache' }); if (!r.ok) return 'noindex'; idx = await r.json(); } catch { return 'noindex'; }
   if (!idx?.pieces) return;
   // a preloaded piece taken out of the wardrobe on review (now failed or blocked there) leaves the closet too; one you made yours stays
   const withdrawn = S.items.filter((i) => i.preloaded && starter.isStarter(i) && !idx.pieces[i.starterId] && (idx.failed?.[i.starterId] || idx.blocked?.[i.starterId])).map((i) => i.id);
@@ -153,7 +173,6 @@ async function importPreloaded() {
   }
   if (String(idx.version) === store.get('preloaded', '')) return;
   let removed; try { removed = new Set(JSON.parse(store.get('starter_removed', '[]'))); } catch { removed = new Set(); }
-  const pack = dollPack || await loadPack(); if (!pack) return;
   let added = 0, updated = 0;
   let busyUntil = 0;
   const pictures = async (sid, p) => { // the closet picture, and for a piece drawn on her, the piece placed on a picture the size of the model
@@ -1052,7 +1071,7 @@ function stageHTML() {
     const items = outfitItems(S.outfit), done = aiFor(items);
     return `<img class="myphoto" src="${done ? S.ai.image : url('profile')}" alt="${done ? `Your photo wearing ${Object.values(items).map((i) => i.name).join(', ')}` : 'Your photo'}">`;
   }
-  if (dollFailed) return '<p class="muted dollhint" role="alert">The model picture couldn’t load. Check your connection and reload.</p>';
+  if (dollFailed) return '<p class="muted dollhint" role="alert">The model picture couldn’t load. Check your connection, then <button class="ghost sm" data-act="dollretry">Try again</button></p>';
   if (!dollPack) return '<p class="muted dollhint" role="status">Getting the model ready…</p>';
   return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
 }
@@ -1861,6 +1880,7 @@ async function handleClick(e) {
     case 'pickmode': S.picking = !S.picking; S.pick = []; return renderCloset();
     case 'cftoggle': S.cfOpen = !S.cfOpen; return renderCloset();
     case 'cgrid': S.closetGrid = v; S.gridN = GRID_PAGE; renderCloset(); return window.scrollTo({ top: 0 });
+    case 'dollretry': dollTries = 0; dollFailed = false; renderTryon(); getDoll(); return importPreloaded();
     case 'cgridmore': S.gridN = (S.gridN || GRID_PAGE) + GRID_PAGE * 2; return renderCloset();
     case 'cgridclose': S.closetGrid = null; return renderCloset();
     case 'pickcancel': S.picking = false; S.pick = []; return S.view === 'tryon' && S.scene === 'closet' ? wicRefresh() : renderCloset();
