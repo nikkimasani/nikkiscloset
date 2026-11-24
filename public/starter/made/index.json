@@ -34386,28 +34386,6 @@
    ],
    "t": 1795395187892
   },
-  "starter-multicolor-floral-corset-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 226,
-    "y": 384,
-    "w": 426,
-    "h": 590
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fbe8fb",
-    "name": "White"
-   },
-   "colors": [
-    "#fbe8fb",
-    "#fbc8f7",
-    "#fa96c8",
-    "#fab8c7",
-    "#f969b7"
-   ],
-   "t": 1795421613796
-  },
   "starter-pink-chunky-knit-sweater": {
    "kind": "worn",
    "box": {
@@ -34681,19 +34659,6 @@
    ],
    "t": 1795481257662
   },
-  "starter-gold-mini-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#daa65a",
-    "name": "Camel"
-   },
-   "colors": [
-    "#daa65a",
-    "#c37c2a",
-    "#f4d484"
-   ],
-   "t": 1795481263695
-  },
   "starter-sage-green-racerback-workout-tank": {
    "kind": "worn",
    "box": {
@@ -34850,18 +34815,6 @@
    ],
    "t": 1795481301716
   },
-  "starter-brown-crescent-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#da9655",
-    "name": "Tan"
-   },
-   "colors": [
-    "#da9655",
-    "#b86b26"
-   ],
-   "t": 1795481307765
-  },
   "starter-blush-pink-racerback-workout-tank": {
    "kind": "worn",
    "box": {
@@ -35016,20 +34969,6 @@
    ],
    "t": 1795481358483
   },
-  "starter-brown-leather-belt": {
-   "kind": "photo",
-   "color": {
-    "hex": "#963a15",
-    "name": "Rust"
-   },
-   "colors": [
-    "#963a15",
-    "#280501",
-    "#040201",
-    "#460a02"
-   ],
-   "t": 1795481380136
-  },
   "starter-chocolate-brown-baggy-sweatpants": {
    "kind": "worn",
    "box": {
@@ -35156,17 +35095,6 @@
    ],
    "t": 1795481421491
   },
-  "starter-brown-structured-top-handle-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#c46537",
-    "name": "Rust"
-   },
-   "colors": [
-    "#c46537"
-   ],
-   "t": 1795481426604
-  },
   "starter-beige-bucket-hat": {
    "kind": "photo",
    "color": {
@@ -35256,25 +35184,6 @@
     "#683619"
    ],
    "t": 1795481457368
-  },
-  "starter-black-pointed-ankle-boots": {
-   "kind": "worn",
-   "box": {
-    "x": 232,
-    "y": 1534,
-    "w": 444,
-    "h": 210
-   },
-   "v": 5,
-   "color": {
-    "hex": "#080808",
-    "name": "Black"
-   },
-   "colors": [
-    "#080808",
-    "#383835"
-   ],
-   "t": 1795481460287
   },
   "starter-brown-pointed-boots": {
    "kind": "worn",
@@ -35465,24 +35374,6 @@
    ],
    "t": 1795481516028
   },
-  "starter-black-ballet-flats": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 1608,
-    "w": 468,
-    "h": 138
-   },
-   "v": 5,
-   "color": {
-    "hex": "#080805",
-    "name": "Black"
-   },
-   "colors": [
-    "#080805"
-   ],
-   "t": 1795481518559
-  },
   "starter-gold-metallic-clutch-bag": {
    "kind": "photo",
    "color": {
@@ -35508,21 +35399,6 @@
     "#fdfac8"
    ],
    "t": 1795481531883
-  },
-  "starter-dainty-gold-necklace": {
-   "kind": "photo",
-   "color": {
-    "hex": "#fa7ab4",
-    "name": "Hot Pink"
-   },
-   "colors": [
-    "#fa7ab4",
-    "#f94a85",
-    "#f50347",
-    "#f8d8e4",
-    "#fab7d5"
-   ],
-   "t": 1795481536966
   },
   "starter-mocha-baggy-sweatpants": {
    "kind": "worn",
@@ -35694,6 +35570,21 @@
   ],
   "starter-grey-long-sleeve-workout-top": [
    "it added shorts or trousers to the top"
+  ],
+  "starter-multicolor-floral-corset-bodysuit": [
+   "only scattered flowers came out, no bodysuit"
+  ],
+  "starter-gold-mini-bag": [
+   "mostly cut away: only bits of the outline are left"
+  ],
+  "starter-black-pointed-ankle-boots": [
+   "the boots came out ragged and broken"
+  ],
+  "starter-black-ballet-flats": [
+   "the flats came out as shapeless fragments"
+  ],
+  "starter-dainty-gold-necklace": [
+   "a rose was drawn instead of a necklace"
   ]
  },
  "blocked": {
@@ -36115,6 +36006,9 @@
   "starter-black-ankle-boots": "broken boot shapes, twice",
   "starter-brown-belt-bag": "a ragged blob, not a belt bag, twice",
   "starter-cognac-saddle-bag": "a ragged blob, not a saddle bag, twice",
-  "starter-olive-hobo-bag": "most of the bag missing, twice"
+  "starter-olive-hobo-bag": "most of the bag missing, twice",
+  "starter-brown-crescent-bag": "mostly cut away: only fragments left (failed before too)",
+  "starter-brown-leather-belt": "the belt came out broken and smeared (failed before too)",
+  "starter-brown-structured-top-handle-bag": "holes cut through the bag (failed before too)"
  }
 }
