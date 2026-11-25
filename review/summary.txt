@@ -1,4 +1,4 @@
-55 made this run · 1936 of 3146 in the wardrobe · 27 failed · stopped: today's share of the free Cloudflare allowance is used (8835 of 9000 neurons; the rest is kept for the app) (the next run carries on)
+2 made this run · 1925 of 3146 in the wardrobe · 35 failed · stopped: today's share of the free Cloudflare allowance is used (8911 of 9000 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-straw-beach-tote: more than the item in the picture (text, a hanger or a prop?); skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
@@ -11,8 +11,8 @@ starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, t
 starter-sage-satin-blouse: taken out on review: trousers added, twice
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
-starter-taupe-quilted-chain-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
-starter-beige-envelope-clutch: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
+starter-taupe-quilted-chain-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a form: the form could not be removed automatically
+starter-beige-envelope-clutch: more than the item in the picture (text, a hanger or a prop?); skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-mini-top-handle-bag: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-chain-shoulder-bag: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-brown-small-shoulder-bag: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
@@ -26,3 +26,11 @@ starter-gold-link-watch: more than the item in the picture (text, a hanger or a 
 starter-silver-link-watch: a white or grey body shape (a dress form?)
 starter-navy-long-sleeve-workout-top: it added shorts or trousers to the top
 starter-cream-mini-top-handle-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a white background (it can’t be cut out cleanly)
+starter-chocolate-wool-coat: a person shows inside the open coat, with legs below
+starter-espresso-sweater-dress: most of the dress was cut away
+starter-gold-initial-necklace: only a thin wire outline came out
+starter-black-platform-heels: only fragments of the heels came out
+starter-black-mary-janes: the shoes came out broken
+starter-navy-pointed-pumps: only the toe caps came out: the sides and backs are missing
+starter-clear-pointed-heels: the piece barely shows (it may not have dressed her)
+starter-clear-pointed-toe-heels: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (017bffcc-01cf-423f-94f1-2b129d24b154)

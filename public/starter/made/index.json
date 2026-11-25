@@ -1,5 +1,5 @@
 {
- "version": 1795568107521,
+ "version": 1795597819168,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -36301,6 +36301,39 @@
     "#bb9446"
    ],
    "t": 1795568107521
+  },
+  "starter-multicolor-floral-corset-bodysuit": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 350,
+    "w": 462,
+    "h": 624
+   },
+   "v": 5,
+   "color": {
+    "hex": "#fa97c8",
+    "name": "Pink"
+   },
+   "colors": [
+    "#fa97c8",
+    "#fbc6e9",
+    "#fae8f9",
+    "#e96899",
+    "#a73958"
+   ],
+   "t": 1795597712142
+  },
+  "starter-brown-suede-shoulder-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#53260d",
+    "name": "Brown"
+   },
+   "colors": [
+    "#53260d"
+   ],
+   "t": 1795597813064
   }
  },
  "failed": {
@@ -36349,10 +36382,10 @@
   ],
   "starter-taupe-quilted-chain-bag": [
    "more than the item in the picture (text, a hanger or a prop?)",
-   "a light piece on a white background (it can’t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-envelope-clutch": [
+   "more than the item in the picture (text, a hanger or a prop?)",
    "skin-coloured areas (a person or a body form?)",
    "a light piece on a form: the form could not be removed automatically"
   ],
@@ -36421,6 +36454,12 @@
   ],
   "starter-navy-pointed-pumps": [
    "only the toe caps came out: the sides and backs are missing"
+  ],
+  "starter-clear-pointed-heels": [
+   "the piece barely shows (it may not have dressed her)"
+  ],
+  "starter-clear-pointed-toe-heels": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (017bffcc-01cf-423f-94f1-2b129d24b154)"
   ]
  },
  "blocked": {
