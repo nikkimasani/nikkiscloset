@@ -1,30 +1,28 @@
-3 made this run · 1881 of 3146 in the wardrobe · 29 failed · stopped: today's share of the free Cloudflare allowance is used (8957 of 9000 neurons; the rest is kept for the app) (the next run carries on)
+55 made this run · 1936 of 3146 in the wardrobe · 27 failed · stopped: today's share of the free Cloudflare allowance is used (8835 of 9000 neurons; the rest is kept for the app) (the next run carries on)
 starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-straw-beach-tote: more than the item in the picture (text, a hanger or a prop?); skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
-starter-gold-pendant-necklace: item is missing or tiny
-starter-tortoiseshell-sunglasses: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
-starter-brown-oversized-sunglasses: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); colour doesn’t look brown
-starter-tortoiseshell-claw-clip: a white or grey body shape (a dress form?)
+starter-gold-pendant-necklace: item is missing or tiny; more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-tortoiseshell-sunglasses: a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-brown-oversized-sunglasses: more than the item in the picture (text, a hanger or a prop?); colour doesn’t look brown
 starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
 starter-floral-corset-top: taken out on review: torn and off colours, twice
 starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
 starter-sage-satin-blouse: taken out on review: trousers added, twice
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
-starter-clear-pointed-heels: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (12b38155-993d-4aad-856f-21c2628d1fd0)
-starter-taupe-quilted-chain-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a form: the form could not be removed automatically
+starter-taupe-quilted-chain-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
 starter-beige-envelope-clutch: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-mini-top-handle-bag: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
-starter-tan-woven-tote: skin-coloured areas (a person or a body form?)
-starter-navy-racerback-workout-tank: it added shorts or trousers to the top
-starter-black-flat-slides: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (5503e90d-4b0b-46f7-a389-7ea2eb7e3c51)
-starter-black-sweater-dress: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (d6be871c-e135-4159-a0b4-77a71b3d4a30)
 starter-beige-chain-shoulder-bag: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
-starter-black-long-sleeve-workout-top: it added shorts or trousers to the top
-starter-brown-small-shoulder-bag: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-brown-small-shoulder-bag: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-grey-long-sleeve-workout-top: it added shorts or trousers to the top
-starter-gold-mini-bag: mostly cut away: only bits of the outline are left
-starter-black-pointed-ankle-boots: the boots came out ragged and broken
-starter-black-ballet-flats: the flats came out as shapeless fragments
-starter-dainty-gold-necklace: a rose was drawn instead of a necklace
+starter-dainty-gold-necklace: item is missing or tiny
+starter-gold-chain-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-tan-straw-top-handle-bag: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-sage-green-long-sleeve-workout-top: it added shorts or trousers to the top
+starter-brown-baguette-shoulder-bag: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-gold-link-watch: more than the item in the picture (text, a hanger or a prop?); a white or grey body shape (a dress form?)
+starter-silver-link-watch: a white or grey body shape (a dress form?)
+starter-navy-long-sleeve-workout-top: it added shorts or trousers to the top
+starter-cream-mini-top-handle-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a white background (it can’t be cut out cleanly)
