@@ -35851,25 +35851,6 @@
    ],
    "t": 1795567879851
   },
-  "starter-navy-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 1666,
-    "w": 454,
-    "h": 82
-   },
-   "v": 5,
-   "color": {
-    "hex": "#151658",
-    "name": "Navy"
-   },
-   "colors": [
-    "#151658",
-    "#0b193c"
-   ],
-   "t": 1795567883358
-  },
   "starter-sage-heeled-mules": {
    "kind": "worn",
    "box": {
@@ -36437,6 +36418,9 @@
   ],
   "starter-black-mary-janes": [
    "the shoes came out broken"
+  ],
+  "starter-navy-pointed-pumps": [
+   "only the toe caps came out: the sides and backs are missing"
   ]
  },
  "blocked": {
