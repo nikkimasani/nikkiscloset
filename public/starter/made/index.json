@@ -35475,96 +35475,6 @@
    ],
    "t": 1795481559064
   },
-  "starter-multicolor-floral-corset-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 136,
-    "y": 392,
-    "w": 498,
-    "h": 582
-   },
-   "v": 5,
-   "color": {
-    "hex": "#e85887",
-    "name": "Hot Pink"
-   },
-   "colors": [
-    "#e85887",
-    "#f7d8e9",
-    "#f787b7",
-    "#aa7557",
-    "#c86888"
-   ],
-   "t": 1795515951700
-  },
-  "starter-clear-pointed-toe-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 210,
-    "y": 1668,
-    "w": 462,
-    "h": 76
-   },
-   "v": 5,
-   "color": {
-    "hex": "#976855",
-    "name": "Brown"
-   },
-   "colors": [
-    "#976855",
-    "#897678",
-    "#594755",
-    "#8689ab",
-    "#6b6248"
-   ],
-   "t": 1795515959895
-  },
-  "starter-brown-suede-shoulder-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#471b09",
-    "name": "Brown"
-   },
-   "colors": [
-    "#471b09",
-    "#a5491c",
-    "#270c03"
-   ],
-   "t": 1795515972507
-  },
-  "starter-clear-pointed-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 256,
-    "y": 1538,
-    "w": 400,
-    "h": 210
-   },
-   "v": 5,
-   "color": {
-    "hex": "#99868d",
-    "name": "Grey"
-   },
-   "colors": [
-    "#99868d",
-    "#8998b7",
-    "#f9f8fa",
-    "#cac4c7"
-   ],
-   "t": 1795567685375
-  },
-  "starter-gold-mini-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#d7a65a",
-    "name": "Camel"
-   },
-   "colors": [
-    "#d7a65a",
-    "#b87828"
-   ],
-   "t": 1795567713283
-  },
   "starter-tan-woven-tote": {
    "kind": "photo",
    "color": {
@@ -35710,24 +35620,6 @@
     "#040303"
    ],
    "t": 1795567751921
-  },
-  "starter-black-ballet-flats": {
-   "kind": "worn",
-   "box": {
-    "x": 224,
-    "y": 1656,
-    "w": 440,
-    "h": 90
-   },
-   "v": 5,
-   "color": {
-    "hex": "#060708",
-    "name": "Black"
-   },
-   "colors": [
-    "#060708"
-   ],
-   "t": 1795567755111
   },
   "starter-black-long-sleeve-workout-top": {
    "kind": "worn",
@@ -35884,20 +35776,6 @@
    ],
    "t": 1795567813272
   },
-  "starter-tortoiseshell-claw-clip": {
-   "kind": "photo",
-   "color": {
-    "hex": "#fdfdfc",
-    "name": "White"
-   },
-   "colors": [
-    "#fdfdfc",
-    "#554649",
-    "#b95a16",
-    "#281717"
-   ],
-   "t": 1795567842804
-  },
   "starter-cream-wide-leg-joggers": {
    "kind": "worn",
    "box": {
@@ -35953,25 +35831,6 @@
     "#343b47"
    ],
    "t": 1795567871031
-  },
-  "starter-chocolate-wool-coat": {
-   "kind": "worn",
-   "box": {
-    "x": 116,
-    "y": 236,
-    "w": 674,
-    "h": 1468
-   },
-   "v": 5,
-   "color": {
-    "hex": "#492815",
-    "name": "Brown"
-   },
-   "colors": [
-    "#492815",
-    "#040303"
-   ],
-   "t": 1795567874506
   },
   "starter-red-pointed-pumps": {
    "kind": "worn",
@@ -36080,24 +35939,6 @@
     "#97877b"
    ],
    "t": 1795567935899
-  },
-  "starter-espresso-sweater-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 184,
-    "y": 326,
-    "w": 460,
-    "h": 1058
-   },
-   "v": 5,
-   "color": {
-    "hex": "#1c1c1a",
-    "name": "Black"
-   },
-   "colors": [
-    "#1c1c1a"
-   ],
-   "t": 1795567939278
   },
   "starter-ecru-sweater-dress": {
    "kind": "worn",
@@ -36210,21 +36051,6 @@
    ],
    "t": 1795567966144
   },
-  "starter-gold-initial-necklace": {
-   "kind": "photo",
-   "color": {
-    "hex": "#281403",
-    "name": "Black"
-   },
-   "colors": [
-    "#281403",
-    "#533617",
-    "#c8873a",
-    "#f3e6da",
-    "#edb568"
-   ],
-   "t": 1795567978430
-  },
   "starter-pearl-necklace": {
    "kind": "photo",
    "color": {
@@ -36314,24 +36140,6 @@
     "#19191a"
    ],
    "t": 1795568013734
-  },
-  "starter-black-platform-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 230,
-    "y": 1538,
-    "w": 448,
-    "h": 208
-   },
-   "v": 5,
-   "color": {
-    "hex": "#070706",
-    "name": "Black"
-   },
-   "colors": [
-    "#070706"
-   ],
-   "t": 1795568017087
   },
   "starter-tan-platform-sandals": {
    "kind": "worn",
@@ -36459,25 +36267,6 @@
     "#baa997"
    ],
    "t": 1795568081741
-  },
-  "starter-black-mary-janes": {
-   "kind": "worn",
-   "box": {
-    "x": 212,
-    "y": 1604,
-    "w": 452,
-    "h": 142
-   },
-   "v": 5,
-   "color": {
-    "hex": "#070708",
-    "name": "Black"
-   },
-   "colors": [
-    "#070708",
-    "#a8855b"
-   ],
-   "t": 1795568086469
   },
   "starter-brown-penny-loafers": {
    "kind": "worn",
@@ -36633,6 +36422,21 @@
   "starter-cream-mini-top-handle-bag": [
    "more than the item in the picture (text, a hanger or a prop?)",
    "a light piece on a white background (it can’t be cut out cleanly)"
+  ],
+  "starter-chocolate-wool-coat": [
+   "a person shows inside the open coat, with legs below"
+  ],
+  "starter-espresso-sweater-dress": [
+   "most of the dress was cut away"
+  ],
+  "starter-gold-initial-necklace": [
+   "only a thin wire outline came out"
+  ],
+  "starter-black-platform-heels": [
+   "only fragments of the heels came out"
+  ],
+  "starter-black-mary-janes": [
+   "the shoes came out broken"
   ]
  },
  "blocked": {
@@ -37057,6 +36861,13 @@
   "starter-olive-hobo-bag": "most of the bag missing, twice",
   "starter-brown-crescent-bag": "mostly cut away: only fragments left (failed before too)",
   "starter-brown-leather-belt": "the belt came out broken and smeared (failed before too)",
-  "starter-brown-structured-top-handle-bag": "holes cut through the bag (failed before too)"
+  "starter-brown-structured-top-handle-bag": "holes cut through the bag (failed before too)",
+  "starter-multicolor-floral-corset-bodysuit": "only scattered roses came out, no bodysuit (failed before too)",
+  "starter-clear-pointed-toe-heels": "only small fragments of the heels came out (failed before too)",
+  "starter-brown-suede-shoulder-bag": "the bag came out torn into smears (failed before too)",
+  "starter-clear-pointed-heels": "the clear heels came out as broken shards (failed before too)",
+  "starter-gold-mini-bag": "mostly cut away again: only bits of the outline are left (failed before too)",
+  "starter-black-ballet-flats": "the flats came out as shapeless fragments (failed before too)",
+  "starter-tortoiseshell-claw-clip": "the clip came out as blotches (failed before too)"
  }
 }
