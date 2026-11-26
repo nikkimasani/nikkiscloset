@@ -36302,39 +36302,6 @@
    ],
    "t": 1795568107521
   },
-  "starter-multicolor-floral-corset-bodysuit": {
-   "kind": "worn",
-   "box": {
-    "x": 214,
-    "y": 350,
-    "w": 462,
-    "h": 624
-   },
-   "v": 5,
-   "color": {
-    "hex": "#fa97c8",
-    "name": "Pink"
-   },
-   "colors": [
-    "#fa97c8",
-    "#fbc6e9",
-    "#fae8f9",
-    "#e96899",
-    "#a73958"
-   ],
-   "t": 1795597712142
-  },
-  "starter-brown-suede-shoulder-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#53260d",
-    "name": "Brown"
-   },
-   "colors": [
-    "#53260d"
-   ],
-   "t": 1795597813064
-  },
   "starter-grey-long-sleeve-workout-top": {
    "kind": "worn",
    "box": {
@@ -36373,24 +36340,6 @@
    ],
    "t": 1795654093065
   },
-  "starter-espresso-sweater-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 182,
-    "y": 354,
-    "w": 460,
-    "h": 1006
-   },
-   "v": 5,
-   "color": {
-    "hex": "#2c2b17",
-    "name": "Black"
-   },
-   "colors": [
-    "#2c2b17"
-   ],
-   "t": 1795654100196
-  },
   "starter-black-linen-midi-dress": {
    "kind": "worn",
    "box": {
@@ -36408,84 +36357,6 @@
     "#17161a"
    ],
    "t": 1795654103307
-  },
-  "starter-chocolate-wool-coat": {
-   "kind": "worn",
-   "box": {
-    "x": 118,
-    "y": 236,
-    "w": 656,
-    "h": 1470
-   },
-   "v": 5,
-   "color": {
-    "hex": "#472b19",
-    "name": "Brown"
-   },
-   "colors": [
-    "#472b19",
-    "#050506",
-    "#74492c"
-   ],
-   "t": 1795654108279
-  },
-  "starter-navy-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 216,
-    "y": 1570,
-    "w": 458,
-    "h": 176
-   },
-   "v": 5,
-   "color": {
-    "hex": "#161849",
-    "name": "Navy"
-   },
-   "colors": [
-    "#161849",
-    "#363a83",
-    "#18152a"
-   ],
-   "t": 1795654113034
-  },
-  "starter-black-platform-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 218,
-    "y": 1534,
-    "w": 458,
-    "h": 212
-   },
-   "v": 5,
-   "color": {
-    "hex": "#020101",
-    "name": "Black"
-   },
-   "colors": [
-    "#020101",
-    "#ab6445",
-    "#794636"
-   ],
-   "t": 1795654116806
-  },
-  "starter-black-mary-janes": {
-   "kind": "worn",
-   "box": {
-    "x": 208,
-    "y": 1618,
-    "w": 476,
-    "h": 128
-   },
-   "v": 5,
-   "color": {
-    "hex": "#0c0b08",
-    "name": "Black"
-   },
-   "colors": [
-    "#0c0b08"
-   ],
-   "t": 1795654119455
   },
   "starter-ivory-satin-pajama-pants": {
    "kind": "worn",
@@ -36621,17 +36492,6 @@
     "#030303"
    ],
    "t": 1795654185553
-  },
-  "starter-brown-oversized-sunglasses": {
-   "kind": "photo",
-   "color": {
-    "hex": "#58373a",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#58373a"
-   ],
-   "t": 1795654207822
   },
   "starter-champagne-satin-pajama-pants": {
    "kind": "worn",
@@ -37204,43 +37064,6 @@
    ],
    "t": 1795654433492
   },
-  "starter-grey-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 1556,
-    "w": 448,
-    "h": 190
-   },
-   "v": 5,
-   "color": {
-    "hex": "#757779",
-    "name": "Grey"
-   },
-   "colors": [
-    "#757779",
-    "#4a4b4a"
-   ],
-   "t": 1795654436651
-  },
-  "starter-chocolate-brown-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 1638,
-    "w": 448,
-    "h": 108
-   },
-   "v": 5,
-   "color": {
-    "hex": "#3a2319",
-    "name": "Black"
-   },
-   "colors": [
-    "#3a2319"
-   ],
-   "t": 1795654441168
-  },
   "starter-camel-pointed-pumps": {
    "kind": "worn",
    "box": {
@@ -37273,18 +37096,6 @@
     "#f5f4f3"
    ],
    "t": 1795654460996
-  },
-  "starter-silver-bracelet": {
-   "kind": "photo",
-   "color": {
-    "hex": "#979899",
-    "name": "Grey"
-   },
-   "colors": [
-    "#979899",
-    "#fbfaf6"
-   ],
-   "t": 1795654465637
   }
  },
  "failed": {
@@ -37404,6 +37215,15 @@
   "starter-gold-band-rings": [
    "a white patch at the top or bottom edge (a form’s neck or stand?)",
    "a white or grey body shape (a dress form?)"
+  ],
+  "starter-grey-pointed-pumps": [
+   "only the toe caps came out"
+  ],
+  "starter-chocolate-brown-pointed-pumps": [
+   "only the toe caps came out"
+  ],
+  "starter-silver-bracelet": [
+   "a grey shadow came out with the bracelet"
   ]
  },
  "blocked": {
@@ -37829,12 +37649,18 @@
   "starter-brown-crescent-bag": "mostly cut away: only fragments left (failed before too)",
   "starter-brown-leather-belt": "the belt came out broken and smeared (failed before too)",
   "starter-brown-structured-top-handle-bag": "holes cut through the bag (failed before too)",
-  "starter-multicolor-floral-corset-bodysuit": "only scattered roses came out, no bodysuit (failed before too)",
+  "starter-multicolor-floral-corset-bodysuit": "only scattered roses came out again (failed before too)",
   "starter-clear-pointed-toe-heels": "only small fragments of the heels came out (failed before too)",
-  "starter-brown-suede-shoulder-bag": "the bag came out torn into smears (failed before too)",
+  "starter-brown-suede-shoulder-bag": "the bag came out as brown smears again (failed before too)",
   "starter-clear-pointed-heels": "the clear heels came out as broken shards (failed before too)",
   "starter-gold-mini-bag": "mostly cut away again: only bits of the outline are left (failed before too)",
   "starter-black-ballet-flats": "the flats came out as shapeless fragments (failed before too)",
-  "starter-tortoiseshell-claw-clip": "the clip came out as blotches (failed before too)"
+  "starter-tortoiseshell-claw-clip": "the clip came out as blotches (failed before too)",
+  "starter-espresso-sweater-dress": "most of the dress was cut away again (failed before too)",
+  "starter-chocolate-wool-coat": "a person shows inside the open coat again (failed before too)",
+  "starter-navy-pointed-pumps": "only the toe caps came out again (failed before too)",
+  "starter-black-platform-heels": "only fragments with skin came out again (failed before too)",
+  "starter-black-mary-janes": "only the toe caps came out (failed before too)",
+  "starter-brown-oversized-sunglasses": "the lenses came out as blotches (failed before too)"
  }
 }
