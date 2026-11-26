@@ -1,5 +1,5 @@
 {
- "version": 1795654470115,
+ "version": 1795683242495,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -37096,6 +37096,158 @@
     "#f5f4f3"
    ],
    "t": 1795654460996
+  },
+  "starter-beige-mini-top-handle-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#9b9996",
+    "name": "Grey"
+   },
+   "colors": [
+    "#9b9996",
+    "#f2cca3"
+   ],
+   "t": 1795683213501
+  },
+  "starter-sage-green-long-sleeve-workout-top": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 276,
+    "w": 630,
+    "h": 610
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a5c3b5",
+    "name": "Sage"
+   },
+   "colors": [
+    "#a5c3b5",
+    "#76958a",
+    "#d6a689"
+   ],
+   "t": 1795683218880
+  },
+  "starter-navy-satin-pajama-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 658,
+    "w": 548,
+    "h": 1048
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c0c25",
+    "name": "Navy"
+   },
+   "colors": [
+    "#0c0c25",
+    "#182657",
+    "#344688"
+   ],
+   "t": 1795683223955
+  },
+  "starter-sage-green-linen-shirt-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 120,
+    "y": 258,
+    "w": 638,
+    "h": 1056
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b6c6aa",
+    "name": "Sage"
+   },
+   "colors": [
+    "#b6c6aa",
+    "#86967a",
+    "#646c57"
+   ],
+   "t": 1795683227644
+  },
+  "starter-olive-linen-shirt-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 144,
+    "y": 268,
+    "w": 600,
+    "h": 1134
+   },
+   "v": 5,
+   "color": {
+    "hex": "#757b4b",
+    "name": "Olive"
+   },
+   "colors": [
+    "#757b4b",
+    "#454a27"
+   ],
+   "t": 1795683231871
+  },
+  "starter-brown-leather-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 114,
+    "y": 238,
+    "w": 658,
+    "h": 634
+   },
+   "v": 5,
+   "color": {
+    "hex": "#593426",
+    "name": "Brown"
+   },
+   "colors": [
+    "#593426",
+    "#070301",
+    "#86665a"
+   ],
+   "t": 1795683234778
+  },
+  "starter-white-espadrille-wedges": {
+   "kind": "worn",
+   "box": {
+    "x": 214,
+    "y": 1534,
+    "w": 462,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d4d7db",
+    "name": "Silver"
+   },
+   "colors": [
+    "#d4d7db",
+    "#98755a",
+    "#a6968a",
+    "#363b49",
+    "#786a65"
+   ],
+   "t": 1795683238299
+  },
+  "starter-grey-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 226,
+    "y": 1550,
+    "w": 424,
+    "h": 196
+   },
+   "v": 5,
+   "color": {
+    "hex": "#6c7378",
+    "name": "Grey"
+   },
+   "colors": [
+    "#6c7378",
+    "#444b56"
+   ],
+   "t": 1795683242495
   }
  },
  "failed": {
@@ -37144,11 +37296,6 @@
   ],
   "starter-beige-envelope-clutch": [
    "skin-coloured areas (a person or a body form?)",
-   "a light piece on a white background (it can’t be cut out cleanly)",
-   "a light piece on a form: the form could not be removed automatically"
-  ],
-  "starter-beige-mini-top-handle-bag": [
-   "skin-coloured areas (a person or a body form?)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-chain-shoulder-bag": [
@@ -37169,9 +37316,6 @@
   ],
   "starter-tan-straw-top-handle-bag": [
    "colour doesn’t look straw"
-  ],
-  "starter-sage-green-long-sleeve-workout-top": [
-   "it added shorts or trousers to the top"
   ],
   "starter-brown-baguette-shoulder-bag": [
    "item is missing or tiny",
@@ -37200,9 +37344,6 @@
   "starter-oatmeal-long-sleeve-workout-top": [
    "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (74d98ac4-12eb-4530-b812-876e7213c4e2)"
   ],
-  "starter-white-espadrille-wedges": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (b2fde7c6-0166-4584-b052-c3c6b7c68d20)"
-  ],
   "starter-tan-check-tote": [
    "skin-coloured areas (a person or a body form?)"
   ],
@@ -37215,9 +37356,6 @@
   "starter-gold-band-rings": [
    "a white patch at the top or bottom edge (a form’s neck or stand?)",
    "a white or grey body shape (a dress form?)"
-  ],
-  "starter-grey-pointed-pumps": [
-   "only the toe caps came out"
   ],
   "starter-chocolate-brown-pointed-pumps": [
    "only the toe caps came out"
