@@ -1,5 +1,5 @@
 {
- "version": 1795597819168,
+ "version": 1795654470115,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -36334,6 +36334,957 @@
     "#53260d"
    ],
    "t": 1795597813064
+  },
+  "starter-grey-long-sleeve-workout-top": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 298,
+    "w": 632,
+    "h": 586
+   },
+   "v": 5,
+   "color": {
+    "hex": "#94999b",
+    "name": "Grey"
+   },
+   "colors": [
+    "#94999b",
+    "#575858"
+   ],
+   "t": 1795654089584
+  },
+  "starter-sage-green-wide-leg-joggers": {
+   "kind": "worn",
+   "box": {
+    "x": 210,
+    "y": 670,
+    "w": 490,
+    "h": 944
+   },
+   "v": 5,
+   "color": {
+    "hex": "#96b6aa",
+    "name": "Sage"
+   },
+   "colors": [
+    "#96b6aa",
+    "#657b76"
+   ],
+   "t": 1795654093065
+  },
+  "starter-espresso-sweater-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 354,
+    "w": 460,
+    "h": 1006
+   },
+   "v": 5,
+   "color": {
+    "hex": "#2c2b17",
+    "name": "Black"
+   },
+   "colors": [
+    "#2c2b17"
+   ],
+   "t": 1795654100196
+  },
+  "starter-black-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 318,
+    "w": 482,
+    "h": 1086
+   },
+   "v": 5,
+   "color": {
+    "hex": "#17161a",
+    "name": "Black"
+   },
+   "colors": [
+    "#17161a"
+   ],
+   "t": 1795654103307
+  },
+  "starter-chocolate-wool-coat": {
+   "kind": "worn",
+   "box": {
+    "x": 118,
+    "y": 236,
+    "w": 656,
+    "h": 1470
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472b19",
+    "name": "Brown"
+   },
+   "colors": [
+    "#472b19",
+    "#050506",
+    "#74492c"
+   ],
+   "t": 1795654108279
+  },
+  "starter-navy-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 1570,
+    "w": 458,
+    "h": 176
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161849",
+    "name": "Navy"
+   },
+   "colors": [
+    "#161849",
+    "#363a83",
+    "#18152a"
+   ],
+   "t": 1795654113034
+  },
+  "starter-black-platform-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 1534,
+    "w": 458,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#020101",
+    "name": "Black"
+   },
+   "colors": [
+    "#020101",
+    "#ab6445",
+    "#794636"
+   ],
+   "t": 1795654116806
+  },
+  "starter-black-mary-janes": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 1618,
+    "w": 476,
+    "h": 128
+   },
+   "v": 5,
+   "color": {
+    "hex": "#0c0b08",
+    "name": "Black"
+   },
+   "colors": [
+    "#0c0b08"
+   ],
+   "t": 1795654119455
+  },
+  "starter-ivory-satin-pajama-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 182,
+    "y": 650,
+    "w": 510,
+    "h": 1012
+   },
+   "v": 5,
+   "color": {
+    "hex": "#c5bba7",
+    "name": "Beige"
+   },
+   "colors": [
+    "#c5bba7",
+    "#f5f4e9"
+   ],
+   "t": 1795654161361
+  },
+  "starter-butter-yellow-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 192,
+    "y": 320,
+    "w": 496,
+    "h": 1006
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f8e9b9",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f8e9b9",
+    "#c5ab76"
+   ],
+   "t": 1795654166242
+  },
+  "starter-light-blue-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 318,
+    "w": 492,
+    "h": 1090
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b7d8f4",
+    "name": "Light Blue"
+   },
+   "colors": [
+    "#b7d8f4",
+    "#8ba6c8"
+   ],
+   "t": 1795654170068
+  },
+  "starter-camel-cape-coat": {
+   "kind": "worn",
+   "box": {
+    "x": 72,
+    "y": 236,
+    "w": 754,
+    "h": 876
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b77a4a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b77a4a",
+    "#8a5936"
+   ],
+   "t": 1795654173860
+  },
+  "starter-burgundy-ballet-flats": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 1534,
+    "w": 464,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3a0008",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#3a0008",
+    "#885538",
+    "#3b0225",
+    "#1a0419"
+   ],
+   "t": 1795654179058
+  },
+  "starter-leopard-ballet-flats": {
+   "kind": "worn",
+   "box": {
+    "x": 186,
+    "y": 1534,
+    "w": 504,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ba8767",
+    "name": "Tan"
+   },
+   "colors": [
+    "#ba8767",
+    "#865945",
+    "#472817"
+   ],
+   "t": 1795654182104
+  },
+  "starter-black-sock-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 232,
+    "y": 1534,
+    "w": 418,
+    "h": 214
+   },
+   "v": 5,
+   "color": {
+    "hex": "#030303",
+    "name": "Black"
+   },
+   "colors": [
+    "#030303"
+   ],
+   "t": 1795654185553
+  },
+  "starter-brown-oversized-sunglasses": {
+   "kind": "photo",
+   "color": {
+    "hex": "#58373a",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#58373a"
+   ],
+   "t": 1795654207822
+  },
+  "starter-champagne-satin-pajama-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 196,
+    "y": 646,
+    "w": 518,
+    "h": 996
+   },
+   "v": 5,
+   "color": {
+    "hex": "#977a74",
+    "name": "Grey"
+   },
+   "colors": [
+    "#977a74",
+    "#fbf9f9",
+    "#d6cac7"
+   ],
+   "t": 1795654227120
+  },
+  "starter-oatmeal-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 128,
+    "y": 314,
+    "w": 548,
+    "h": 1392
+   },
+   "v": 5,
+   "color": {
+    "hex": "#baa698",
+    "name": "Grey"
+   },
+   "colors": [
+    "#baa698",
+    "#897466",
+    "#684539",
+    "#e7b898"
+   ],
+   "t": 1795654231978
+  },
+  "starter-stone-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 202,
+    "y": 364,
+    "w": 504,
+    "h": 1266
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b4aca6",
+    "name": "Grey"
+   },
+   "colors": [
+    "#b4aca6",
+    "#857b76",
+    "#574a46"
+   ],
+   "t": 1795654235543
+  },
+  "starter-black-faux-fur-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 88,
+    "y": 242,
+    "w": 724,
+    "h": 690
+   },
+   "v": 5,
+   "color": {
+    "hex": "#030202",
+    "name": "Black"
+   },
+   "colors": [
+    "#030202"
+   ],
+   "t": 1795654239699
+  },
+  "starter-cream-ankle-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 1534,
+    "w": 444,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eae6d6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#eae6d6",
+    "#b9b5ab"
+   ],
+   "t": 1795654243842
+  },
+  "starter-black-riding-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 1168,
+    "w": 460,
+    "h": 578
+   },
+   "v": 5,
+   "color": {
+    "hex": "#161616",
+    "name": "Black"
+   },
+   "colors": [
+    "#161616",
+    "#383835"
+   ],
+   "t": 1795654247093
+  },
+  "starter-tan-cowboy-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 222,
+    "y": 1534,
+    "w": 464,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#55493a",
+    "name": "Brown"
+   },
+   "colors": [
+    "#55493a",
+    "#2b241a",
+    "#7c7265"
+   ],
+   "t": 1795654250130
+  },
+  "starter-gold-initial-necklace": {
+   "kind": "photo",
+   "color": {
+    "hex": "#fdd76b",
+    "name": "Yellow"
+   },
+   "colors": [
+    "#fdd76b",
+    "#fbf6ca"
+   ],
+   "t": 1795654277791
+  },
+  "starter-black-satin-pajama-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 658,
+    "w": 518,
+    "h": 1010
+   },
+   "v": 5,
+   "color": {
+    "hex": "#020202",
+    "name": "Black"
+   },
+   "colors": [
+    "#020202",
+    "#363739"
+   ],
+   "t": 1795654284377
+  },
+  "starter-espresso-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 216,
+    "y": 386,
+    "w": 500,
+    "h": 1026
+   },
+   "v": 5,
+   "color": {
+    "hex": "#46382a",
+    "name": "Brown"
+   },
+   "colors": [
+    "#46382a"
+   ],
+   "t": 1795654289591
+  },
+  "starter-mocha-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 324,
+    "w": 490,
+    "h": 1246
+   },
+   "v": 5,
+   "color": {
+    "hex": "#472929",
+    "name": "Black"
+   },
+   "colors": [
+    "#472929"
+   ],
+   "t": 1795654293700
+  },
+  "starter-cream-faux-fur-coat": {
+   "kind": "worn",
+   "box": {
+    "x": 80,
+    "y": 236,
+    "w": 740,
+    "h": 834
+   },
+   "v": 5,
+   "color": {
+    "hex": "#eae5d9",
+    "name": "Cream"
+   },
+   "colors": [
+    "#eae5d9",
+    "#b9b9b7"
+   ],
+   "t": 1795654297207
+  },
+  "starter-white-cowboy-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 1534,
+    "w": 484,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f9f9f8",
+    "name": "White"
+   },
+   "colors": [
+    "#f9f9f8",
+    "#c6c8c9"
+   ],
+   "t": 1795654301223
+  },
+  "starter-black-combat-boots": {
+   "kind": "worn",
+   "box": {
+    "x": 178,
+    "y": 1534,
+    "w": 522,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#171616",
+    "name": "Black"
+   },
+   "colors": [
+    "#171616"
+   ],
+   "t": 1795654304541
+  },
+  "starter-grey-suede-sneakers": {
+   "kind": "worn",
+   "box": {
+    "x": 206,
+    "y": 1560,
+    "w": 480,
+    "h": 186
+   },
+   "v": 5,
+   "color": {
+    "hex": "#8b8984",
+    "name": "Grey"
+   },
+   "colors": [
+    "#8b8984",
+    "#dad8d4",
+    "#494949"
+   ],
+   "t": 1795654307830
+  },
+  "starter-cream-mini-top-handle-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#b3aca6",
+    "name": "Grey"
+   },
+   "colors": [
+    "#b3aca6",
+    "#f4e8d7",
+    "#6b6763"
+   ],
+   "t": 1795654329064
+  },
+  "starter-grey-oversized-hoodie": {
+   "kind": "worn",
+   "box": {
+    "x": 130,
+    "y": 246,
+    "w": 632,
+    "h": 802
+   },
+   "v": 5,
+   "color": {
+    "hex": "#999ca3",
+    "name": "Grey"
+   },
+   "colors": [
+    "#999ca3",
+    "#16161a",
+    "#666769"
+   ],
+   "t": 1795654345109
+  },
+  "starter-blush-pink-satin-pajama-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 174,
+    "y": 660,
+    "w": 528,
+    "h": 984
+   },
+   "v": 5,
+   "color": {
+    "hex": "#aa6577",
+    "name": "Pink"
+   },
+   "colors": [
+    "#aa6577",
+    "#f7d5db",
+    "#d49aa6",
+    "#873b5b"
+   ],
+   "t": 1795654349723
+  },
+  "starter-ecru-linen-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 306,
+    "w": 454,
+    "h": 1084
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d9d5ca",
+    "name": "Cream"
+   },
+   "colors": [
+    "#d9d5ca",
+    "#a49989"
+   ],
+   "t": 1795654354307
+  },
+  "starter-white-linen-shirt-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 138,
+    "y": 266,
+    "w": 622,
+    "h": 1092
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f4f5f8",
+    "name": "White"
+   },
+   "colors": [
+    "#f4f5f8",
+    "#c5c4cc"
+   ],
+   "t": 1795654362354
+  },
+  "starter-tan-suede-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 118,
+    "y": 244,
+    "w": 662,
+    "h": 642
+   },
+   "v": 5,
+   "color": {
+    "hex": "#b88959",
+    "name": "Tan"
+   },
+   "colors": [
+    "#b88959",
+    "#d8b389",
+    "#030302",
+    "#785638"
+   ],
+   "t": 1795654366300
+  },
+  "starter-black-slip-on-sneakers": {
+   "kind": "worn",
+   "box": {
+    "x": 190,
+    "y": 1536,
+    "w": 516,
+    "h": 210
+   },
+   "v": 5,
+   "color": {
+    "hex": "#070706",
+    "name": "Black"
+   },
+   "colors": [
+    "#070706",
+    "#b9b6b8",
+    "#8a8688",
+    "#474647"
+   ],
+   "t": 1795654370818
+  },
+  "starter-gold-thong-sandals": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 1644,
+    "w": 496,
+    "h": 100
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a8775a",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a8775a",
+    "#b79856",
+    "#855a19",
+    "#775a48",
+    "#583c15"
+   ],
+   "t": 1795654380197
+  },
+  "starter-black-leather-work-tote": {
+   "kind": "photo",
+   "color": {
+    "hex": "#1a1a1a",
+    "name": "Black"
+   },
+   "colors": [
+    "#1a1a1a",
+    "#464647"
+   ],
+   "t": 1795654388755
+  },
+  "starter-gold-bangle-bracelet-stack": {
+   "kind": "photo",
+   "color": {
+    "hex": "#f5ede6",
+    "name": "White"
+   },
+   "colors": [
+    "#f5ede6",
+    "#e9c686",
+    "#fcf6b8",
+    "#e9b75a",
+    "#f9e489"
+   ],
+   "t": 1795654405081
+  },
+  "starter-delicate-gold-bracelet": {
+   "kind": "photo",
+   "color": {
+    "hex": "#f8f4e9",
+    "name": "White"
+   },
+   "colors": [
+    "#f8f4e9",
+    "#e9d7a8",
+    "#c9a767",
+    "#fcd475"
+   ],
+   "t": 1795654411798
+  },
+  "starter-black-oversized-hoodie": {
+   "kind": "worn",
+   "box": {
+    "x": 112,
+    "y": 254,
+    "w": 666,
+    "h": 730
+   },
+   "v": 5,
+   "color": {
+    "hex": "#131214",
+    "name": "Black"
+   },
+   "colors": [
+    "#131214"
+   ],
+   "t": 1795654414765
+  },
+  "starter-sage-green-satin-pajama-pants": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 666,
+    "w": 514,
+    "h": 994
+   },
+   "v": 5,
+   "color": {
+    "hex": "#386766",
+    "name": "Teal"
+   },
+   "colors": [
+    "#386766",
+    "#97b6a8",
+    "#d4e8da"
+   ],
+   "t": 1795654419809
+  },
+  "starter-cream-linen-shirt-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 142,
+    "y": 254,
+    "w": 620,
+    "h": 1078
+   },
+   "v": 5,
+   "color": {
+    "hex": "#e9e5db",
+    "name": "Cream"
+   },
+   "colors": [
+    "#e9e5db"
+   ],
+   "t": 1795654423932
+  },
+  "starter-beige-linen-shirt-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 136,
+    "y": 260,
+    "w": 630,
+    "h": 1446
+   },
+   "v": 5,
+   "color": {
+    "hex": "#d5c8ba",
+    "name": "Beige"
+   },
+   "colors": [
+    "#d5c8ba",
+    "#a89689"
+   ],
+   "t": 1795654429859
+  },
+  "starter-black-bomber-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 112,
+    "y": 268,
+    "w": 668,
+    "h": 608
+   },
+   "v": 5,
+   "color": {
+    "hex": "#060706",
+    "name": "Black"
+   },
+   "colors": [
+    "#060706",
+    "#363739"
+   ],
+   "t": 1795654433492
+  },
+  "starter-grey-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 220,
+    "y": 1556,
+    "w": 448,
+    "h": 190
+   },
+   "v": 5,
+   "color": {
+    "hex": "#757779",
+    "name": "Grey"
+   },
+   "colors": [
+    "#757779",
+    "#4a4b4a"
+   ],
+   "t": 1795654436651
+  },
+  "starter-chocolate-brown-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 228,
+    "y": 1638,
+    "w": 448,
+    "h": 108
+   },
+   "v": 5,
+   "color": {
+    "hex": "#3a2319",
+    "name": "Black"
+   },
+   "colors": [
+    "#3a2319"
+   ],
+   "t": 1795654441168
+  },
+  "starter-camel-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 232,
+    "y": 1534,
+    "w": 432,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a56b46",
+    "name": "Tan"
+   },
+   "colors": [
+    "#a56b46",
+    "#694729",
+    "#c79573"
+   ],
+   "t": 1795654444930
+  },
+  "starter-burgundy-top-handle-bag": {
+   "kind": "photo",
+   "color": {
+    "hex": "#772c35",
+    "name": "Burgundy"
+   },
+   "colors": [
+    "#772c35",
+    "#370104",
+    "#f5f4f3"
+   ],
+   "t": 1795654460996
+  },
+  "starter-silver-bracelet": {
+   "kind": "photo",
+   "color": {
+    "hex": "#979899",
+    "name": "Grey"
+   },
+   "colors": [
+    "#979899",
+    "#fbfaf6"
+   ],
+   "t": 1795654465637
   }
  },
  "failed": {
@@ -36352,15 +37303,11 @@
   ],
   "starter-gold-pendant-necklace": [
    "item is missing or tiny",
-   "more than the item in the picture (text, a hanger or a prop?)",
    "a white patch at the top or bottom edge (a form’s neck or stand?)"
   ],
   "starter-tortoiseshell-sunglasses": [
-   "a white patch at the top or bottom edge (a form’s neck or stand?)"
-  ],
-  "starter-brown-oversized-sunglasses": [
    "more than the item in the picture (text, a hanger or a prop?)",
-   "colour doesn’t look brown"
+   "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-sequin-cami": [
    "taken out on review: cut out in shreds, twice"
@@ -36385,8 +37332,8 @@
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-envelope-clutch": [
-   "more than the item in the picture (text, a hanger or a prop?)",
    "skin-coloured areas (a person or a body form?)",
+   "a light piece on a white background (it can’t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-mini-top-handle-bag": [
@@ -36395,25 +37342,22 @@
   ],
   "starter-beige-chain-shoulder-bag": [
    "skin-coloured areas (a person or a body form?)",
+   "a light piece on a white background (it can’t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-brown-small-shoulder-bag": [
    "a white patch at the top or bottom edge (a form’s neck or stand?)",
    "a white or grey body shape (a dress form?)"
   ],
-  "starter-grey-long-sleeve-workout-top": [
-   "it added shorts or trousers to the top"
-  ],
   "starter-dainty-gold-necklace": [
-   "item is missing or tiny"
-  ],
-  "starter-gold-chain-necklace": [
    "item is missing or tiny",
    "a white patch at the top or bottom edge (a form’s neck or stand?)"
   ],
+  "starter-gold-chain-necklace": [
+   "a white patch at the top or bottom edge (a form’s neck or stand?)"
+  ],
   "starter-tan-straw-top-handle-bag": [
-   "a white patch at the top or bottom edge (a form’s neck or stand?)",
-   "a white or grey body shape (a dress form?)"
+   "colour doesn’t look straw"
   ],
   "starter-sage-green-long-sleeve-workout-top": [
    "it added shorts or trousers to the top"
@@ -36424,42 +37368,42 @@
    "a white or grey body shape (a dress form?)"
   ],
   "starter-gold-link-watch": [
-   "more than the item in the picture (text, a hanger or a prop?)",
-   "a white or grey body shape (a dress form?)"
+   "more than the item in the picture (text, a hanger or a prop?)"
   ],
   "starter-silver-link-watch": [
-   "a white or grey body shape (a dress form?)"
-  ],
-  "starter-navy-long-sleeve-workout-top": [
-   "it added shorts or trousers to the top"
-  ],
-  "starter-cream-mini-top-handle-bag": [
    "more than the item in the picture (text, a hanger or a prop?)",
    "a light piece on a white background (it can’t be cut out cleanly)"
   ],
-  "starter-chocolate-wool-coat": [
-   "a person shows inside the open coat, with legs below"
-  ],
-  "starter-espresso-sweater-dress": [
-   "most of the dress was cut away"
-  ],
-  "starter-gold-initial-necklace": [
-   "only a thin wire outline came out"
-  ],
-  "starter-black-platform-heels": [
-   "only fragments of the heels came out"
-  ],
-  "starter-black-mary-janes": [
-   "the shoes came out broken"
-  ],
-  "starter-navy-pointed-pumps": [
-   "only the toe caps came out: the sides and backs are missing"
+  "starter-navy-long-sleeve-workout-top": [
+   "it added shorts or trousers to the top"
   ],
   "starter-clear-pointed-heels": [
    "the piece barely shows (it may not have dressed her)"
   ],
   "starter-clear-pointed-toe-heels": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (017bffcc-01cf-423f-94f1-2b129d24b154)"
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (6685cbf8-7c25-4546-b0e3-3068114af979)"
+  ],
+  "starter-gold-mini-bag": [
+   "more than the item in the picture (text, a hanger or a prop?)"
+  ],
+  "starter-oatmeal-long-sleeve-workout-top": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (74d98ac4-12eb-4530-b812-876e7213c4e2)"
+  ],
+  "starter-white-espadrille-wedges": [
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (b2fde7c6-0166-4584-b052-c3c6b7c68d20)"
+  ],
+  "starter-tan-check-tote": [
+   "skin-coloured areas (a person or a body form?)"
+  ],
+  "starter-brown-crossbody-chain-bag": [
+   "item is missing or tiny",
+   "more than the item in the picture (text, a hanger or a prop?)",
+   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white or grey body shape (a dress form?)"
+  ],
+  "starter-gold-band-rings": [
+   "a white patch at the top or bottom edge (a form’s neck or stand?)",
+   "a white or grey body shape (a dress form?)"
   ]
  },
  "blocked": {
