@@ -1,5 +1,5 @@
 {
- "version": 1795740809613,
+ "version": 1795770382836,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -38223,6 +38223,80 @@
     "#180406"
    ],
    "t": 1795740809613
+  },
+  "starter-espresso-linen-shirt-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 184,
+    "y": 348,
+    "w": 520,
+    "h": 1004
+   },
+   "v": 5,
+   "color": {
+    "hex": "#4b443a",
+    "name": "Charcoal"
+   },
+   "colors": [
+    "#4b443a"
+   ],
+   "t": 1795770368353
+  },
+  "starter-butter-yellow-sundress": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 314,
+    "w": 552,
+    "h": 1136
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ebe6c7",
+    "name": "Cream"
+   },
+   "colors": [
+    "#ebe6c7",
+    "#e7d598"
+   ],
+   "t": 1795770373179
+  },
+  "starter-khaki-field-jacket": {
+   "kind": "worn",
+   "box": {
+    "x": 112,
+    "y": 256,
+    "w": 672,
+    "h": 728
+   },
+   "v": 5,
+   "color": {
+    "hex": "#aba585",
+    "name": "Sage"
+   },
+   "colors": [
+    "#aba585",
+    "#7a7558"
+   ],
+   "t": 1795770377440
+  },
+  "starter-olive-pointed-pumps": {
+   "kind": "worn",
+   "box": {
+    "x": 204,
+    "y": 1542,
+    "w": 470,
+    "h": 204
+   },
+   "v": 5,
+   "color": {
+    "hex": "#46442b",
+    "name": "Brown"
+   },
+   "colors": [
+    "#46442b"
+   ],
+   "t": 1795770380554
   }
  },
  "failed": {
@@ -38296,7 +38370,7 @@
    "a light piece on a white background (it can’t be cut out cleanly)"
   ],
   "starter-navy-long-sleeve-workout-top": [
-   "Cloudflare said: 8004 AiError: AiError: Internal server error (05ea2e5e-0e98-4d6e-afd6-f70f85fe1022)"
+   "it added shorts or trousers to the top"
   ],
   "starter-clear-pointed-heels": [
    "the piece barely shows (it may not have dressed her)"
@@ -38323,7 +38397,7 @@
    "a light piece on a white background (it can’t be cut out cleanly)"
   ],
   "starter-light-blue-pointed-pumps": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (2a8676dd-99de-4c1f-962b-327b6985e910)"
+   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (b10a7c74-4da5-4171-a1cc-0b556f86d58a)"
   ],
   "starter-brown-logo-buckle-belt": [
    "a white patch at the top or bottom edge (a form’s neck or stand?)"
@@ -38331,23 +38405,14 @@
   "starter-tan-wide-belt": [
    "skin-coloured areas (a person or a body form?)"
   ],
-  "starter-olive-pointed-pumps": [
-   "only the toe caps came out"
-  ],
   "starter-gold-pointed-pumps": [
    "only the toe caps came out"
-  ],
-  "starter-espresso-linen-shirt-dress": [
-   "most of the dress was cut away"
   ],
   "starter-white-strappy-heeled-sandals": [
    "only fragments of the straps came out"
   ],
   "starter-red-strappy-heeled-sandals": [
    "only fragments of the straps came out"
-  ],
-  "starter-butter-yellow-sundress": [
-   "holes cut through the dress"
   ],
   "starter-brown-cat-eye-sunglasses": [
    "the lenses came out blotchy"
