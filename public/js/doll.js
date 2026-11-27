@@ -3,6 +3,7 @@
 // box for each kind of clothing. Layer order: base picture -> clothing -> hair -> accessories.
 import { slotOf } from './data.js';
 import { pivotOf } from './garment.js';
+import { sleevesFromName } from './landmarks.js';
 
 export const DEFAULT_PACK = 'base';
 const packs = new Map();
@@ -113,7 +114,6 @@ export function garmentTransform(anchor, fit) {
 /** Tucked in: the top hides below the bottoms' own waistband, across her hips only, so sleeves and hands stay. With the bottoms' outline
  *  (edge: { k, top } — the first opaque row of each column of their worn picture, in steps of k pixels) the cut follows their waistband, so a
  *  low-rise pair or a curved waistband leaves no gap of skin; otherwise it is a straight line just below where they start. */
-const SIDE = 30; // how far past her waistband points a tucked top is trimmed (her arms hang further out)
 export function tuckCut(pack, bottom, edge) {
   const P = pack.points, [W, H] = pack.size, bx = bottom?.wornBox, dip = 12;
   if (edge?.top?.length) {
@@ -128,7 +128,7 @@ export function tuckCut(pack, bottom, edge) {
         // below the waistband line the top is hidden right across her waist, short of her arms, not only under the bottoms: where their sides
         // curve down over her hips, a top wider than them would otherwise show above the curve, beside them
         const mid = pts.slice(Math.floor(pts.length / 4), Math.ceil(pts.length * 3 / 4)).map(([, y]) => y), line = Math.max(...mid); // (the lowest point of the waistband's front: never above their top edge there)
-        const L = P.waistbandL ? Math.min(pts[0][0], P.waistbandL[0] - SIDE) : pts[0][0], R = P.waistbandR ? Math.max(pts.at(-1)[0], P.waistbandR[0] + SIDE) : pts.at(-1)[0];
+        const L = 0, R = W; // (right across: a bodysuit's legs or a top's hem wider than the bottoms at her hips would show beside them; her forearms keep their sleeves, drawn again in armBands)
         const at = new Map(pts.map(([x, y]) => [Math.round(x), y])), out = [];
         for (let x = Math.floor(L / edge.k) * edge.k; x <= R; x += edge.k) out.push([x, Math.min(at.get(Math.round(x)) ?? Infinity, line)]);
         if (out.at(-1)[0] < R) out.push([R, line]);
@@ -136,7 +136,7 @@ export function tuckCut(pack, bottom, edge) {
       }
     }
   }
-  const cut = Math.round((bx?.y ?? P.belt?.[1] ?? pack.waistY) + 16), x0 = Math.min(bx ? bx.x + 10 : W, P.waistbandL ? P.waistbandL[0] - SIDE : 0), x1 = Math.max(bx ? bx.x + bx.w - 10 : 0, P.waistbandR ? P.waistbandR[0] + SIDE : W);
+  const cut = Math.round((bx?.y ?? P.belt?.[1] ?? pack.waistY) + 16), x0 = 0, x1 = W;
   return `M${x0} ${cut}H${x1}V${H}H${x0}Z`;
 }
 /** Her forearms, elbow to hand: a tucked top is drawn a second time inside these bands only, so a long sleeve hanging beside her hips
@@ -144,6 +144,12 @@ export function tuckCut(pack, bottom, edge) {
 const ARM = 64; // half the width of a sleeve at the forearm, in the base picture's pixels
 /** The second drawing of a tucked top for its sleeves: the same picture, but not a piece of its own (no id to tap, no selection box). */
 const sleeveCopy = (g) => g.replace(/ class="gar[^"]*" data-id="[^"]*" data-slot="[^"]*"/, '').replace(/<rect class="selbox"[^>]*\/>/, '');
+/** Everywhere but her hips below the waist: the sleeves drawn again stay off her body there (only her forearms and hands hang beside it). */
+function hipOut(pack, n) {
+  const P = pack.points || {}, [W, H] = pack.size; if (!P.hipL || !P.hipR) return `<clipPath id="hipout-${n}"><path d="M0 0H${W}V${H}H0Z"/></clipPath>`;
+  const wl = P.waistbandL || [P.hipL[0] + 60, P.hipL[1] - 200], wr = P.waistbandR || [P.hipR[0] - 60, P.hipR[1] - 200], l = P.hipL[0] - 4, r = P.hipR[0] + 4; // (her own outline: waist, widening to the hips; her elbows sit outside it)
+  return `<clipPath id="hipout-${n}" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H${W}V${H}H0Z M${wl[0]} ${wl[1]}L${wr[0]} ${wr[1]}L${r} ${P.hipR[1]}L${r} ${H}L${l} ${H}L${l} ${P.hipL[1]}Z"/></clipPath>`;
+}
 export function armBands(P) {
   let d = '';
   for (const [e, h] of [[P.elbowL, P.handL || P.wristL], [P.elbowR, P.handR || P.wristR]]) {
@@ -232,7 +238,8 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
   const n = ++uidN;
   const top = items.top, bottom = items.bottom; // (tuck: true/false to tuck the top in or not for this picture only, as a look on Today says; null = as she left it)
   const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && (tuck ?? tuckOf(top, pack)))), clipTop = tucked; // (a bodysuit goes under too, but is trimmed the same way: where it's wider than the trousers at her hips it would show beside them)
-  const order = tucked ? pack.tuckedOrder : pack.clothesOrder, arms = clipTop && pack.points ? armBands(pack.points) : '';
+  const hasSleeves = !!top && (top.sleeves ?? sleevesFromName(top.type, top.name || '')) !== false; // (a tank, cami or bodysuit has no sleeves to draw again: its hips would show beside the bottoms)
+  const order = tucked ? pack.tuckedOrder : pack.clothesOrder, arms = clipTop && hasSleeves && pack.points ? armBands(pack.points) : '';
   let sleeves = ''; // (a tucked top's sleeves, drawn again over the bottoms: her arms hang in front of them)
   const garment = (slot) => {
     const it = items[slot]; if (!it) return '';
@@ -244,11 +251,11 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
       const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
       const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}">${(() => { const pl = places?.get(it.id); return pl ? `<image href="${fitted}" x="${num(pl.x)}" y="${num(pl.y)}" width="${num(pl.w)}" height="${num(pl.h)}" preserveAspectRatio="none" filter="url(#gfx-${n})"/>` : `<image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>`; })()}${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
-      return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
+      return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true"><g clip-path="url(#hipout-${n})">${sleeveCopy(g)}</g></g>`), '') : '') : g;
     }
     const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${garmentTransform(a, f)}">
       <image href="${href}" width="${a.w}" height="${a.h}" preserveAspectRatio="${a.align} meet" filter="url(#gfx-${n})"/>${selected === it.id ? `<rect class="selbox" x="${box.x}" y="${box.y}" width="${box.w}" height="${box.h}" rx="6" fill="none"/>` : ''}</g>`;
-    return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
+    return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true"><g clip-path="url(#hipout-${n})">${sleeveCopy(g)}</g></g>`), '') : '') : g;
   };
   const accPiece = (it, r, f, sel, slot) => {
     const m = meta?.get(it.id), iw = m?.iw || 1, ih = m?.ih || 1, off = r.off || [0, 0], pts = [].concat(r.at).map((k) => pack.points[k]).filter(Boolean).map(([x, y]) => [x + off[0], y + off[1]]), pair = pts.length === 2;
@@ -339,7 +346,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
       <feFlood flood-color="#2b1a22" flood-opacity=".32"/><feComposite in2="off" operator="in" result="shadow"/>
       <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/></feMerge></filter>`;
   return `<svg class="doll ${cls}" viewBox="${x} ${y} ${w} ${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${desc.replace(/"/g, '&quot;')}" data-pack="${pack.id}">
-    <defs>${fx}${hairDefs}${armDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}${arms ? `<clipPath id="sleeveclip-${n}"><path d="${arms}"/></clipPath>` : ''}</defs>
+    <defs>${fx}${hairDefs}${armDefs}${clipTop ? tuckClip(pack, bottom, n, fits?.get(bottom.id) ? masks?.get(bottom.id) : null) : ''}${arms ? `<clipPath id="sleeveclip-${n}"><path d="${arms}"/></clipPath>${hipOut(pack, n)}` : ''}</defs>
     ${pack.stack.map((k) => parts[k] || '').join('')}${debug ? pointsOverlay(pack, items) : ''}</svg>`;
 }
 
