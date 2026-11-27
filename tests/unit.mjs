@@ -270,11 +270,10 @@ test('layers stack as base, clothes, then accessories, and tucking swaps top and
   assert.match(svg, /filter="url\(#gfx-\d+\)"/); assert.match(svg, /<filter id="gfx-\d+"/); // feathered edge and soft shadow
 });
 
-test('a tucked top hides below the bottoms\' own waistband, out to her sides but short of her arms (sleeves stay)', () => {
+test('a tucked top hides below the bottoms\' own waistband right across, so nothing shows beside them at her hips (sleeves are drawn again)', () => {
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms', { wornBox: { x: 300, y: 690, w: 300, h: 500 } }) }, urls });
-  const [wl, wr] = [pack.points.waistbandL[0] - 30, pack.points.waistbandR[0] + 30];
-  assert.match(svg, new RegExp(`<clipPath id="tuckclip-\\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\\d+V\\d+H0Z M${wl} 706H${wr}V\\d+H${wl}Z"/>`));
-  assert.ok(wl > pack.points.elbowL[0] && wr < pack.points.elbowR[0], 'her arms are outside the cut');
+  assert.match(svg, new RegExp(`<clipPath id="tuckclip-\\d+" clip-rule="evenodd"><path clip-rule="evenodd" d="M0 0H\\d+V\\d+H0Z M0 706H${pack.size[0]}V\\d+H0Z"/>`));
+  assert.ok(pack.points.hipL[0] > 0 && pack.points.hipR[0] < pack.size[0], 'her hips are inside the cut');
 });
 
 test('a tucked top keeps its sleeves: drawn again inside her forearms, elbow to hand, with no id of its own', () => {
@@ -285,13 +284,20 @@ test('a tucked top keeps its sleeves: drawn again inside her forearms, elbow to 
   assert.ok(!/sleeveclip/.test(dollSVG({ pack, items: { top: mkItem('t', 'tops'), bottom: mkItem('b', 'bottoms') }, urls })), 'an untucked top is drawn once');
 });
 
+test('a sleeveless top or bodysuit isn\'t drawn again along her arms (its hips would show beside the bottoms); a sleeved one is, never over her hips', () => {
+  const bottom = mkItem('b', 'bottoms');
+  for (const top of [mkItem('Black cropped tank', 'tanks'), mkItem('White crew bodysuit', 'bodysuits')]) assert.ok(!/sleeveclip/.test(dollSVG({ pack, items: { top, bottom }, urls })), top.name);
+  const svg = dollSVG({ pack, items: { top: mkItem('White long-sleeve shirt', 'tops', { fit: { base: { tuck: true } } }), bottom }, urls });
+  assert.match(svg, /<g clip-path="url\(#sleeveclip-\d+\)" aria-hidden="true"><g clip-path="url\(#hipout-\d+\)">/);
+  assert.match(svg, /<clipPath id="hipout-\d+" clip-rule="evenodd">/);
+});
 test('a tucked top follows the bottoms\' waistband when their outline is known (no gap of skin over a low or curved waistband)', () => {
   const top = new Int16Array(40).fill(-1); for (let x = 5; x < 35; x++) top[x] = 190 - Math.abs(x - 20); // (higher at the sides, lower in the middle)
   const d = tuckCut(pack, null, { k: 4, top }), ys = [...d.matchAll(/(\d+(?:\.\d+)?) (\d+(?:\.\d+)?)/g)].map((m) => [+m[1], +m[2]]);
   const at = (x) => ys.find(([px]) => px === x)?.[1];
   assert.ok(Math.abs(at(80) - (190 * 4 + 12)) <= 8, `the cut sits just inside their top edge in the middle (${at(80)})`);
   assert.ok(at(40) < at(80) - 20, 'and rises with the waistband at the sides');
-  assert.ok(ys.every(([x]) => x >= 5 * 4 && x <= pack.points.waistbandR[0] + 30), 'from the bottoms\' own edge out to just past her waistband, never further');
+  assert.ok(ys.some(([x]) => x === 0) && ys.some(([x]) => x === pack.size[0]), 'right across her, past the bottoms\' own edges (a bodysuit\'s legs mustn\'t show beside them)');
   const svg = dollSVG({ pack, items: { top: mkItem('t', 'tops', { fit: { base: { tuck: true } } }), bottom: mkItem('b', 'bottoms') }, urls, fits: new Map([['t', 'blob:tf'], ['b', 'blob:bf']]), masks: new Map([['b', { k: 4, top }]]) });
   assert.match(svg, /<clipPath id="tuckclip-\d+"[^>]*><path clip-rule="evenodd" d="M0 0H896V1776H0Z M\d+ \d+L/);
 });
