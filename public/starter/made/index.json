@@ -37230,25 +37230,6 @@
    ],
    "t": 1795683238299
   },
-  "starter-grey-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 226,
-    "y": 1550,
-    "w": 424,
-    "h": 196
-   },
-   "v": 5,
-   "color": {
-    "hex": "#6c7378",
-    "name": "Grey"
-   },
-   "colors": [
-    "#6c7378",
-    "#444b56"
-   ],
-   "t": 1795683242495
-  },
   "starter-chocolate-brown-satin-pajama-pants": {
    "kind": "worn",
    "box": {
@@ -37326,45 +37307,6 @@
    ],
    "t": 1795740465504
   },
-  "starter-chocolate-brown-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 238,
-    "y": 1548,
-    "w": 434,
-    "h": 198
-   },
-   "v": 5,
-   "color": {
-    "hex": "#3a2319",
-    "name": "Black"
-   },
-   "colors": [
-    "#3a2319"
-   ],
-   "t": 1795740469533
-  },
-  "starter-olive-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 220,
-    "y": 1536,
-    "w": 454,
-    "h": 210
-   },
-   "v": 5,
-   "color": {
-    "hex": "#474828",
-    "name": "Brown"
-   },
-   "colors": [
-    "#474828",
-    "#745a48",
-    "#757853",
-    "#a87677"
-   ],
-   "t": 1795740473700
-  },
   "starter-sage-green-tennis-skirt": {
    "kind": "worn",
    "box": {
@@ -37403,25 +37345,6 @@
     "#6a6a67"
    ],
    "t": 1795740519305
-  },
-  "starter-espresso-linen-shirt-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 172,
-    "y": 338,
-    "w": 502,
-    "h": 1346
-   },
-   "v": 5,
-   "color": {
-    "hex": "#28241b",
-    "name": "Black"
-   },
-   "colors": [
-    "#28241b",
-    "#5b5246"
-   ],
-   "t": 1795740524801
   },
   "starter-beige-quilted-jacket": {
    "kind": "worn",
@@ -37462,28 +37385,6 @@
     "#756867"
    ],
    "t": 1795740532616
-  },
-  "starter-gold-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 1670,
-    "w": 448,
-    "h": 76
-   },
-   "v": 5,
-   "color": {
-    "hex": "#564854",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#564854",
-    "#957a76",
-    "#685547",
-    "#745d27",
-    "#46391b"
-   ],
-   "t": 1795740535524
   },
   "starter-nude-strappy-heeled-sandals": {
    "kind": "worn",
@@ -37601,27 +37502,6 @@
    ],
    "t": 1795740577793
   },
-  "starter-white-strappy-heeled-sandals": {
-   "kind": "worn",
-   "box": {
-    "x": 176,
-    "y": 1536,
-    "w": 496,
-    "h": 210
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f4f6f7",
-    "name": "White"
-   },
-   "colors": [
-    "#f4f6f7",
-    "#282819",
-    "#6e7177",
-    "#a9a9a6"
-   ],
-   "t": 1795740581419
-  },
   "starter-silver-strappy-heeled-sandals": {
    "kind": "worn",
    "box": {
@@ -37643,54 +37523,6 @@
     "#5c6d84"
    ],
    "t": 1795740584665
-  },
-  "starter-red-strappy-heeled-sandals": {
-   "kind": "worn",
-   "box": {
-    "x": 210,
-    "y": 1552,
-    "w": 454,
-    "h": 194
-   },
-   "v": 5,
-   "color": {
-    "hex": "#960202",
-    "name": "Red"
-   },
-   "colors": [
-    "#960202",
-    "#690504",
-    "#370304",
-    "#1b0304"
-   ],
-   "t": 1795740588434
-  },
-  "starter-brown-small-shoulder-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#491908",
-    "name": "Burgundy"
-   },
-   "colors": [
-    "#491908",
-    "#473937",
-    "#290a04",
-    "#86797a"
-   ],
-   "t": 1795740593153
-  },
-  "starter-gold-link-watch": {
-   "kind": "photo",
-   "color": {
-    "hex": "#eac477",
-    "name": "Camel"
-   },
-   "colors": [
-    "#eac477",
-    "#c69648",
-    "#260c01"
-   ],
-   "t": 1795740603745
   },
   "starter-oatmeal-oversized-hoodie": {
    "kind": "worn",
@@ -37827,31 +37659,6 @@
    ],
    "t": 1795740637895
   },
-  "starter-brown-baguette-shoulder-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#b24d1b",
-    "name": "Rust"
-   },
-   "colors": [
-    "#b24d1b"
-   ],
-   "t": 1795740643012
-  },
-  "starter-gold-band-rings": {
-   "kind": "photo",
-   "color": {
-    "hex": "#dddbd8",
-    "name": "Silver"
-   },
-   "colors": [
-    "#dddbd8",
-    "#fbf7d8",
-    "#eabc73",
-    "#c28c47"
-   ],
-   "t": 1795740660530
-  },
   "starter-chocolate-brown-oversized-hoodie": {
    "kind": "worn",
    "box": {
@@ -37870,26 +37677,6 @@
     "#281716"
    ],
    "t": 1795740664296
-  },
-  "starter-butter-yellow-sundress": {
-   "kind": "worn",
-   "box": {
-    "x": 152,
-    "y": 306,
-    "w": 606,
-    "h": 1110
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f9ebb7",
-    "name": "Cream"
-   },
-   "colors": [
-    "#f9ebb7",
-    "#c7b889",
-    "#f9db86"
-   ],
-   "t": 1795740667875
   },
   "starter-light-blue-sundress": {
    "kind": "worn",
@@ -38001,18 +37788,6 @@
     "#727d98"
    ],
    "t": 1795740698683
-  },
-  "starter-brown-cat-eye-sunglasses": {
-   "kind": "photo",
-   "color": {
-    "hex": "#170100",
-    "name": "Black"
-   },
-   "colors": [
-    "#170100",
-    "#471a01"
-   ],
-   "t": 1795740705208
   },
   "starter-black-square-sunglasses": {
    "kind": "photo",
@@ -38555,6 +38330,27 @@
   ],
   "starter-tan-wide-belt": [
    "skin-coloured areas (a person or a body form?)"
+  ],
+  "starter-olive-pointed-pumps": [
+   "only the toe caps came out"
+  ],
+  "starter-gold-pointed-pumps": [
+   "only the toe caps came out"
+  ],
+  "starter-espresso-linen-shirt-dress": [
+   "most of the dress was cut away"
+  ],
+  "starter-white-strappy-heeled-sandals": [
+   "only fragments of the straps came out"
+  ],
+  "starter-red-strappy-heeled-sandals": [
+   "only fragments of the straps came out"
+  ],
+  "starter-butter-yellow-sundress": [
+   "holes cut through the dress"
+  ],
+  "starter-brown-cat-eye-sunglasses": [
+   "the lenses came out blotchy"
   ]
  },
  "blocked": {
@@ -38992,6 +38788,12 @@
   "starter-navy-pointed-pumps": "only the toe caps came out again (failed before too)",
   "starter-black-platform-heels": "only fragments with skin came out again (failed before too)",
   "starter-black-mary-janes": "only the toe caps came out (failed before too)",
-  "starter-brown-oversized-sunglasses": "the lenses came out as blotches (failed before too)"
+  "starter-brown-oversized-sunglasses": "the lenses came out as blotches (failed before too)",
+  "starter-grey-pointed-pumps": "only the toe caps came out (failed before too)",
+  "starter-chocolate-brown-pointed-pumps": "only the toe caps came out (failed before too)",
+  "starter-brown-small-shoulder-bag": "the bag came out as smears (failed before too)",
+  "starter-gold-link-watch": "the watch came out broken (failed before too)",
+  "starter-brown-baguette-shoulder-bag": "the bag came out with ragged edges and no strap (failed before too)",
+  "starter-gold-band-rings": "only faint fragments of the rings came out (failed before too)"
  }
 }
