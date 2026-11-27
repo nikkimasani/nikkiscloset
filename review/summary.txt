@@ -1,9 +1,9 @@
-52 made this run · 1977 of 3146 in the wardrobe · 32 failed · stopped: today's share of the free Cloudflare allowance is used (8878 of 9000 neurons; the rest is kept for the app) (the next run carries on)
-starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
+66 made this run · 2040 of 3146 in the wardrobe · 29 failed · stopped: today's share of the free Cloudflare allowance is used (8867 of 9000 neurons; the rest is kept for the app) (the next run carries on)
+starter-beige-quilted-crossbody: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
 starter-straw-beach-tote: more than the item in the picture (text, a hanger or a prop?); skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-beige-structured-tote: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
 starter-gold-pendant-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?)
-starter-tortoiseshell-sunglasses: more than the item in the picture (text, a hanger or a prop?); a white or grey body shape (a dress form?)
+starter-tortoiseshell-sunglasses: more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
 starter-gold-sequin-cami: taken out on review: cut out in shreds, twice
 starter-floral-corset-top: taken out on review: torn and off colours, twice
 starter-floral-corset-bodysuit: taken out on review: patches on her legs kept, twice
@@ -11,23 +11,20 @@ starter-sage-satin-blouse: taken out on review: trousers added, twice
 starter-tan-halter-top: taken out on review: pale arms kept with the piece, twice
 starter-tan-scoop-bodysuit: taken out on review: pale arms kept with the piece, twice
 starter-taupe-quilted-chain-bag: more than the item in the picture (text, a hanger or a prop?); a light piece on a form: the form could not be removed automatically
-starter-beige-envelope-clutch: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
-starter-beige-mini-top-handle-bag: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
-starter-beige-chain-shoulder-bag: skin-coloured areas (a person or a body form?); a light piece on a white background (it can’t be cut out cleanly); a light piece on a form: the form could not be removed automatically
-starter-brown-small-shoulder-bag: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
-starter-dainty-gold-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?)
-starter-gold-chain-necklace: a white patch at the top or bottom edge (a form’s neck or stand?)
-starter-tan-straw-top-handle-bag: colour doesn’t look straw
-starter-sage-green-long-sleeve-workout-top: it added shorts or trousers to the top
-starter-brown-baguette-shoulder-bag: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
-starter-gold-link-watch: more than the item in the picture (text, a hanger or a prop?)
-starter-silver-link-watch: more than the item in the picture (text, a hanger or a prop?); a light piece on a white background (it can’t be cut out cleanly)
-starter-navy-long-sleeve-workout-top: it added shorts or trousers to the top
+starter-beige-envelope-clutch: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
+starter-beige-chain-shoulder-bag: skin-coloured areas (a person or a body form?); a light piece on a form: the form could not be removed automatically
+starter-dainty-gold-necklace: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-gold-chain-necklace: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-tan-straw-top-handle-bag: colour doesn’t look straw; a light piece on a white background (it can’t be cut out cleanly)
+starter-silver-link-watch: a light piece on a white background (it can’t be cut out cleanly)
+starter-navy-long-sleeve-workout-top: Cloudflare said: 8004 AiError: AiError: Internal server error (05ea2e5e-0e98-4d6e-afd6-f70f85fe1022)
 starter-clear-pointed-heels: the piece barely shows (it may not have dressed her)
 starter-clear-pointed-toe-heels: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (6685cbf8-7c25-4546-b0e3-3068114af979)
 starter-gold-mini-bag: more than the item in the picture (text, a hanger or a prop?)
-starter-oatmeal-long-sleeve-workout-top: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (74d98ac4-12eb-4530-b812-876e7213c4e2)
-starter-white-espadrille-wedges: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (b2fde7c6-0166-4584-b052-c3c6b7c68d20)
+starter-oatmeal-long-sleeve-workout-top: it added shorts or trousers to the top
 starter-tan-check-tote: skin-coloured areas (a person or a body form?)
-starter-brown-crossbody-chain-bag: item is missing or tiny; more than the item in the picture (text, a hanger or a prop?); a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
-starter-gold-band-rings: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-brown-crossbody-chain-bag: a white patch at the top or bottom edge (a form’s neck or stand?); a white or grey body shape (a dress form?)
+starter-silver-bracelet: item is missing or tiny; a white patch at the top or bottom edge (a form’s neck or stand?); a light piece on a white background (it can’t be cut out cleanly)
+starter-light-blue-pointed-pumps: Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (2a8676dd-99de-4c1f-962b-327b6985e910)
+starter-brown-logo-buckle-belt: a white patch at the top or bottom edge (a form’s neck or stand?)
+starter-tan-wide-belt: skin-coloured areas (a person or a body form?)
