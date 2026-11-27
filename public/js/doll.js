@@ -228,7 +228,7 @@ function hull(pts) {
   return lo.slice(0, -1).concat(up.slice(0, -1));
 }
 
-export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false, tuck = null }) {
+export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = null, places = null, fitBoxes = null, masks = null, base = '', selected = '', cls = '', label = '', debug = false, tuck = null }) {
   const n = ++uidN;
   const top = items.top, bottom = items.bottom; // (tuck: true/false to tuck the top in or not for this picture only, as a look on Today says; null = as she left it)
   const tucked = !!(top && bottom && (top.type === 'bodysuits' ? pack.tuckable.includes('bodysuits') : isTuckable(top, pack) && (tuck ?? tuckOf(top, pack)))), clipTop = tucked; // (a bodysuit goes under too, but is trimmed the same way: where it's wider than the trousers at her hips it would show beside them)
@@ -243,7 +243,7 @@ export function dollSVG({ pack, items, urls, hair = null, meta = null, fits = nu
     if (ar && !fitted) return accPiece(it, { ...ar, ...(ar.variants || []).find((v) => new RegExp(v.match, 'i').test(`${it.name || ''} ${it.detail || ''}`)) }, f, selected === it.id, slot); // an accessory snaps to its body point (accRules in config.json)
     if (fitted) { // warped onto the body (garment.js): a picture the size of the base picture, nudged about its pivot
       const [px, py] = pivotOf(it.type, pack), tf = `translate(${num(f.dx)} ${num(f.dy)}) rotate(${num(f.rot)} ${num(px)} ${num(py)}) translate(${num(px)} ${num(py)}) scale(${num(f.scale * 1000) / 1000}) translate(${-num(px)} ${-num(py)})`;
-      const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}"><image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
+      const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${tf}">${(() => { const pl = places?.get(it.id); return pl ? `<image href="${fitted}" x="${num(pl.x)}" y="${num(pl.y)}" width="${num(pl.w)}" height="${num(pl.h)}" preserveAspectRatio="none" filter="url(#gfx-${n})"/>` : `<image href="${fitted}" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}" filter="url(#gfx-${n})"/>`; })()}${selected === it.id && fitBoxes?.get(it.id) ? `<rect class="selbox" x="${fitBoxes.get(it.id).x}" y="${fitBoxes.get(it.id).y}" width="${fitBoxes.get(it.id).w}" height="${fitBoxes.get(it.id).h}" rx="6" fill="none"/>` : ''}</g>`;
       return slot === 'top' && clipTop ? `<g clip-path="url(#tuckclip-${n})">${g}</g>` + (arms ? ((sleeves = `<g clip-path="url(#sleeveclip-${n})" aria-hidden="true">${sleeveCopy(g)}</g>`), '') : '') : g;
     }
     const g = `<g class="gar${selected === it.id ? ' sel' : ''}" data-id="${it.id}" data-slot="${slot}" transform="${garmentTransform(a, f)}">
