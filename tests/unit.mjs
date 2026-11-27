@@ -585,6 +585,13 @@ test('Style me never makes a look of a top on its own', async () => {
   for (let k = 0; k < 20; k++) { const o = styleMe([t, d], 'Brunch'); assert.ok(!o.top && o.dress?.id === 'd', 'no bottoms at all: a dress instead'); }
   assert.ok(!styleMe([t], 'Brunch').top, 'nothing to go with the top: no look');
 });
+test('a piece made on the model is drawn from its own picture at its place on her (nothing her size is made on opening)', () => {
+  const top = mkItem('t', 'tops'), urls = new Map([['t', 'blob:t']]);
+  const placed = dollSVG({ pack, items: { top }, urls, fits: new Map([['t', 'blob:t']]), places: new Map([['t', { x: 278, y: 290, w: 338, h: 460 }]]) });
+  assert.match(placed, /<image href="blob:t" x="278" y="290" width="338" height="460" preserveAspectRatio="none"/);
+  const full = dollSVG({ pack, items: { top }, urls, fits: new Map([['t', 'blob:fit']]) });
+  assert.match(full, new RegExp(`<image href="blob:fit" x="0" y="0" width="${pack.size[0]}" height="${pack.size[1]}"`));
+});
 test('accessories and bags snap to their body points: earrings split onto both ears, a watch on the wrist', () => {
   const earrings = mkItem('e', 'accessories', { acc: 'earrings' }), meta = new Map([['e', { iw: 200, ih: 100 }], ['w', { iw: 100, ih: 100 }]]);
   const svg = dollSVG({ pack, items: { acc: earrings }, urls: new Map([['e', 'blob:e']]), meta });
