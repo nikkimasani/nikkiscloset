@@ -45,7 +45,7 @@ const S = {
   items: [], outfits: [], wears: [], inspos: [], profile: null, plans: [], wishlist: [],
   loc: (() => { try { return JSON.parse(store.get('loc', 'null')); } catch { return null; } })(), forecast: null, weatherError: '',
   pack: { days: 3, band: 'auto', moods: [], result: null, checked: new Set() },
-  urls: lazyUrls(), fits: new Map(), fitBoxes: new Map(), bases: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitSig: new Map(), fitPending: new Set(),
+  urls: lazyUrls(), fits: new Map(), fitBoxes: new Map(), bases: new Map(), fitMask: new Map(), fitBlobs: new Map(), fitPlace: new Map(), fitSig: new Map(), fitPending: new Set(),
   view: 'today', planTab: 'week', mood: '', drawer: 'fit', lastTab: '',
   scene: store.get('scene', 'doll') === 'doll' ? 'doll' : 'closet', // 'doll' = Dress up (the mannequin at the mirror); 'closet' = the walk-in closet
   game: (() => { try { return { ...gameInitial(), ...JSON.parse(store.get('game', '{}')) }; } catch { return gameInitial(); } })(),
@@ -301,37 +301,59 @@ function outfitItems(src) {
 
 /** The base picture to show under these items: base.png, or (under a short skirt or dress) base.png with the shorts below the hem hidden. */
 function baseFor(items) {
-  const parts = Object.values(items).filter((i) => (i.type === 'dresses' || i.type === 'skirts') && S.fitBlobs.has(i.id));
+  const parts = Object.values(items).filter((i) => (i.type === 'dresses' || i.type === 'skirts') && (S.fitBlobs.has(i.id) || S.fitPlace.has(i.id)));
   if (!parts.length || !dollPack) return '';
   const key = parts.map((i) => i.id + S.fitSig.get(i.id)).join('|');
   if (S.bases.has(key)) return S.bases.get(key) || '';
   S.bases.set(key, null);
-  baseUnder(dollPack, parts.map((i) => S.fitBlobs.get(i.id))).then((u) => { S.bases.set(key, u); if (u) (S.view === 'tryon' ? mountStage() : render()); }).catch(() => {});
+  Promise.all(parts.map((i) => (S.fitPlace.has(i.id) ? placedCanvas(i) : S.fitBlobs.get(i.id)))).then((list) => baseUnder(dollPack, list)).then((u) => { S.bases.set(key, u); if (u) (S.view === 'tryon' ? mountStage() : render()); }).catch(() => {});
   return '';
 }
 
+/** A piece made on the model, drawn at its place on a picture her size (only where a whole picture is needed: the shorts under a short skirt). */
+async function placedCanvas(item) {
+  const { img, url: u } = await loadImage(item.cutout), b = item.wornBox, c = document.createElement('canvas'); c.width = dollPack.size[0]; c.height = dollPack.size[1];
+  c.getContext('2d').drawImage(img, b.x, b.y, b.w, b.h); URL.revokeObjectURL(u); return c;
+}
+/** The see-through map of a piece made on the model, from its own small picture and its place on her: the same map maskFromBlob makes of
+ *  the picture her size, without making that picture (the slow part of opening the app). */
+async function maskFromPlaced(item) {
+  const { img, url: u } = await loadImage(item.cutout); URL.revokeObjectURL(u);
+  return maskOf(img, (g) => { const b = item.wornBox; g.drawImage(img, b.x / 4, b.y / 4, b.w / 4, b.h / 4); }, dollPack.size[0], dollPack.size[1]);
+}
 /** A quarter-size see-through map of a fitted picture, so a tap picks the piece you touched. */
 async function maskFromBlob(blob) {
   const { img, url: u } = await loadImage(blob); URL.revokeObjectURL(u);
-  const w = Math.round(img.naturalWidth / 4), h = Math.round(img.naturalHeight / 4), c = document.createElement('canvas'); c.width = w; c.height = h;
-  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, w, h); const d = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h);
+  return maskOf(img, (g, w, h) => g.drawImage(img, 0, 0, w, h), img.naturalWidth, img.naturalHeight);
+}
+function maskOf(img, draw, fullW, fullH) {
+  const w = Math.round(fullW / 4), h = Math.round(fullH / 4), c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true }); draw(g, w, h); const d = g.getImageData(0, 0, w, h).data, data = new Uint8Array(w * h);
   let x0 = w, y0 = h, x1 = -1, y1 = -1;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 40) { data[y * w + x] = 1; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-  const k = img.naturalWidth / w, top = new Int16Array(w).fill(-1); // (top: the piece's upper edge in each column, where a top tucked into it is cut)
+  const k = fullW / w, top = new Int16Array(w).fill(-1); // (top: the piece's upper edge in each column, where a top tucked into it is cut)
   for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) if (data[y * w + x]) { top[x] = y; break; }
   return { w, h, data, k, top, box: x1 < 0 ? null : { x: x0 * k, y: y0 * k, w: (x1 - x0 + 1) * k, h: (y1 - y0 + 1) * k } };
 }
-
 /** Fit a worn piece to the body in the background (landmarks are suggested the first time and kept on the piece); the figure redraws when it's ready. */
 function queueFit(item) {
   if (!dollPack || !(groupOf(item.type) || item.worn || item.wornLazy) || !item.cutout) return;
   const sig = fitSignature(item, dollPack), key = item.id + sig;
   if (S.fitSig.get(item.id) === sig || S.fitPending.has(key)) return;
   S.fitPending.add(key);
+  if (item.wornLazy && item.wornBox && !item.worn?.size) { // made on the model: its own picture is drawn at its place on her, so nothing her size is made each time the app opens
+    maskFromPlaced(item).then((fm) => {
+      S.fitPending.delete(key); const old = S.fits.get(item.id); if (old && !S.fitPlace.has(item.id)) setTimeout(() => URL.revokeObjectURL(old), 5000);
+      S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, S.urls.get(item.id)); S.fitPlace.set(item.id, item.wornBox); S.fitBlobs.delete(item.id); S.fitSig.set(item.id, sig);
+      clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : (S.view === 'plan' && S.planTab === 'diary') || S.view === 'inspo' ? render() : fillFigures(true)), 60);
+    }).catch(() => S.fitPending.delete(key));
+    return;
+  }
   fitItem(item, dollPack).then(async (r) => {
     S.fitPending.delete(key);
     if (!r) return;
-    const old = S.fits.get(item.id); if (old) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one)
+    const old = S.fits.get(item.id); if (old && !S.fitPlace.has(item.id)) setTimeout(() => URL.revokeObjectURL(old), 5000); // (after the figure has redrawn with the new one; a placed piece's is its own picture, still in use)
+    S.fitPlace.delete(item.id);
     const fm = await maskFromBlob(r.blob); S.fitMask.set(item.id, fm); if (fm.box) S.fitBoxes.set(item.id, fm.box); S.fits.set(item.id, r.url); S.fitBlobs.set(item.id, r.blob); S.fitSig.set(item.id, sig);
     if (!item.marks && r.marks) { item.marks = r.marks; S.fitSig.set(item.id, fitSignature(item, dollPack)); await put('items', item, { sync: true }); } // (worked out, not an edit: it mustn't win over an edit from another device)
     clearTimeout(S.fitTimer); S.fitTimer = setTimeout(() => (S.view === 'tryon' ? mountStage() : (S.view === 'plan' && S.planTab === 'diary') || S.view === 'inspo' ? render() : fillFigures(true)), 60); // (elsewhere only the model pictures change, so nothing else on the page is redrawn)
@@ -347,7 +369,7 @@ const hairMarks = () => { // your own "Adjust fit" landmarks, per style (dropped
 const myHair = () => hairOf(dollPack, S.hairStyle, S.hairColor, hairMarks());
 /** Model pictures drawn before the model's art had loaded (Today's looks) are filled in once it has, without redrawing the page. */
 function fillFigures(all = false) { if (dollPack) document.querySelectorAll('[data-fig]').forEach((el) => { if (all || !el.firstElementChild) el.innerHTML = figure(el.dataset.fig.split(','), 'mini', el.dataset.tuck ? { tuck: el.dataset.tuck === '1' } : {}); }); }
-function figure(src, cls = '', { tuck = null } = {}) { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls, tuck }) : ''; }
+function figure(src, cls = '', { tuck = null } = {}) { return dollPack ? dollSVG({ pack: dollPack, items: outfitItems(src), urls: S.urls, hair: myHair(), fits: S.fits, places: S.fitPlace, base: baseFor(outfitItems(src)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls, tuck }) : ''; }
 const hanger = '<svg class="hang" aria-hidden="true" viewBox="0 0 44 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M22 2a4 4 0 1 1 3 6.5L22 10 3 16h38L22 10"/></svg>';
 
 /* ───────────────────────── router ───────────────────────── */
@@ -1073,7 +1095,7 @@ function stageHTML() {
   }
   if (dollFailed) return '<p class="muted dollhint" role="alert">The model picture couldn’t load. Check your connection, then <button class="ghost sm" data-act="dollretry">Try again</button></p>';
   if (!dollPack) return '<p class="muted dollhint" role="status">Getting the model ready…</p>';
-  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
+  return dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, places: S.fitPlace, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, debug: S.dbgPts, selected: S.adjust && Object.values(S.outfit).includes(S.adjust) ? S.adjust : '' });
 }
 function mountStage() { if (S.scene === 'closet' && S.view === 'tryon') return wicRefresh(); const el = $('#stage'); if (el) el.innerHTML = stageHTML(); }
 const refreshStage = mountStage;
@@ -1324,7 +1346,7 @@ function wicPanel(sec, W, H, x) {
     inner = layoutSection(sec, list.map((i) => ({ id: i.id, ar: itemRatio(i) }))).map((p) => { const it = itemById(p.id);
       return `${p.hanger ? `<span class="wic-hanger" aria-hidden="true" style="left:${pct(p.hanger[0], iw)};top:${pct(p.hanger[1] - 6, ih)}"></span>` : ''}<button class="wic-item ${worn.has(it.id) ? 'worn' : ''} ${S.picking && S.pick.includes(it.id) ? 'picked' : ''} ${starter.isStarter(it) ? 'is-starter' : ''}" style="left:${pct(p.x, iw)};top:${pct(p.y, ih)};width:${pct(p.w, iw)};height:${pct(p.h, ih)}" data-act="wicitem" data-id="${it.id}" aria-label="${esc(it.name)}${worn.has(it.id) ? ' (in your outfit)' : ''}"><img src="${url(it.id)}" alt="" draggable="false"></button>`; }).join('');
   } else if (sec.k === 'mirror') {
-    const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
+    const fig = dollPack ? dollSVG({ pack: dollPack, items: outfitItems(S.outfit), urls: S.urls, hair: myHair(), fits: S.fits, places: S.fitPlace, base: baseFor(outfitItems(S.outfit)), fitBoxes: S.fitBoxes, masks: S.fitMask, meta: S.meta, cls: 'wic-doll', label: 'You, in the mirror' }) : '';
     inner = `<button class="wic-mirrorfig" data-act="wicmirror" aria-label="Open the mirror to try it on">${fig}</button>`;
   }
   const n = list.length;
@@ -1641,10 +1663,10 @@ async function dollCanvas() {
   if (!dollOn() || !dollPack) return null;
   const items = outfitItems(S.outfit), urls = new Map();
   const fits = new Map();
-  for (const it of Object.values(items)) { urls.set(it.id, await blobToData(it.cutout)); if (S.fitBlobs.has(it.id)) fits.set(it.id, await blobToData(S.fitBlobs.get(it.id))); }
+  for (const it of Object.values(items)) { urls.set(it.id, await blobToData(it.cutout)); if (S.fitPlace.has(it.id)) fits.set(it.id, urls.get(it.id)); else if (S.fitBlobs.has(it.id)) fits.set(it.id, await blobToData(S.fitBlobs.get(it.id))); }
   const bodyFile = dollPack.layers.body, baseData = await blobToData(await (await fetch(baseFor(items) || dollPack.files[bodyFile])).blob()); // an SVG drawn as an image can't fetch files either
   let hair = myHair(); if (hair) hair = { ...hair, href: await blobToData(await (await fetch(hair.href)).blob()) }; // (an SVG drawn as an image can't fetch files)
-  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits, hair });
+  const svg = dollSVG({ pack: { ...dollPack, files: { ...dollPack.files, [bodyFile]: baseData } }, items, urls, fits, places: S.fitPlace, hair });
   const img = new Image(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   try { await img.decode(); } catch { return null; }
   const [, , w, h] = dollPack.view, c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);

@@ -1,5 +1,5 @@
 {
- "version": 1795770382836,
+ "version": 1795826771375,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -285,7 +285,7 @@
     "#f5f5f8",
     "#b7bac7"
    ],
-   "t": 1795395770537
+   "t": 1795810491884
   },
   "starter-camel-wide-leg-trousers": {
    "kind": "worn",
@@ -19790,7 +19790,7 @@
     "#8798c8",
     "#786b98"
    ],
-   "t": 1794531076181
+   "t": 1795810491884
   },
   "starter-light-blue-ripped-straight-jeans": {
    "kind": "worn",
@@ -21314,7 +21314,7 @@
     "#e6dac7",
     "#b4aca3"
    ],
-   "t": 1795361190981
+   "t": 1795810491884
   },
   "starter-grey-wide-leg-trousers": {
    "kind": "worn",
@@ -24658,7 +24658,7 @@
     "#374968",
     "#152648"
    ],
-   "t": 1794704018374
+   "t": 1795810491884
   },
   "starter-black-denim-denim-shorts": {
    "kind": "worn",
@@ -38484,7 +38484,6 @@
   "starter-cream-satin-midi-skirt": "taken out on review: torn down the side, twice",
   "starter-lavender-square-neck-tank-bodysuit": "taken out on review: torn, holes, twice",
   "starter-tan-check-mini-skirt": "taken out on review: shorts added under it, twice",
-  "starter-tan-leather-mini-skirt": "taken out on review: legs kept below it, twice",
   "starter-camel-mini-skirt": "taken out on review: legs kept below it, twice",
   "starter-camel-pencil-skirt": "taken out on review: legs kept below it, twice",
   "starter-chocolate-brown-tailored-shorts": "taken out on review: legs kept below it, twice",
@@ -38652,15 +38651,7 @@
    "matching shorts or trousers kept under the jacket (left out by review)",
    "matching shorts or trousers kept under the jacket (left out by review)"
   ],
-  "starter-pink-blazer": [
-   "matching shorts or trousers kept under the jacket (left out by review)",
-   "matching shorts or trousers kept under the jacket (left out by review)"
-  ],
   "starter-red-tailored-blazer": [
-   "matching shorts or trousers kept under the jacket (left out by review)",
-   "matching shorts or trousers kept under the jacket (left out by review)"
-  ],
-  "starter-sage-blazer": [
    "matching shorts or trousers kept under the jacket (left out by review)",
    "matching shorts or trousers kept under the jacket (left out by review)"
   ],
