@@ -38224,24 +38224,6 @@
    ],
    "t": 1795740809613
   },
-  "starter-espresso-linen-shirt-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 184,
-    "y": 348,
-    "w": 520,
-    "h": 1004
-   },
-   "v": 5,
-   "color": {
-    "hex": "#4b443a",
-    "name": "Charcoal"
-   },
-   "colors": [
-    "#4b443a"
-   ],
-   "t": 1795770368353
-  },
   "starter-butter-yellow-sundress": {
    "kind": "worn",
    "box": {
@@ -38279,24 +38261,6 @@
     "#7a7558"
    ],
    "t": 1795770377440
-  },
-  "starter-olive-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 204,
-    "y": 1542,
-    "w": 470,
-    "h": 204
-   },
-   "v": 5,
-   "color": {
-    "hex": "#46442b",
-    "name": "Brown"
-   },
-   "colors": [
-    "#46442b"
-   ],
-   "t": 1795770380554
   },
   "starter-navy-long-sleeve-workout-top": {
    "kind": "worn",
@@ -38373,66 +38337,6 @@
     "#ab9885"
    ],
    "t": 1795826835052
-  },
-  "starter-light-blue-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 222,
-    "y": 1538,
-    "w": 454,
-    "h": 208
-   },
-   "v": 5,
-   "color": {
-    "hex": "#87c5fa",
-    "name": "Light Blue"
-   },
-   "colors": [
-    "#87c5fa",
-    "#7798d7"
-   ],
-   "t": 1795826839261
-  },
-  "starter-gold-pointed-pumps": {
-   "kind": "worn",
-   "box": {
-    "x": 232,
-    "y": 1660,
-    "w": 440,
-    "h": 84
-   },
-   "v": 5,
-   "color": {
-    "hex": "#775707",
-    "name": "Olive"
-   },
-   "colors": [
-    "#775707",
-    "#b99738",
-    "#e6c56a",
-    "#7a6435"
-   ],
-   "t": 1795826843094
-  },
-  "starter-white-strappy-heeled-sandals": {
-   "kind": "worn",
-   "box": {
-    "x": 208,
-    "y": 1576,
-    "w": 466,
-    "h": 170
-   },
-   "v": 5,
-   "color": {
-    "hex": "#f6fafb",
-    "name": "White"
-   },
-   "colors": [
-    "#f6fafb",
-    "#262724",
-    "#9a775a"
-   ],
-   "t": 1795826846752
   },
   "starter-black-corset-midi-dress": {
    "kind": "worn",
@@ -38687,19 +38591,6 @@
    ],
    "t": 1795826963789
   },
-  "starter-silver-bracelet": {
-   "kind": "photo",
-   "color": {
-    "hex": "#979797",
-    "name": "Grey"
-   },
-   "colors": [
-    "#979797",
-    "#e2ddd6",
-    "#6a6965"
-   ],
-   "t": 1795826991275
-  },
   "starter-cream-oversized-sweatshirt": {
    "kind": "worn",
    "box": {
@@ -38837,29 +38728,6 @@
    ],
    "t": 1795827019397
   },
-  "starter-brown-crossbody-chain-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#45251b",
-    "name": "Brown"
-   },
-   "colors": [
-    "#45251b"
-   ],
-   "t": 1795827025773
-  },
-  "starter-silver-mini-chain-bag": {
-   "kind": "photo",
-   "color": {
-    "hex": "#a4a5aa",
-    "name": "Grey"
-   },
-   "colors": [
-    "#a4a5aa",
-    "#d6d8d9"
-   ],
-   "t": 1795827035336
-  },
   "starter-oatmeal-oversized-sweatshirt": {
    "kind": "worn",
    "box": {
@@ -38916,28 +38784,6 @@
     "#976749"
    ],
    "t": 1795827064888
-  },
-  "starter-camel-teddy-coat": {
-   "kind": "worn",
-   "box": {
-    "x": 104,
-    "y": 236,
-    "w": 690,
-    "h": 1334
-   },
-   "v": 5,
-   "color": {
-    "hex": "#c97746",
-    "name": "Rust"
-   },
-   "colors": [
-    "#c97746",
-    "#c6876a",
-    "#995936",
-    "#381406",
-    "#080705"
-   ],
-   "t": 1795827069485
   },
   "starter-cream-leather-sneakers": {
    "kind": "worn",
@@ -39105,25 +38951,6 @@
    ],
    "t": 1795827131831
   },
-  "starter-cream-slingback-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 226,
-    "y": 1666,
-    "w": 418,
-    "h": 80
-   },
-   "v": 5,
-   "color": {
-    "hex": "#dad5b6",
-    "name": "Beige"
-   },
-   "colors": [
-    "#dad5b6",
-    "#979898"
-   ],
-   "t": 1795827135719
-  },
   "starter-crystal-clutch": {
    "kind": "photo",
    "color": {
@@ -39237,25 +39064,6 @@
    ],
    "t": 1795827179874
   },
-  "starter-red-slingback-heels": {
-   "kind": "worn",
-   "box": {
-    "x": 228,
-    "y": 1542,
-    "w": 450,
-    "h": 204
-   },
-   "v": 5,
-   "color": {
-    "hex": "#790003",
-    "name": "Rust"
-   },
-   "colors": [
-    "#790003",
-    "#5a0207"
-   ],
-   "t": 1795827184055
-  },
   "starter-burgundy-slingback-heels": {
    "kind": "worn",
    "box": {
@@ -39296,20 +39104,6 @@
     "#a97559"
    ],
    "t": 1795827190966
-  },
-  "starter-cream-canvas-tote": {
-   "kind": "photo",
-   "color": {
-    "hex": "#787879",
-    "name": "Grey"
-   },
-   "colors": [
-    "#787879",
-    "#ebe5d9",
-    "#b8b6b5",
-    "#4a4949"
-   ],
-   "t": 1795827202779
   },
   "starter-black-nylon-tote": {
    "kind": "photo",
@@ -39511,6 +39305,21 @@
   "starter-brown-leather-bucket-bag": [
    "a white patch at the top or bottom edge (a form’s neck or stand?)",
    "a white or grey body shape (a dress form?)"
+  ],
+  "starter-silver-mini-chain-bag": [
+   "holes cut through the bag, grey backdrop left"
+  ],
+  "starter-camel-teddy-coat": [
+   "a person shows inside the open coat, with legs below"
+  ],
+  "starter-cream-slingback-heels": [
+   "only the toe caps came out"
+  ],
+  "starter-red-slingback-heels": [
+   "only the toe caps came out"
+  ],
+  "starter-cream-canvas-tote": [
+   "grey backdrop left and the bag cut ragged"
   ]
  },
  "blocked": {
@@ -39945,6 +39754,13 @@
   "starter-brown-small-shoulder-bag": "the bag came out as smears (failed before too)",
   "starter-gold-link-watch": "the watch came out broken (failed before too)",
   "starter-brown-baguette-shoulder-bag": "the bag came out with ragged edges and no strap (failed before too)",
-  "starter-gold-band-rings": "only faint fragments of the rings came out (failed before too)"
+  "starter-gold-band-rings": "only faint fragments of the rings came out (failed before too)",
+  "starter-espresso-linen-shirt-dress": "most of the dress was cut away (failed before too)",
+  "starter-olive-pointed-pumps": "only the toe caps came out (failed before too)",
+  "starter-light-blue-pointed-pumps": "only the toe caps came out (failed before too)",
+  "starter-gold-pointed-pumps": "only the toe caps came out (failed before too)",
+  "starter-white-strappy-heeled-sandals": "only fragments of the straps came out (failed before too)",
+  "starter-silver-bracelet": "a grey shadow came out with the bracelet (failed before too)",
+  "starter-brown-crossbody-chain-bag": "the bag came out as smears (failed before too)"
  }
 }
