@@ -1,5 +1,5 @@
 {
- "version": 1795827228670,
+ "version": 1795854424182,
  "pieces": {
   "starter-white-ribbed-tank": {
    "kind": "worn",
@@ -39175,6 +39175,123 @@
     "#c6c6ca"
    ],
    "t": 1795827228670
+  },
+  "starter-oatmeal-corset-midi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 208,
+    "y": 316,
+    "w": 514,
+    "h": 1386
+   },
+   "v": 5,
+   "color": {
+    "hex": "#9a836b",
+    "name": "Tan"
+   },
+   "colors": [
+    "#9a836b",
+    "#765a47"
+   ],
+   "t": 1795854403323
+  },
+  "starter-cream-tube-maxi-dress": {
+   "kind": "worn",
+   "box": {
+    "x": 224,
+    "y": 414,
+    "w": 450,
+    "h": 1260
+   },
+   "v": 5,
+   "color": {
+    "hex": "#ede5d7",
+    "name": "Cream"
+   },
+   "colors": [
+    "#ede5d7"
+   ],
+   "t": 1795854407054
+  },
+  "starter-camel-teddy-coat": {
+   "kind": "worn",
+   "box": {
+    "x": 94,
+    "y": 236,
+    "w": 700,
+    "h": 1324
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a85828",
+    "name": "Rust"
+   },
+   "colors": [
+    "#a85828",
+    "#d89557",
+    "#a8875b",
+    "#270a03",
+    "#7b4427"
+   ],
+   "t": 1795854410810
+  },
+  "starter-navy-leather-sneakers": {
+   "kind": "worn",
+   "box": {
+    "x": 194,
+    "y": 1570,
+    "w": 518,
+    "h": 176
+   },
+   "v": 5,
+   "color": {
+    "hex": "#252658",
+    "name": "Navy"
+   },
+   "colors": [
+    "#252658",
+    "#d8c8d6"
+   ],
+   "t": 1795854413919
+  },
+  "starter-cream-slingback-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 218,
+    "y": 1666,
+    "w": 444,
+    "h": 80
+   },
+   "v": 5,
+   "color": {
+    "hex": "#f3eac6",
+    "name": "Cream"
+   },
+   "colors": [
+    "#f3eac6",
+    "#c4bc9a"
+   ],
+   "t": 1795854417641
+  },
+  "starter-red-slingback-heels": {
+   "kind": "worn",
+   "box": {
+    "x": 230,
+    "y": 1534,
+    "w": 436,
+    "h": 212
+   },
+   "v": 5,
+   "color": {
+    "hex": "#a80113",
+    "name": "Red"
+   },
+   "colors": [
+    "#a80113",
+    "#78010b",
+    "#48050a"
+   ],
+   "t": 1795854424182
   }
  },
  "failed": {
@@ -39215,12 +39332,10 @@
    "taken out on review: pale arms kept with the piece, twice"
   ],
   "starter-taupe-quilted-chain-bag": [
-   "more than the item in the picture (text, a hanger or a prop?)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-envelope-clutch": [
    "skin-coloured areas (a person or a body form?)",
-   "a light piece on a white background (it can’t be cut out cleanly)",
    "a light piece on a form: the form could not be removed automatically"
   ],
   "starter-beige-chain-shoulder-bag": [
@@ -39270,9 +39385,6 @@
    "more than the item in the picture (text, a hanger or a prop?)",
    "colour doesn’t look brown"
   ],
-  "starter-navy-leather-sneakers": [
-   "Cloudflare said: 3030 AiError: AiError: Your output has been flagged. Please choose another prompt / input image combination (4476ee5f-5e9a-4ebe-9319-5b846077ceff)"
-  ],
   "starter-pearl-beaded-clutch": [
    "more than the item in the picture (text, a hanger or a prop?)",
    "a light piece on a form: the form could not be removed automatically"
@@ -39289,20 +39401,8 @@
   "starter-silver-mini-chain-bag": [
    "holes cut through the bag, grey backdrop left"
   ],
-  "starter-camel-teddy-coat": [
-   "a person shows inside the open coat, with legs below"
-  ],
-  "starter-cream-slingback-heels": [
-   "only the toe caps came out"
-  ],
-  "starter-red-slingback-heels": [
-   "only the toe caps came out"
-  ],
   "starter-cream-canvas-tote": [
    "grey backdrop left and the bag cut ragged"
-  ],
-  "starter-oatmeal-corset-midi-dress": [
-   "bare arms, shoulders and chest came out with the dress"
   ]
  },
  "blocked": {
