@@ -38765,26 +38765,6 @@
    ],
    "t": 1795827059554
   },
-  "starter-oatmeal-corset-midi-dress": {
-   "kind": "worn",
-   "box": {
-    "x": 134,
-    "y": 286,
-    "w": 624,
-    "h": 1420
-   },
-   "v": 5,
-   "color": {
-    "hex": "#b4967c",
-    "name": "Camel"
-   },
-   "colors": [
-    "#b4967c",
-    "#674a37",
-    "#976749"
-   ],
-   "t": 1795827064888
-  },
   "starter-cream-leather-sneakers": {
    "kind": "worn",
    "box": {
@@ -39320,6 +39300,9 @@
   ],
   "starter-cream-canvas-tote": [
    "grey backdrop left and the bag cut ragged"
+  ],
+  "starter-oatmeal-corset-midi-dress": [
+   "bare arms, shoulders and chest came out with the dress"
   ]
  },
  "blocked": {
